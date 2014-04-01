@@ -62,6 +62,7 @@ var ammoInfo = [];
 var AmmoWorker = new Worker('js/ammo_worker.js');
 AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
 
+
 AmmoWorker.onmessage = function(e) {
 	var phase = e.data.tell;
     
