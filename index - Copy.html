@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Ammo lab</title>
+    <title>Assets lab</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <style>
@@ -68,8 +68,14 @@ AmmoWorker.onmessage = function(e) {
 
 		meshs[0] = new THREE.Mesh( BoxGeometry, BoxMaterial0 );
 		meshs[0].scale.set(300,30,300);
+		//meshs[0].position.y = -14;
+		//meshs[0].rotation.y = 45*ToRad;
 		scene.add(meshs[0]);
 		AmmoWorker.postMessage({tell:"ADD", obj:{type:"box", size:[300,30,300], pos:[0, -14, 0], rot:[0,45,0], mass:0} });
+
+		/*meshs[1] = new THREE.Mesh( BoxGeometry, BoxMaterial );
+			scene.add(meshs[1]);
+			AmmoWorker.postMessage({tell:"ADD", obj:{type:"box", pos:[0, 100, 0], mass:1} });*/
 		var mx,my,mz
 		for(var i=1; i<1000; i++){
 			mx = 1 + Math.random()*5;
@@ -276,7 +282,7 @@ function displayInfo(){
 // SEA3D
 //--------------------------------
 
-/*var populateCar = function (){
+var populateCar = function (){
 	for (var i=0; i !== pool.models.length; i++){
             info.innerHTML += pool.models[i].name+"<br>"
     }
@@ -373,7 +379,7 @@ function displayInfo(){
     }
 
     scene.add(car);
-}*/
+}
 
 //-----------------------------------
 // MATH
