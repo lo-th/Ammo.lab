@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Ammo lab</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<title>Ammo lab</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <style>
     * {  margin: 0; padding: 0; border: 0;}
-    body { background-color: #383838; overflow: hidden; color: #eeeeee; font-family: monospace; font-size: 12px; }
+    @font-face { font-family: "SourceCode"; src:url("images/SourceCodePro.woff") format("woff");}
+    body { background-color: #383838; overflow: hidden; color: #eeeeee; font-family: "SourceCode"; font-size: 12px; }
+    h3 { font-size: 16px; }
     input{ margin:0; padding:4px; }
     #interface{ position: absolute; left:10px; top:10px; width:456px; height:20px; }
     #info{ pointer-events:none; position: absolute; left:10px; top:10px; width: 400px; height: 400px; }
 </style>
 
 <script src="js/PNGtoSCRIPT.js"></script>
-
+<script src="js/Editor.js"></script>
 </head>
+
 <body>
 <div id='container'></div>
 <div id="info"></div>
@@ -24,21 +27,21 @@
 // Parameters
 var ToRad = Math.PI / 180;
 var info = document.getElementById("info");
-var sourceInfo = "";
 
 // THREE var
-var container, camera, scene, renderer, camPos, mouse;;
-var oimoMeshes=[]
-var rvoMeshes=[];
-
+var container, camera, scene, renderer, camPos, mouse, content, ground;
 var fps=0, time, time_prev=0, fpsint = 0;
 var bgcolor = 0x606060;
-var clock;
+//var clock;
+var pool;
+var Editor;
+var vmid = 1, hmid = 1;
+var scriptLoader;
+var viewSize = {w:1, h:1};
 
 var meshs = [];
-var pool;
-
-var scriptLoader;
+var geos = [];
+var mats = [];
 
 
 //-----------------------------------
@@ -52,34 +55,31 @@ function prevInit() {
 }
 
 //-----------------------------------
-// AMMO SIDE 
+// AMMO WORKER SIDE 
 //-----------------------------------
 
+var ammoInfo = [];
 var AmmoWorker = new Worker('js/ammo_worker.js');
 AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
-var ammoInfo = [];
-var ammoFps = 0;
-var ammoTest = 0;
 
 AmmoWorker.onmessage = function(e) {
 	var phase = e.data.tell;
-	if( phase === "START"){
-		console.log("ammo started");
+    
+	if( phase === "INIT"){
 
-		meshs[0] = new THREE.Mesh( BoxGeometry, BoxMaterial0 );
-		meshs[0].scale.set(300,30,300);
-		scene.add(meshs[0]);
-		AmmoWorker.postMessage({tell:"ADD", obj:{type:"box", size:[300,30,300], pos:[0, -14, 0], rot:[0,45,0], mass:0} });
-		var mx,my,mz
-		for(var i=1; i<1000; i++){
+		ADD({type:"ground", size:[300,30,300], pos:[0, -15, 0], rot:[0,45,0], mass:0} );
+
+		var mx,my,mz,py;
+		for(var i=1; i< 1000; i++){
 			mx = 1 + Math.random()*5;
 			my = 1 + Math.random()*5;
 			mz = 1 + Math.random()*5;
-			meshs[i] = new THREE.Mesh( BoxGeometry, BoxMaterial1 );
-			meshs[i].scale.set(mx,my,mz)
-			scene.add(meshs[i]);
-			AmmoWorker.postMessage({tell:"ADD", obj:{type:"box", size:[mx,my,mz], pos:[0, 100+i*10, 0], mass:1} });
+            py=100+i*10;
+
+            ADD({type:"box", size:[mx,my,mz], pos:[0, py, 0], mass:1});
 		}
+
+        AmmoWorker.postMessage({tell:"START"});
 	}
 	if( phase === "RUN"){
 		ammoInfo = e.data.infos;
@@ -90,9 +90,9 @@ AmmoWorker.onmessage = function(e) {
 	    	if( meshs[i] ){
 	    		mesh = meshs[i];
 	    		m = mtx[i];
-	    		if(m[0]==2){ if(mesh.material.name=="red") mesh.material = BoxMaterial2; }
+	    		if(m[0]==2){ if(mesh.material.name=="red") mesh.material = mats[2]; }
 	    		else if(m[0]==1){
-	    			if(mesh.material.name=="blue")mesh.material = BoxMaterial1;
+	    			if(mesh.material.name=="blue") mesh.material = mats[1];
 	    		    mesh.position.set( m[5], m[6], m[7] );
 	    		    mesh.quaternion.set( m[1], m[2], m[3], m[4] );
 
@@ -103,88 +103,74 @@ AmmoWorker.onmessage = function(e) {
 	    	}
 	    }
 	}
+    if( phase === "CLEAR"){
+        clearAll();
+        if(Editor.getScript()){
+            AmmoWorker.postMessage({tell:"START", option:engineOption });
+            initDemo();
+        }
+    }
 
 }
 
 //-----------------------------------
 // THREE SIDE 
 //-----------------------------------
-var BoxGeometry;
-
-var BoxMaterial0;
-var BoxMaterial1;
-var BoxMaterial2;
 
 function init() {
-    // send AMMO script to worker
-	AmmoWorker.postMessage({tell:"INIT", url:scriptLoader.ref["AMMO"] });
-
-	BoxGeometry = THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 1, 1, 1 ));
-	
-	BoxMaterial0 = new THREE.MeshPhongMaterial({ color: 0x101010, shininess: 120 });
-	BoxMaterial1 = new THREE.MeshPhongMaterial({ color: 0xFF0505, shininess: 120, name:"red" });
-	BoxMaterial2 = new THREE.MeshPhongMaterial({ color: 0x0505FF, shininess: 120, name:"blue" });
-	
-
+    // init editor
+    Editor = new Editor();
+    document.body.appendChild( Editor.domElement );
+    
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
     camPos = { horizontal: 90, vertical: 70, distance: 300, automove: false };
     mouse = { ox:0, oy:0, h:0, v:0, mx:0, my:0, down:false, over:false, moving:true };
 
-    clock = new THREE.Clock();
-
-    renderer = new THREE.WebGLRenderer( {precision: "lowp", antialias: false } );
+    renderer = new THREE.WebGLRenderer( {precision: "lowp", antialias: false, alpha:false } );
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.setClearColor( bgcolor, 1 );
 
     container = document.getElementById("container");
     container.appendChild( renderer.domElement );
-
-    //renderer.gammaInput = true;
-    //renderer.gammaOutput = true;
-    renderer.shadowMapEnabled = true;
-    renderer.autoClearColor = false;
     renderer.autoClear = false;
+    renderer.gammaInput = true;
+    renderer.gammaOutput = true;
+    renderer.shadowMapEnabled = true;
+    //renderer.shadowMapCullFace = THREE.CullFaceBack;
 
     // scene
     scene = new THREE.Scene();
 
     // camera
     camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 0.5, 2000 );
-    camera.position.set( 0, 30, 100 );
     center = new THREE.Vector3();
     moveCamera();
 
     scene.add( camera );
 
+    //content for all physics object
+    content = new THREE.Object3D();
+    scene.add(content);
+
     // lights
-    var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1 );
-    hemiLight.color.setHex( 0xb6a385 );
-    hemiLight.groundColor.setHex( 0x4b5054);
-    hemiLight.position.set( 0, 100, 0 );
+    var hemiLight = new THREE.HemisphereLight( bgcolor, 0xffffff, 2 );
+    //hemiLight.color.setHex( 0xb6a385 );
+    //hemiLight.groundColor.setHex( 0x4b5054);
+    hemiLight.position.set( 0, 1, 0 );
     scene.add( hemiLight );
 
-    var light, materials;
-    scene.add( new THREE.AmbientLight( bgcolor ) );
+    //scene.add( new THREE.AmbientLight( bgcolor ) );
 
-    light = new THREE.DirectionalLight( 0xffffff, 1.3 );
-    var d = 120;
-
-    light.position.set( d, d, d );
+    var light = new THREE.SpotLight( 0xffffff, 1.5, 0, Math.PI/2, 1 );
+    light.position.set( 100, 300, 50 );
 
     light.castShadow = true;
     //light.shadowCameraVisible = true;
-
-    light.shadowMapWidth = 1024;
-    light.shadowMapHeight = 1024;
-
-    light.shadowCameraLeft = -d;
-    light.shadowCameraRight = d;
-    light.shadowCameraTop = d;
-    light.shadowCameraBottom = -d;
-
-    light.shadowCameraFar = 3*d;
-    light.shadowCameraNear = d;
+    light.shadowMapWidth = light.shadowMapHeight = 512;
+    light.shadowCameraNear = 50;
+    light.shadowCameraFar = 400;
+    light.shadowCameraFov = 60;
     light.shadowDarkness = 0.5;
 
     scene.add( light );
@@ -193,35 +179,15 @@ function init() {
     var backGeo = new THREE.Mesh( new THREE.SphereGeometry( 500, 6, 6 ), backMat );
     scene.add( backGeo );
 
-    var material = new THREE.MeshBasicMaterial( { color: bgcolor } );
-    var cubeMaterial01 = new THREE.MeshPhongMaterial( { color: 0xCC8888 } );
-    var cubeMaterial02 = new THREE.MeshPhongMaterial( { color: 0x88CC88 } );
-
-    var sphereMaterial = new THREE.MeshPhongMaterial( { color: 0x8888CC } );
-
-    var planeMaterial01 = new THREE.MeshPhongMaterial( { color: 0xCC8888 - 0x444444 } );
-    var planeMaterial02 = new THREE.MeshPhongMaterial( { color: 0x88CC88 - 0x444444 } );
-
-    geometry = THREE.BufferGeometryUtils.fromGeometry( new THREE.PlaneGeometry( 400, 400, 1, 1 ) );
-    
-    var mesh = new THREE.Mesh( geometry, material );
-    mesh.castShadow = false;
-    mesh.receiveShadow = true;
-    mesh.rotation.x = -90 * ToRad;
-    scene.add( mesh );
-       
-    // geometry
-    var cubeGeo = THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 0.5,  1,  0.25, 1, 1, 1));
-    var sphereGeo = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 0.25, 12, 8));
-    var planeGeo = THREE.BufferGeometryUtils.fromGeometry(new THREE.PlaneGeometry( 0.5, 0.25, 1, 1));
-    planeGeo.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
-
-    // sea3d
-    //pool = new SEA3D.Pool('model/vision.sea', populateCar);
-    //pool = new SEA3D.Pool('model/vision.high.sea', populateCar);
+    var groundMat = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, transparent:true, blending:THREE.MultiplyBlending } );
+    var groundGeo = THREE.BufferGeometryUtils.fromGeometry( new THREE.PlaneGeometry( 1, 1 ) );
+    groundGeo.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+    ground = new THREE.Mesh( groundGeo, groundMat );
+    ground.castShadow = false;
+    ground.receiveShadow = true;
+    scene.add( ground );
 
     var body = document.body;
-
     window.addEventListener( 'resize', resize, false );
     container.addEventListener( 'mousemove', onMouseMove, false );
     container.addEventListener( 'mousedown', onMouseDown, false );
@@ -234,37 +200,29 @@ function init() {
         body.attachEvent("onmousewheel" , onMouseWheel); // ie
     }
 
+    // load basic model
+    pool = new SEA3D.Pool('models/geo.sea', initGeometry);
+
     loop();
 }
 
-function resize() {
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-}
-
-var nloop = 0;
 function loop() {
     requestAnimationFrame( loop );
-    var delta = clock.getDelta();
-    nloop++
-    if(nloop===2){
-        nloop = 0;
-        THREE.AnimationHandler.update( delta*2 );
-    }
     renderer.render( scene, camera );
     displayInfo();
 }
 
+function resize() {
+    renderer.setSize( window.innerWidth*viewSize.w, window.innerHeight*viewSize.h );
+    camera.aspect = (window.innerWidth*viewSize.w) / (window.innerHeight*viewSize.h );
+    camera.updateProjectionMatrix();
+}
+
 function displayInfo(){
     time = Date.now();
-    if (time - 1000 > time_prev) {
-        time_prev = time; fpsint = fps; fps = 0;
-    } fps++;
-
+    if (time - 1000 > time_prev) { time_prev = time; fpsint = fps; fps = 0; } fps++;
     var info =[
-        "<h3>AMMO LAB</h3><br>",
-        sourceInfo,
+        "<h3>Ammo lab</h3><br>",
         "Three : " + fpsint +" fps<br>",
         "Ammo : " + ammoInfo[0]+" fps<br>",
         "rigids : " + ammoInfo[1]+" <br>"
@@ -272,108 +230,112 @@ function displayInfo(){
     document.getElementById("info").innerHTML = info;
 }
 
-//--------------------------------
-// SEA3D
-//--------------------------------
+//-----------------------------------------------------
+// MESH FUNCTION
+//-----------------------------------------------------
 
-/*var populateCar = function (){
-	for (var i=0; i !== pool.models.length; i++){
-            info.innerHTML += pool.models[i].name+"<br>"
+function initGeometry() {
+    mats[0] = new THREE.MeshPhongMaterial({ color: 0x101010, shininess: 120 });
+    mats[1] = new THREE.MeshPhongMaterial({ color: 0xFF0505, shininess: 120, name:"red" });
+    mats[2] = new THREE.MeshPhongMaterial({ color: 0x0505FF, shininess: 120, name:"blue" });
+
+    geos[0] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 1, 1, 1 ));
+    geos[1] = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("box", true));
+    geos[2] = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
+    geos[3] = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("cyl", true));
+    geos[4] = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("dice", true));
+
+    // send AMMO script to worker
+    AmmoWorker.postMessage({tell:"INIT", url:scriptLoader.ref["AMMO"] });
+}
+
+var removeObject = function (n) {
+    content.remove( content.children[n] );
+}
+
+var clearAll = function (){
+    var i = content.children.length;
+    while (i--) {
+        content.remove(content.children[ i ]);
+    }
+    meshs.length = 0;
+}
+
+//-----------------------------------------------------
+// TRANSE SCRIPT
+//-----------------------------------------------------
+
+var engineOption = null;
+//var SET = null;
+var debugAlpha = 0.5;
+var debugColor = 0xcccccc;
+//var CAM = function(h, v, d){ TE.changeView(h, v, d); }
+
+var ADD = function(obj){
+    var size = obj.size || [1,1,1];
+    var mesh, mesh0;
+
+    switch(obj.type){
+        case 'boxbasic': case 'ground': 
+            mesh = new THREE.Mesh( geos[0] );
+            mesh.scale.set( size[0], size[1], size[2] );
+            mesh.visible = false;
+            mesh0 = new THREE.BoxHelper( mesh );
+            mesh0.material.color.set( debugColor );
+            mesh0.material.opacity = debugAlpha;
+            mesh0.material.transparent = true;
+            mesh.add( mesh0 );
+
+        break;
+        case 'box': 
+            mesh = new THREE.Mesh( geos[1], mats[1] );
+            mesh.scale.set( size[0], size[1], size[2] );
+        break;
+
+        case 'sphere':
+            mesh = new THREE.Mesh( geos[2], mats[1] );
+            mesh.scale.set( size[0], size[0], size[0] );
+        break;
+        case 'cylinder':
+            mesh = new THREE.Mesh( geos[3], mats[1] );
+            mesh.scale.set( size[0], size[1], size[2] );
+        break;
+        case 'dice': 
+            mesh = new THREE.Mesh( geos[4], mats[1] );
+            mesh.scale.set( size[0], size[1], size[2] );
+        break;
+        case 'capsule': 
+        //shape = new Ammo.btCapsuleShape(size[0]*0.5, size[1]*0.5); 
+        break;
+        /*case 'cone': shape = new Ammo.btConeShape(size[0]*0.5, size[1]*0.5); break;
+        case 'mesh': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
+        case 'convex': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
+        case 'terrain': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;*/
     }
 
-    var scale = 0.1;
-    var c = [0x202020, 0x606060]
-
-    var mat0 = new THREE.MeshPhongMaterial({ ambient: c[0], color: 0x050505, specular: c[1], shininess: 120 });
-    var mat1 = new THREE.MeshPhongMaterial({ ambient: c[0], color: 0xCCCCCC, specular: c[1], shininess: 120 });
-    var mat2 = new THREE.MeshPhongMaterial({ ambient: c[0], color: 0x373536, specular: c[1], shininess: 120 });
-    var mat3 = new THREE.MeshPhongMaterial({ ambient: c[0], color: 0x909090, specular: c[1], shininess: 120 });
-    var mat4 = new THREE.MeshPhongMaterial({ ambient: c[0], color: 0x2020FF, specular: c[1], shininess: 120, transparent:true, opacity:0.5, side:THREE.DoubleSide });
-    var mat5 = new THREE.MeshPhongMaterial({ ambient: c[0], color: 0xFF0000, specular: c[1], shininess: 120, transparent:true, opacity:0.9 });
-    var mat6 = new THREE.MeshPhongMaterial({ ambient: c[0], color: 0xFFFFFF, specular: c[1], shininess: 120, transparent:true, opacity:0.9 });
-
-    // wheel
-    var g0 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("wheel", true, scale));
-    var g1 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("wheel_j1", true, scale));
-    var g2 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("wheel_j2", true, scale));
-    var w0 = new THREE.Mesh( g0, mat0 );
-    var w1 = new THREE.Mesh( g1, mat1 );
-    var w2 = new THREE.Mesh( g2, mat2 );
-    w0.add(w1);
-    w0.add(w2);
-    scene.add(w0);
-
-    // sit
-    g0 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("sit", true, scale));
-    g1 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("sit_j1", true, scale));
-    g2 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("sit_j2", true, scale));
-    var s0 = new THREE.Mesh( g0, mat3 );
-    var s1 = new THREE.Mesh( g1, mat1 );
-    var s2 = new THREE.Mesh( g2, mat2 );
-    s0.add(s1);
-    s0.add(s2);
-    scene.add(s0);
-
-    //door l
-    g0 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("door_l", true, scale));
-    g1 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("door_l_j1", true, scale));
-    g2 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("door_l_j2", true, scale));
-    g3 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("door_l_glass", true, scale));
-    var dl0 = new THREE.Mesh( g0, mat2 );
-    var dl1 = new THREE.Mesh( g1, mat1 );
-    var dl2 = new THREE.Mesh( g2, mat3 );
-    var dl3 = new THREE.Mesh( g3, mat4 );
-    dl0.add(dl1);
-    dl0.add(dl2);
-    dl0.add(dl3)
-    scene.add(dl0);
-   // dl0.position.x = 20;
-
-    //door r
-    g0 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("door_r", true, scale));
-    g1 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("door_r_j1", true, scale));
-    g2 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("door_r_j2", true, scale));
-    g3 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("door_r_glass", true, scale));
-    var dr0 = new THREE.Mesh( g0, mat2 );
-    var dr1 = new THREE.Mesh( g1, mat1 );
-    var dr2 = new THREE.Mesh( g2, mat3 );
-    var dr3 = new THREE.Mesh( g3, mat4 );
-    dr0.add(dr1);
-    dr0.add(dr2);
-    dr0.add(dr3);
-    scene.add(dr0);
-
-   // dr0.position.x = -20;
-
-    //steering
-    g0 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("steering", true, scale));
-    g1 = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("steering_j1", true, scale));
-    var st0 = new THREE.Mesh( g0, mat2 );
-    var st1 = new THREE.Mesh( g1, mat1 );
-    st0.add(st1);
-    scene.add(st0);
-
-    // car
-    var carNames = ["body_top", "body_side", "body_back", "glass_top", "chassisPlus", "interiorPlus", "capot", "crome", "interiorSymetrie",
-    "glass_wheel_window", "light_red", "chassisSymetrie", "interiorWheelAxe", "Plaques", "Bouchon", "driveMain", "interiorDeco",
-    "frontLight", "frontLightContour", "frontLightBack", "grille++", "radiateur"];
-
-    var carMats = [ mat1, mat1, mat1, mat4, mat2, mat2, mat1, mat3, mat2,
-    mat4, mat5, mat2, mat2, mat1, mat3, mat2, mat2,
-    mat6, mat6, mat2, mat3, mat3]
-
-    var car = new THREE.Object3D();
-    var g, m, mat;
-
-    for (i=0; i !== carNames.length; i++){
-    	g = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry(carNames[i], true, scale));
-    	mat = carMats[i] || mat1;
-    	m = new THREE.Mesh( g, mat );
-    	car.add(m);
+    if(obj.type !== 'boxbasic' || obj.type !== 'ground'){
+       mesh.castShadow = true;
+       mesh.receiveShadow = true;
     }
 
-    scene.add(car);
-}*/
+    if(obj.type == 'ground'){
+        ground.scale.set( size[0], 1, size[2] );
+        if(obj.rot)ground.rotation.set( (obj.rot[0])*ToRad, obj.rot[1]*ToRad, obj.rot[2]*ToRad );
+        else ground.rotation.set(0,0,0);
+    }
+
+    content.add(mesh);
+    meshs.push(mesh);
+
+    AmmoWorker.postMessage({tell:"ADD", obj:obj });
+}
+
+//var GET = function(names){ AmmoWorker.postMessage({tell:"GET", names:names}); }
+
+var CLEAR = function(option){
+    engineOption = option || {};
+    AmmoWorker.postMessage({tell:"CLEAR"});
+}
 
 //-----------------------------------
 // MATH

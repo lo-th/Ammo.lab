@@ -1,0 +1,35 @@
+<meta charset="utf-8">
+<script>
+function CLEAR(o){};
+CLEAR({timer:false, timestep:1/60, iteration:8, broadphase:2, G:-10});
+
+function initDemo()
+{
+    //demoName("In the box");
+    // ground
+    ADD({type:"ground", size:[55,30,55], pos:[0,-15,0]});
+    // wall
+    ADD({ type:"boxbasic", size:[45,100,5], pos:[0,50,-25] });
+    ADD({ type:"boxbasic", size:[45,100,5], pos:[0,50, 25] });
+    ADD({ type:"boxbasic", size:[5,100,55], pos:[-25,50,0] });
+    ADD({ type:"boxbasic", size:[5,100,55], pos:[ 25,50,0] });
+    
+    // dynamique object
+    var max = 200;
+    var px, pz, t, n = 3;
+    var sx, sy, sz;
+
+    for (var i=0; i!==max; ++i ){
+        t = Math.floor(Math.random()*n)+1;
+        px = -10+Math.random()*20;
+        pz = -10+Math.random()*20;
+
+        sx = 2+Math.random()*10;
+        sy = 2+Math.random()*10;
+        sz = 2+Math.random()*10;
+        if(t==1) ADD({ type:"sphere", size:[sx*0.5], pos:[px,10*i,pz], mass:1 });
+        else if(t==2) ADD({ type:"box", size:[sx,sy,sz], pos:[px,10*i,pz], mass:1 });
+        else if(t==3) ADD({ type:"cylinder", size:[sx*0.5,sy,sx*0.5], pos:[px,10*i,pz], mass:1 });
+    }
+}
+</script>

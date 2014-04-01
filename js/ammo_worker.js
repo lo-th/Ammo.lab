@@ -5,13 +5,14 @@
 
 'use strict';
 var world;
-var bodys=[];
+var bodys = [];
 var matrix = [];
 
 var infos = [];
 
 var fps=0, time, time_prev=0, fpsint = 0;
 var dt = 1.0/60.0;
+var iteration = 10;
 var isTimout = false;
 var timer, delay, timerStep, timeStart=0;
 
@@ -24,12 +25,20 @@ self.onmessage = function (e) {
 		importScripts("AMMO.Three.js");
 		INITWORLD();
 	}
+	
 	if(phase === "ADD") {
-		new AMMO.Rigid(e.data.obj);
+		var id = AMMO.ID++;
+		bodys[id] = new AMMO.Rigid(e.data.obj);
+	    matrix[id] = new Float32Array(8);
+		//new AMMO.Rigid(e.data.obj);
 	}
 	if(phase === "SET") {
-		bodys[e.data.id].set(e.data.obj);
+		if(bodys[e.data.id])bodys[e.data.id].set(e.data.obj);
 	}
+	if(phase === "CLEAR") CLEARWORLD();
+	if(phase === "START") STARTWORLD(e.data.option || {});
+		
+	
 
 
 }
@@ -42,13 +51,12 @@ self.onmessage = function (e) {
 var update = function(){
 
 	timeStart = Date.now();
-	world.stepSimulation(dt, 10);
+	world.stepSimulation(dt, iteration);
 	
-	var i =  bodys.length;
+	var i = AMMO.ID;// bodys.length;
 	
     while (i--) {
-        //getMatrix(i);
-        bodys[i].getMatrix();
+        bodys[i].getMatrix(i);
     }
 
 	worldInfo();
@@ -72,7 +80,20 @@ var INITWORLD = function(){
 	world.setGravity(new Ammo.btVector3(0, -100, 0));
 	timerStep = dt * 1000;
 
-	self.postMessage({tell:"START"});
+	self.postMessage({tell:"INIT"});
+}
 
+var STARTWORLD = function(option){
+	if(option.interation) iteration = option.interation;
 	if(isTimout) update(); else timer = setInterval(update, timerStep);
 }
+
+var CLEARWORLD = function(){
+	if(isTimout)clearTimeout(timer);
+	else clearInterval(timer);
+	AMMO.Clear();
+
+	self.postMessage({tell:"CLEAR"});
+}
+
+

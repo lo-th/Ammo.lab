@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>EDITOR</title>
+		<meta charset="utf-8">
+		<style> html,body { border:none; margin:0px; padding: 0px; width:100%; height:100%;  overflow:hidden; } </style>
+		<link rel="stylesheet" href="css/codemirror.css">
+		<script src="js/PNGtoSCRIPT.js"></script>
+	</head>
+	<body>
+		
+	<script>
+	prevInit();
+
+	function prevInit() {
+	    scriptLoader = new PNGtoSCRIPT.Loader(["images/codemirror.png"], init);
+	}
+
+		//window.onload = init;
+		var codeEditor;
+		var fileref;
+		var head;
+		var base = null;
+
+		function init() {
+		    head = document.getElementsByTagName("head")[0];
+		    codeEditor = CodeMirror(document.body, {
+		        //lineNumbers: true,
+		        styleActiveLine: true,
+		        matchBrackets: true,
+		        theme:'monokai',
+		        mode:'javascript'
+		    });
+		}
+
+		function close(){
+			codeEditor.getInputField().blur();
+		}
+
+		function setBase(b){
+			if(base==null)base = b;
+		}
+
+		function loadfile(url){
+		    if(fileref) head.removeChild(fileref);
+		    fileref = document.createElement("frame");
+		    fileref.charset = "utf-8";
+		    fileref.id = "fileref";
+		    fileref.type = "text/html";
+		    fileref.src = url;
+
+		    fileref.onreadystatechange = callback;
+		    fileref.onload = callback;
+		    head.appendChild(fileref);
+		}
+
+		function callback(){
+		    var doc; 
+		    var frame = document.getElementById("fileref");
+		    if(frame.contentDocument) doc = frame.contentDocument; 
+		    else doc = frame.contentWindow.document; 
+		    var v = doc.getElementsByTagName("head")[0].innerHTML;
+		    var txt = v.slice(53, -10);
+		    codeEditor.setValue( txt );
+
+		    base.update();
+		}
+
+		</script>
+	</body>
+</html>

@@ -1,23 +1,34 @@
 'use strict';
 var AMMO={ REVISION: 'DEV.0.1' };
 
-AMMO.nextID = 0;
+AMMO.ID = 0;
+
+AMMO.Clear = function(){
+	var i = AMMO.ID;
+    while (i--) {
+        world.removeRigidBody(bodys[i].body);
+    }
+    world.clearForces();
+
+    bodys.length = 0;
+    matrix.length = 0;
+    AMMO.ID = 0;
+}
 
 //--------------------------------------------------
 //  RIGIDBODY
 //--------------------------------------------------
 
 AMMO.Rigid = function(obj){
-	this.id = AMMO.nextID++;
+	//this.id = AMMO.ID++;
 	
 	this.body = null;
 	this.forceUpdate = false;
 
 	this.add(obj);
 
-	bodys[this.id] = this;
-	matrix[this.id] = new Float32Array(8);
-
+	//bodys[this.id] = this;
+	//matrix[this.id] = new Float32Array(8);
 }
 
 AMMO.Rigid.prototype = {
@@ -30,10 +41,10 @@ AMMO.Rigid.prototype = {
 		var shape;
 		
 		switch(obj.type){
-			case 'box': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
-			case 'sphere': shape = new Ammo.btSphereShape(size[0]*0.5); break;
+			case 'box':case 'boxbasic':case 'dice':case 'ground': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
+			case 'sphere': shape = new Ammo.btSphereShape(size[0]); break;
 			case 'capsule': shape = new Ammo.btCapsuleShape(size[0]*0.5, size[1]*0.5); break;
-			case 'cylinder': shape = new Ammo.btCylinderShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
+			case 'cylinder': shape = new Ammo.btCylinderShape(new Ammo.btVector3(size[0], size[1]*0.5, size[2]*0.5)); break;
 			case 'cone': shape = new Ammo.btConeShape(size[0]*0.5, size[1]*0.5); break;
 			case 'mesh': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
 			case 'convex': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
@@ -62,9 +73,6 @@ AMMO.Rigid.prototype = {
 		world.addRigidBody(this.body);
 		//body.activate();
     },
-    clear:function(){
-
-    },
     set:function(obj){
     	var v = new Ammo.btVector3(0,0,0);
     	this.body.setLinearVelocity(v);
@@ -76,8 +84,8 @@ AMMO.Rigid.prototype = {
     		this.body.getCenterOfMassTransform().setRotation(q);
     	}
     },
-    getMatrix:function(){
-    	var m = matrix[this.id];
+    getMatrix:function(id){
+    	var m = matrix[id];
     	if(this.forceUpdate){ m[0] = 1; this.forceUpdate=false;}
 		else m[0] = this.body.getActivationState();
 
