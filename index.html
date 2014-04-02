@@ -48,10 +48,10 @@ var mats = [];
 // ALL SOURCE LOADED FROM PNG 
 //-----------------------------------
 
-prevInit();
+window.onload = prevInit;
 
 function prevInit() {
-    scriptLoader = new PNGtoSCRIPT.Loader(["images/ammo.png", "images/three.png", "images/sea3d.png"], init, [1, 0, 0]);
+    scriptLoader = new PNGtoSCRIPT.Loader([ "images/three.png", "images/sea3d.png","images/ammo.png"], init, [0, 0, 1]);
 }
 
 //-----------------------------------
@@ -71,7 +71,7 @@ AmmoWorker.onmessage = function(e) {
 		ADD({type:"ground", size:[300,30,300], pos:[0, -15, 0], rot:[0,45,0], mass:0} );
 
 		var mx,my,mz,py;
-		for(var i=1; i< 1000; i++){
+		for(var i=1; i< 100; i++){
 			mx = 1 + Math.random()*5;
 			my = 1 + Math.random()*5;
 			mz = 1 + Math.random()*5;
@@ -155,13 +155,13 @@ function init() {
     scene.add(content);
 
     // lights
-    var hemiLight = new THREE.HemisphereLight( bgcolor, 0xffffff, 2 );
+    //var hemiLight = new THREE.HemisphereLight( bgcolor, 0xffffff, 2 );
     //hemiLight.color.setHex( 0xb6a385 );
     //hemiLight.groundColor.setHex( 0x4b5054);
-    hemiLight.position.set( 0, 1, 0 );
-    scene.add( hemiLight );
+    //hemiLight.position.set( 0, 1, 0 );
+    //scene.add( hemiLight );
 
-    //scene.add( new THREE.AmbientLight( bgcolor ) );
+    scene.add( new THREE.AmbientLight( bgcolor ) );
 
     var light = new THREE.SpotLight( 0xffffff, 1.5, 0, Math.PI/2, 1 );
     light.position.set( 100, 300, 50 );
@@ -184,6 +184,7 @@ function init() {
     var groundGeo = THREE.BufferGeometryUtils.fromGeometry( new THREE.PlaneGeometry( 1, 1 ) );
     groundGeo.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
     ground = new THREE.Mesh( groundGeo, groundMat );
+    ground.position.y = -0.1
     ground.castShadow = false;
     ground.receiveShadow = true;
     scene.add( ground );
@@ -247,7 +248,10 @@ function initGeometry() {
     geos[4] = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("dice", true));
 
     // send AMMO script to worker
-    AmmoWorker.postMessage({tell:"INIT", url:scriptLoader.ref["AMMO"] });
+   // console.log(scriptLoader.ref["AMMOX"].getAttribute("type"))//.getAttribute("src"))
+  // AmmoWorker.postMessage({tell:"INIT", AmmoUrl:scriptLoader.ref["AMMOX"] });
+
+  AmmoWorker.postMessage({tell:"INIT", AmmoUrl:scriptLoader.ref["AMMOX"] });
 }
 
 var removeObject = function (n) {

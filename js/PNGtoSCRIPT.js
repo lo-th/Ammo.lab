@@ -1,5 +1,5 @@
 var PNGtoSCRIPT = { REV: 0.1 };
-window.URL = window.URL || window.webkitURL;
+//window.URL = window.URL || self.URL || window.webkitURL;
 PNGtoSCRIPT.Loader = function(Files, End, Types){
 	this.files = [];
 	this.num = 0;
@@ -43,7 +43,7 @@ PNGtoSCRIPT.Loader.prototype = {
 						pix = d[i];
 						if( pix<96 ) string += String.fromCharCode(pix+32);
 					}
-					self.URL.revokeObjectURL(img.src);
+					window.URL.revokeObjectURL(img.src);
 					// clear canvas
 					c = null; delete c;
 
@@ -51,7 +51,8 @@ PNGtoSCRIPT.Loader.prototype = {
 					var nn = string.indexOf("var");
 					var pn = string.indexOf("=");
 					var name = string.substring(nn+4,pn);
-					if(name=="Module;Module||(Module") name = "AMMO";
+
+					console.log(name)
 
 					if(_this.types[_this.num] == 0){ // direct script 
 						var script = document.createElement("script");
@@ -63,8 +64,15 @@ PNGtoSCRIPT.Loader.prototype = {
 						_this.head.appendChild(script);
 					}
 					else {// for worker
-						var sblob = new Blob([ string ], {type: "text/javascript"} );
-						_this.ref[name] = window.URL.createObjectURL(sblob);
+						var sblob = new Blob([ string ], {type: "text/javascript;charset=UTF-8"} );
+						/*var script = document.createElement('script');
+						script.src = URL.createObjectURL(sblob);
+						script.type = "text/javascript";
+						script.charset = "utf-8";
+						script.async = false;
+						document.body.appendChild(script);*/
+						//var sblob = new Blob([ string ] );
+						_this.ref[name] = URL.createObjectURL(sblob);
 					}
 
 					string = "";
@@ -75,7 +83,7 @@ PNGtoSCRIPT.Loader.prototype = {
 
 
 	    		}
-	    		img.src = self.URL.createObjectURL(blob);
+	    		img.src = window.URL.createObjectURL(blob);
 	    	}
 		}
 		xhr.send( null );

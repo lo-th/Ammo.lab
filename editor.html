@@ -10,7 +10,7 @@
 	<body>
 		
 	<script>
-	prevInit();
+	window.onload = prevInit;
 
 	function prevInit() {
 	    scriptLoader = new PNGtoSCRIPT.Loader(["images/codemirror.png"], init);

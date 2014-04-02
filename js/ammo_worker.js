@@ -4,15 +4,18 @@
  */
 
 'use strict';
+
 var world;
 var bodys = [];
+var vehicles = [];
+var characters = [];
 var matrix = [];
 
 var infos = [];
 
 var fps=0, time, time_prev=0, fpsint = 0;
-var dt = 1.0/60.0;
-var iteration = 10;
+var dt = 1/60;
+var iteration = 2;
 var isTimout = false;
 var timer, delay, timerStep, timeStart=0;
 
@@ -21,8 +24,10 @@ var ToRad = Math.PI / 180;
 self.onmessage = function (e) {
 	var phase = e.data.tell;
 	if(phase === "INIT"){
-		importScripts(e.data.url);
+		importScripts(e.data.AmmoUrl);
+		//importScripts("ammo.js");
 		importScripts("AMMO.Three.js");
+
 		INITWORLD();
 	}
 	
@@ -30,7 +35,6 @@ self.onmessage = function (e) {
 		var id = AMMO.ID++;
 		bodys[id] = new AMMO.Rigid(e.data.obj);
 	    matrix[id] = new Float32Array(8);
-		//new AMMO.Rigid(e.data.obj);
 	}
 	if(phase === "SET") {
 		if(bodys[e.data.id])bodys[e.data.id].set(e.data.obj);
@@ -50,10 +54,11 @@ self.onmessage = function (e) {
 
 var update = function(){
 
-	timeStart = Date.now();
+	if(isTimout) timeStart = Date.now();
+
 	world.stepSimulation(dt, iteration);
 	
-	var i = AMMO.ID;// bodys.length;
+	var i = AMMO.ID;
 	
     while (i--) {
         bodys[i].getMatrix(i);
@@ -61,6 +66,11 @@ var update = function(){
 
 	worldInfo();
 	self.postMessage({tell:"RUN", infos:infos, matrix:matrix });
+
+	if(isTimout){
+        delay = timerStep - (Date.now()-timeStart);
+        timer = setTimeout(update, delay);
+    }
 
 }
 
@@ -75,16 +85,24 @@ var INITWORLD = function(){
 	var solver = new Ammo.btSequentialImpulseConstraintSolver();
 	var collisionConfig = new Ammo.btDefaultCollisionConfiguration();
 	var dispatcher = new Ammo.btCollisionDispatcher(collisionConfig);
-	var broadPhase = new Ammo.btDbvtBroadphase();
+	
+    // var broadPhase = new Ammo.btAxisSweep3(new Ammo.btVector3(-1000,-1000,-1000),new Ammo.btVector3(1000,1000,1000), 16384); //4096;
+    var broadPhase = new Ammo.btDbvtBroadphase();
+
 	world = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadPhase, solver, collisionConfig);
 	world.setGravity(new Ammo.btVector3(0, -100, 0));
-	timerStep = dt * 1000;
-
+	
 	self.postMessage({tell:"INIT"});
 }
 
 var STARTWORLD = function(option){
+	if(option.isTimout) isTimout = option.isTimout;
 	if(option.interation) iteration = option.interation;
+	if(option.timerstep) dt = option.timerstep;
+	if(option.G)world.setGravity(new Ammo.btVector3(0, option.G, 0));
+
+
+	timerStep = dt * 1000;
 	if(isTimout) update(); else timer = setInterval(update, timerStep);
 }
 

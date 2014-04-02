@@ -1,11 +1,10 @@
 <meta charset="utf-8">
 <script>
 function CLEAR(o){};
-CLEAR({timer:false, timestep:1/60, iteration:8, broadphase:2, G:-10});
+CLEAR({timer:false, timestep:1/60, iteration:2, G:-100});
 
 function initDemo()
 {
-    //demoName("In the box");
     // ground
     ADD({type:"ground", size:[55,30,55], pos:[0,-15,0]});
     // wall
