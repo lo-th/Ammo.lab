@@ -64,7 +64,7 @@ function prevInit() {
 //-----------------------------------
 
 var ammoInfo = [];
-var AmmoWorker = new Worker('js/ammo_worker.js');
+var AmmoWorker = new Worker('js/AMMO.Worker.js');
 AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
 
 AmmoWorker.onmessage = function(e) {
