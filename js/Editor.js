@@ -2,7 +2,7 @@
  * @author loth / http://3dflashlo.wordpress.com/
  */
 var Editor = function (Pos) {
-	'use strict';
+	//'use strict';
 	var left = Pos || 310;//590;
 	var render3d, scene3d = null;
 	var unselect = '-o-user-select:none; -ms-user-select:none; -khtml-user-select:none; -webkit-user-select:none; -moz-user-select: none;'
