@@ -5,7 +5,7 @@
 
 'use strict';
 
-var world;
+var world = null, dispatcher, collisionConfig, solver, broadphase;
 var bodys = [];
 var vehicles = [];
 var characters = [];
@@ -31,7 +31,9 @@ self.onmessage = function (e) {
 		//importScripts("ammo.js");
 		importScripts("AMMO.Three.js");
 
-		INITWORLD();
+		self.postMessage({tell:"INIT"});
+
+		//INITWORLD( e.data.Broadphase || "SAP" );
 	}
 	
 	if(phase === "ADD") {
@@ -64,7 +66,6 @@ var update = function(){
 	world.stepSimulation(dt, iteration);
 	
 	var i = AMMO.ID;
-	
     while (i--) {
         bodys[i].getMatrix(i);
     }
@@ -86,26 +87,27 @@ var worldInfo = function(){
     infos[1] = bodys.length;
 }
 
-var INITWORLD = function(){
-	var solver = new Ammo.btSequentialImpulseConstraintSolver();
-	var collisionConfig = new Ammo.btDefaultCollisionConfiguration();
-	var dispatcher = new Ammo.btCollisionDispatcher(collisionConfig);
-	
-    // var broadPhase = new Ammo.btAxisSweep3(new Ammo.btVector3(-1000,-1000,-1000),new Ammo.btVector3(1000,1000,1000), 16384); //4096;
-    var broadPhase = new Ammo.btDbvtBroadphase();
-
-	world = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadPhase, solver, collisionConfig);
-	world.setGravity(new Ammo.btVector3(0, -100, 0));
-	
-	self.postMessage({tell:"INIT"});
-}
-
 var STARTWORLD = function(option){
+	var Broadphase = option.broadphase || "BVT";
+	var gravity = option.G || -100;
+	if(world == null){
+		solver = new Ammo.btSequentialImpulseConstraintSolver();
+		collisionConfig = new Ammo.btDefaultCollisionConfiguration();
+		dispatcher = new Ammo.btCollisionDispatcher(collisionConfig);
+
+		switch(Broadphase){
+			case 'SAP': broadphase = new Ammo.btAxisSweep3(new Ammo.btVector3(-10,-10,-10),new Ammo.btVector3(10,10,10), 4096); break;//16384;
+			case 'BVT': broadphase = new Ammo.btDbvtBroadphase(); break;
+			case 'SIMPLE': broadphase = new Ammo.btSimpleBroadphase(); break;
+		}
+	    
+		world = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
+		world.setGravity(new Ammo.btVector3(0, gravity, 0));
+	}
+
 	if(option.isTimout) isTimout = option.isTimout;
 	if(option.interation) iteration = option.interation;
 	if(option.timerstep) dt = option.timerstep;
-	if(option.G)world.setGravity(new Ammo.btVector3(0, option.G, 0));
-
 
 	timerStep = dt * 1000;
 	if(isTimout) update(); else timer = setInterval(update, timerStep);
@@ -116,7 +118,13 @@ var CLEARWORLD = function(){
 	else clearInterval(timer);
 	AMMO.Clear();
 
+	Ammo.destroy( world );
+	Ammo.destroy( solver );
+	Ammo.destroy( collisionConfig );
+	Ammo.destroy( dispatcher );
+	Ammo.destroy( broadphase );
+
+	world = null;
+
 	self.postMessage({tell:"CLEAR"});
 }
-
-

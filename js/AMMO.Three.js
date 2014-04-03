@@ -13,6 +13,7 @@ AMMO.Clear = function(){
 	var i = AMMO.ID;
     while (i--) {
         world.removeRigidBody(bodys[i].body);
+        Ammo.destroy( bodys[i].body );
     }
     world.clearForces();
 

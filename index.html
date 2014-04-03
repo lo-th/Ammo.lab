@@ -106,6 +106,7 @@ AmmoWorker.onmessage = function(e) {
 }
 
 function introDemo() {
+    AmmoWorker.postMessage({tell:"START", option:engineOption});
     //ADD({type:"ground", size:[300,30,300], pos:[0, -15, 0], rot:[0,0,0], mass:0} );
     ADD({type:"terrain", size:[300,30,300], pos:[0, -5, 0], div:[64,64] });
 
@@ -120,8 +121,6 @@ function introDemo() {
         ADD({type:"sphere", size:[mx,my,mz], pos:[0, py, 0], mass:1});
         ADD({type:"cylinder", size:[mx,my,mx], pos:[0, py, 0], mass:1});
     }
-
-    AmmoWorker.postMessage({tell:"START"});
 }
 
 
@@ -291,17 +290,14 @@ var clearAll = function (){
     while (i--) {
         content.remove(content.children[ i ]);
     }
-
-    //if(terrain!== null) terrain = null;
     meshs.length = 0;
-
 }
 
 //-----------------------------------------------------
 // TRANSE SCRIPT
 //-----------------------------------------------------
 
-var engineOption = null;
+var engineOption = { broadphase:"BVT", timer:false, timestep:1/60, iteration:2, G:-100 };
 //var SET = null;
 var debugAlpha = 0.5;
 var debugColor = 0xcccccc;
