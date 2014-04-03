@@ -7,9 +7,9 @@
 <style>
     * {  margin: 0; padding: 0; border: 0;}
     @font-face { font-family: "SourceCode"; src:url("images/SourceCodePro.woff") format("woff");}
-    body { background-color: #383838; overflow: hidden; color: #eeeeee; font-family: "SourceCode"; font-size: 12px; }
-    h3 { font-size: 16px; }
-    input{ margin:0; padding:4px; }
+    body { background-color: #383838; overflow: hidden; color: #eeeeee; font-family: "SourceCode"; font-size: 11px; }
+    h3 { margin-left:38px; font-size:20px; font-weight:500; word-spacing:-6px;}
+    input{ margin:0px; padding:4px; }
     #interface{ position: absolute; left:10px; top:10px; width:456px; height:20px; }
     #info{ pointer-events:none; position: absolute; left:10px; top:10px; width: 400px; height: 400px; }
 </style>
@@ -255,8 +255,8 @@ function displayInfo(){
     var info =[
         "<h3>Ammo lab</h3><br>",
         "Three : " + fpsint +" fps<br>",
-        "Ammo : " + ammoInfo[0]+" fps<br>",
-        "rigids : " + ammoInfo[1]+" <br>"
+        "Ammo : " + ammoInfo[0]+" fps<br><br>",
+        "Rigids : " + ammoInfo[1]+" <br>"
     ].join("\n");
     document.getElementById("info").innerHTML = info;
 }
