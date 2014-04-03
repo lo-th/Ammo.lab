@@ -16,6 +16,8 @@
 
 <script src="js/PNGtoSCRIPT.js"></script>
 <script src="js/Editor.js"></script>
+<script src="js/Terrain.js"></script>
+
 </head>
 
 <body>
@@ -29,10 +31,11 @@ var ToRad = Math.PI / 180;
 var info = document.getElementById("info");
 
 // THREE var
-var container, camera, scene, renderer, camPos, mouse, content, ground;
+var container, camera, scene, renderer, camPos, mouse, content, ground
+var terrain = null;
 var fps=0, time, time_prev=0, fpsint = 0;
 var bgcolor = 0x606060;
-//var clock;
+var clock;
 var pool;
 var Editor;
 var vmid = 1, hmid = 1;
@@ -43,7 +46,9 @@ var meshs = [];
 var geos = [];
 var mats = [];
 
-
+var directionalLight;
+var pointLight;
+var hemiLight;
 //-----------------------------------
 // ALL SOURCE LOADED FROM PNG 
 //-----------------------------------
@@ -51,7 +56,7 @@ var mats = [];
 window.onload = prevInit;
 
 function prevInit() {
-    scriptLoader = new PNGtoSCRIPT.Loader([ "images/three.png", "images/sea3d.png","images/ammo.png"], init, [0, 0, 1]);
+    scriptLoader = new PNGtoSCRIPT.Loader([ "images/ammo.png", "images/three.png", "images/sea3d.png"], init, [1, 0, 0]);
 }
 
 //-----------------------------------
@@ -62,25 +67,11 @@ var ammoInfo = [];
 var AmmoWorker = new Worker('js/ammo_worker.js');
 AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
 
-
 AmmoWorker.onmessage = function(e) {
 	var phase = e.data.tell;
     
 	if( phase === "INIT"){
-
-		ADD({type:"ground", size:[300,30,300], pos:[0, -15, 0], rot:[0,45,0], mass:0} );
-
-		var mx,my,mz,py;
-		for(var i=1; i< 100; i++){
-			mx = 1 + Math.random()*5;
-			my = 1 + Math.random()*5;
-			mz = 1 + Math.random()*5;
-            py=100+i*10;
-
-            ADD({type:"box", size:[mx,my,mz], pos:[0, py, 0], mass:1});
-		}
-
-        AmmoWorker.postMessage({tell:"START"});
+        introDemo();
 	}
 	if( phase === "RUN"){
 		ammoInfo = e.data.infos;
@@ -91,9 +82,9 @@ AmmoWorker.onmessage = function(e) {
 	    	if( meshs[i] ){
 	    		mesh = meshs[i];
 	    		m = mtx[i];
-	    		if(m[0]==2){ if(mesh.material.name=="red") mesh.material = mats[2]; }
+	    		if(m[0]==2){ if(mesh.material) if(mesh.material.name=="red") mesh.material = mats[2]; }
 	    		else if(m[0]==1){
-	    			if(mesh.material.name=="blue") mesh.material = mats[1];
+	    			if(mesh.material) if(mesh.material.name=="blue") mesh.material = mats[1];
 	    		    mesh.position.set( m[5], m[6], m[7] );
 	    		    mesh.quaternion.set( m[1], m[2], m[3], m[4] );
 
@@ -113,6 +104,26 @@ AmmoWorker.onmessage = function(e) {
     }
 
 }
+
+function introDemo() {
+    //ADD({type:"ground", size:[300,30,300], pos:[0, -15, 0], rot:[0,0,0], mass:0} );
+    ADD({type:"terrain", size:[300,30,300], pos:[0, -5, 0], div:[64,64] });
+
+    var mx,my,mz,py;
+    for(var i=1; i< 20; i++){
+        mx = 1 + Math.random()*5;
+        my = 1 + Math.random()*5;
+        mz = 1 + Math.random()*5;
+        py=100+i*10;
+
+        ADD({type:"box", size:[mx,my,mz], pos:[0, py, 0], mass:1});
+        ADD({type:"sphere", size:[mx,my,mz], pos:[0, py, 0], mass:1});
+        ADD({type:"cylinder", size:[mx,my,mx], pos:[0, py, 0], mass:1});
+    }
+
+    AmmoWorker.postMessage({tell:"START"});
+}
+
 
 //-----------------------------------
 // THREE SIDE 
@@ -139,7 +150,7 @@ function init() {
     renderer.gammaOutput = true;
     renderer.shadowMapEnabled = true;
     //renderer.shadowMapCullFace = THREE.CullFaceBack;
-
+    clock = new THREE.Clock()
     // scene
     scene = new THREE.Scene();
 
@@ -155,13 +166,28 @@ function init() {
     scene.add(content);
 
     // lights
-    //var hemiLight = new THREE.HemisphereLight( bgcolor, 0xffffff, 2 );
+    //hemiLight = new THREE.HemisphereLight( bgcolor, 0xffffff, 1 );
     //hemiLight.color.setHex( 0xb6a385 );
     //hemiLight.groundColor.setHex( 0x4b5054);
-    //hemiLight.position.set( 0, 1, 0 );
+    //hemiLight.position.set( 0, 50, 0 );
     //scene.add( hemiLight );
 
     scene.add( new THREE.AmbientLight( bgcolor ) );
+
+    //directionalLight = new THREE.DirectionalLight( 0xffffee , 1 );
+   //directionalLight.position.set(100, 300, 50 );
+    //directionalLight.position.multiplyScalar( 100 );
+    //scene.add( directionalLight );
+    directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
+    directionalLight.position.set( 100, 300, 50 );
+    scene.add( directionalLight );
+
+    pointLight = new THREE.PointLight( 0xAACCff, 3);
+    pointLight.position.set(0, 0, 0);
+    scene.add( pointLight );
+    /*var lightMat = new THREE.MeshBasicMaterial( { color: pointLight.color } );
+    var lightMesh = new THREE.Mesh( new THREE.SphereGeometry( 2, 6, 6 ), lightMat );
+    pointLight.add(lightMesh)*/
 
     var light = new THREE.SpotLight( 0xffffff, 1.5, 0, Math.PI/2, 1 );
     light.position.set( 100, 300, 50 );
@@ -205,11 +231,15 @@ function init() {
     // load basic model
     pool = new SEA3D.Pool('models/geo.sea', initGeometry);
 
+    
+
     loop();
 }
 
 function loop() {
     requestAnimationFrame( loop );
+    var delta = clock.getDelta();
+    if( terrain !== null  )terrain.update(delta);
     renderer.render( scene, camera );
     displayInfo();
 }
@@ -248,10 +278,7 @@ function initGeometry() {
     geos[4] = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("dice", true));
 
     // send AMMO script to worker
-   // console.log(scriptLoader.ref["AMMOX"].getAttribute("type"))//.getAttribute("src"))
-  // AmmoWorker.postMessage({tell:"INIT", AmmoUrl:scriptLoader.ref["AMMOX"] });
-
-  AmmoWorker.postMessage({tell:"INIT", AmmoUrl:scriptLoader.ref["AMMOX"] });
+    AmmoWorker.postMessage({tell:"INIT", AmmoUrl:scriptLoader.ref["AMMOX"] });
 }
 
 var removeObject = function (n) {
@@ -259,11 +286,15 @@ var removeObject = function (n) {
 }
 
 var clearAll = function (){
+    if(terrain!== null){ terrain.clear(); terrain = null; }
     var i = content.children.length;
     while (i--) {
         content.remove(content.children[ i ]);
     }
+
+    //if(terrain!== null) terrain = null;
     meshs.length = 0;
+
 }
 
 //-----------------------------------------------------
@@ -278,6 +309,7 @@ var debugColor = 0xcccccc;
 
 var ADD = function(obj){
     var size = obj.size || [1,1,1];
+    var div = obj.div || [64,64];
     var mesh, mesh0;
 
     switch(obj.type){
@@ -290,13 +322,11 @@ var ADD = function(obj){
             mesh0.material.opacity = debugAlpha;
             mesh0.material.transparent = true;
             mesh.add( mesh0 );
-
         break;
         case 'box': 
             mesh = new THREE.Mesh( geos[1], mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
-
         case 'sphere':
             mesh = new THREE.Mesh( geos[2], mats[1] );
             mesh.scale.set( size[0], size[0], size[0] );
@@ -314,8 +344,12 @@ var ADD = function(obj){
         break;
         /*case 'cone': shape = new Ammo.btConeShape(size[0]*0.5, size[1]*0.5); break;
         case 'mesh': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
-        case 'convex': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
-        case 'terrain': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;*/
+        case 'convex': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;*/
+        case 'terrain': 
+            terrain = new TERRAIN.Generate( div, size );
+            terrain.init( window.innerWidth, window.innerHeight );
+            mesh = terrain.container;
+        break;
     }
 
     if(obj.type !== 'boxbasic' || obj.type !== 'ground'){
@@ -323,7 +357,7 @@ var ADD = function(obj){
        mesh.receiveShadow = true;
     }
 
-    if(obj.type == 'ground'){
+    if(obj.type == 'ground'){// ground shadow
         ground.scale.set( size[0], 1, size[2] );
         if(obj.rot)ground.rotation.set( (obj.rot[0])*ToRad, obj.rot[1]*ToRad, obj.rot[2]*ToRad );
         else ground.rotation.set(0,0,0);
@@ -332,7 +366,7 @@ var ADD = function(obj){
     content.add(mesh);
     meshs.push(mesh);
 
-    AmmoWorker.postMessage({tell:"ADD", obj:obj });
+    AmmoWorker.postMessage({ tell:"ADD", obj:obj });
 }
 
 //var GET = function(names){ AmmoWorker.postMessage({tell:"GET", names:names}); }

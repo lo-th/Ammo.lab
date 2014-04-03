@@ -15,12 +15,13 @@ function initDemo()
 
     var max = 333;
     var px, pz, s;
+    // phy = [friction, restitution];
 
     for (var i=0; i!==max; ++i ){
         s = 1+(Math.random()*10);
         px = -10+Math.random()*20;
         pz = -10+Math.random()*20;
-        ADD({ type:"dice", size:[s,s,s], pos:[px,1+(10*i),pz], config:[s/10, 0.5, 0.5], mass:1 });
+        ADD({ type:"dice", size:[s,s,s], pos:[px,1+(10*i),pz], phy:[0.5, 0.5], mass:s/10 });
     }
 }
 </script>

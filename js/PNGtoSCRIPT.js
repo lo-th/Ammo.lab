@@ -52,7 +52,7 @@ PNGtoSCRIPT.Loader.prototype = {
 					var pn = string.indexOf("=");
 					var name = string.substring(nn+4,pn);
 
-					console.log(name)
+					//console.log(name)
 
 					if(_this.types[_this.num] == 0){ // direct script 
 						var script = document.createElement("script");
@@ -65,13 +65,6 @@ PNGtoSCRIPT.Loader.prototype = {
 					}
 					else {// for worker
 						var sblob = new Blob([ string ], {type: "text/javascript;charset=UTF-8"} );
-						/*var script = document.createElement('script');
-						script.src = URL.createObjectURL(sblob);
-						script.type = "text/javascript";
-						script.charset = "utf-8";
-						script.async = false;
-						document.body.appendChild(script);*/
-						//var sblob = new Blob([ string ] );
 						_this.ref[name] = URL.createObjectURL(sblob);
 					}
 

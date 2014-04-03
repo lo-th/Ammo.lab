@@ -21,6 +21,9 @@ var timer, delay, timerStep, timeStart=0;
 
 var ToRad = Math.PI / 180;
 
+var terrain = null;
+
+
 self.onmessage = function (e) {
 	var phase = e.data.tell;
 	if(phase === "INIT"){
@@ -41,7 +44,9 @@ self.onmessage = function (e) {
 	}
 	if(phase === "CLEAR") CLEARWORLD();
 	if(phase === "START") STARTWORLD(e.data.option || {});
-		
+	if(phase === "UPTERRAIN") {
+		if(terrain!== null) terrain.update(e.data.Hdata);
+	}
 	
 
 

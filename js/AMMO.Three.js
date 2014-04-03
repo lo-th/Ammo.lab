@@ -1,7 +1,13 @@
+/**
+ * ammo.js and Worker for three.js 2014
+ * @author LoTh / http://3dflashlo.wordpress.com/
+ */
+ 
 'use strict';
 var AMMO={ REVISION: 'DEV.0.1' };
 
 AMMO.ID = 0;
+
 
 AMMO.Clear = function(){
 	var i = AMMO.ID;
@@ -10,6 +16,7 @@ AMMO.Clear = function(){
     }
     world.clearForces();
 
+    if(terrain!== null) terrain = null;
     bodys.length = 0;
     matrix.length = 0;
     AMMO.ID = 0;
@@ -20,23 +27,21 @@ AMMO.Clear = function(){
 //--------------------------------------------------
 
 AMMO.Rigid = function(obj){
-	//this.id = AMMO.ID++;
-	
 	this.body = null;
 	this.forceUpdate = false;
-
 	this.add(obj);
-
-	//bodys[this.id] = this;
-	//matrix[this.id] = new Float32Array(8);
 }
 
 AMMO.Rigid.prototype = {
     constructor: AMMO.Rigid,
     add:function(obj){
     	var size = obj.size || [1,1,1];
+    	var div = obj.div || [64,64];
 		var pos = obj.pos || [0,0,0];
 		var rot = obj.rot || [0,0,0];
+		// phy = [friction, restitution];
+		var phy = obj.phy || [0.5,0];
+		var noSleep = obj.noSleep || false;
 
 		var shape;
 		
@@ -48,7 +53,10 @@ AMMO.Rigid.prototype = {
 			case 'cone': shape = new Ammo.btConeShape(size[0]*0.5, size[1]*0.5); break;
 			case 'mesh': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
 			case 'convex': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
-			case 'terrain': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
+			case 'terrain': 
+			    terrain = new AMMO.Terrain(div, size);
+			    shape = terrain.shape;
+			break;
 		}
 
 		var transform = new Ammo.btTransform();
@@ -70,13 +78,18 @@ AMMO.Rigid.prototype = {
 		var rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
 
 		this.body = new Ammo.btRigidBody(rbInfo);
+		this.body.setFriction(phy[0]);
+		this.body.setRestitution(phy[1]);
+		if(noSleep)this.body.setActivationState(Ammo.DISABLE_DEACTIVATION);//this.body.setFlags(4);
+
 		world.addRigidBody(this.body);
-		//body.activate();
+		this.body.activate();
     },
     set:function(obj){
     	var v = new Ammo.btVector3(0,0,0);
     	this.body.setLinearVelocity(v);
     	this.body.setAngularVelocity(v);
+    	this.body.clearForces();
     	if(obj.pos){ this.body.getCenterOfMassTransform().setOrigin(new Ammo.btVector3(obj.pos[0], obj.pos[1], obj.pos[2]));}
     	if(obj.rot){
     		var q = new Ammo.btQuaternion();
@@ -103,6 +116,32 @@ AMMO.Rigid.prototype = {
 	    m[5] = p.x();
 	    m[6] = p.y();
 	    m[7] = p.z();
+    }
+}
+
+//--------------------------------------------------
+//  TERRAIN
+//--------------------------------------------------
+
+AMMO.Terrain = function(div, size){
+	this.div = div;
+	this.size = size;
+	this.fMax = div[0]*div[1];
+	this.maxHeight = 100;
+	this.ptr = Ammo.allocate(this.fMax*4, "float", Ammo.ALLOC_NORMAL);
+    this.shape = new Ammo.btHeightfieldTerrainShape(this.div[0], this.div[1], this.ptr, 1, -this.maxHeight, this.maxHeight, 1, 0, false);
+	this.shape.setUseDiamondSubdivision(true);
+	var localScaling = new Ammo.btVector3(this.size[0]/this.div[0],1,this.size[2]/this.div[1]);
+	this.shape.setLocalScaling(localScaling);
+}
+
+AMMO.Terrain.prototype = {
+	constructor: AMMO.Terrain,
+    update:function(Hdata){
+    	var i = this.fMax;
+    	while(i--){
+	    	Ammo.setValue(this.ptr+(i<<2), Hdata[i], 'float');
+	    }
     }
 }
 
