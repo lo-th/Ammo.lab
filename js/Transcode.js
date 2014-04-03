@@ -1,6 +1,11 @@
-var PNGtoSCRIPT = { REV: 0.1 };
+/**
+* Transcode convert png to script
+* @author LoTh / http://3dflashlo.wordpress.com/
+*/
+
+var Transcode = { REV: 0.1 };
 //window.URL = window.URL || self.URL || window.webkitURL;
-PNGtoSCRIPT.Loader = function(Files, End, Types){
+Transcode.Loader = function(Files, End, Types){
 	this.files = [];
 	this.num = 0;
 	this.end = End;
@@ -18,8 +23,8 @@ PNGtoSCRIPT.Loader = function(Files, End, Types){
 	this.load(this.files[0]);
 }
 
-PNGtoSCRIPT.Loader.prototype = {
-    constructor: PNGtoSCRIPT.Loader,
+Transcode.Loader.prototype = {
+    constructor: Transcode.Loader,
     isArray:function(subj){
     	try { subj && (subj.length = -1); return false; }
 	    catch (er) { return true; }

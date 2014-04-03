@@ -14,7 +14,7 @@
     #info{ pointer-events:none; position: absolute; left:10px; top:10px; width: 400px; height: 400px; }
 </style>
 
-<script src="js/PNGtoSCRIPT.js"></script>
+<script src="js/Transcode.js"></script>
 <script src="js/Editor.js"></script>
 <script src="js/Terrain.js"></script>
 
@@ -29,6 +29,7 @@
 // Parameters
 var ToRad = Math.PI / 180;
 var info = document.getElementById("info");
+var sources;
 
 // THREE var
 var container, camera, scene, renderer, camPos, mouse, content, ground
@@ -39,7 +40,7 @@ var clock;
 var pool;
 var Editor;
 var vmid = 1, hmid = 1;
-var scriptLoader;
+
 var viewSize = {w:1, h:1};
 
 var meshs = [];
@@ -56,7 +57,7 @@ var hemiLight;
 window.onload = prevInit;
 
 function prevInit() {
-    scriptLoader = new PNGtoSCRIPT.Loader([ "images/ammo.png", "images/three.png", "images/sea3d.png"], init, [1, 0, 0]);
+    sources = new Transcode.Loader([ "images/ammo.png", "images/three.png", "images/sea3d.png"], init, [1, 0, 0]);
 }
 
 //-----------------------------------
@@ -277,7 +278,7 @@ function initGeometry() {
     geos[4] = THREE.BufferGeometryUtils.fromGeometry(pool.getGeometry("dice", true));
 
     // send AMMO script to worker
-    AmmoWorker.postMessage({tell:"INIT", AmmoUrl:scriptLoader.ref["AMMOX"] });
+    AmmoWorker.postMessage({tell:"INIT", AmmoUrl:sources.ref["AMMOX"] });
 }
 
 var removeObject = function (n) {
