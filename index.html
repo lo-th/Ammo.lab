@@ -70,6 +70,10 @@ function prevInit() {
     s1.domElement.style.top = '50px';
     s2.domElement.style.top = '85px';
     displayInfo();
+
+    // init editor
+    Editor = new Editor();
+    document.body.appendChild( Editor.domElement );
 }
 
 //-----------------------------------
@@ -146,10 +150,7 @@ function introDemo() {
 //-----------------------------------
 
 function init() {
-    // init editor
-    Editor = new Editor();
-    document.body.appendChild( Editor.domElement );
-    
+   
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
     camPos = { horizontal: 90, vertical: 70, distance: 300, automove: false };
@@ -246,8 +247,6 @@ function init() {
 
     // load basic model
     pool = new SEA3D.Pool('models/geo.sea', initGeometry);
-
-    
 
     loop();
 }

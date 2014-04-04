@@ -10,8 +10,7 @@ var Stats_loth = function (name, size) {
 	var fps = 0, fpsMin = Infinity, fpsMax = 0;
 	var frames = 0, mode = 0;
 
-	var iconSize = size || 30;//36;
-
+	var iconSize = size || 30;
 	var container = document.createElement( 'div' );
 	var unselect = '-o-user-select:none; -ms-user-select:none; -khtml-user-select:none; -webkit-user-select:none; -moz-user-select: none;'
 	
@@ -35,6 +34,7 @@ var Stats_loth = function (name, size) {
 		"M50,17.5c-1.381,0-2.5,1.119-2.5,2.5v30c0,1.381,1.119,2.5,2.5,2.5s2.5-1.119,2.5-2.5V20C52.5,18.619,51.381,17.5,50,17.5z",
 		"'/></svg>"
 	].join("\n");
+
 	var needle2= [
 	    "<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px'",
 		"width='"+iconSize+"px' height='"+iconSize+"px' viewBox='0 0 100 100' enable-background='new 0 0 100 100' xml:space='preserve'>",
@@ -43,12 +43,12 @@ var Stats_loth = function (name, size) {
 		"'/></svg>"
 	].join("\n");
 
-
 	var needleplus= [
 		"<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px'",
 		"width='"+iconSize+"px' height='"+iconSize+"px' viewBox='0 0 100 100' enable-background='new 0 0 100 100' xml:space='preserve'>",
 		"<circle id='needleplus' fill='"+iconColor0+"' cx='50' cy='6' r='4'/></svg>"
 	].join("\n");
+
 	var needleplus2= [
 	    "<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px'",
 		"width='"+iconSize+"px' height='"+iconSize+"px' viewBox='0 0 100 100' enable-background='new 0 0 100 100' xml:space='preserve'>",
@@ -64,64 +64,35 @@ var Stats_loth = function (name, size) {
 		"'/></svg>"
 	].join("\n");
 
-	
 	var size = 2;
 
 	var loDiv = document.createElement( 'div' );
 	loDiv.id = 'lo';
 	loDiv.style.cssText = 'position:absolute; left:0; top:0; width:'+iconSize+'px; height:'+iconSize+'px;';
 	loDiv.innerHTML = base;
-	//container.appendChild( loDiv );
 	
-
 	var txt = document.createElement( 'div' );
 	txt.style.cssText = 'font-family:Monospace; color:'+iconColor0+'; position:absolute; left:0; top:'+(iconSize-12)+'px; width:'+iconSize+'px; height:'+10+'px;  text-align:center; font-size:10px; pointer-events:none;';
 	container.appendChild(txt);
 	txt.innerHTML = name || "three";
 
-	/*var needleMsMax = document.createElement( 'div' );
-	needleMsMax.id = 'nmsx';
-	needleMsMax.style.cssText = 'position:absolute;left:'+16*size+'px; bottom:1px;width:'+1*size+'px;height:'+15*size+'px;transform-origin: 0.5px '+15*size+'px;-webkit-transform-origin:1px '+15*size+'px;-o-transform-origin:1px '+15*size+'px;';
-	loDiv.appendChild( needleMsMax );
-
-	var l0 = document.createElement( 'div' );
-	l0.style.cssText = 'width:'+1*size+'px;height:'+12*size+'px;background-color:'+lomsColorMax+';';
-	needleMsMax.appendChild(l0);*/
-
-	
-	//needleMs.style.cssText = 'position:absolute;left:'+16*size+'px; bottom:1px;width:'+1*size+'px;height:'+15*size+'px;transform-origin: 0.5px '+15*size+'px;-webkit-transform-origin: 1px '+15*size+'px;-o-transform-origin:1px '+15*size+'px;';
-	//loDiv.appendChild( needleMs );
-
-	//var l1 = document.createElement( 'div' );
-	//l1.style.cssText = 'width:'+1*size+'px;height:'+12*size+'px;background-color:'+lomsColor+';';
-	//needleMs.appendChild(l1);
-
-	/*var needleFpsMin = document.createElement( 'div' );
-	needleFpsMin.id = 'nfpsm';
-	needleFpsMin.style.cssText = 'position:absolute;left:'+16*size+'px; bottom:1px;width:'+1*size+'px;height:'+15*size+'px;background-color:'+lofpsColorMin+';transform-origin:1px '+15*size+'px;-webkit-transform-origin:1px '+15*size+'px;-o-transform-origin: 1px '+15*size+'px%;';
-	loDiv.appendChild(needleFpsMin);*/
-
 	var needleFps = document.createElement( 'div' );
-	//needleFps.id = 'nfps';
-	needleFps.style.cssText = 'position:absolute;  left:0; top:0; width:'+iconSize+'px; height:'+iconSize+'px;';//' transform-origin:50% 70.31%; -webkit-transform-origin:50% 70.31%; -o-transform-origin:50% 70.31%;';
+	needleFps.style.cssText = 'position:absolute;  left:0; top:0; width:'+iconSize+'px; height:'+iconSize+'px;';
     needleFps.innerHTML = needle;
 	container.appendChild(needleFps);
 
 	var needleMs = document.createElement( 'div' );
-	//needleMs.id = 'nms';
-	needleMs.style.cssText = 'position:absolute;  left:0; top:0; width:'+iconSize+'px; height:'+iconSize+'px;';//' transform-origin:50% 70.31%; -webkit-transform-origin:50% 70.31%; -o-transform-origin:50% 70.31%;';
+	needleMs.style.cssText = 'position:absolute;  left:0; top:0; width:'+iconSize+'px; height:'+iconSize+'px;';
     needleMs.innerHTML = needle2;
     container.appendChild(needleMs);
 	
 	var needleFpsm = document.createElement( 'div' );
-	//needleFpsm.id = 'nfps';
-	needleFpsm.style.cssText = 'position:absolute;  left:0; top:0; width:'+iconSize+'px; height:'+iconSize+'px;';//' transform-origin:50% 70.31%; -webkit-transform-origin:50% 70.31%; -o-transform-origin:50% 70.31%;';
+	needleFpsm.style.cssText = 'position:absolute;  left:0; top:0; width:'+iconSize+'px; height:'+iconSize+'px;';
     needleFpsm.innerHTML = needleplus;
 	container.appendChild(needleFpsm);
 
 	var needleMsm = document.createElement( 'div' );
-	//needleMs.id = 'nms';
-	needleMsm.style.cssText = 'position:absolute;  left:0; top:0; width:'+iconSize+'px; height:'+iconSize+'px;';//' transform-origin:50% 70.31%; -webkit-transform-origin:50% 70.31%; -o-transform-origin:50% 70.31%;';
+	needleMsm.style.cssText = 'position:absolute;  left:0; top:0; width:'+iconSize+'px; height:'+iconSize+'px;';
     needleMsm.innerHTML = needleplus2;
     container.appendChild(needleMsm);
 
