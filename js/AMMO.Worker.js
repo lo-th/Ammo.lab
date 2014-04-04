@@ -61,6 +61,8 @@ self.onmessage = function (e) {
 
 var update = function(){
 
+	self.postMessage({tell:"STATSTART"});
+
 	if(isTimout) timeStart = Date.now();
 
 	world.stepSimulation(dt, iteration);
@@ -70,8 +72,10 @@ var update = function(){
         bodys[i].getMatrix(i);
     }
 
-	worldInfo();
-	self.postMessage({tell:"RUN", infos:infos, matrix:matrix });
+	//worldInfo();
+	//self.postMessage({tell:"RUN", infos:infos, matrix:matrix });
+	self.postMessage({tell:"RUN", matrix:matrix });
+
 
 	if(isTimout){
         delay = timerStep - (Date.now()-timeStart);
@@ -80,12 +84,12 @@ var update = function(){
 
 }
 
-var worldInfo = function(){
+/*var worldInfo = function(){
 	time = Date.now();
     if (time - 1000 > time_prev) { time_prev = time; fpsint = fps; fps = 0; } fps++;
     infos[0] = fpsint;
     infos[1] = bodys.length;
-}
+}*/
 
 var STARTWORLD = function(option){
 	var Broadphase = option.broadphase || "BVT";

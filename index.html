@@ -8,16 +8,16 @@
     * {  margin: 0; padding: 0; border: 0;}
     @font-face { font-family: "SourceCode"; src:url("images/SourceCodePro.woff") format("woff");}
     body { background-color: #383838; overflow: hidden; color: #eeeeee; font-family: "SourceCode"; font-size: 11px; }
-    h3 { margin-left:38px; font-size:20px; font-weight:500; word-spacing:-6px;}
+    h3 { margin-left:0px; font-size:18px; font-weight:500; word-spacing:-6px;}
     input{ margin:0px; padding:4px; }
     #interface{ position: absolute; left:10px; top:10px; width:456px; height:20px; }
-    #info{ pointer-events:none; position: absolute; left:10px; top:10px; width: 400px; height: 400px; }
+    #info{ pointer-events:none; position: absolute; left:48px; top:12px; width: 400px; height: 400px; }
 </style>
 
 <script src="js/Transcode.js"></script>
 <script src="js/Editor.js"></script>
 <script src="js/Terrain.js"></script>
-
+<script src="js/loth/Stats_loth.js"></script>
 </head>
 
 <body>
@@ -50,6 +50,9 @@ var mats = [];
 var directionalLight;
 var pointLight;
 var hemiLight;
+
+var s1, s2;
+
 //-----------------------------------
 // ALL SOURCE LOADED FROM PNG 
 //-----------------------------------
@@ -58,6 +61,15 @@ window.onload = prevInit;
 
 function prevInit() {
     sources = new Transcode.Loader([ "images/ammo.png", "images/three.png", "images/sea3d.png"], init, [1, 0, 0]);
+
+    s1 = new Stats_loth("three");
+    s2 = new Stats_loth("ammo");
+
+    document.body.appendChild( s1.domElement );
+    document.body.appendChild( s2.domElement );
+    s1.domElement.style.top = '50px';
+    s2.domElement.style.top = '85px';
+    displayInfo();
 }
 
 //-----------------------------------
@@ -70,12 +82,16 @@ AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
 
 AmmoWorker.onmessage = function(e) {
 	var phase = e.data.tell;
+
+    if( phase === "STATSTART")s2.begin();
     
 	if( phase === "INIT"){
         introDemo();
 	}
 	if( phase === "RUN"){
-		ammoInfo = e.data.infos;
+        s2.end();
+        //s2.update();
+		//ammoInfo = e.data.infos;
 		var mtx = e.data.matrix;
 		var mesh, m;
     	var i = mtx.length;
@@ -238,10 +254,12 @@ function init() {
 
 function loop() {
     requestAnimationFrame( loop );
+    s1.begin();
     var delta = clock.getDelta();
     if( terrain !== null  )terrain.update(delta);
     renderer.render( scene, camera );
-    displayInfo();
+    s1.end();
+   // displayInfo();
 }
 
 function resize() {
@@ -251,13 +269,13 @@ function resize() {
 }
 
 function displayInfo(){
-    time = Date.now();
-    if (time - 1000 > time_prev) { time_prev = time; fpsint = fps; fps = 0; } fps++;
+    //time = Date.now();
+    //if (time - 1000 > time_prev) { time_prev = time; fpsint = fps; fps = 0; } fps++;
     var info =[
-        "<h3>Ammo lab</h3><br>",
-        "Three : " + fpsint +" fps<br>",
-        "Ammo : " + ammoInfo[0]+" fps<br><br>",
-        "Rigids : " + ammoInfo[1]+" <br>"
+        "<h3>Ammo lab</h3><br>"//,
+        //"Three : " + fpsint +" fps<br>",
+        //"Ammo : " + ammoInfo[0]+" fps<br><br>",
+        //"Rigids : " + ammoInfo[1]+" <br>"
     ].join("\n");
     document.getElementById("info").innerHTML = info;
 }
