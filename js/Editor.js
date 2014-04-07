@@ -3,24 +3,84 @@
  */
 
 'use strict';
-var Editor = function () {
+var Editor = function (Themes, nDemo) {
+
+	var maxDemo = nDemo || 6;
+	var themes = Themes || ['1d1f20', '2f3031', '424344'];
+
+	var degrade01 = '#'+themes[0]+';';//'linear-gradient(45deg, #'+themes[0]+', #'+themes[1]+');';
+	var fullImg = '';//background: url(images/grad.png) no-repeat center center fixed; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover;'
 
 	var unselect = '-o-user-select:none; -ms-user-select:none; -khtml-user-select:none; -webkit-user-select:none; -moz-user-select: none;'
 	var textselect = '-o-user-select:text; -ms-user-select:text; -khtml-user-select:text; -webkit-user-select:text; -moz-user-select: text;'
 	var open = false;
 
     var container = document.createElement( 'div' );
-	container.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; bottom:0px;right:0px; color:#CCCCCC; width:100%; height:100% font-size:12px; font-family:SourceCode;  pointer-events:none;';
+	//container.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; bottom:0px; right:0px; color:#CCCCCC; width:100%; height:100% font-size:12px; font-family:SourceCode; pointer-events:none;';
+	container.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; left:0px; width:100%; height:100%; font-size:12px; font-family:SourceCode; pointer-events:none;';
+	
 	container.id = 'Editor';
 
+	var intro = document.createElement( 'div' );
+	intro.style.cssText = '-webkit-filter: drop-shadow( 1px 1px 1px #25517c ); filter: drop-shadow( 1px 1px 1px #25517c ); text-align:center; position:absolute; margin:0; padding:0; top:50%; left:50%; width:300px; height:150px; margin-left:-150px; margin-top:-75px; display:block; pointer-events:none';
+	container.appendChild( intro );
+
 	var containerEdit = document.createElement( 'div' );
-	containerEdit.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; left:50%; color:#CCCCCC; width:50%; height:100%; font-size:12px; font-family:SourceCode;  pointer-events:none; display:none; background: linear-gradient(45deg, #1d1f20, #2f3031);';
+	//containerEdit.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; left:50%; color:#CCCCCC; width:50%; height:100%; font-size:12px; font-family:SourceCode;  pointer-events:none; display:none; background:' + degrade01;
+	containerEdit.style.cssText = unselect+fullImg+'position:absolute; margin:0; padding:0; top:0px; left:50%; color:#CCCCCC; width:50%; height:100%; font-size:12px; font-family:SourceCode;  pointer-events:none; display:none;';//' background-image:url(images/grad.png)'
+
 	containerEdit.id = 'EditorRoot';
 	container.appendChild( containerEdit );
 
+	var line = document.createElement( 'div' );
+	line.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:-1px; left:-1px; width:1px; height:100%; pointer-events:none; background:#'+themes[2]+';';
+	containerEdit.appendChild( line );
+
+
+    var iconSize0 = 90;
 	var iconSize = 36;
 	var iconSize2 = 46;
 	var iconColor = '#ffffff';
+
+	var icon_libs= [
+	"<svg version='1.1' id='Calque_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px'",
+	"width='"+iconSize0+"px' height='"+iconSize0+"px' viewBox='0 40 128 50' enable-background='new 0 40 128 50' xml:space='preserve' >",
+    "<g><path id='icon_libs' fill='#"+themes[0]+"' d='M78.881,34.035v-3.054C81.464,30.785,83.5,28.633,83.5,26c0-2.761-2.239-5-5-5c-0.75,0-5.958,0-7.872,4.25",
+	"c-2.123,4.715-1.709,8.826-1.709,8.826c0,21.715,17.59,23.895,17.59,40.494c0,12.389-10.078,22.467-22.467,22.467",
+	"c-12.389,0-22.467-10.079-22.467-22.467c0-16.911,17.59-18.498,17.59-40.494c0,0,0.086-4.41-2.529-8.826",
+	"C54.142,21.039,50,21,49.25,21c-2.761,0-5,2.239-5,5c0,2.717,2.169,4.923,4.869,4.993v3.042c0,17.909-17.59,17.92-17.59,40.494",
+	"C31.528,92.462,46.066,107,64,107s32.471-14.538,32.471-32.471C96.471,52.276,78.881,51.708,78.881,34.035z'/>",
+	"<circle fill='#"+themes[0]+"' cx='64.937' cy='85.463' r='3.87'/>",
+	"<circle fill='#"+themes[0]+"' cx='64.751' cy='72.129' r='3.061'/>",
+	"<circle fill='#"+themes[0]+"' cx='64.589' cy='58.439' r='2.764'/>",
+	"<circle fill='#"+themes[0]+"' cx='76.325' cy='76.663' r='3.518'/>",
+	"<circle fill='#"+themes[0]+"' cx='55.491' cy='65.33' r='2.764'/>",
+	"<circle fill='#"+themes[0]+"' cx='52.726' cy='78.197' r='4.523'/>",
+    "</g></svg>"
+	].join("\n");
+
+	var introStyle = unselect+'color:#'+themes[0]+'; -webkit-filter: drop-shadow( -1px -1px 1px #693c28 ); filter: drop-shadow( -1px -1px 1px #693c28 );pointer-events:none; font-size:40px; font-weight:800;';
+
+	var logo = document.createElement( 'div' );
+	logo.style.cssText = introStyle;
+	logo.innerHTML = icon_libs;//+ "<br>Ammo.lab";
+	intro.appendChild( logo );
+
+	var logotext = document.createElement( 'div' );
+	logotext.style.cssText = introStyle + 'margin-top:-30px;'; 
+	logotext.innerHTML = "Ammo.lab";
+	intro.appendChild( logotext );
+
+	var hideIntro = function () {
+		//intro.removeChild(logotext);
+		intro.removeChild(logo);
+		container.removeChild( intro );
+
+		nMenu0.style.display = "block";
+		nMenu.style.display = "block";
+		menuDemo.style.display = "block";
+	};
+
 
 	var icon_github= [
 		"<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px'",
@@ -62,7 +122,7 @@ var Editor = function () {
 
 
     var nMenu = document.createElement( 'div' );
-	nMenu.style.cssText = "position:absolute; width:"+iconSize+"px; height:"+iconSize+"px; margin-bottom:0px; pointer-events:auto; top:6px; right:6px; ";
+	nMenu.style.cssText = "position:absolute; width:"+iconSize+"px; height:"+iconSize+"px; margin-bottom:0px; pointer-events:auto; top:6px; right:6px; display:none;";
 	nMenu.innerHTML = icon_gear;
 	container.appendChild( nMenu );
 
@@ -71,7 +131,7 @@ var Editor = function () {
 	nMenu.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); showCode(); }, false );
 
 	var nMenu0 = document.createElement( 'div' );
-	nMenu0.style.cssText = "position:absolute; width:"+iconSize+"px; height:"+iconSize+"px; margin-bottom:0px; pointer-events:auto; top:6px; left:6px; ";
+	nMenu0.style.cssText = "position:absolute; width:"+iconSize+"px; height:"+iconSize+"px; margin-bottom:0px; pointer-events:auto; top:6px; left:6px;  display:none;";
 	nMenu0.innerHTML = "<a href='https://github.com/lo-th/Ammo.lab'  target='_blank' >"+icon_github+"</a>";//icon_github;
 	container.appendChild( nMenu0 );
 	
@@ -80,17 +140,25 @@ var Editor = function () {
 	nMenu0.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); showCode(); }, false );
 
 	var showCode = function () {
-    	if(open){ hide(); viewSize = {w:1, h:1}; }
-    	else{ 
+    	if(open){ 
+    		hide();
+    	    View.viewSize.mw = 1;
+    		View.viewSize.mh = 1;
+    	}else{ 
     		if(self.innerWidth>self.innerHeight){
     			show('v');
-    			viewSize = {w:0.5, h:1};
+    			if(stats) stats.style.bottom = '0px';
+    			View.viewSize.mw = 0.5;
+    			View.viewSize.mh = 1;
     		} else {
     			show('h');
-    			viewSize = {w:1, h:0.5};
+    			if(stats) stats.style.bottom = '50%';
+    			View.viewSize.mw = 1;
+    			View.viewSize.mh = 0.5;
+    			
     		}
     	}
-    	resize();
+    	View.resize();
     }
 
 	var show = function(mode){
@@ -100,11 +168,16 @@ var Editor = function () {
 			containerEdit.style.left = "50%";
 			containerEdit.style.height = "100%";
 			containerEdit.style.width = "50%";
+			line.style.height = "100%";
+			line.style.width = "1px";
+			//line.style.left = "-1px";
 		} else{
 			containerEdit.style.top = "50%";
 			containerEdit.style.left = "0px";
 			containerEdit.style.height = "50%";
 			containerEdit.style.width = "100%";
+			line.style.height = "1px";
+			line.style.width = "100%";
 		}
 		containerEdit.style.display = "block";
 	}
@@ -120,17 +193,18 @@ var Editor = function () {
 
 	var colors = ['#303030', '#b10dc9', '#0074d9', '#ff851b'];
 	var buttonActif = 'position:relative; display:inline-block; cursor:pointer; pointer-events:auto;';
-	var bstyle =unselect+ ' font-size:14px; -webkit-border-radius:40px; border-radius:40px;  border:2px solid #252525; background:'+colors[0]+'; height:19px; padding:0px 0px; text-align:center;';
+	var effect= '';//-webkit-filter: drop-shadow( 1px 1px 2px #'+themes[2]+' ); filter: drop-shadow( 1px 1px 2px #'+themes[2]+' );';
+	var bstyle = unselect + effect +' font-size:14px; -webkit-border-radius:40px; border-radius:40px;  border:1px solid #'+themes[2]+'; height:19px; padding:0px 0px; text-align:center; background:'+ degrade01;
+	var bstyleMenu = unselect + effect +' font-size:12px; -webkit-border-radius:20px; border-radius:20px;  border:1px solid #'+themes[2]+'; height:19px; padding:0px 0px; text-align:center; ';
+
 
 	var bbMenu = [];
+	var bbColor = [];
 	var nscript;
-	var maxDemo = 5;
+	
 	var currentDemo;
 
-	var decoFrame = document.createElement( 'div' );
-	decoFrame.id = 'decoFrame';
-	decoFrame.style.cssText =unselect+'top:10px; left:70px; position:absolute; display:block; width:calc(100% - 120px); height:60px; overflow:hidden; padding:0;';
-	containerEdit.appendChild( decoFrame );
+	
 
 	var rvalue = 0;
 	var updateTimer;
@@ -138,12 +212,18 @@ var Editor = function () {
     // RUN BUTTON
 	var bRun = document.createElement( 'div' );
 	bRun.id = 'Editor-Run';
-	bRun.style.cssText =bstyle+buttonActif+'top:10px; left:10px; position:absolute; width:46px; height:46px;padding-left:0px; padding-top:0px;';
-	bRun.innerHTML = icon_update;
+	bRun.style.cssText = bstyle + buttonActif + 'top:10px; left:10px; position:absolute; width:46px; height:46px;';
+	var icColor = document.createElement( 'div' );
+	icColor.style.cssText = "-webkit-border-radius:40px; border-radius:40px; position:absolute; width:46px; height:46px; pointer-events:none; background-color: rgba(0,0,0,0); pointer-events:none;";
+	var icRun = document.createElement( 'div' );
+	icRun.style.cssText = "position:absolute; width:46px; height:46px; pointer-events:none;";
+	icRun.innerHTML = icon_update; 
 	containerEdit.appendChild( bRun );
-	bRun.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); update(); this.style.backgroundColor = colors[3]; }, false );
-	bRun.addEventListener( 'mouseover', function ( event ) { event.preventDefault();  this.style.backgroundColor = colors[2]; updateTimer = setInterval(rotateUpdate, 10, this); }, false );
-    bRun.addEventListener( 'mouseout', function ( event ) { event.preventDefault(); this.style.backgroundColor = colors[0]; clearInterval(updateTimer);}, false );
+	bRun.appendChild(icColor);
+	bRun.appendChild(icRun);
+	bRun.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); update(); icColor.style.backgroundColor = 'rgba(0,116,217,0.7)'; }, false );
+	bRun.addEventListener( 'mouseover', function ( event ) { event.preventDefault();  icColor.style.backgroundColor = 'rgba(0,0,0,0.3)'; updateTimer = setInterval(rotateUpdate, 10, icRun); }, false );
+    bRun.addEventListener( 'mouseout', function ( event ) { event.preventDefault(); icColor.style.backgroundColor = 'rgba(0,0,0,0)'; clearInterval(updateTimer);}, false );
 
     var rotateUpdate = function (dom) {
     	rvalue -= 5;
@@ -153,9 +233,19 @@ var Editor = function () {
 	}
 
     // MENU DEMO
+    var menuDemo = document.createElement( 'div' );
+	menuDemo.id = 'menuDemo';
+	menuDemo.style.cssText = unselect + 'top:12px; left:180px; position:absolute; display:block; width:'+(maxDemo*28)+'px; height:60px; overflow:hidden; padding:0; display:none';
+	container.appendChild( menuDemo );
+
+
+
+
 	for(var i=0;i!==maxDemo;i++){
 		bbMenu[i] = document.createElement( 'div' );
+		bbColor[i] = document.createElement( 'div' );
 		bbMenu[i].style.cssText = bstyle + buttonActif + "width:20px; margin-right:2px; padding:2px 2px;";
+		bbColor[i].style.cssText = "-webkit-border-radius:40px; border-radius:40px; position:absolute; top:0; left:0; width:24px; height:24px; pointer-events:none; background-color: rgba(0,0,0,0);";
 		if(i<10){
 			bbMenu[i].textContent = '0'+i;
 			bbMenu[i].name = 'demo0'+i;
@@ -163,10 +253,11 @@ var Editor = function () {
 			bbMenu[i].textContent = i;
 			bbMenu[i].name = 'demo'+i;
 		}
-		bbMenu[i].addEventListener( 'mousedown', function ( event ) { event.preventDefault(); importScript(this.name); currentDemo=this.name; this.style.backgroundColor =  colors[3];}, false );
-		bbMenu[i].addEventListener( 'mouseover', function ( event ) { event.preventDefault(); this.style.backgroundColor = colors[2]; }, false );
-		bbMenu[i].addEventListener( 'mouseout', function ( event ) { event.preventDefault();  this.style.backgroundColor = colors[0]; testCurrentDemo(); }, false );		
-		decoFrame.appendChild( bbMenu[i] );
+		bbMenu[i].addEventListener( 'mousedown', function ( event ) { event.preventDefault(); importScript(this.name); currentDemo = this.name; this.childNodes[1].style.backgroundColor = 'rgba(0,116,217,0.7)';}, false );
+		bbMenu[i].addEventListener( 'mouseover', function ( event ) { event.preventDefault(); this.childNodes[1].style.backgroundColor = 'rgba(0,0,0,0.3)'; }, false );
+		bbMenu[i].addEventListener( 'mouseout', function ( event ) { event.preventDefault();  this.childNodes[1].style.backgroundColor = 'rgba(0,0,0,0)'; testCurrentDemo(); }, false );		
+		menuDemo.appendChild( bbMenu[i] );
+		bbMenu[i].appendChild( bbColor[i] );
 	}
 
 	// MAIN EDITOR
@@ -185,8 +276,8 @@ var Editor = function () {
 
 	var testCurrentDemo = function(){
 		for(var i=0, j=bbMenu.length;i!==j;i++){
-			if(bbMenu[i].name === currentDemo)bbMenu[i].style.backgroundColor = colors[1];
-			else bbMenu[i].style.backgroundColor = colors[0];
+			if(bbMenu[i].name === currentDemo)bbMenu[i].childNodes[1].style.backgroundColor = 'rgba(177,13,201,0.5)';
+			else bbMenu[i].childNodes[1].style.backgroundColor = 'rgba(0,0,0,0)';
 		}
 	}
 
@@ -204,6 +295,7 @@ var Editor = function () {
 	return {
 		update:update,
 		domElement: container,
+		hideIntro: hideIntro,
 		getScript: function () {
 			return nscript;
 		}

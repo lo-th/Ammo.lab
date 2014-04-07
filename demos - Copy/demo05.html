@@ -1,0 +1,17 @@
+<meta charset="utf-8">
+<script>
+function CLEAR(o){};
+CLEAR({broadphase:"BVT", timer:false, timestep:1/60, iteration:2, G:-10});
+
+function initDemo()
+{
+    NAME("Vehicule Garage");
+
+    ADD({type:"plane"});
+    ADD({type:"ground", size:[200,10,200], pos:[0,5,0], mass:0});
+    ADD({type:"box", size:[10,10,10], pos:[100, 100, 0], mass:1, noSleep:true});
+
+    CAR({ size:[10,5,20], pos:[0, 50, 0], wPos:[5,-5,10], wRadius:3, wDeepth:2, nWheels:4, mass:100 });
+
+}
+</script>

@@ -63,6 +63,9 @@ TERRAIN.Generate = function( div, size ){
     this.mesh.rotation.x = -Math.PI / 2;
     this.mesh.visible = false;
 
+    this.mesh.castShadow = true;
+    this.mesh.receiveShadow = true;
+
     this.container = new THREE.Object3D();
     this.container.add(this.mesh);
 }
@@ -237,7 +240,7 @@ TERRAIN.Generate.prototype = {
 
         sceneTmp.add( meshTmp );
 
-        renderer.render( sceneTmp, this.cameraOrtho, this.specularMap, true );
+        View.renderer.render( sceneTmp, this.cameraOrtho, this.specularMap, true );
 
     },
 
@@ -254,7 +257,8 @@ TERRAIN.Generate.prototype = {
            }
         }
 
-        AmmoWorker.postMessage({tell:"UPTERRAIN", Hdata:this.hfFloatBuffer });
+        if(AmmoWorker) AmmoWorker.postMessage({tell:"UPTERRAIN", Hdata:this.hfFloatBuffer });
+        else if(world) world.terrain.update(this.hfFloatBuffer);
     },
     
     generateData : function (width, height, color) {
@@ -316,13 +320,13 @@ TERRAIN.Generate.prototype = {
                 this.uniformsTerrain[ "uOffset" ].value.x = 8 * this.uniformsNoise[ "offset" ].value.x;//4
 
                 this.quadTarget.material =  this.mlib[ "heightmap" ];
-                renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.heightMap, true );
+                View.renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.heightMap, true );
 
-                var gl = renderer.getContext();
+                var gl = View.renderer.getContext();
                 gl.readPixels( 0, 0, this.div[0], this.div[1], gl.RGBA, gl.UNSIGNED_BYTE, this.tmpData );
 
                 this.quadTarget.material =  this.mlib[ "normal" ];
-                renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.normalMap, true );
+                View.renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.normalMap, true );
 
                 this.generatePhysics();
             }

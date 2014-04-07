@@ -7,17 +7,26 @@
 <style>
     * {  margin: 0; padding: 0; border: 0; }
     @font-face { font-family: "SourceCode"; src:url("images/SourceCodePro.woff") format("woff");}
-    body { background-color: #1d1f20; overflow: hidden; color: #eeeeee;    font-family: "SourceCode"; font-size: 12px; }
+    body { background-color: #1d1f20; overflow: hidden; color: #eeeeee; font-family: "SourceCode"; font-size: 12px; }
     h3 { margin-left:0px; font-size:20px; font-weight:800; word-spacing:-6px;}
     input{ margin:0px; padding:4px; }
     #container{ position: absolute; width:100%; height:100%;}
     #interface{ position: absolute; left:10px; top:10px; width:456px; height:20px; }
-    #stats{ position: absolute; left:10px; bottom:0px; height:20px; width:220px;  pointer-events:none; font-size: 12px;word-spacing:-4px; color:#424344;}
+    #stats{ position: absolute; left:10px; bottom:0px; height:20px; width:300px;  pointer-events:none; font-size: 12px;word-spacing:-4px; color:#424344;}
     #info{ pointer-events:none; position: absolute; left:48px; top:18px; width: 400px; height: 400px; line-height:12px;}
 </style>
 
+<script src="lib/three.min.js"></script>
+<script src="lib/Detector.js"></script>
+<script src="lib/BufferGeometryUtils.js"></script>
+<script src="lib/loaders/sea3d/SEA3D.js"></script>
+<script src="lib/loaders/sea3d/SEA3DLoader.js"></script>
+<script src="lib/loaders/sea3d/SEA3DLZMA.js"></script>
+<script src="lib/loaders/sea3d/SEA3DPool.js"></script>
+<script src="lib/ammo.js"></script>
+
+<script src="js/AMMO.Three.js"></script>
 <script src="js/AAA.View.js"></script>
-<script src="js/Transcode.js"></script>
 <script src="js/Editor.js"></script>
 <script src="js/Terrain.js"></script>
 
@@ -27,94 +36,69 @@
 <div id='container'></div>
 <div id="info"></div>
 <div id="stats"></div>
-<script>
 
+<script>
 var engineOption = { broadphase:"BVT", timer:false, timestep:1/60, iteration:2, G:-10 };
+// Parameters
 var themes = ['1d1f20', '2f3031', '424344', '68696b'];
 var info = document.getElementById("info");
 var stats = document.getElementById("stats");
 var demoName = "yoch";
 
+
 var Sources, Editor, View, Pool;
 
-//-----------------------------------
-// ALL SOURCE LOADED FROM PNG 
-//-----------------------------------
+var world;
+var worldTimer;
+var AmmoWorker = null;
 
-window.onload = prevInit;
-
-function prevInit() {
-    Sources = new Transcode.Loader([ "images/ammo.png", "images/three.png", "images/sea3d.png"], init, [1, 0, 0]);
-
-    // init editor
-    Editor = new Editor(themes);
-    document.body.appendChild( Editor.domElement );
-}
-
-//-----------------------------------
-// AMMO WORKER SIDE 
-//-----------------------------------
-
-var ammoInfo = [0];
-var AmmoWorker = new Worker('js/AMMO.Worker.js');
-AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
 
 var mtxCar;
 var mtx;
 
-AmmoWorker.onmessage = function(e) {
+// init editor
+Editor = new Editor(themes);
+document.body.appendChild( Editor.domElement );
 
-	var phase = e.data.tell;
-    
-	if( phase === "INIT"){
-        introDemo();
-	}
-	if( phase === "RUN"){
-		ammoInfo = e.data.infos;
-		mtx = e.data.mtx;
-        mtxCar = e.data.mtxCar;
-		var mesh, m, n;
-    	var i = ammoInfo[1];
-        while (i--) {
-            View.objs[i].update(i);
-    	}
-        i = ammoInfo[2];
-        while (i--) {
-            View.cars[i].update(i);
-        }
-	}
-    if( phase === "CLEAR"){
-        View.clearAll();
-        if(Editor.getScript()){
-            AmmoWorker.postMessage({tell:"START", option:engineOption });
-            initDemo();
-        }
+window.onload = prevInit;
+
+function prevInit() {
+
+    world = new AMMO.World(engineOption);
+    init();
+
+}
+
+function updateWorld() {
+
+    world.step();
+
+    var mesh, m, n;
+    mtx = world.mtx;
+    mtxCar = world.mtxCar;
+
+    var i = world.infos[1];
+    while (i--) {
+        View.objs[i].update(i);
+    }
+    i = world.infos[2];
+    while (i--) {
+        View.cars[i].update(i);
     }
 }
 
 function introDemo() {
-    AmmoWorker.postMessage({tell:"START", option:engineOption});
-
-    NAME("Vehicule Garage");
 
     ADD({type:"plane"});
-    ADD({type:"ground", size:[30,1,20], pos:[0,1,0], rot:[5,0,0], mass:0});
-    ADD({type:"box", size:[1,1,1], pos:[10, 10, 0], mass:1, noSleep:true});
+    ADD({type:"ground", size:[200,10,200], pos:[0,5,0], mass:0});
+    ADD({type:"box", size:[10,10,10], pos:[100, 100, 0], mass:1, noSleep:true});
 
-    ADD({ type:"boxbasic", size:[30,2,1], pos:[0,1,16] });
+    CAR({ pos:[0, 50, 0], mass:1 });
 
-    var max = 10;
-    var px;
-
-    for (var i=0; i!==10; ++i ){
-        px=-10+(i*2.5);
-        CAR({ size:[1,0.5,2], pos:[px, 10, 0], wPos:[0.5,0,1], wRadius:0.3, wDeepth:0.2, nWheels:4, mass:100 });
-    }
 }
 
 function introDemoTerrain() {
-    AmmoWorker.postMessage({tell:"START", option:engineOption});
-    //ADD({type:"ground", size:[300,30,300], pos:[0, -15, 0], rot:[0,0,0], mass:0} );
+
     ADD({type:"terrain", size:[300,30,300], pos:[0, -5, 0], div:[64,64] });
 
     var mx,my,mz,py;
@@ -127,9 +111,10 @@ function introDemoTerrain() {
         ADD({type:"box", size:[mx,my,mz], pos:[0, py, 0], mass:1});
         ADD({type:"sphere", size:[mx,my,mz], pos:[0, py, 0], mass:1});
         ADD({type:"cylinder", size:[mx,my,mx], pos:[0, py, 0], mass:1});
-    }
-}
 
+    }
+    CAR({ pos:[0, 50+py, 0], mass:100 });
+}
 
 //-----------------------------------
 // THREE SIDE 
@@ -138,7 +123,7 @@ function introDemoTerrain() {
 function init() {
     Editor.hideIntro();
     displayInfo();
-
+   
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
     View = new AAA.View(themes);
@@ -152,11 +137,15 @@ function init() {
 function loop() {
     requestAnimationFrame( loop );
     View.render();
-    stats.innerHTML = "three: " + View.fps +" fps | ammo: " + ammoInfo[0]+" fps";
+    stats.innerHTML = "three: " + View.fps +" fps | ammo: " + world.infos[0]+" fps";
 }
 
 function displayInfo(){
-    info.innerHTML = "<h3>Ammo.lab</h3><br>"+demoName;
+    var info =[
+        "<h3>Ammo.lab</h3><br>",
+        demoName
+    ].join("\n");
+    document.getElementById("info").innerHTML = info;
 }
 
 //-----------------------------------------------------
@@ -171,8 +160,22 @@ function initGeometry() {
     View.geos[3] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("cyl", true));
     View.geos[4] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("dice", true));
 
-    // send AMMO script to worker
-    AmmoWorker.postMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });
+    introDemoTerrain();
+    worldTimer = setInterval(updateWorld, 1000/60);
+}
+
+var removeObject = function (n) {
+    content.remove( content.children[n] );
+}
+
+var clearAll = function (){
+    if(terrain!== null){ terrain.clear(); terrain = null; }
+    var i = content.children.length;
+    while (i--) {
+        content.remove(content.children[ i ]);
+    }
+    meshs.length = 0;
+    cars.length = 0;
 }
 
 //-----------------------------------------------------
@@ -185,26 +188,29 @@ var NAME = function(name){
 }
 
 var SET = function(id, obj){
-    AmmoWorker.postMessage({tell:"SET", id:id, obj:obj });
+    if( world.bodys[id] ) world.bodys[id].set(obj);
 }
 
 var ADD = function(obj){
     View.addObj(obj);
-    AmmoWorker.postMessage({ tell:"ADD", obj:obj });
+    world.addBody(obj);
 }
 
 var CAR = function(obj){ 
     View.addCar(obj);
-    AmmoWorker.postMessage({ tell:"CAR", obj:obj });
+    world.addCar(obj);
 }
 
 var CLEAR = function(option){
+    clearInterval(worldTimer);
     engineOption = option || {};
-    AmmoWorker.postMessage({tell:"CLEAR"});
-}
+    world.clear();
+    View.clearAll();
 
-//var GET = function(names){ AmmoWorker.postMessage({tell:"GET", names:names}); }
-//var CAM = function(h, v, d){ TE.changeView(h, v, d); }
+    world = new AMMO.World(engineOption);
+    initDemo();
+    worldTimer = setInterval(updateWorld, 1000/60);
+}
 
 </script>
 </body>
