@@ -23,19 +23,15 @@ self.onmessage = function (e) {
 	if(phase === "INIT") INIT(e.data.AmmoUrl);
 	if(phase === "CLEAR") CLEARWORLD();
 	if(phase === "START") STARTWORLD(e.data.option || {});
-		
 	
 	if(phase === "ADD") world.addBody(e.data.obj);
 	if(phase === "CAR") world.addCar(e.data.obj);
 	if(phase === "SET") if( world.bodys[e.data.id] ) world.bodys[e.data.id].set(e.data.obj);
-	
-	
 	if(phase === "UPTERRAIN") if(world.terrain!== null) world.terrain.update(e.data.Hdata);
 	
 }
 
 var INIT = function(url){
-    //importScripts("ammo.js");
 	importScripts(url);
 	importScripts("AMMO.Three.js");
 	self.postMessage({tell:"INIT"});
@@ -46,11 +42,8 @@ var UPDATE = function(){
 	if(isTimout) timeStart = Date.now();
 
 	world.step();
-	//self.postMessage({tell:"RUN", matrix:world.matrix, matrixCars:world.matrixCars, infos:world.infos } );
-	self.postMessage({tell:"RUN", mtx:world.mtx, mtxCar:world.mtxCar, infos:world.infos });//, [world.mtx.buffer] );
-	
-	//self.postMessage({tell:"RUN", matrix:world.matrix, matrixCars:world.matrixCars, infos:world.infos }, [world.matrix.buffer, world.matrixCars.buffer]);
 
+	self.postMessage({tell:"RUN", mtx:world.mtx, mtxCar:world.mtxCar, infos:world.infos });
 
 	if(isTimout){
         delay = timerStep - (Date.now()-timeStart);

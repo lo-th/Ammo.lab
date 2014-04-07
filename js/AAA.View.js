@@ -6,7 +6,6 @@
 */
 
 // THREE for ammo.js
-
 // use 1 three unit for 1 meter 
 
 var AAA={ REV: 0.1 };
@@ -288,8 +287,6 @@ AAA.Obj = function(obj, Parent){
     mesh.position.y = 20000;
 
     this.mesh = mesh;
-
-    //AmmoWorker.postMessage({ tell:"ADD", obj:obj });
 }
 
 AAA.Obj.prototype = {
@@ -307,7 +304,6 @@ AAA.Obj.prototype = {
 
             if(mtx[n+6]<-20){
                 SET(id, {pos:[0, 3+Math.random()*10, 0]});
-                //AmmoWorker.postMessage({tell:"SET", id:id, obj:{pos:[0, 30+Math.random()*60, 0]} });
             }
         }
     }
@@ -359,8 +355,6 @@ AAA.Car = function(obj, Parent){
     obj.wRadius = wRadius;
     obj.wDeepth = wDeepth;
     obj.nWheels = nWheels;
-
-    //AmmoWorker.postMessage({ tell:"CAR", obj:obj });
 }
 
 AAA.Car.prototype = {
