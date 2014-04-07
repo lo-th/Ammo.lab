@@ -306,7 +306,7 @@ AAA.Obj.prototype = {
             mesh.position.set( mtx[n+5], mtx[n+6], mtx[n+7] );
 
             if(mtx[n+6]<-20){
-                SET(id, {pos:[0, 30+Math.random()*60, 0]});
+                SET(id, {pos:[0, 3+Math.random()*10, 0]});
                 //AmmoWorker.postMessage({tell:"SET", id:id, obj:{pos:[0, 30+Math.random()*60, 0]} });
             }
         }
