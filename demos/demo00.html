@@ -5,7 +5,7 @@ CLEAR({broadphase:"BVT", timer:false, timestep:1/60, iteration:2, G:-10});
 
 function initDemo()
 {
-    NAME("Basic shape");
+    NAME("Basic shapes");
     // ground
     ADD({type:"ground", size:[20,3,20], pos:[0,-1.5,0], mass:0});
 
@@ -14,7 +14,7 @@ function initDemo()
 
     // dynamique object
     var max = 100;
-    var px, pz, py, t, n = 3;
+    var px, pz, py, t, n = 5;
     var sx, sy, sz;
 
     for (var i=0; i!==max; ++i ){
@@ -29,6 +29,8 @@ function initDemo()
         if(t==1) ADD({ type:"sphere", size:[sx*0.5], pos:[px,py,pz], mass:1 });
         else if(t==2) ADD({ type:"box", size:[sx,sy,sz], pos:[px,py,pz], mass:1 });
         else if(t==3) ADD({ type:"cylinder", size:[sx*0.5,sy,sx*0.5], pos:[px,py,pz], mass:1 });
+        else if(t==4) ADD({ type:"cone", size:[sx*0.5,sy], pos:[px,py,pz], mass:1 });
+        else if(t==5) ADD({ type:"capsule", size:[sx*0.5,sy], pos:[px,py,pz], mass:1 });
     }
 }
 </script>

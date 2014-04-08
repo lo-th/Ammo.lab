@@ -198,10 +198,10 @@ AMMO.Rigid.prototype = {
 			case 'box': case 'boxbasic': case 'dice': case 'ground': 
 			    shape = new Ammo.btBoxShape(AMMO.V3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); 
 			break;
-			case 'sphere': shape = new Ammo.btSphereShape(size[0]); break;
-			case 'capsule': shape = new Ammo.btCapsuleShape(size[0]*0.5, size[1]*0.5); break;
+			case 'sphere': shape = new Ammo.btSphereShape(size[0]); break;	
 			case 'cylinder': shape = new Ammo.btCylinderShape(AMMO.V3(size[0], size[1]*0.5, size[2]*0.5)); break;
 			case 'cone': shape = new Ammo.btConeShape(size[0]*0.5, size[1]*0.5); break;
+			case 'capsule': shape = new Ammo.btCapsuleShape(size[0], size[1]*0.5); break;
 			case 'mesh': shape = new Ammo.btBoxShape(AMMO.V3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
 			case 'convex': shape = new Ammo.btBoxShape(AMMO.V3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
 			case 'terrain': 

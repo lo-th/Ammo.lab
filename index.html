@@ -172,6 +172,7 @@ function initGeometry() {
     View.geos[2] = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
     View.geos[3] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("cyl", true));
     View.geos[4] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("dice", true));
+    View.geos[5] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));
 
     // send AMMO script to worker
     AmmoWorker.postMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });

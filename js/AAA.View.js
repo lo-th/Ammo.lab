@@ -255,12 +255,16 @@ AAA.Obj = function(obj, Parent){
             mesh = new THREE.Mesh( this.parent.geos[4], this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
-        case 'capsule': 
-        //shape = new Ammo.btCapsuleShape(size[0]*0.5, size[1]*0.5); 
+        case 'cone': 
+            mesh = new THREE.Mesh( this.parent.geos[5], this.parent.mats[1] );
+            mesh.scale.set( size[0], size[1], size[2] );
         break;
-        /*case 'cone': shape = new Ammo.btConeShape(size[0]*0.5, size[1]*0.5); break;
+        case 'capsule':
+            mesh = new THREE.Mesh( new AAA.CapsuleGeometry(size[0], size[1]*0.5), this.parent.mats[1] );
+        break;
+       
         case 'mesh': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
-        case 'convex': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;*/
+        case 'convex': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
         case 'terrain': 
             this.parent.terrain = new TERRAIN.Generate( div, size );
             this.parent.terrain.init( window.innerWidth, window.innerHeight );
@@ -307,6 +311,23 @@ AAA.Obj.prototype = {
             }
         }
     }
+}
+
+AAA.CapsuleGeometry = function(radius, height, SRadius, SHeight) {
+    var sRadius = SRadius || 20;
+    var sHeight = SHeight || 10;
+    var o0 = Math.PI*2;
+    var o1 = Math.PI/2
+    var geometry = new THREE.Geometry(); 
+    var m0 = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, sRadius, 1, true));
+    var m1 = new THREE.Mesh(new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1));
+    var m2 = new THREE.Mesh(new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1));
+    m1.position.set(0, height*0.5,0);
+    m2.position.set(0,-height*0.5,0);
+    THREE.GeometryUtils.merge(geometry, m0);
+    THREE.GeometryUtils.merge(geometry, m1);
+    THREE.GeometryUtils.merge(geometry, m2);
+    return  THREE.BufferGeometryUtils.fromGeometry(geometry);
 }
 
 //-----------------------------------------------------
