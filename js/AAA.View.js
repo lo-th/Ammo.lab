@@ -30,7 +30,7 @@ AAA.View = function(Themes){
     this.objs = [];
 
     this.cam = { fov:50, horizontal: 90, vertical: 70, distance: 30, automove: false };
-    this.mouse = { ox:0, oy:0, h:0, v:0, mx:0, my:0, down:false, over:false, moving:true };
+    this.mouse = { ox:0, oy:0, h:0, v:0, rx:0, ry:0, dx:0, dy:0, down:false, moving:false, ray:false, direction:false };
     this.viewSize = { w:window.innerWidth, h:window.innerHeight, mw:1, mh:1};
 
     this.themes = Themes || ['1d1f20', '2f3031', '424344', '68696b'];
@@ -175,11 +175,20 @@ AAA.View.prototype = {
     },
     onMouseMove:function(e){
         e.preventDefault();
-        if ( this.mouse.down ) {
+        if( this.mouse.ray ){
+            this.mouse.rx = ( e.clientX / this.viewSize.w ) * 2 - 1;
+            this.mouse.ry = -( e.clientY / this.viewSize.h ) * 2 + 1;
+            //this.rayTest();
+        }
+        if( this.mouse.down ) {
             document.body.style.cursor = 'move';
             this.cam.horizontal = ((e.clientX - this.mouse.ox) * 0.3) + this.mouse.h;
             this.cam.vertical = (-(e.clientY - this.mouse.oy) * 0.3) + this.mouse.v;
             this.moveCamera();
+        }
+        if(this.mouse.direction){
+            this.mouse.dx = (e.clientX - this.viewSize.w*0.5);
+            this.mouse.dy = (e.clientX - this.viewSize.h*0.5);
         }
     },
     onMouseWheel:function(e){
@@ -268,6 +277,7 @@ AAA.Obj = function(obj, Parent){
         case 'terrain': 
             this.parent.terrain = new TERRAIN.Generate( div, size );
             this.parent.terrain.init( window.innerWidth, window.innerHeight );
+            this.parent.terrain.anim();// active morph
             mesh = this.parent.terrain.container;
             shadow = false;
         break;

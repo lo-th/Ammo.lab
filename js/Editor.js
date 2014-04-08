@@ -21,8 +21,14 @@ var Editor = function (Themes, nDemo) {
 	
 	container.id = 'Editor';
 
+	/*var logobb = document.createElement( 'div' );
+	logobb.style.cssText = 'position:absolute; width:100%; height:100%; background:#FFFFFF';
+    container.appendChild( logobb );
+    themes[0] = "FFFFFF";*/
+   // 25517c//693c28
+
 	var intro = document.createElement( 'div' );
-	intro.style.cssText = '-webkit-filter: drop-shadow( 1px 1px 1px #25517c ); filter: drop-shadow( 1px 1px 1px #25517c ); text-align:center; position:absolute; margin:0; padding:0; top:50%; left:50%; width:300px; height:150px; margin-left:-150px; margin-top:-75px; display:block; pointer-events:none';
+	intro.style.cssText = '-webkit-filter: drop-shadow( 1px 1px 1px #00ffff ); filter: drop-shadow( 1px 1px 1px #00ffff ); text-align:center; position:absolute; margin:0; padding:0; top:50%; left:50%; width:300px; height:150px; margin-left:-150px; margin-top:-75px; display:block; pointer-events:none';
 	container.appendChild( intro );
 
 	var containerEdit = document.createElement( 'div' );
@@ -42,6 +48,8 @@ var Editor = function (Themes, nDemo) {
 	var iconSize2 = 46;
 	var iconColor = '#ffffff';
 
+
+
 	var icon_libs= [
 	"<svg version='1.1' id='Calque_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px'",
 	"width='"+iconSize0+"px' height='"+iconSize0+"px' viewBox='0 40 128 50' enable-background='new 0 40 128 50' xml:space='preserve' >",
@@ -59,7 +67,9 @@ var Editor = function (Themes, nDemo) {
     "</g></svg>"
 	].join("\n");
 
-	var introStyle = unselect+'color:#'+themes[0]+'; -webkit-filter: drop-shadow( -1px -1px 1px #693c28 ); filter: drop-shadow( -1px -1px 1px #693c28 );pointer-events:none; font-size:40px; font-weight:800;';
+	var introStyle = unselect+'color:#'+themes[0]+'; -webkit-filter: drop-shadow( -1px -1px 1px #ff0000 ); filter: drop-shadow( -1px -1px 1px #ff0000 );pointer-events:none; font-size:40px; font-weight:800;';
+
+
 
 	var logo = document.createElement( 'div' );
 	logo.style.cssText = introStyle;
@@ -72,7 +82,6 @@ var Editor = function (Themes, nDemo) {
 	intro.appendChild( logotext );
 
 	var hideIntro = function () {
-		//intro.removeChild(logotext);
 		intro.removeChild(logo);
 		container.removeChild( intro );
 
