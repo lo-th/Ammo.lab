@@ -257,7 +257,7 @@ AAA.Obj = function(obj, Parent){
         break;
         case 'cone': 
             mesh = new THREE.Mesh( this.parent.geos[5], this.parent.mats[1] );
-            mesh.scale.set( size[0], size[1], size[2] );
+            mesh.scale.set( size[0], size[1]*0.5, size[0] );
         break;
         case 'capsule':
             mesh = new THREE.Mesh( new AAA.CapsuleGeometry(size[0], size[1]*0.5), this.parent.mats[1] );

@@ -26,11 +26,14 @@ function initDemo()
         sx = 0.2+Math.random();
         sy = 0.2+Math.random();
         sz = 0.2+Math.random();
-        if(t==1) ADD({ type:"sphere", size:[sx*0.5], pos:[px,py,pz], mass:1 });
-        else if(t==2) ADD({ type:"box", size:[sx,sy,sz], pos:[px,py,pz], mass:1 });
-        else if(t==3) ADD({ type:"cylinder", size:[sx*0.5,sy,sx*0.5], pos:[px,py,pz], mass:1 });
-        else if(t==4) ADD({ type:"cone", size:[sx*0.5,sy], pos:[px,py,pz], mass:1 });
-        else if(t==5) ADD({ type:"capsule", size:[sx*0.5,sy], pos:[px,py,pz], mass:1 });
+
+        switch(t){
+            case 1: ADD({ type:"box", size:[sx,sy,sz], pos:[px,py,pz], mass:1 }); break;
+            case 2: ADD({ type:"sphere", size:[sx*0.5], pos:[px,py,pz], mass:1 }); break;
+            case 3: ADD({ type:"cylinder", size:[sx*0.5,sy,sx*0.5], pos:[px,py,pz], mass:1 }); break;
+            case 4: ADD({ type:"capsule", size:[sx*0.5,sy], pos:[px,py,pz], mass:1 }); break;
+            case 5: ADD({ type:"cone", size:[sx*0.5,sy], pos:[px,py,pz], mass:1 }); break;
+        }
     }
 }
 </script>
