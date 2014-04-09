@@ -104,7 +104,6 @@ function introDemo() {
     ADD({type:"box", size:[1,1,1], pos:[10, 10, 0], mass:1, noSleep:true});
     ADD({type:"box", size:[1,1,1], pos:[-10, 10, 0], mass:1, noSleep:true});
 
-
     var max = 10;
     var px;
 
@@ -113,25 +112,6 @@ function introDemo() {
         CAR({ size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], wRadius:0.3, wDeepth:0.2, nWheels:4, mass:100 });
     }
 }
-
-function introDemoTerrain() {
-    AmmoWorker.postMessage({tell:"START", option:engineOption});
-    //ADD({type:"ground", size:[300,30,300], pos:[0, -15, 0], rot:[0,0,0], mass:0} );
-    ADD({type:"terrain", size:[300,30,300], pos:[0, -5, 0], div:[64,64] });
-
-    var mx,my,mz,py;
-    for(var i=1; i< 20; i++){
-        mx = 1 + Math.random()*5;
-        my = 1 + Math.random()*5;
-        mz = 1 + Math.random()*5;
-        py=100+i*10;
-
-        ADD({type:"box", size:[mx,my,mz], pos:[0, py, 0], mass:1});
-        ADD({type:"sphere", size:[mx,my,mz], pos:[0, py, 0], mass:1});
-        ADD({type:"cylinder", size:[mx,my,mx], pos:[0, py, 0], mass:1});
-    }
-}
-
 
 //-----------------------------------
 // THREE SIDE 
@@ -166,20 +146,11 @@ function displayInfo(){
 //-----------------------------------------------------
 
 function initGeometry() {
-
-    View.geos[0] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 1, 1, 1 ));
-    View.geos[1] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("box", true));
-    View.geos[2] = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
-    View.geos[3] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("cyl", true));
-    View.geos[4] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("dice", true));
-    View.geos[5] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));
-
-    View.geos[6] = Pool.getGeometry("L", true);
-    View.geos[6].name = "L";
-    View.geos[7] = Pool.getGeometry("T", true);
-    View.geos[7].name = "T";
-    View.geos[8] = Pool.getGeometry("H", true);
-    View.geos[8].name = "H";
+    var oName = ['smoothCube','smoothCylinder','dice','L','T','H'];
+    for(var i=0;i<oName.length;i++){
+        View.geos[i] = Pool.getGeometry(oName[i], true);
+        View.geos[i].name = oName[i];
+    }
 
     // send AMMO script to worker
     AmmoWorker.postMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });

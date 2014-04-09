@@ -42,6 +42,7 @@ AAA.View = function(Themes){
 
     this.mats = [];
     this.geos = [];
+    this.geoBasic = [];
 
     this.tt = [0 , 0];
 
@@ -118,6 +119,12 @@ AAA.View.prototype = {
         }
 
         this.initSkyAndMat();
+        this.initBasicGeometry();
+    },
+    initBasicGeometry:function(){
+        this.geoBasic[0] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 1, 1, 1 ))
+        this.geoBasic[1] = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
+        this.geoBasic[2] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));//cone
     },
     initSkyAndMat:function(){
         var path = "images/sky/";
@@ -234,11 +241,16 @@ AAA.View.prototype = {
         }
         return v;
     },
-    getGeoByName:function(name) {
+    getGeoByName:function(name, Buffer) {
+        var g;
         var i = this.geos.length;
+        var buffer = Buffer || false;
         while(i--){
-            if(name==this.geos[i].name) return this.geos[i];
+            if(name==this.geos[i].name) g=this.geos[i];
         }
+
+        if(buffer) g = THREE.BufferGeometryUtils.fromGeometry(g);
+        return g
     }
 
 }
@@ -284,36 +296,37 @@ AAA.Obj = function(obj, Parent){
             shadow = false;
         break;
         case 'box': 
-            mesh = new THREE.Mesh( this.parent.geos[1], this.parent.mats[1] );
+            //mesh = new THREE.Mesh( this.parent.geos[1], this.parent.mats[1] );
+            mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCube", true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'sphere':
-            mesh = new THREE.Mesh( this.parent.geos[2], this.parent.mats[1] );
+            mesh = new THREE.Mesh( this.parent.geoBasic[1], this.parent.mats[1] );
             mesh.scale.set( size[0], size[0], size[0] );
         break;
         case 'cylinder':
-            mesh = new THREE.Mesh( this.parent.geos[3], this.parent.mats[1] );
+            //mesh = new THREE.Mesh( this.parent.geos[3], this.parent.mats[1] );
+            mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCylinder", true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'dice': 
-            mesh = new THREE.Mesh( this.parent.geos[4], this.parent.mats[1] );
+            //mesh = new THREE.Mesh( this.parent.geos[4], this.parent.mats[1] );
+            mesh = new THREE.Mesh( this.parent.getGeoByName("dice", true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'cone': 
-            mesh = new THREE.Mesh( this.parent.geos[5], this.parent.mats[1] );
+            mesh = new THREE.Mesh( this.parent.geoBasic[2], this.parent.mats[1] );
             mesh.scale.set( size[0], size[1]*0.5, size[0] );
         break;
         case 'capsule':
             mesh = new THREE.Mesh( new AAA.CapsuleGeometry(size[0], size[1]*0.5), this.parent.mats[1] );
         break;
         case 'mesh': 
-            mesh = new THREE.Mesh( this.parent.getGeoByName(obj.name), this.parent.mats[1] );
+            mesh = new THREE.Mesh( this.parent.getGeoByName(obj.name, true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'convex':
-            //var geo = obj.geo;//THREE.GeometryUtils.clone(obj.geometry);
-            mesh = new THREE.Mesh(this.parent.getGeoByName(obj.name), this.parent.mats[1] );
-           // mesh = new THREE.Mesh( this.parent.geos[obj.ngeo], this.parent.mats[1] );
+            mesh = new THREE.Mesh(this.parent.getGeoByName(obj.name, true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'terrain': 
@@ -396,12 +409,12 @@ AAA.Car = function(obj, Parent){
 
     this.nWheels = nWheels;
 
-    this.mesh = new THREE.Mesh( this.parent.geos[1], this.parent.mats[1] ) || obj.mesh;
+    this.mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCube", true), this.parent.mats[1] ) || obj.mesh;
     this.mesh.scale.set( size[0], size[1], size[2] );
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
 
-    var wheelMesh = new THREE.Mesh( this.parent.geos[3], this.parent.mats[2] ) || obj.wheel;
+    var wheelMesh = new THREE.Mesh( this.parent.getGeoByName("smoothCylinder", true), this.parent.mats[2] ) || obj.wheel;
     wheelMesh.scale.set( wRadius, wDeepth, wRadius );
     this.wheels = [];
 

@@ -57,7 +57,7 @@ var mtxCar;
 var mtx;
 
 // init editor
-Editor = new Editor(themes);
+Editor = new Editor(themes,8);
 document.body.appendChild( Editor.domElement );
 
 window.onload = prevInit;
@@ -89,31 +89,24 @@ function updateWorld() {
 
 function introDemo() {
 
+    NAME("Vehicule Garage");
+
     ADD({type:"plane"});
-    ADD({type:"ground", size:[200,10,200], pos:[0,5,0], mass:0});
-    ADD({type:"box", size:[10,10,10], pos:[100, 100, 0], mass:1, noSleep:true});
+    ADD({type:"ground", size:[30,1,20], pos:[0,1,0], rot:[9,0,0], mass:0});
+    ADD({ type:"boxbasic", size:[30,2,1], pos:[0,1,16] });
 
-    CAR({ pos:[0, 50, 0], mass:1 });
+    ADD({type:"box", size:[1,1,1], pos:[10, 10, 0], mass:1, noSleep:true});
+    ADD({type:"box", size:[1,1,1], pos:[-10, 10, 0], mass:1, noSleep:true});
 
-}
 
-function introDemoTerrain() {
+    var max = 10;
+    var px;
 
-    ADD({type:"terrain", size:[300,30,300], pos:[0, -5, 0], div:[64,64] });
-
-    var mx,my,mz,py;
-    for(var i=1; i< 20; i++){
-        mx = 1 + Math.random()*5;
-        my = 1 + Math.random()*5;
-        mz = 1 + Math.random()*5;
-        py=100+i*10;
-
-        ADD({type:"box", size:[mx,my,mz], pos:[0, py, 0], mass:1});
-        ADD({type:"sphere", size:[mx,my,mz], pos:[0, py, 0], mass:1});
-        ADD({type:"cylinder", size:[mx,my,mx], pos:[0, py, 0], mass:1});
-
+    for (var i=0; i!==10; ++i ){
+        px=-10+(i*2.5);
+        CAR({ size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], wRadius:0.3, wDeepth:0.2, nWheels:4, mass:100 });
     }
-    CAR({ pos:[0, 50+py, 0], mass:100 });
+
 }
 
 //-----------------------------------
@@ -153,16 +146,13 @@ function displayInfo(){
 //-----------------------------------------------------
 
 function initGeometry() {
+    var oName = ['smoothCube','smoothCylinder','dice','L','T','H'];
+    for(var i=0;i<oName.length;i++){
+        View.geos[i] = Pool.getGeometry(oName[i], true);
+        View.geos[i].name = oName[i];
+    }
 
-    View.geos[0] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 1, 1, 1 ));
-    View.geos[1] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("box", true));
-    View.geos[2] = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
-    View.geos[3] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("cyl", true));
-    View.geos[4] = THREE.BufferGeometryUtils.fromGeometry(Pool.getGeometry("dice", true));
-    View.geos[5] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));
-
-
-    introDemoTerrain();
+    introDemo();
     worldTimer = setInterval(updateWorld, 1000/60);
 }
 
@@ -195,6 +185,12 @@ var SET = function(id, obj){
 
 var ADD = function(obj){
     View.addObj(obj);
+    if(obj.type == "convex"){// get geometry vertices 
+        obj.v = View.getVertex(obj.name, obj.size);
+    }
+    if(obj.type == "mesh"){// get geometry faces vertices 
+        obj.v = View.getFaces(obj.name, obj.size);
+    }
     world.addBody(obj);
 }
 
