@@ -42,6 +42,8 @@ AMMO.V3 = function(x, y, z){
 	return new Ammo.btVector3(x || 0, y || 0, z || 0);
 }
 
+AMMO.copyV3 = function (a,b) { b.setX(a[0]); b.setY(a[1]); b.setZ(a[2]); }
+
 //--------------------------------------------------
 //  RIGIDBODY
 //--------------------------------------------------
@@ -182,6 +184,7 @@ AMMO.Rigid = function(obj, Parent){
 AMMO.Rigid.prototype = {
     constructor: AMMO.Rigid,
     init:function(obj){
+    	var mass = obj.mass || 0;
     	var size = obj.size || [1,1,1];
     	var dir = obj.dir || [0,1,0]; // for infinite plane
     	var div = obj.div || [64,64];
@@ -202,8 +205,39 @@ AMMO.Rigid.prototype = {
 			case 'cylinder': shape = new Ammo.btCylinderShape(AMMO.V3(size[0], size[1]*0.5, size[2]*0.5)); break;
 			case 'cone': shape = new Ammo.btConeShape(size[0], size[1]*0.5); break;
 			case 'capsule': shape = new Ammo.btCapsuleShape(size[0], size[1]*0.5); break;
-			case 'mesh': shape = new Ammo.btBoxShape(AMMO.V3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
-			case 'convex': shape = new Ammo.btBoxShape(AMMO.V3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
+			case 'mesh':
+			    var mTriMesh = new Ammo.btTriangleMesh();
+			    var v0 = AMMO.V3(0,0,0);
+			    var v1 = AMMO.V3(0,0,0); 
+                var v2 = AMMO.V3(0,0,0);
+                var geo = obj.geo;
+                var faces = geo.faces;
+                for (var f = 0, fMax = faces.length; f < fMax; f++){
+	                var face = faces[f];
+	                //if (face.points.length !== 3) continue;
+	                v0.setValue( geo.vertices[face.a].position.x*size[0], geo.vertices[face.a].position.y*size[1], geo.vertices[face.a].position.z*size[2]);
+	                v1.setValue( geo.vertices[face.b].position.x*size[0], geo.vertices[face.b].position.y*size[1], geo.vertices[face.b].position.z*size[2]);
+	                v2.setValue( geo.vertices[face.c].position.x*size[0], geo.vertices[face.c].position.y*size[1], geo.vertices[face.c].position.z*size[2]);
+	                mTriMesh.addTriangle(v0,v1,v2);
+	            }
+			    if(mass == 0){ 
+			    	// btScaledBvhTriangleMeshShape -- if scaled instances
+			    	shape = new Ammo.btBvhTriangleMeshShape(mTriMesh,true);
+			    }else{ 
+			    	// btGimpactTriangleMeshShape -- complex?
+			    	// btConvexHullShape -- possibly better?
+			    	shape = new Ammo.btConvexTriangleMeshShape(mTriMesh,true);
+			    }
+			break;
+			case 'convex':
+			    shape = new Ammo.btConvexHullShape();
+			    var v = AMMO.V3(0,0,0);
+			    var vx = obj.v;
+			    for (var i = 0, fMax = vx.length; i < fMax; i+=3){
+			    	AMMO.copyV3([vx[i+0], vx[i+1], vx[i+2]], v);
+			    	shape.addPoint(v);
+			    }
+			break;
 			case 'terrain': 
 			    this.parent.terrain = new AMMO.Terrain(div, size);
 			    shape = this.parent.terrain.shape;
@@ -219,7 +253,7 @@ AMMO.Rigid.prototype = {
 		q.setEulerZYX(rot[2]*AMMO.TORAD,rot[1]*AMMO.TORAD,rot[0]*AMMO.TORAD);
 		transform.setRotation(q);
 
-		var mass = obj.mass || 0;
+		
 		// static
 		if(mass == 0){
 		    this.forceUpdate = true;

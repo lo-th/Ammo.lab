@@ -56,10 +56,12 @@ AAA.View.prototype = {
         this.renderer = new THREE.WebGLRenderer( {precision: "lowp", antialias: false, alpha:false } );
         this.renderer.setSize( this.viewSize.w, this.viewSize.h );
         this.renderer.setClearColor( this.bgColor, 1 );
-        //renderer.autoClear = false;
-        this.renderer.gammaInput = true;
-        this.renderer.gammaOutput = true;
+        //this.renderer.autoClear = false;
+        //this.renderer.autoClearStencil = false;
+        //this.renderer.gammaInput = true;
+        //this.renderer.gammaOutput = true;
         this.renderer.shadowMapEnabled = this.isShadow;
+        this.renderer.shadowMapType = THREE.BasicShadowMap;
         this.container.appendChild( this.renderer.domElement );
 
         this.scene = new THREE.Scene();
@@ -204,6 +206,18 @@ AAA.View.prototype = {
     },
     addObj:function(obj){
         this.objs[this.objs.length] = new AAA.Obj(obj, this);
+    },
+    getVertex:function(num, size) {
+        var v = [], n;
+        var pp = this.geos[num].vertices;
+        var i = pp.length;
+        while(i--){
+            n = i*3;
+            v[n+0]=pp[i].x*size[0];
+            v[n+1]=pp[i].y*size[1];
+            v[n+2]=pp[i].z*size[2];
+        }
+        return v;
     }
 
 }
@@ -271,9 +285,15 @@ AAA.Obj = function(obj, Parent){
         case 'capsule':
             mesh = new THREE.Mesh( new AAA.CapsuleGeometry(size[0], size[1]*0.5), this.parent.mats[1] );
         break;
-       
-        case 'mesh': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
-        case 'convex': shape = new Ammo.btBoxShape(new Ammo.btVector3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); break;
+        case 'mesh': 
+            mesh = new THREE.Mesh( obj.geo, this.parent.mats[1] );
+            mesh.scale.set( size[0], size[1], size[2] );
+        break;
+        case 'convex':
+            //var geo = obj.geo;//THREE.GeometryUtils.clone(obj.geometry);
+            mesh = new THREE.Mesh( this.parent.geos[obj.ngeo], this.parent.mats[1] );
+            mesh.scale.set( size[0], size[1], size[2] );
+        break;
         case 'terrain': 
             this.parent.terrain = new TERRAIN.Generate( div, size );
             this.parent.terrain.init( window.innerWidth, window.innerHeight );

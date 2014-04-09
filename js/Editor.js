@@ -5,7 +5,7 @@
 'use strict';
 var Editor = function (Themes, nDemo) {
 
-	var maxDemo = nDemo || 6;
+	var maxDemo = nDemo || 7;
 	var themes = Themes || ['1d1f20', '2f3031', '424344'];
 
 	var degrade01 = '#'+themes[0]+';';//'linear-gradient(45deg, #'+themes[0]+', #'+themes[1]+');';
