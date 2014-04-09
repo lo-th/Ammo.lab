@@ -47,7 +47,7 @@ function prevInit() {
     Sources = new Transcode.Loader([ "images/ammo.png", "images/three.png", "images/sea3d.png"], init, [1, 0, 0]);
 
     // init editor
-    Editor = new Editor(themes, 7);
+    Editor = new Editor(themes, 8);
     document.body.appendChild( Editor.domElement );
 }
 
@@ -175,8 +175,11 @@ function initGeometry() {
     View.geos[5] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));
 
     View.geos[6] = Pool.getGeometry("L", true);
+    View.geos[6].name = "L";
     View.geos[7] = Pool.getGeometry("T", true);
+    View.geos[7].name = "T";
     View.geos[8] = Pool.getGeometry("H", true);
+    View.geos[8].name = "H";
 
     // send AMMO script to worker
     AmmoWorker.postMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });
@@ -197,9 +200,11 @@ var SET = function(id, obj){
 
 var ADD = function(obj){
     View.addObj(obj);
-    if(obj.type == "convex"){ 
-        // get geometry vertices 
-        obj.v = View.getVertex(obj.ngeo, obj.size);
+    if(obj.type == "convex"){// get geometry vertices 
+        obj.v = View.getVertex(obj.name, obj.size);
+    }
+    if(obj.type == "mesh"){// get geometry faces vertices 
+        obj.v = View.getFaces(obj.name, obj.size);
     }
     AmmoWorker.postMessage({ tell:"ADD", obj:obj });
 }
@@ -214,15 +219,6 @@ var CLEAR = function(option){
     AmmoWorker.postMessage({tell:"CLEAR"});
 }
 
-var GETGEO = function(name){
-    var n;
-    switch(name){
-        case "L": n = 6; break;
-        case "T": n = 7; break;
-        case "H": n = 8; break;
-    }
-    return n;
-}
 
 //var GET = function(names){ AmmoWorker.postMessage({tell:"GET", names:names}); }
 //var CAM = function(h, v, d){ TE.changeView(h, v, d); }

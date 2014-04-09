@@ -210,14 +210,11 @@ AMMO.Rigid.prototype = {
 			    var v0 = AMMO.V3(0,0,0);
 			    var v1 = AMMO.V3(0,0,0); 
                 var v2 = AMMO.V3(0,0,0);
-                var geo = obj.geo;
-                var faces = geo.faces;
-                for (var f = 0, fMax = faces.length; f < fMax; f++){
-	                var face = faces[f];
-	                //if (face.points.length !== 3) continue;
-	                v0.setValue( geo.vertices[face.a].position.x*size[0], geo.vertices[face.a].position.y*size[1], geo.vertices[face.a].position.z*size[2]);
-	                v1.setValue( geo.vertices[face.b].position.x*size[0], geo.vertices[face.b].position.y*size[1], geo.vertices[face.b].position.z*size[2]);
-	                v2.setValue( geo.vertices[face.c].position.x*size[0], geo.vertices[face.c].position.y*size[1], geo.vertices[face.c].position.z*size[2]);
+                var vx = obj.v;
+                for (var i = 0, fMax = vx.length; i < fMax; i+=9){
+	                v0.setValue( vx[i+0], vx[i+1], vx[i+2] );
+	                v1.setValue( vx[i+3], vx[i+4], vx[i+5] );
+	                v2.setValue( vx[i+6], vx[i+7], vx[i+8] );
 	                mTriMesh.addTriangle(v0,v1,v2);
 	            }
 			    if(mass == 0){ 

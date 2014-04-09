@@ -207,9 +207,9 @@ AAA.View.prototype = {
     addObj:function(obj){
         this.objs[this.objs.length] = new AAA.Obj(obj, this);
     },
-    getVertex:function(num, size) {
+    getVertex:function(name, size) {
         var v = [], n;
-        var pp = this.geos[num].vertices;
+        var pp =  this.getGeoByName(name).vertices;
         var i = pp.length;
         while(i--){
             n = i*3;
@@ -218,6 +218,27 @@ AAA.View.prototype = {
             v[n+2]=pp[i].z*size[2];
         }
         return v;
+    },
+    getFaces:function(name, size) {
+        var v = [], n, face, va, vb, vc;
+        var geo = this.getGeoByName(name);
+        var pp = geo.faces;
+        var pv = geo.vertices;
+        var i = pp.length;
+        while(i--){
+            n = i*9; face = pp[i];
+            va = pv[face.a]; vb = pv[face.b]; vc = pv[face.c];
+            v[n+0]=va.x*size[0]; v[n+1]=va.y*size[1]; v[n+2]=va.z*size[2];
+            v[n+3]=vb.x*size[0]; v[n+4]=vb.y*size[1]; v[n+5]=vb.z*size[2];
+            v[n+6]=vc.x*size[0]; v[n+7]=vc.y*size[1]; v[n+8]=vc.z*size[2];
+        }
+        return v;
+    },
+    getGeoByName:function(name) {
+        var i = this.geos.length;
+        while(i--){
+            if(name==this.geos[i].name) return this.geos[i];
+        }
     }
 
 }
@@ -286,12 +307,13 @@ AAA.Obj = function(obj, Parent){
             mesh = new THREE.Mesh( new AAA.CapsuleGeometry(size[0], size[1]*0.5), this.parent.mats[1] );
         break;
         case 'mesh': 
-            mesh = new THREE.Mesh( obj.geo, this.parent.mats[1] );
+            mesh = new THREE.Mesh( this.parent.getGeoByName(obj.name), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'convex':
             //var geo = obj.geo;//THREE.GeometryUtils.clone(obj.geometry);
-            mesh = new THREE.Mesh( this.parent.geos[obj.ngeo], this.parent.mats[1] );
+            mesh = new THREE.Mesh(this.parent.getGeoByName(obj.name), this.parent.mats[1] );
+           // mesh = new THREE.Mesh( this.parent.geos[obj.ngeo], this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'terrain': 
