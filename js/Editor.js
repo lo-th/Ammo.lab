@@ -27,9 +27,9 @@ var Editor = function (Themes, nDemo) {
     themes[0] = "FFFFFF";*/
    // 25517c//693c28
 
-	var intro = document.createElement( 'div' );
-	intro.style.cssText = '-webkit-filter: drop-shadow( 1px 1px 1px #00ffff ); filter: drop-shadow( 1px 1px 1px #00ffff ); text-align:center; position:absolute; margin:0; padding:0; top:50%; left:50%; width:300px; height:150px; margin-left:-150px; margin-top:-75px; display:block; pointer-events:none';
-	container.appendChild( intro );
+	var introX = document.createElement( 'div' );
+	introX.style.cssText = '-webkit-filter: drop-shadow( 1px 1px 1px #00ffff ); filter: drop-shadow( 1px 1px 1px #00ffff ); text-align:center; position:absolute; margin:0; padding:0; top:50%; left:50%; width:300px; height:150px; margin-left:-150px; margin-top:-75px; display:block; pointer-events:none';
+	container.appendChild( introX );
 
 	var containerEdit = document.createElement( 'div' );
 	//containerEdit.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; left:50%; color:#CCCCCC; width:50%; height:100%; font-size:12px; font-family:SourceCode;  pointer-events:none; display:none; background:' + degrade01;
@@ -74,16 +74,16 @@ var Editor = function (Themes, nDemo) {
 	var logo = document.createElement( 'div' );
 	logo.style.cssText = introStyle;
 	logo.innerHTML = icon_libs;//+ "<br>Ammo.lab";
-	intro.appendChild( logo );
+	introX.appendChild( logo );
 
 	var logotext = document.createElement( 'div' );
 	logotext.style.cssText = introStyle + 'margin-top:-30px;'; 
 	logotext.innerHTML = "Ammo.lab";
-	intro.appendChild( logotext );
+	introX.appendChild( logotext );
 
 	var hideIntro = function () {
-		intro.removeChild(logo);
-		container.removeChild( intro );
+		introX.removeChild(logo);
+		container.removeChild( introX );
 
 		nMenu0.style.display = "block";
 		nMenu.style.display = "block";

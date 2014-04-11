@@ -64,7 +64,7 @@ AAA.View.prototype = {
         //this.renderer.gammaOutput = true;
         this.renderer.shadowMapEnabled = this.isShadow;
         this.renderer.shadowMapType = THREE.BasicShadowMap;
-        this.container.appendChild( this.renderer.domElement );
+        //this.container.appendChild( this.renderer.domElement );
 
         this.scene = new THREE.Scene();
 

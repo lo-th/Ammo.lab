@@ -12,7 +12,7 @@
     input{ margin:0px; padding:4px; }
     #container{ position: absolute; width:100%; height:100%;}
     #interface{ position: absolute; left:10px; top:10px; width:456px; height:20px; }
-    #stats{ position: absolute; left:10px; bottom:0px; height:20px; width:220px;  pointer-events:none; font-size: 12px;word-spacing:-4px; color:#707070;}
+    #stats{ position: absolute; left:10px; bottom:0px; height:20px; width:220px;  pointer-events:none; font-size: 12px;word-spacing:-4px; color:#909090;}
     #info{ pointer-events:none; position: absolute; left:48px; top:18px; width: 400px; height: 400px; line-height:12px;}
 </style>
 
@@ -182,6 +182,7 @@ function initDemo(){
     AmmoWorker.postMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });
 
     loop();
+    View.container.appendChild( View.renderer.domElement );
 }
 
 //-----------------------------------------------------
