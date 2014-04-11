@@ -49,6 +49,10 @@ AAA.View = function(Themes){
 
     this.tt = [0 , 0];
 
+    // for draw sketch
+    this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise.png');
+    this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper.jpg');
+
     this.init();
 }
 
@@ -573,26 +577,11 @@ AAA.PostEffect = function(Parent){
     this.renderPass = null;
     this.shader = null;
     this.pass = null;
-    this.tx01 = null
-    this.tx02 = null;
-    this.timerTest = null;
     this.parameters={minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter, format:THREE.RGBFormat, stencilBuffer:false};
 }
 AAA.PostEffect.prototype = {
     constructor: AAA.PostEffect,
     init:function(){
-        this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise3.png');
-        this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper6.jpg');
-        this.timerTest = setInterval(this.loadTextures, 20, this);
-    },
-    loadTextures:function (pp) {
-        if ( pp.tx01 !== null && pp.tx02 !== null)  {
-            clearInterval(pp.timerTest);
-            pp.start();
-
-        }
-    },
-    start:function() {
         this.colorBuffer=new THREE.WebGLRenderTarget(1,1,this.parameters);
         //this.blurBuffer=new THREE.WebGLRenderTarget(1,1,parameters);
         this.composer= new THREE.EffectComposer(this.parent.renderer);
@@ -603,8 +592,8 @@ AAA.PostEffect.prototype = {
                 tDiffuse:{type:'t',value:null},
                 tColor:{ type:'t',value:null},
                 tBlur:{type:'t',value:null},
-                tNoise:{type:'t',value:this.tx01},
-                tPaper:{type:'t',value:this.tx02},
+                tNoise:{type:'t',value:this.parent.tx01},
+                tPaper:{type:'t',value:this.parent.tx02},
                 resolution:{ type:'v2',value:new THREE.Vector2(1,1)}
             },
             vertexShader:vs_render,

@@ -182,7 +182,7 @@ var Editor = function (Themes, nDemo) {
 		if(View.isSketch){
 			textColor('111111');
 			outColor = '111111';
-			containerEdit.style.backgroundImage = 'url(images/sketch/paper6.jpg)';
+			containerEdit.style.backgroundImage = 'url(images/sketch/paper.jpg)';
 			document.getElementById("info").style.color = '#111111';
 			document.getElementById("stats").style.color = '#111111';
 		}else{
