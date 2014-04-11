@@ -25,6 +25,7 @@ AAA.View = function(Themes){
     this.lights = null;
     this.ground = null;
     this.terrain = null;
+    this.postEffect = null;
 
     this.cars = [];
     this.objs = [];
@@ -40,6 +41,7 @@ AAA.View = function(Themes){
     this.debugAlpha = 0.3;
 
     this.isShadow = false;
+    this.isSketch = false;
 
     this.mats = [];
     this.geos = [];
@@ -61,8 +63,8 @@ AAA.View.prototype = {
         //this.renderer.sortObjects = false;
         //this.renderer.autoClear = false;
         //this.renderer.autoClearStencil = false;
-        //this.renderer.gammaInput = true;
-        //this.renderer.gammaOutput = true;
+        this.renderer.gammaInput = true;
+        this.renderer.gammaOutput = true;
         this.renderer.shadowMapEnabled = this.isShadow;
         this.renderer.shadowMapType = THREE.BasicShadowMap;
         //this.container.appendChild( this.renderer.domElement );
@@ -125,6 +127,22 @@ AAA.View.prototype = {
         this.initSkyAndMat();
         this.initBasicGeometry();
     },
+    sketchMode:function(){
+        if(this.isSketch){
+            this.renderer.setClearColor( this.bgColor, 1);
+            this.ground.material.color.setHex(  this.bgColor );
+            this.mats[1].color.setHex( 0xFF0505 );
+            this.postEffect.clear();
+            this.isSketch = false;
+        } else{
+            this.renderer.setClearColor(0xffffff, 1);
+            this.ground.material.color.setHex( 0xffffff );
+            this.mats[1].color.setHex( 0xffffff );
+            this.postEffect = new AAA.PostEffect(this);
+            this.postEffect.init();
+            this.isSketch = true;
+        }
+    },
     initBasicGeometry:function(){
         this.geoBasic[0] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 1, 1, 1 ))
         this.geoBasic[1] = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
@@ -148,7 +166,8 @@ AAA.View.prototype = {
     render:function(){
         var delta = this.clock.getDelta();
         if( this.terrain !== null  ) this.terrain.update(delta);
-        this.renderer.render( this.scene, this.camera );
+        if(this.isSketch) this.postEffect.render();
+        else this.renderer.render( this.scene, this.camera );
         var last = Date.now();
         if (last - 1000 > this.tt[0]) { this.tt[0] = last; this.fps = this.tt[1]; this.tt[1] = 0; } this.tt[1]++;
     },
@@ -159,6 +178,8 @@ AAA.View.prototype = {
         this.renderer.setSize( this.viewSize.w*this.viewSize.mw, this.viewSize.h*this.viewSize.mh );
         this.camera.aspect = ( this.viewSize.w*this.viewSize.mw ) / ( this.viewSize.h*this.viewSize.mh );
         this.camera.updateProjectionMatrix();
+
+        if(this.isSketch) this.postEffect.resize();
     },
     clearAll:function (){
         if(this.terrain!== null){ this.terrain.clear(); this.terrain = null; }
@@ -289,8 +310,9 @@ AAA.View.prototype = {
         }
         KEY(key);
     }
-
 }
+
+
 
 //-----------------------------------------------------
 // MATH
@@ -536,5 +558,85 @@ AAA.Car.prototype = {
             wm.position.set( m[n+w+5], m[n+w+6], m[n+w+7] );
             wm.quaternion.set( m[n+w+1], m[n+w+2], m[n+w+3], m[n+w+4] );
         }
+    }
+}
+
+//-----------------------------------------------------
+// POST EFFECT
+//-----------------------------------------------------
+
+AAA.PostEffect = function(Parent){
+    this.parent = Parent;
+    this.composer = null;
+    this.colorBuffer = null;
+    this.blurBuffer = null;
+    this.renderPass = null;
+    this.shader = null;
+    this.pass = null;
+    this.tx01 = null
+    this.tx02 = null;
+    this.timerTest = null;
+    this.parameters={minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter, format:THREE.RGBFormat, stencilBuffer:false};
+}
+AAA.PostEffect.prototype = {
+    constructor: AAA.PostEffect,
+    init:function(){
+        this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise3.png');
+        this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper6.jpg');
+        this.timerTest = setInterval(this.loadTextures, 20, this);
+    },
+    loadTextures:function (pp) {
+        if ( pp.tx01 !== null && pp.tx02 !== null)  {
+            clearInterval(pp.timerTest);
+            pp.start();
+
+        }
+    },
+    start:function() {
+        this.colorBuffer=new THREE.WebGLRenderTarget(1,1,this.parameters);
+        //this.blurBuffer=new THREE.WebGLRenderTarget(1,1,parameters);
+        this.composer= new THREE.EffectComposer(this.parent.renderer);
+        this.renderPass = new THREE.RenderPass( this.parent.scene, this.parent.camera );
+        this.composer.addPass( this.renderPass );
+        this.shader={
+            uniforms:{
+                tDiffuse:{type:'t',value:null},
+                tColor:{ type:'t',value:null},
+                tBlur:{type:'t',value:null},
+                tNoise:{type:'t',value:this.tx01},
+                tPaper:{type:'t',value:this.tx02},
+                resolution:{ type:'v2',value:new THREE.Vector2(1,1)}
+            },
+            vertexShader:vs_render,
+            fragmentShader:fs_render
+        }
+        this.pass=new THREE.ShaderPass(this.shader);
+        this.pass.renderToScreen=true;
+        this.composer.addPass(this.pass);
+        this.pass.uniforms.tNoise.value.needsUpdate=true;
+        this.pass.uniforms.tPaper.value.needsUpdate=true;
+        this.resize();
+    },
+    render:function(){
+        if(this.pass && this.composer){
+            this.parent.renderer.render(this.parent.scene, this.parent.camera, this.colorBuffer);
+            this.pass.uniforms.tColor.value=this.colorBuffer;
+            this.composer.render();
+        }
+    },
+    resize:function(){
+        var w = this.parent.viewSize.w* this.parent.viewSize.mw;
+        var h = this.parent.viewSize.h* this.parent.viewSize.mh;
+        this.composer.setSize(w,h);
+        this.pass.uniforms.resolution.value.set(w,h);
+        this.colorBuffer=new THREE.WebGLRenderTarget(w,h,this.parameters);
+    },
+    clear:function(){
+        this.composer = null;
+        this.colorBuffer = null;
+        this.blurBuffer = null;
+        this.renderPass = null;
+        this.shader = null;
+        this.pass = null;
     }
 }
