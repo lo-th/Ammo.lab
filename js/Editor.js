@@ -148,6 +148,7 @@ var Editor = function (Themes, nDemo) {
 	].join("\n");
 
 	var outColor = 'ffffff';
+	var selColor = '1a94ff';//7fdbff'
 
 
     var nMenu = document.createElement( 'div' );
@@ -155,7 +156,7 @@ var Editor = function (Themes, nDemo) {
 	nMenu.innerHTML = icon_gear;
 	container.appendChild( nMenu );
 
-	nMenu.addEventListener( 'mouseover', function ( event ) { event.preventDefault(); document.getElementById("icon_gear").setAttribute('fill','#7fdbff'); updateTimer = setInterval(rotateUpdate, 10, this); }, false );
+	nMenu.addEventListener( 'mouseover', function ( event ) { event.preventDefault(); document.getElementById("icon_gear").setAttribute('fill','#'+selColor); updateTimer = setInterval(rotateUpdate, 10, this); }, false );
 	nMenu.addEventListener( 'mouseout', function ( event ) { event.preventDefault(); document.getElementById("icon_gear").setAttribute('fill','#'+outColor); clearInterval(updateTimer);}, false );
 	nMenu.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); showCode(); }, false );
 
@@ -164,7 +165,7 @@ var Editor = function (Themes, nDemo) {
 	nMenu0.innerHTML = "<a href='https://github.com/lo-th/Ammo.lab'  target='_blank' >"+icon_github+"</a>";//icon_github;
 	container.appendChild( nMenu0 );
 	
-	nMenu0.addEventListener( 'mouseover', function ( event ) { event.preventDefault(); document.getElementById("icon_github").setAttribute('fill','#7fdbff'); }, false );
+	nMenu0.addEventListener( 'mouseover', function ( event ) { event.preventDefault(); document.getElementById("icon_github").setAttribute('fill','#'+selColor); }, false );
 	nMenu0.addEventListener( 'mouseout', function ( event ) { event.preventDefault(); document.getElementById("icon_github").setAttribute('fill','#'+outColor); }, false );
 	nMenu0.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); showCode(); }, false );
 
@@ -173,7 +174,7 @@ var Editor = function (Themes, nDemo) {
 	nMenu1.innerHTML = icon_sketch;
 	container.appendChild( nMenu1 );
 
-	nMenu1.addEventListener( 'mouseover', function ( event ) { event.preventDefault(); document.getElementById("icon_sketch").setAttribute('fill','#7fdbff');  }, false );
+	nMenu1.addEventListener( 'mouseover', function ( event ) { event.preventDefault(); document.getElementById("icon_sketch").setAttribute('fill','#'+selColor);  }, false );
 	nMenu1.addEventListener( 'mouseout', function ( event ) { event.preventDefault(); document.getElementById("icon_sketch").setAttribute('fill','#'+outColor); }, false );
 	nMenu1.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); sketchMode(); }, false );
 
@@ -182,6 +183,7 @@ var Editor = function (Themes, nDemo) {
 		if(View.isSketch){
 			textColor('111111');
 			outColor = '111111';
+			selColor = 'ab0dd8';
 			containerEdit.style.backgroundImage = 'url(images/sketch/paper.jpg)';
 			document.getElementById("info").style.color = '#111111';
 			document.getElementById("stats").style.color = '#111111';
@@ -192,14 +194,13 @@ var Editor = function (Themes, nDemo) {
 			document.getElementById("info").style.color = '#ffffff';
 			document.getElementById("stats").style.color = '#909090'
 			outColor = 'ffffff';
+			selColor = '1a94ff';
 			MainEditor.contentWindow.changeTheme(1);
 		}
 		document.getElementById("icon_sketch").setAttribute('fill','#'+outColor); 
 		document.getElementById("icon_gear").setAttribute('fill','#'+outColor); 
 		document.getElementById("icon_github").setAttribute('fill','#'+outColor); 
 		document.getElementById("icon_update").setAttribute('fill','#'+outColor); 
-
-		
 	}
 
 	var showCode = function () {
@@ -285,8 +286,8 @@ var Editor = function (Themes, nDemo) {
 	bRun.appendChild(icColor);
 	bRun.appendChild(icRun);
 	bRun.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); update(); icColor.style.backgroundColor = 'rgba(0,116,217,0.7)'; }, false );
-	bRun.addEventListener( 'mouseover', function ( event ) { event.preventDefault();  icColor.style.backgroundColor = 'rgba(0,0,0,0.3)'; updateTimer = setInterval(rotateUpdate, 10, icRun); }, false );
-    bRun.addEventListener( 'mouseout', function ( event ) { event.preventDefault(); icColor.style.backgroundColor = 'rgba(0,0,0,0)'; clearInterval(updateTimer);}, false );
+	bRun.addEventListener( 'mouseover', function ( event ) { event.preventDefault();  icColor.style.backgroundColor = 'rgba(0,116,217,0.1)'; updateTimer = setInterval(rotateUpdate, 10, icRun); document.getElementById("icon_update").setAttribute('fill','#'+selColor);}, false );
+    bRun.addEventListener( 'mouseout', function ( event ) { event.preventDefault(); icColor.style.backgroundColor = 'rgba(0,0,0,0)'; clearInterval(updateTimer); document.getElementById("icon_update").setAttribute('fill','#'+outColor);}, false );
 
     var rotateUpdate = function (dom) {
     	rvalue -= 5;
@@ -317,7 +318,7 @@ var Editor = function (Themes, nDemo) {
 			bbMenu[i].name = 'demo'+i;
 		}
 		bbMenu[i].addEventListener( 'mousedown', function ( event ) { event.preventDefault(); importScript(this.name); this.childNodes[1].style.backgroundColor = 'rgba(0,116,217,0.7)';}, false );
-		bbMenu[i].addEventListener( 'mouseover', function ( event ) { event.preventDefault(); this.childNodes[1].style.backgroundColor = 'rgba(0,0,0,0.3)'; }, false );
+		bbMenu[i].addEventListener( 'mouseover', function ( event ) { event.preventDefault(); this.childNodes[1].style.backgroundColor = 'rgba(0,116,217,0.3)'; }, false );
 		bbMenu[i].addEventListener( 'mouseout', function ( event ) { event.preventDefault();  this.childNodes[1].style.backgroundColor = 'rgba(0,0,0,0)'; testCurrentDemo(); }, false );		
 		menuDemo.appendChild( bbMenu[i] );
 		bbMenu[i].appendChild( bbColor[i] );

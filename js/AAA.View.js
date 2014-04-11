@@ -50,7 +50,7 @@ AAA.View = function(Themes){
     this.tt = [0 , 0];
 
     // for draw sketch
-    this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise.png');
+    this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise.jpg');
     this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper.jpg');
 
     this.init();
