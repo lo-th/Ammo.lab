@@ -127,7 +127,7 @@ AAA.C1gt.prototype = {
 	    	mesh = this.meshs[i];
 	        this.car.add(mesh)
 	        if(mesh.name=='hood'){
-	        	mesh.position.set(0,0.29225*2,-0.55*2); mesh.rotation.set(0*AAA.ToRad,0,0)
+	        	mesh.position.set(0,0.2935*2,-0.55*2); mesh.rotation.set(0*AAA.ToRad,0,0)
 	        }
 	        if(mesh.name=='trunk'){
 	        	mesh.position.set(0,0.44225*2,0.595*2); mesh.rotation.set(-0*AAA.ToRad,0,0)
