@@ -37,6 +37,11 @@
 		codeEditor.getInputField().blur();
 	}
 
+	function changeTheme(n){
+		if(n==0)codeEditor.setOption("theme", "default");
+		else codeEditor.setOption("theme", "monokai");
+	}
+
 	function setBase(b){
 		if(base==null)base = b;
 	}

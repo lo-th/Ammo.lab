@@ -185,12 +185,14 @@ var Editor = function (Themes, nDemo) {
 			containerEdit.style.backgroundImage = 'url(images/sketch/paper.jpg)';
 			document.getElementById("info").style.color = '#111111';
 			document.getElementById("stats").style.color = '#111111';
+			MainEditor.contentWindow.changeTheme(0);
 		}else{
 			textColor('cccccc');
 			containerEdit.style.backgroundImage = 'none';
 			document.getElementById("info").style.color = '#ffffff';
 			document.getElementById("stats").style.color = '#909090'
 			outColor = 'ffffff';
+			MainEditor.contentWindow.changeTheme(1);
 		}
 		document.getElementById("icon_sketch").setAttribute('fill','#'+outColor); 
 		document.getElementById("icon_gear").setAttribute('fill','#'+outColor); 
