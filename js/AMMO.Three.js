@@ -13,7 +13,7 @@
 // Bullet was designed for (0.05 to 10). 
  
 'use strict';
-var AMMO={ REVISION: 'DEV.0.1' };
+var AMMO={ REVISION: 0.2 };
 
 AMMO.TORAD = Math.PI / 180;
 

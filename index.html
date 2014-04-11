@@ -17,6 +17,8 @@
 </style>
 
 <script src="js/AAA.View.js"></script>
+<script src="js/vehicle/C1gt.js"></script>
+<script src="js/vehicle/Vision.js"></script>
 <script src="js/Transcode.js"></script>
 <script src="js/Editor.js"></script>
 <script src="js/Terrain.js"></script>
@@ -105,11 +107,15 @@ function introDemo() {
     ADD({type:"box", size:[1,1,1], pos:[-10, 10, 0], mass:1, noSleep:true});
 
     var max = 10;
-    var px;
+    var px, t, n=2;
 
     for (var i=0; i!==10; ++i ){
-        px=-10+(i*2.5);
-        CAR({ size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], wRadius:0.3, wDeepth:0.2, nWheels:4, mass:100 });
+        t = Math.floor(Math.random()*n)+1;
+        px=-11+(i*2.5);
+        switch(t){
+            case 1: CAR({type:'c1gt', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:900 }); break;
+            case 2: CAR({type:'vision', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:1490 }); break;
+        }
     }
 }
 
@@ -118,8 +124,8 @@ function introDemo() {
 //-----------------------------------
 
 function init() {
-    Editor.hideIntro();
-    displayInfo();
+    //Editor.hideIntro();
+    //displayInfo();
 
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
@@ -142,16 +148,33 @@ function displayInfo(){
 }
 
 //-----------------------------------------------------
-// MESH FUNCTION
+// MESH IMPORT
 //-----------------------------------------------------
+var c1gt, vision;
 
-function initGeometry() {
+function initGeometry(){
     var oName = ['smoothCube','smoothCylinder','dice','L','T','H'];
     for(var i=0;i<oName.length;i++){
         View.geos[i] = Pool.getGeometry(oName[i], true);
         View.geos[i].name = oName[i];
     }
 
+    c1gt = new AAA.C1gt(initVisionCar);
+}
+
+function initVisionCar(){
+    vision = new AAA.Vision(initDemo);
+}
+
+function initDemo(){
+   // var c = vision.car.clone();
+    //var c = c1gt.car.clone();
+    //View.scene.add(c);
+
+
+
+    Editor.hideIntro();
+    displayInfo();
     // send AMMO script to worker
     AmmoWorker.postMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });
 }

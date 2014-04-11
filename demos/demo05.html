@@ -16,11 +16,15 @@ function initDemo()
 
 
     var max = 10;
-    var px;
+    var px, t, n=2;
 
     for (var i=0; i!==10; ++i ){
+        t = Math.floor(Math.random()*n)+1;
     	px=-11+(i*2.5);
-        CAR({ size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], wRadius:0.3, wDeepth:0.2, nWheels:4, mass:100 });
+        switch(t){
+            case 1: CAR({type:'c1gt', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:900 }); break;
+            case 2: CAR({type:'vision', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:1490 }); break;
+        }
     }
 }
 </script>

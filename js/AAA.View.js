@@ -8,7 +8,7 @@
 // THREE for ammo.js
 // use 1 three unit for 1 meter 
 
-var AAA={ REV: 0.1 };
+var AAA={ REVISION: 0.2 };
 
 //-----------------------------------------------------
 // 3D VIEW
@@ -57,6 +57,7 @@ AAA.View.prototype = {
         this.renderer = new THREE.WebGLRenderer( {precision: "lowp", antialias: false, alpha:false } );
         this.renderer.setSize( this.viewSize.w, this.viewSize.h );
         this.renderer.setClearColor( this.bgColor, 1 );
+        //this.renderer.sortObjects = false;
         //this.renderer.autoClear = false;
         //this.renderer.autoClearStencil = false;
         //this.renderer.gammaInput = true;
@@ -248,7 +249,6 @@ AAA.View.prototype = {
         while(i--){
             if(name==this.geos[i].name) g=this.geos[i];
         }
-
         if(buffer) g = THREE.BufferGeometryUtils.fromGeometry(g);
         return g
     }
@@ -295,8 +295,7 @@ AAA.Obj = function(obj, Parent){
             mesh.matrixAutoUpdate = true;
             shadow = false;
         break;
-        case 'box': 
-            //mesh = new THREE.Mesh( this.parent.geos[1], this.parent.mats[1] );
+        case 'box':
             mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCube", true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
@@ -305,12 +304,10 @@ AAA.Obj = function(obj, Parent){
             mesh.scale.set( size[0], size[0], size[0] );
         break;
         case 'cylinder':
-            //mesh = new THREE.Mesh( this.parent.geos[3], this.parent.mats[1] );
             mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCylinder", true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
-        case 'dice': 
-            //mesh = new THREE.Mesh( this.parent.geos[4], this.parent.mats[1] );
+        case 'dice':
             mesh = new THREE.Mesh( this.parent.getGeoByName("dice", true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
@@ -406,16 +403,58 @@ AAA.Car = function(obj, Parent){
     var wRadius = obj.wRadius || 3;
     var wDeepth = obj.wDeepth || 2;
     var nWheels = obj.nWheels || 4;
+    this.type = obj.type || 'c1gt';
 
     this.nWheels = nWheels;
 
-    this.mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCube", true), this.parent.mats[1] ) || obj.mesh;
-    this.mesh.scale.set( size[0], size[1], size[2] );
-    this.mesh.castShadow = true;
-    this.mesh.receiveShadow = true;
+    var wheelMesh;
 
-    var wheelMesh = new THREE.Mesh( this.parent.getGeoByName("smoothCylinder", true), this.parent.mats[2] ) || obj.wheel;
-    wheelMesh.scale.set( wRadius, wDeepth, wRadius );
+    switch(this.type){
+
+        case 'no':
+            this.mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCube", true), this.parent.mats[1] ) || obj.mesh;
+            this.mesh.scale.set( size[0], size[1], size[2] );
+
+            wheelMesh = new THREE.Mesh( this.parent.getGeoByName("smoothCylinder", true), this.parent.mats[2] ) || obj.wheel;
+            wheelMesh.scale.set( wRadius, wDeepth, wRadius );
+        break;
+        case 'c1gt':
+            this.mesh= new THREE.Object3D();
+            var c = c1gt.car.clone();
+            c.rotation.y = 180*AAA.ToRad;
+            this.mesh.add(c);
+
+            wheelMesh = c1gt.wheel;
+            wRadius = 0.34;
+            wDeepth = 0.26;
+            size = [ 1.85,0.5,3.44];//1.465
+            wPos = [0.79,0,1.2];
+        break;
+        case 'vision':
+            this.mesh= new THREE.Object3D();
+            var c = vision.car.clone();
+            c.position.y = -0.33;
+            this.mesh.add(c)
+
+            wheelMesh = vision.wheel;
+            wRadius = 0.38;
+            
+            wDeepth = 0.22
+            //wheelMesh.scale.set( wRadius, wDeepth, wRadius );
+            size = [1.9,0.5,4.6];//1.24
+            wPos = [0.85,0,1.42];
+        break;
+
+    }
+    this.mesh.position.y = 20000;
+    //this.mesh.castShadow = true;
+    //this.mesh.receiveShadow = true;
+
+    
+    
+
+
+
     this.wheels = [];
 
     var i = this.nWheels, w;
@@ -424,7 +463,12 @@ AAA.Car = function(obj, Parent){
         w = wheelMesh.clone();
         w.castShadow = true;
         w.receiveShadow = true;
-        w.rotation.z = -Math.PI / 2;
+        if(this.type=='no')w.rotation.z = -Math.PI / 2;
+        else if(this.type=='c1gt'){
+            if(i==0 || i==3)w.rotation.z = 180*AAA.ToRad
+        }else if(this.type=='vision'){
+            if(i==1 || i==2)w.rotation.z = 180*AAA.ToRad
+        }
         this.wheels[i].add(w);
         this.parent.content.add(this.wheels[i]);
 
@@ -434,7 +478,7 @@ AAA.Car = function(obj, Parent){
 
     this.parent.content.add(this.mesh);
     // out of view range 
-    this.mesh.position.y = 20000;
+    //this.mesh.position.y = 20000;
 
     obj.size = size;
     obj.wPos = wPos;
