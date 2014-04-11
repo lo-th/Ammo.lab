@@ -262,7 +262,7 @@ var Editor = function (Themes, nDemo) {
 			bbMenu[i].textContent = i;
 			bbMenu[i].name = 'demo'+i;
 		}
-		bbMenu[i].addEventListener( 'mousedown', function ( event ) { event.preventDefault(); importScript(this.name); currentDemo = this.name; this.childNodes[1].style.backgroundColor = 'rgba(0,116,217,0.7)';}, false );
+		bbMenu[i].addEventListener( 'mousedown', function ( event ) { event.preventDefault(); importScript(this.name); this.childNodes[1].style.backgroundColor = 'rgba(0,116,217,0.7)';}, false );
 		bbMenu[i].addEventListener( 'mouseover', function ( event ) { event.preventDefault(); this.childNodes[1].style.backgroundColor = 'rgba(0,0,0,0.3)'; }, false );
 		bbMenu[i].addEventListener( 'mouseout', function ( event ) { event.preventDefault();  this.childNodes[1].style.backgroundColor = 'rgba(0,0,0,0)'; testCurrentDemo(); }, false );		
 		menuDemo.appendChild( bbMenu[i] );
@@ -278,9 +278,12 @@ var Editor = function (Themes, nDemo) {
 	containerEdit.appendChild( MainEditor );
 
 
-	var importScript = function(name){
+	var importScript = function(name, Test){
+		currentDemo = name;
+		var test = Test || false;
 		MainEditor.contentWindow.setBase(Editor);
 		MainEditor.contentWindow.loadfile("demos/"+name+".html");
+		if(test)testCurrentDemo();
 	}
 
 	var testCurrentDemo = function(){
@@ -303,6 +306,7 @@ var Editor = function (Themes, nDemo) {
 
 	return {
 		update:update,
+		importScript: importScript,
 		domElement: container,
 		hideIntro: hideIntro,
 		getScript: function () {

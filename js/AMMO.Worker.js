@@ -72,7 +72,7 @@ var CLEARWORLD = function(){
 	if(isTimout)clearTimeout(timer);
 	else clearInterval(timer);
 
-	world.clear();
+	if(world)world.clear();
 
 	self.postMessage({tell:"CLEAR"});
 
