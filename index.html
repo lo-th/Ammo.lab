@@ -162,20 +162,14 @@ function initGeometry(){
         View.geos[i].name = oName[i];
     }
 
-    c1gt = new AAA.C1gt(initVisionCar, true);
+    c1gt = new AAA.C1gt(initVisionCar, false);
 }
 
 function initVisionCar(){
-    vision = new AAA.Vision(initDemo, true);
+    vision = new AAA.Vision(initDemo, false);
 }
 
 function initDemo(){
-   // var c = vision.car.clone();
-    //var c = c1gt.car.clone();
-    //View.scene.add(c);
-
-
-
     Editor.hideIntro();
     displayInfo();
     // send AMMO script to worker
