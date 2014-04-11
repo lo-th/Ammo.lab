@@ -32,7 +32,7 @@ AAA.View = function(Themes){
     this.cam = { fov:50, horizontal: 90, vertical: 70, distance: 30, automove: false };
     this.mouse = { ox:0, oy:0, h:0, v:0, rx:0, ry:0, dx:0, dy:0, down:false, moving:false, ray:false, direction:false };
     this.viewSize = { w:window.innerWidth, h:window.innerHeight, mw:1, mh:1};
-    this.key = [0,0,0,0,0,0];
+    this.key = [0,0,0,0,0,0,0];
 
     this.themes = Themes || ['1d1f20', '2f3031', '424344', '68696b'];
     this.bgColor = parseInt("0x" + this.themes[0]);
@@ -264,6 +264,16 @@ AAA.View.prototype = {
             case 39: case 68: key[3]=1; break;          // right, D
             case 17: case 67: key[4]=1; break;          // ctrl, c
             case 32: key[5]=1; break;                   // space
+            case 96:case 48: key[6]=0; break; //0
+            case 97:case 49: key[6]=1; break; //1
+            case 98:case 50: key[6]=2; break; //2
+            case 99:case 51: key[6]=3; break; //3
+            case 100:case 52: key[6]=4; break; //4
+            case 101:case 53: key[6]=5; break; //5
+            case 102:case 54: key[6]=6; break; //6
+            case 103:case 55: key[6]=7; break; //7
+            case 104:case 56: key[6]=8; break; //8
+            case 105:case 57: key[6]=9; break; //9
         }
         KEY(key);
     },

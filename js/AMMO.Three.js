@@ -80,7 +80,7 @@ AMMO.World = function(obj){
 
 	this.infos = [];
 
-	this.key = [0,0,0,0,0,0];
+	this.key = [0,0,0,0,0,0,0];
 }
 
 AMMO.World.prototype = {
@@ -158,7 +158,7 @@ AMMO.World.prototype = {
 	    while (i--) { this.bodys[i].getMatrix(i); }
 	    i = this.CARID;
 	    while (i--) { 
-	    	if(i==0)this.cars[i].drive();
+	    	if(i==this.key[6])this.cars[i].drive();
 	    	this.cars[i].getMatrix(i);
 	    }
 
