@@ -181,6 +181,8 @@ AAA.Vision.prototype = {
 
 	    this.shape = new THREE.Mesh( this.geos[29] );
 
+	    this.name.length = 0;
+
 	    this.end(); 
 
     }

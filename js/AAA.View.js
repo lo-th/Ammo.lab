@@ -32,6 +32,7 @@ AAA.View = function(Themes){
     this.cam = { fov:50, horizontal: 90, vertical: 70, distance: 30, automove: false };
     this.mouse = { ox:0, oy:0, h:0, v:0, rx:0, ry:0, dx:0, dy:0, down:false, moving:false, ray:false, direction:false };
     this.viewSize = { w:window.innerWidth, h:window.innerHeight, mw:1, mh:1};
+    this.key = [0,0,0,0,0,0];
 
     this.themes = Themes || ['1d1f20', '2f3031', '424344', '68696b'];
     this.bgColor = parseInt("0x" + this.themes[0]);
@@ -112,6 +113,8 @@ AAA.View.prototype = {
         this.container.addEventListener( 'mousedown',  function(e) { _this.onMouseDown(e) }, false );
         this.container.addEventListener( 'mouseout', function(e) { _this.onMouseUp(e) }, false );
         this.container.addEventListener( 'mouseup', function(e) { _this.onMouseUp(e) }, false );
+        document.addEventListener( 'keydown', function(e) { _this.onKeyDown(e) }, false );
+        document.addEventListener( 'keyup', function(e) { _this.onKeyUp(e) }, false );
         if( body.addEventListener ){
             body.addEventListener( 'mousewheel', function(e) { _this.onMouseWheel(e) }, false ); //chrome
             body.addEventListener( 'DOMMouseScroll', function(e) { _this.onMouseWheel(e) }, false ); // firefox
@@ -251,6 +254,30 @@ AAA.View.prototype = {
         }
         if(buffer) g = THREE.BufferGeometryUtils.fromGeometry(g);
         return g
+    },
+    onKeyDown:function( e ) {
+        var key = this.key;
+        switch ( e.keyCode ) {
+            case 38: case 87: case 90: key[0]=1; break; // up, W, Z
+            case 40: case 83: key[1]=1; break;          // down, S
+            case 37: case 65: case 81: key[2]=1; break; // left, A, Q
+            case 39: case 68: key[3]=1; break;          // right, D
+            case 17: case 67: key[4]=1; break;          // ctrl, c
+            case 32: key[5]=1; break;                   // space
+        }
+        KEY(key);
+    },
+    onKeyUp:function( e ) {
+        var key = this.key;
+        switch( e.keyCode ) {
+            case 38: case 87: case 90: key[0]=0; break; // up, W, Z
+            case 40: case 83: key[1]=0; break;          // down, S
+            case 37: case 65: case 81: key[2]=0; break; // left, A, Q
+            case 39: case 68: key[3]=0; break;          // right, D
+            case 17: case 67: key[4]=0; break;          // ctrl, c
+            case 32: key[5]=0; break;                   // space
+        }
+        KEY(key);
     }
 
 }
@@ -449,11 +476,6 @@ AAA.Car = function(obj, Parent){
     this.mesh.position.y = 20000;
     //this.mesh.castShadow = true;
     //this.mesh.receiveShadow = true;
-
-    
-    
-
-
 
     this.wheels = [];
 

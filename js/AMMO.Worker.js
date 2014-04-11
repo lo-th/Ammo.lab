@@ -20,14 +20,15 @@ self.onmessage = function (e) {
 
 	var phase = e.data.tell;
 
-	if(phase === "INIT") INIT(e.data.AmmoUrl);
-	if(phase === "CLEAR") CLEARWORLD();
-	if(phase === "START") STARTWORLD(e.data.option || {});
+	if(phase == "INIT") INIT(e.data.AmmoUrl);
+	if(phase == "CLEAR") CLEARWORLD();
+	if(phase == "START") STARTWORLD(e.data.option || {});
 	
-	if(phase === "ADD") world.addBody(e.data.obj);
-	if(phase === "CAR") world.addCar(e.data.obj);
-	if(phase === "SET") if( world.bodys[e.data.id] ) world.bodys[e.data.id].set(e.data.obj);
-	if(phase === "UPTERRAIN") if(world.terrain!== null) world.terrain.update(e.data.Hdata);
+	if(phase == "ADD") world.addBody(e.data.obj);
+	if(phase == "CAR") world.addCar(e.data.obj);
+	if(phase == "SET") if( world.bodys[e.data.id] ) world.bodys[e.data.id].set(e.data.obj);
+	if(phase == "UPTERRAIN") if(world.terrain!== null) world.terrain.update(e.data.Hdata);
+	if(phase == "KEY") world.setKey(e.data.key);
 	
 }
 

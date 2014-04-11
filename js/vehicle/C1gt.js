@@ -148,6 +148,8 @@ AAA.C1gt.prototype = {
 
 	    this.shape = new THREE.Mesh( this.geos[14] );
 
+	    this.name.length = 0;
+
 	    this.end(); 
 
     }

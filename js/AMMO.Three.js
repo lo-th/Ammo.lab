@@ -79,6 +79,8 @@ AMMO.World = function(obj){
 	this.tt = [0 , 0];
 
 	this.infos = [];
+
+	this.key = [0,0,0,0,0,0];
 }
 
 AMMO.World.prototype = {
@@ -155,7 +157,10 @@ AMMO.World.prototype = {
     	i = this.BODYID;
 	    while (i--) { this.bodys[i].getMatrix(i); }
 	    i = this.CARID;
-	    while (i--) { this.cars[i].getMatrix(i); }
+	    while (i--) { 
+	    	if(i==0)this.cars[i].drive();
+	    	this.cars[i].getMatrix(i);
+	    }
 
 	    this.last = now;
 	    this.upInfo();
@@ -165,6 +170,9 @@ AMMO.World.prototype = {
     	this.infos[2] = this.CARID;
     	
     	if (this.last - 1000 > this.tt[0]) { this.tt[0] = this.last; this.infos[0] = this.tt[1]; this.tt[1] = 0; } this.tt[1]++;
+    },
+    setKey:function(k){
+    	this.key = k;
     }
 
 }
@@ -207,6 +215,7 @@ AMMO.Rigid.prototype = {
 			case 'capsule': shape = new Ammo.btCapsuleShape(size[0], size[1]*0.5); break;
 			case 'mesh':
 			    var mTriMesh = new Ammo.btTriangleMesh();
+			    var removeDuplicateVertices = true;
 			    var v0 = AMMO.V3(0,0,0);
 			    var v1 = AMMO.V3(0,0,0); 
                 var v2 = AMMO.V3(0,0,0);
@@ -215,11 +224,11 @@ AMMO.Rigid.prototype = {
 	                v0.setValue( vx[i+0], vx[i+1], vx[i+2] );
 	                v1.setValue( vx[i+3], vx[i+4], vx[i+5] );
 	                v2.setValue( vx[i+6], vx[i+7], vx[i+8] );
-	                mTriMesh.addTriangle(v0,v1,v2);
+	                mTriMesh.addTriangle(v0,v1,v2, removeDuplicateVertices);
 	            }
 			    if(mass == 0){ 
 			    	// btScaledBvhTriangleMeshShape -- if scaled instances
-			    	shape = new Ammo.btBvhTriangleMeshShape(mTriMesh,true);
+			    	shape = new Ammo.btBvhTriangleMeshShape(mTriMesh, true, true);
 			    }else{ 
 			    	// btGimpactTriangleMeshShape -- complex?
 			    	// btConvexHullShape -- possibly better?
@@ -471,6 +480,10 @@ AMMO.Vehicle.prototype = {
 		this.tuning.maxSuspensionTravelCm = 3;//* ReScale; //10;// 10;
 		this.tuning.maxSuspensionForce = 10000;
 
+		this.maxEngineForce = 1000;
+		this.maxSteering = 0.3;
+
+
 	    this.vehicle = new Ammo.btRaycastVehicle(this.tuning, this.body, this.vehicleRayCaster);
 	    this.body.setActivationState(AMMO.DISABLE_DEACTIVATION);
 	    
@@ -545,6 +558,24 @@ AMMO.Vehicle.prototype = {
 		    m[n+w+6] = p.y();
 		    m[n+w+7] = p.z();
 	    }
+    },
+    drive:function(){
+    	var key = this.parent.key;
+    	var st = 0, f=0, b=0;
+    	if(key[2]==1)st=this.maxSteering;
+    	if(key[3]==1)st=-this.maxSteering;
+    	if(key[2]==0 && key[3]==0) st = 0;
+
+    	if(key[0]==1)f=this.maxEngineForce;
+    	if(key[1]==1)f=-0.5*this.maxEngineForce;
+    	if(key[0]==0 && key[1]==0) f=0;
+
+    	var i = this.nWheels;
+    	while(i--){
+    		this.vehicle.applyEngineForce( f, i );
+    		this.vehicle.setBrake( b, i );
+    		if(i==0 || i==1)this.vehicle.setSteeringValue( st, i );
+    	}
 
     }
 }

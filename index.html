@@ -208,9 +208,13 @@ var CAR = function(obj){
     AmmoWorker.postMessage({ tell:"CAR", obj:obj });
 }
 
-var CLEAR = function(option){
-    engineOption = option || {};
+var CLEAR = function(obj){
+    engineOption = obj || {};
     AmmoWorker.postMessage({tell:"CLEAR"});
+}
+
+var KEY = function(key){
+    AmmoWorker.postMessage({tell:"KEY", key:key});
 }
 
 
