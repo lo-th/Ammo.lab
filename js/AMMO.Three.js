@@ -35,7 +35,7 @@ AMMO.WORLD_SCALE = 100;
 AMMO.INV_SCALE = 0.01;
 
 AMMO.MAX_BODY = 1024;
-AMMO.MAX_CAR = 10;
+AMMO.MAX_CAR = 20;
 AMMO.MAX_CAR_WHEEL = 4;
 
 AMMO.V3 = function(x, y, z){
@@ -378,37 +378,25 @@ AMMO.Vehicle = function(obj, Parent){
 	this.size = obj.size || [1,1,1];
 	this.pos = obj.pos || [0,0,0];
 	this.rot = obj.rot || [0,0,0];
-	// phy = [friction, restitution];
 	this.phy = obj.phy || [0.5,0];
+
 	this.wRadius = obj.wRadius;
 	this.wDeepth = obj.wDeepth;
-
 	this.nWheels = obj.nWheels || 4;
 	this.wPos = obj.wPos || [20,5,10];
 
-	this.rightIndex = 0; 
+	/*this.rightIndex = 0; 
     this.upIndex = 1; 
-    this.forwardIndex = 2;
+    this.forwardIndex = 2;*/
 
-	/*this.settings = {
-		mass: 1000, size: 1, friction: 0.6, restitution: 0.0, linearDamping: 0.3, angularDamping: 0.3,
-		frictionSlip: 1.5, suspensionStiffness: 100, suspensionDamping: 0.85, suspensionCompression: 0.8, maxSuspensionTravelCm: 3, maxSuspensionForce: 10000,
-		radius: 17, suspResist: 3, posX: 39, posY: 17, posZ: 60,
-		wheelsDampingRelaxation: 4.5, wheelsDampingCompression: 4.5, suspensionRestLength: 3, rollInfluence: 0.01, wheelFriction: 1000		
-	};*/
-
-	this.settings = {
-		//mass: 1000, size: 1, friction: 0.6, restitution: 0.0, linearDamping: 0.3, angularDamping: 0.3,
-		frictionSlip: 0.94, suspensionStiffness: 40, suspensionDamping: 2.3, suspensionCompression: 2.4, maxSuspensionTravelCm: 3, maxSuspensionForce: 10000,
-		//radius: 17, suspResist: 3, posX: 39, posY: 17, posZ: 60,
-		wheelsDampingRelaxation: 4.5, wheelsDampingCompression: 4.5, suspensionRestLength: 0.06, rollInfluence: 0.5//, wheelFriction: 1000		
+	this.settings = obj.setting || {
+		engine:600, stiffness: 40, relaxation: 0.85, compression: 0.82, travel: 500, force: 6000, frictionSlip: 20.5, reslength: 0.1, roll: 0.1	
 	};
 
 
 	this.maxEngineForce = obj.maxEngineForce || 2000.0;
     this.maxBreakingForce = obj.maxBreakingForce || 125.0;
     this.steeringClamp = obj.steeringClamp || 0.51;
-    //this.mass = obj.mass || 400;
 
 	this.engine = 0.0;
     this.breaking = 0.0;
@@ -417,8 +405,6 @@ AMMO.Vehicle = function(obj, Parent){
     this.vehicleRayCaster = null;
     this.tuning = null;
     this.vehicle = null;
-
-    //this.wheels = [];
 
     this.wheelDirectionCS0 = AMMO.V3(0, -1, 0);
     this.wheelAxleCS = AMMO.V3(-1, 0, 0);
@@ -439,10 +425,16 @@ AMMO.Vehicle = function(obj, Parent){
 	this.shape.calculateLocalInertia(this.mass, this.localInertia);
 	this.motionState = new Ammo.btDefaultMotionState(this.transform);
 	this.rbInfo = new Ammo.btRigidBodyConstructionInfo(this.mass, this.motionState, this.shape, this.localInertia);
+	this.rbInfo.set_m_friction(this.phy[0]);
+	this.rbInfo.set_m_restitution(this.phy[1]);
+
+	//console.log(this.rbInfo.get_m_linearDamping())//0
+	//console.log(this.rbInfo.get_m_angularDamping())//0
 
 	this.body = new Ammo.btRigidBody(this.rbInfo);
 	this.body.setLinearVelocity([0, 0, 0]);
     this.body.setAngularVelocity([0, 0, 0]);
+    this.body.setActivationState(AMMO.DISABLE_DEACTIVATION);
 	//this.body.setFriction(this.phy[0]);
 	//this.body.setRestitution(this.phy[1]);
 
@@ -459,9 +451,7 @@ AMMO.Vehicle = function(obj, Parent){
 
 
 
-      /// create vehicle
-      ///never deactivate the vehicle
-    //this.body.getBody().setActivationState(enums.physics.collision_states.DISABLE_DEACTIVATION);
+    // create vehicle
     this.init();
 }
 
@@ -471,58 +461,51 @@ AMMO.Vehicle.prototype = {
 
 	    this.vehicleRayCaster = new Ammo.btDefaultVehicleRaycaster(this.parent.world);
 	    this.tuning = new Ammo.btVehicleTuning();
-	    this.tuning.frictionSlip = 1.5; //2;
-		// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car
-		this.tuning.suspensionStiffness = 60; //100;
-		// 0.1 to 0.3 are good values
-		this.tuning.suspensionDamping = 0.3; //0.85;
-		this.tuning.suspensionCompression = 0.8; //0.83;
-		this.tuning.maxSuspensionTravelCm = 3;//* ReScale; //10;// 10;
-		this.tuning.maxSuspensionForce = 10000;
 
-		this.maxEngineForce = 1000;
+		// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car
+		this.tuning.set_m_suspensionStiffness(this.settings.stiffness); //100;
+		// 0.1 to 0.3 are good values
+		this.tuning.set_m_suspensionDamping(this.settings.relaxation);//0.87
+		this.tuning.set_m_suspensionCompression(this.settings.compression);//0.82
+		this.tuning.set_m_maxSuspensionTravelCm(this.settings.travel);//500
+		this.tuning.set_m_maxSuspensionForce(this.settings.force);//6000
+		this.tuning.set_m_frictionSlip( this.settings.frictionSlip);//10.5
+
+		this.maxEngineForce = this.settings.engine;
 		this.maxSteering = 0.3;
 
 
 	    this.vehicle = new Ammo.btRaycastVehicle(this.tuning, this.body, this.vehicleRayCaster);
-	    this.body.setActivationState(AMMO.DISABLE_DEACTIVATION);
-	    
-	    
-    	
-
     	// choose coordinate system
-    	this.vehicle.setCoordinateSystem(this.rightIndex,this.upIndex,this.forwardIndex);
-
-        //AMMO.V3(this.size[0]*0.25, -this.size[1]*0.25, this.size[2]*0.25);
+    	//this.vehicle.setCoordinateSystem(this.rightIndex,this.upIndex,this.forwardIndex);
+    	this.vehicle.setCoordinateSystem(0,1,2);
 
         var isFrontWheel = true;
-        //var pos = AMMO.V3(this.wPos[0], this.wPos[1], this.wPos[2], true);
 
-        this.vehicle.addWheel( AMMO.V3(this.wPos[0], this.wPos[1], this.wPos[2]), this.wheelDirectionCS0, this.wheelAxleCS, this.settings.suspensionRestLength, this.wRadius, this.tuning, isFrontWheel);
-        this.vehicle.addWheel( AMMO.V3(-this.wPos[0], this.wPos[1], this.wPos[2]), this.wheelDirectionCS0, this.wheelAxleCS, this.settings.suspensionRestLength, this.wRadius, this.tuning, isFrontWheel);
-        this.vehicle.addWheel( AMMO.V3(-this.wPos[0], this.wPos[1], -this.wPos[2]), this.wheelDirectionCS0, this.wheelAxleCS, this.settings.suspensionRestLength, this.wRadius, this.tuning, false);
-        this.vehicle.addWheel( AMMO.V3(this.wPos[0], this.wPos[1], -this.wPos[2]), this.wheelDirectionCS0, this.wheelAxleCS, this.settings.suspensionRestLength, this.wRadius, this.tuning, false);
+        this.vehicle.addWheel( AMMO.V3(this.wPos[0], this.wPos[1], this.wPos[2]), this.wheelDirectionCS0, this.wheelAxleCS, this.settings.reslength, this.wRadius, this.tuning, isFrontWheel);
+        this.vehicle.addWheel( AMMO.V3(-this.wPos[0], this.wPos[1], this.wPos[2]), this.wheelDirectionCS0, this.wheelAxleCS, this.settings.reslength, this.wRadius, this.tuning, isFrontWheel);
+        this.vehicle.addWheel( AMMO.V3(-this.wPos[0], this.wPos[1], -this.wPos[2]), this.wheelDirectionCS0, this.wheelAxleCS, this.settings.reslength, this.wRadius, this.tuning, false);
+        this.vehicle.addWheel( AMMO.V3(this.wPos[0], this.wPos[1], -this.wPos[2]), this.wheelDirectionCS0, this.wheelAxleCS, this.settings.reslength, this.wRadius, this.tuning, false);
 
         for (var i=0; i<this.vehicle.getNumWheels(); i++){
 		    var wheel = this.vehicle.getWheelInfo(i);
-		    wheel.set_m_suspensionStiffness( this.settings.suspensionStiffness);
-		    wheel.set_m_wheelsDampingRelaxation( this.settings.suspensionDamping);
-		    wheel.set_m_wheelsDampingCompression( this.settings.suspensionCompression);
-		    wheel.set_m_frictionSlip( this.settings.frictionSlip);
-		    wheel.set_m_rollInfluence( this.settings.rollInfluence);
-		 }
+		    wheel.set_m_rollInfluence( this.settings.roll);//0.1
+		    //wheel.set_m_suspensionStiffness( this.settings.suspensionStiffness);
+		    //wheel.set_m_suspensionRestLength1( this.settings.suspensionRestLength );//0.1
+		    //wheel.set_m_wheelsDampingRelaxation( this.settings.wheelsDampingRelaxation);//0.85
+		    //wheel.set_m_wheelsDampingCompression( this.settings.wheelsDampingCompression);//0.82
+		    //wheel.set_m_frictionSlip( this.settings.frictionSlip);//10.5
+		}
 
 		this.parent.world.addVehicle(this.vehicle);
         //this.parent.world.addVehicle(this.vehicle, this.wheelShape);
         this.parent.world.addRigidBody(this.body);
 	    this.body.activate();
-		// this.body.activate();
     },
     getMatrix:function(id){
     	var m = this.parent.mtxCar;
     	var n = id*40;
 
-    	//var m = this.parent.matrixCars[id];
 		m[n+0] = this.vehicle.getCurrentSpeedKmHour();//this.body.getActivationState();
 
 		//var t = this.vehicle.getChassisWorldTransform(); 

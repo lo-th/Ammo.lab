@@ -17,15 +17,20 @@ function initDemo()
     // NOTE: use arrow key to control car
     // select your car with number 0-9
 
-    var max = 10;
+    var Setting = {
+        engine:600, stiffness: 40, relaxation: 0.85, compression: 0.82, 
+        travel: 500, force: 6000, frictionSlip: 10.5, reslength: 0.1, roll: 0.1 
+    }
+
+    var max = 10; // maximum 20
     var px, t, n=2;
 
-    for (var i=0; i!==10; ++i ){
+    for (var i=0; i!==max; ++i ){
         t = Math.floor(Math.random()*n)+1;
     	px=-11+(i*2.5);
         switch(t){
-            case 1: CAR({type:'c1gt', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:900 }); break;
-            case 2: CAR({type:'vision', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:1490 }); break;
+            case 1: CAR({type:'c1gt', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:900, setting:Setting }); break;
+            case 2: CAR({type:'vision', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:1490, setting:Setting }); break;
         }
     }
 }
