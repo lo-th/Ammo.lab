@@ -184,9 +184,14 @@ AMMO.World.prototype = {
 AMMO.Rigid = function(obj, Parent){
 	this.parent = Parent;
 	this.body = null;
+	this.shape = null;
 	this.forceUpdate = false;
-	this.init(obj);
 	this.forceState = false;
+
+	this.init(obj);
+
+	// get only shape for car
+	if(this.parent == null ) return this.shape;
 }
 
 AMMO.Rigid.prototype = {
@@ -249,6 +254,8 @@ AMMO.Rigid.prototype = {
 			    shape = this.parent.terrain.shape;
 			break;
 		}
+		if(this.parent == null ){ this.shape=shape; return;}
+
 
 		var transform = new Ammo.btTransform();
 		transform.setIdentity();
@@ -409,7 +416,9 @@ AMMO.Vehicle = function(obj, Parent){
     this.wheelDirectionCS0 = AMMO.V3(0, -1, 0);
     this.wheelAxleCS = AMMO.V3(-1, 0, 0);
 
-    this.shape = new Ammo.btBoxShape(AMMO.V3(this.size[0]*0.5, this.size[1]*0.5, this.size[2]*0.5, true)); 
+    //this.shape = new Ammo.btBoxShape(AMMO.V3(this.size[0]*0.5, this.size[1]*0.5, this.size[2]*0.5, true)); 
+    this.shape = new AMMO.Rigid({type:'box', size:this.size}, null);
+    
     this.compound = new Ammo.btCompoundShape();
 
     // move center of mass
@@ -519,9 +528,9 @@ AMMO.Vehicle.prototype = {
 
 		m[n+0] = this.vehicle.getCurrentSpeedKmHour();//this.body.getActivationState();
 
-		var t = this.body.getCenterOfMassTransform();
+		//var t = this.body.getCenterOfMassTransform();
 		//var t = this.vehicle.getChassisWorldTransform(); 
-		//var t = this.body.getWorldTransform(); 
+		var t = this.body.getWorldTransform(); 
 
 	    
 	    var r = t.getRotation();
