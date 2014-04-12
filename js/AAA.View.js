@@ -465,10 +465,10 @@ AAA.CapsuleGeometry = function(radius, height, SRadius, SHeight) {
 
 AAA.Car = function(obj, Parent){
     this.parent = Parent;
-    var size = obj.size || [10,5,20];
-    var wPos = obj.wPos || [5,-5,10];
-    var wRadius = obj.wRadius || 3;
-    var wDeepth = obj.wDeepth || 2;
+    var size = obj.size || [2,0.5,5];
+    var wPos = obj.wPos || [1,0,2];
+    var wRadius = obj.wRadius || 0.4;
+    var wDeepth = obj.wDeepth || 0.3;
     var nWheels = obj.nWheels || 4;
     this.type = obj.type || 'c1gt';
 
@@ -478,7 +478,7 @@ AAA.Car = function(obj, Parent){
 
     switch(this.type){
 
-        case 'no':
+        case 'basic':
             this.mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCube", true), this.parent.mats[1] ) || obj.mesh;
             this.mesh.scale.set( size[0], size[1], size[2] );
 
@@ -494,7 +494,7 @@ AAA.Car = function(obj, Parent){
             wheelMesh = c1gt.wheel;
             wRadius = 0.34;
             wDeepth = 0.26;
-            size = [ 1.85,0.5,3.44];//1.465
+            size = [1.85,0.5,3.44];//1.465
             wPos = [0.79,0,1.2];
         break;
         case 'vision':
@@ -505,9 +505,7 @@ AAA.Car = function(obj, Parent){
 
             wheelMesh = vision.wheel;
             wRadius = 0.38;
-            
             wDeepth = 0.22
-            //wheelMesh.scale.set( wRadius, wDeepth, wRadius );
             size = [1.9,0.5,4.6];//1.24
             wPos = [0.85,0,1.42];
         break;
@@ -525,11 +523,12 @@ AAA.Car = function(obj, Parent){
         w = wheelMesh.clone();
         w.castShadow = true;
         w.receiveShadow = true;
-        if(this.type=='no')w.rotation.z = -Math.PI / 2;
-        else if(this.type=='c1gt'){
-            if(i==0 || i==3)w.rotation.z = 180*AAA.ToRad
+        if(this.type=='basic'){
+            w.rotation.z = -Math.PI / 2;
+        }else if(this.type=='c1gt'){
+            if(i==0 || i==3) w.rotation.z = 180*AAA.ToRad
         }else if(this.type=='vision'){
-            if(i==1 || i==2)w.rotation.z = 180*AAA.ToRad
+            if(i==1 || i==2) w.rotation.z = 180*AAA.ToRad
         }
         this.wheels[i].add(w);
         this.parent.content.add(this.wheels[i]);
@@ -570,7 +569,7 @@ AAA.Car.prototype = {
 }
 
 //-----------------------------------------------------
-// POST EFFECT
+// POST EFFECT SKETCH
 //-----------------------------------------------------
 
 AAA.PostEffect = function(Parent){

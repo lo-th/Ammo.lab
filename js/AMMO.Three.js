@@ -299,8 +299,6 @@ AMMO.Rigid.prototype = {
 		this.parent.world.addRigidBody(this.body);
 
 		this.body.activate();
-
-
     },
     set:function(obj){
     	var v = AMMO.V3(0,0,0);
@@ -374,11 +372,13 @@ AMMO.Terrain.prototype = {
 
 AMMO.Vehicle = function(obj, Parent){
 	this.parent = Parent;
+	this.type = obj.type || 'basic';
 
 	this.size = obj.size || [1,1,1];
 	this.pos = obj.pos || [0,0,0];
 	this.rot = obj.rot || [0,0,0];
 	this.phy = obj.phy || [0.5,0];
+	this.massCenter = obj.massCenter || [0,0.05,0];
 
 	this.wRadius = obj.wRadius;
 	this.wDeepth = obj.wDeepth;
@@ -410,6 +410,14 @@ AMMO.Vehicle = function(obj, Parent){
     this.wheelAxleCS = AMMO.V3(-1, 0, 0);
 
     this.shape = new Ammo.btBoxShape(AMMO.V3(this.size[0]*0.5, this.size[1]*0.5, this.size[2]*0.5, true)); 
+    this.compound = new Ammo.btCompoundShape();
+
+    // move center of mass
+    var localTrans = new Ammo.btTransform();
+    localTrans.setIdentity();
+    localTrans.setOrigin(AMMO.V3(this.massCenter[0],this.massCenter[1],this.massCenter[2]));
+    this.compound.addChildShape(localTrans,this.shape);
+
     this.transform = new Ammo.btTransform();
     this.transform.setIdentity();
     // position
@@ -422,9 +430,12 @@ AMMO.Vehicle = function(obj, Parent){
 	this.mass = obj.mass || 400;
 
 	this.localInertia = AMMO.V3(0, 0, 0);
-	this.shape.calculateLocalInertia(this.mass, this.localInertia);
+	//this.shape.calculateLocalInertia(this.mass, this.localInertia);
+	this.compound.calculateLocalInertia(this.mass, this.localInertia);
 	this.motionState = new Ammo.btDefaultMotionState(this.transform);
-	this.rbInfo = new Ammo.btRigidBodyConstructionInfo(this.mass, this.motionState, this.shape, this.localInertia);
+	//this.rbInfo = new Ammo.btRigidBodyConstructionInfo(this.mass, this.motionState, this.shape, this.localInertia);
+	this.rbInfo = new Ammo.btRigidBodyConstructionInfo(this.mass, this.motionState, this.compound, this.localInertia);
+	
 	this.rbInfo.set_m_friction(this.phy[0]);
 	this.rbInfo.set_m_restitution(this.phy[1]);
 
@@ -508,10 +519,11 @@ AMMO.Vehicle.prototype = {
 
 		m[n+0] = this.vehicle.getCurrentSpeedKmHour();//this.body.getActivationState();
 
+		var t = this.body.getCenterOfMassTransform();
 		//var t = this.vehicle.getChassisWorldTransform(); 
-		var t = this.body.getWorldTransform(); 
+		//var t = this.body.getWorldTransform(); 
 
-	    //var t = this.body.getCenterOfMassTransform();//getWorldTransform();
+	    
 	    var r = t.getRotation();
 	    var p = t.getOrigin();
 
@@ -520,9 +532,17 @@ AMMO.Vehicle.prototype = {
 	    m[n+3] = r.z();
 	    m[n+4] = r.w();
 
-	    m[n+5] = p.x();
-	    m[n+6] = p.y();
-	    m[n+7] = p.z();
+	    if(this.type=='basic'){
+	    	m[n+5] = p.x()+this.massCenter[0];
+	        m[n+6] = p.y()+this.massCenter[1];
+	        m[n+7] = p.z()+this.massCenter[2];
+	    }else{
+	    	m[n+5] = p.x();
+	        m[n+6] = p.y();
+	        m[n+7] = p.z();
+	    }
+
+	    
 
 	    var i = this.nWheels;
 	    var w;

@@ -10,6 +10,7 @@
 // largeur 1.85m / hauteur 1.5m / longeur 3.44m
 
 AAA.ToRad = Math.PI / 180;
+
 AAA.C1gt = function(endFunction, High){
 	this.end = endFunction;
 	this.isHighModel = High || false;
@@ -36,7 +37,6 @@ AAA.C1gt = function(endFunction, High){
 AAA.C1gt.prototype = {
     constructor: AAA.C1gt,
     load:function(){
-    	//if()
     	var _this = this;
     	if(this.isHighModel)this.Pool = new SEA3D.Pool('models/c1gt.high.sea', function() { _this.init() });
     	else this.Pool = new SEA3D.Pool('models/c1gt.sea', function() { _this.init() });

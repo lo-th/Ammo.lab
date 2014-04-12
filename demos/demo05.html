@@ -29,8 +29,14 @@ function initDemo()
         t = Math.floor(Math.random()*n)+1;
     	px=-11+(i*2.5);
         switch(t){
-            case 1: CAR({type:'c1gt', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:900, setting:Setting }); break;
-            case 2: CAR({type:'vision', size:[1,0.5,2], pos:[px, 10, -8], wPos:[0.5,0,1], mass:1490, setting:Setting }); break;
+            case 1: CAR({type:'c1gt',   pos:[px, 10, -7], mass:900,  setting:Setting }); break;
+            case 2: CAR({type:'vision', pos:[px, 10, -7], mass:1490, setting:Setting }); break;
+            case 3: 
+                CAR({
+                    type:'basic',  pos:[px, 10, -7], mass:1000, setting:Setting, 
+                    size:[2,0.5,5], wPos:[1,0,2], wRadius:0.4, massCenter:[0,0.05,0] 
+                }); 
+            break;
         }
     }
 }
