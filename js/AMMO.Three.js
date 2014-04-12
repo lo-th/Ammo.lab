@@ -218,6 +218,7 @@ AMMO.Rigid.prototype = {
 			case 'cylinder': shape = new Ammo.btCylinderShape(AMMO.V3(size[0], size[1]*0.5, size[2]*0.5)); break;
 			case 'cone': shape = new Ammo.btConeShape(size[0], size[1]*0.5); break;
 			case 'capsule': shape = new Ammo.btCapsuleShape(size[0], size[1]*0.5); break;
+			case 'compound': shape = new Ammo.btCompoundShape(); break;
 			case 'mesh':
 			    var mTriMesh = new Ammo.btTriangleMesh();
 			    var removeDuplicateVertices = true;
@@ -374,6 +375,18 @@ AMMO.Terrain.prototype = {
 }
 
 //--------------------------------------------------
+//  JOINT
+//--------------------------------------------------
+
+AMMO.Joint = function(obj, Parent){
+
+}
+
+AMMO.Joint.prototype = {
+	constructor: AMMO.Joint
+}
+
+//--------------------------------------------------
 //  VEHICLE
 //--------------------------------------------------
 
@@ -425,7 +438,7 @@ AMMO.Vehicle = function(obj, Parent){
     var localTrans = new Ammo.btTransform();
     localTrans.setIdentity();
     localTrans.setOrigin(AMMO.V3(this.massCenter[0],this.massCenter[1],this.massCenter[2]));
-    this.compound.addChildShape(localTrans,this.shape);
+    this.compound.addChildShape(localTrans, this.shape);
 
     this.transform = new Ammo.btTransform();
     this.transform.setIdentity();

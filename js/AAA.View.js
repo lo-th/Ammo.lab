@@ -460,6 +460,17 @@ AAA.CapsuleGeometry = function(radius, height, SRadius, SHeight) {
 }
 
 //-----------------------------------------------------
+// AAA JOINT
+//-----------------------------------------------------
+
+AAA.Joint = function(obj, Parent){
+}
+
+AAA.Joint.prototype = {
+    constructor: AAA.Joint
+}
+
+//-----------------------------------------------------
 // AAA VEHICLE
 //-----------------------------------------------------
 
