@@ -118,7 +118,7 @@ AAA.View.prototype = {
         this.container.addEventListener( 'mousemove', function(e) { _this.onMouseMove(e) }, false );
         this.container.addEventListener( 'mousedown',  function(e) { _this.onMouseDown(e) }, false );
         this.container.addEventListener( 'mouseout', function(e) { _this.onMouseUp(e) }, false );
-        this.container.addEventListener( 'mouseup', function(e) { _this.onMouseUp(e) }, false );
+        this.container.addEventListener( 'mouseup', function(e) { _this.onMouseUp(e); if(Editor.getOpen())Editor.close();  }, false );
         document.addEventListener( 'keydown', function(e) { _this.onKeyDown(e) }, false );
         document.addEventListener( 'keyup', function(e) { _this.onKeyUp(e) }, false );
         if( body.addEventListener ){
@@ -136,12 +136,16 @@ AAA.View.prototype = {
             this.renderer.setClearColor( this.bgColor, 1);
             this.ground.material.color.setHex(  this.bgColor );
             this.mats[1].color.setHex( 0xFF0505 );
+            this.mats[1].reflectivity =0.8;
+            this.mats[2].reflectivity =0.8;
             this.postEffect.clear();
             this.isSketch = false;
         } else{
             this.renderer.setClearColor(0xffffff, 1);
             this.ground.material.color.setHex( 0xffffff );
             this.mats[1].color.setHex( 0xffffff );
+            this.mats[1].reflectivity =1;
+            this.mats[2].reflectivity =0.3;
             this.postEffect = new AAA.PostEffect(this);
             this.postEffect.init();
             this.isSketch = true;

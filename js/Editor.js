@@ -341,6 +341,11 @@ var Editor = function (Themes, nDemo) {
 		if(test)testCurrentDemo();
 	}
 
+	var close = function(){
+		MainEditor.contentWindow.close();
+		window.focus();
+	}
+
 	var textColor = function(cc){
 		for(var i=0, j=bbMenu.length;i!==j;i++){
 			bbMenu[i].style.color = "#"+cc;
@@ -370,8 +375,12 @@ var Editor = function (Themes, nDemo) {
 		importScript: importScript,
 		domElement: container,
 		hideIntro: hideIntro,
+		close:close,
 		getScript: function () {
 			return nscript;
+		},
+		getOpen: function () {
+			return open;
 		}
 	}
 
