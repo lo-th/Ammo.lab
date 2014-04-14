@@ -129,52 +129,36 @@ AAA.View.prototype = {
             body.attachEvent("onmousewheel" , function(e) { _this.onMouseWheel(e) }); // ie
         }
 
-        this.initSkyAndMat();
+        this.initBasicMaterial();
         this.initBasicGeometry();
     },
     sketchMode:function(){
         if(this.isSketch){
             this.renderer.setClearColor( this.bgColor, 1);
             this.ground.material.color.setHex(  this.bgColor );
-            this.mats[1].color.setHex( 0xFF0505 );
-            this.mats[1].reflectivity =0.8;
-            this.mats[2].reflectivity =0.8;
             this.postEffect.clear();
             this.isSketch = false;
         } else{
             this.renderer.setClearColor(0xffffff, 1);
             this.ground.material.color.setHex( 0xffffff );
-            this.mats[1].color.setHex( 0xffffff );
-            this.mats[1].reflectivity =1;
-            this.mats[2].reflectivity =0.3;
             this.postEffect = new AAA.PostEffect(this);
             this.postEffect.init();
             this.isSketch = true;
         }
+    },
+    initBasicMaterial:function(){
+        this.mats[0] = new THREE.MeshBasicMaterial({ color: 0x101010 });
+        this.mats[1] = new THREE.MeshBasicMaterial({ color: 0xFFEEEE, name:"actif" });
+        this.mats[2] = new THREE.MeshBasicMaterial({ color: 0x101030, name:"static" });
     },
     initBasicGeometry:function(){
         this.geoBasic[0] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 1, 1, 1 ))
         this.geoBasic[1] = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
         this.geoBasic[2] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));//cone
     },
-    initSkyAndMat:function(){
-        /*var path = "images/sky/";
-        var format = '.jpg';
-        var urls = [
-            path + 'px' + format, path + 'nx' + format,
-            path + 'py' + format, path + 'ny' + format,
-            path + 'pz' + format, path + 'nz' + format
-        ];
-
-        this.sky = THREE.ImageUtils.loadTextureCube( urls );*/
-
-        this.mats[0] = new THREE.MeshBasicMaterial({ color: 0x101010 });
-        this.mats[1] = new THREE.MeshBasicMaterial({ color: 0xFF0505, name:"red" });
-        this.mats[2] = new THREE.MeshBasicMaterial({ color: 0x0505FF, name:"blue" });
-    },
     initSky:function(envtexture){
         this.sky = envtexture;
-         var i = this.mats.length;
+        var i = this.mats.length;
         while (i--) {
             this.mats[i].envMap = this.sky;
             this.mats[i].reflectivity = 0.8;
@@ -452,9 +436,9 @@ AAA.Obj.prototype = {
         var n = id * 8;
         var mesh = this.mesh;
 
-        if(mtx[n+0]==2){ if(mesh.material) if(mesh.material.name=="red") mesh.material = this.parent.mats[2]; }
+        if(mtx[n+0]==2){ if(mesh.material) if(mesh.material.name=="actif") mesh.material = this.parent.mats[2]; }
         else {
-            if(mesh.material) if(mesh.material.name=="blue") mesh.material = this.parent.mats[1];
+            if(mesh.material) if(mesh.material.name=="static") mesh.material = this.parent.mats[1];
             
             mesh.quaternion.set( mtx[n+1], mtx[n+2], mtx[n+3], mtx[n+4] );
             mesh.position.set( mtx[n+5], mtx[n+6], mtx[n+7] );
