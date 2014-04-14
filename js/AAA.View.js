@@ -26,6 +26,7 @@ AAA.View = function(Themes){
     this.ground = null;
     this.terrain = null;
     this.postEffect = null;
+    this.sky = null;
 
     this.cars = [];
     this.objs = [];
@@ -157,7 +158,7 @@ AAA.View.prototype = {
         this.geoBasic[2] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));//cone
     },
     initSkyAndMat:function(){
-        var path = "images/sky/";
+        /*var path = "images/sky/";
         var format = '.jpg';
         var urls = [
             path + 'px' + format, path + 'nx' + format,
@@ -165,11 +166,23 @@ AAA.View.prototype = {
             path + 'pz' + format, path + 'nz' + format
         ];
 
-        this.sky = THREE.ImageUtils.loadTextureCube( urls );
+        this.sky = THREE.ImageUtils.loadTextureCube( urls );*/
 
-        this.mats[0] = new THREE.MeshBasicMaterial({ color: 0x101010, reflectivity:0.8, envMap:this.sky, combine:THREE.MixOperation });
-        this.mats[1] = new THREE.MeshBasicMaterial({ color: 0xFF0505, reflectivity:0.8, envMap:this.sky, combine:THREE.MixOperation, name:"red" });
-        this.mats[2] = new THREE.MeshBasicMaterial({ color: 0x0505FF, reflectivity:0.8, envMap:this.sky, combine:THREE.MixOperation, name:"blue" });
+        this.mats[0] = new THREE.MeshBasicMaterial({ color: 0x101010 });
+        this.mats[1] = new THREE.MeshBasicMaterial({ color: 0xFF0505, name:"red" });
+        this.mats[2] = new THREE.MeshBasicMaterial({ color: 0x0505FF, name:"blue" });
+    },
+    initSky:function(envtexture){
+        this.sky = envtexture;
+         var i = this.mats.length;
+        while (i--) {
+            this.mats[i].envMap = this.sky;
+            this.mats[i].reflectivity = 0.8;
+            this.mats[i].combine = THREE.MixOperation;
+        }
+    },
+    updateSky:function(envtexture){
+        this.sky = envtexture;
     },
     render:function(){
         var delta = this.clock.getDelta();

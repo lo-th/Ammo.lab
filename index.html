@@ -12,7 +12,7 @@
     input{ margin:0px; padding:4px; }
     #container{ position: absolute; width:100%; height:100%;}
     #interface{ position: absolute; left:10px; top:10px; width:456px; height:20px; }
-    #stats{ position: absolute; left:10px; bottom:0px; height:20px; width:220px;  pointer-events:none; font-size: 12px; word-spacing:-4px; color:#909090;}
+    #stats{ position: absolute; left:280px; bottom:0px; height:20px; width:220px;  pointer-events:none; font-size: 12px; word-spacing:-4px; color:#909090;}
     #info{ pointer-events:none; position: absolute; left:48px; top:18px; width:300px; height:30px; line-height:12px;}
     #note{ pointer-events:none; position: absolute; left:48px; top:58px; width:300px; height:50px; line-height:12px; color:#909090;}
 </style>
@@ -20,9 +20,11 @@
 <script src="js/AAA.View.js"></script>
 <script src="js/vehicle/C1gt.js"></script>
 <script src="js/vehicle/Vision.js"></script>
-<script src="js/Transcode.js"></script>
-<script src="js/Editor.js"></script>
-<script src="js/Terrain.js"></script>
+<script src="js/loth/Transcode.js"></script>
+<script src="js/loth/Editor.js"></script>
+<script src="js/loth/Ambience.js"></script>
+<script src="js/loth/AmbienceMapList.js"></script>
+<script src="js/loth/Terrain.js"></script>
 
 </head>
 
@@ -41,7 +43,7 @@ var note = document.getElementById("note");
 var stats = document.getElementById("stats");
 var demoName = "loth", demoNote = "2014";
 
-var Sources, Editor, View, Pool;
+var Sources, Editor, Ambience, View, Pool;
 
 //-----------------------------------
 // ALL SOURCE LOADED FROM PNG 
@@ -50,11 +52,14 @@ var Sources, Editor, View, Pool;
 window.onload = prevInit;
 
 function prevInit() {
-    Sources = new Transcode.Loader([ "images/ammo.png", "images/three.png", "images/effect.png", "images/sea3d.png"], init, [1, 0, 0]);
+    Sources = new Transcode.Loader([ "images/ammo.png", "images/three.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
 
     // init editor
     Editor = new Editor(themes, 9);
     document.body.appendChild( Editor.domElement );
+
+    Ambience = new Ambience();
+    document.body.appendChild( Ambience.domElement );
 }
 
 //-----------------------------------
@@ -107,7 +112,10 @@ function init() {
 
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
+    
+
     View = new AAA.View(themes);
+    Ambience.init3d(View.renderer);
 
     // load basic model
     Pool = new SEA3D.Pool('models/geo.sea', initGeometry);

@@ -44,8 +44,9 @@ TERRAIN.Generate = function( obj ){
     this.lightDir = 1;
     this.pos = {x:0, y:0};
     this.ease = {x:0, y:0};
-    this.speed = 0.5;
+    this.maxspeed = 1;
     this.acc = 0.01;
+    this.dec = 0.03;
 
     this.updateNoise = true;
 
@@ -302,19 +303,19 @@ TERRAIN.Generate.prototype = {
         if (key[2]) this.ease.x -= this.acc;
         if (key[3]) this.ease.x += this.acc;
         //speed limite
-        if (this.ease.x > this.speed) this.ease.x = this.speed;
-        if (this.ease.y > this.speed) this.ease.y = this.speed;
-        if (this.ease.x < -this.speed) this.ease.x = -this.speed;
-        if (this.ease.y < -this.speed) this.ease.y = -this.speed;
+        if (this.ease.x > this.maxspeed) this.ease.x = this.maxspeed;
+        if (this.ease.y > this.maxspeed) this.ease.y = this.maxspeed;
+        if (this.ease.x < -this.maxspeed) this.ease.x = -this.maxspeed;
+        if (this.ease.y < -this.maxspeed) this.ease.y = -this.maxspeed;
         //break
         if (!key[0] && !key[1]) {
-            if (this.ease.y > this.acc) this.ease.y -= this.acc;
-            else if (this.ease.y < -this.acc) this.ease.y += this.acc;
+            if (this.ease.y > this.dec) this.ease.y -= this.dec;
+            else if (this.ease.y < -this.dec) this.ease.y += this.dec;
             else this.ease.y = 0;
         }
         if (!key[2] && !key[3]) {
-            if (this.ease.x > this.acc) this.ease.x -= this.acc;
-            else if (this.ease.x < -this.acc) this.ease.x += this.acc;
+            if (this.ease.x > this.dec) this.ease.x -= this.dec;
+            else if (this.ease.x < -this.dec) this.ease.x += this.dec;
             else this.ease.x = 0;
         }
 
