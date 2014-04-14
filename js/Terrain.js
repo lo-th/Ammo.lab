@@ -4,10 +4,12 @@ var TERRAIN = { REVISION: '0.1' };
 
 TERRAIN.ToRad = Math.PI / 180;
 
-TERRAIN.Generate = function( div, size ){
+TERRAIN.Generate = function( obj ){
 
-    this.div = div || [64,64];
-    this.size = size || [256, 30, 256];
+    this.div = obj.div || [64,64];
+    this.size = obj.size || [256, 30, 256];
+    this.isAutoMove = obj.AutoMove || false;
+    this.isMove = obj.Move || false;
 
     this.ratio = this.size[1]/765;
     this.hfFloatBuffer = new Float32Array(this.div[0]*this.div[1]);
@@ -40,6 +42,7 @@ TERRAIN.Generate = function( div, size ){
     this.animDeltaDir = -1;
     this.lightVal = 0;
     this.lightDir = 1;
+    this.pos = {x:0, y:0};
 
     this.updateNoise = true;
 
@@ -68,6 +71,9 @@ TERRAIN.Generate = function( div, size ){
 
     this.container = new THREE.Object3D();
     this.container.add(this.mesh);
+
+    
+    
 }
 
 TERRAIN.Generate.prototype = {
@@ -286,6 +292,11 @@ TERRAIN.Generate.prototype = {
 
         this.tmpData = data;
     },
+    move:function(x,y, delta){
+        this.pos.x = x;
+        this.pos.y = y;
+        this.update(delta);
+    },
     update:function (delta) {
         if ( this.fullLoaded ) {
 
@@ -315,7 +326,9 @@ TERRAIN.Generate.prototype = {
                 this.animDelta = THREE.Math.clamp( this.animDelta + 0.00075 * this.animDeltaDir, 0, 0.05 );
                 this.uniformsNoise[ "time" ].value += delta * this.animDelta;
 
-                this.uniformsNoise[ "offset" ].value.x += delta * 0.05;
+                //this.uniformsNoise[ "offset" ].value.x += delta * 0.05;
+                this.uniformsNoise[ "offset" ].value.x = this.pos.x* 0.01;
+                this.uniformsNoise[ "offset" ].value.y = this.pos.y* 0.01;
 
                 this.uniformsTerrain[ "uOffset" ].value.x = 8 * this.uniformsNoise[ "offset" ].value.x;//4
 

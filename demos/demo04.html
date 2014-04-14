@@ -5,9 +5,9 @@ CLEAR({broadphase:"BVT", timer:false, timestep:1/60, iteration:2, G:-10});
 
 function initDemo()
 {
-    NAME("Infinite Terrain");
+    NAME("Infinite Terrain", "use arrow key to move terrain");
     ADD({ type:"ground", size:[40,1,40], pos:[0,0.5,0] });
-    ADD({type:"terrain", pos:[0,0,0], size:[40,3,40], div:[64,64] });
+    ADD({type:"terrain", pos:[0,0,0], size:[40,3,40], div:[64,64], Move:true });
 
     var max = 50;
     var px, py, pz, sx, sy, sz;

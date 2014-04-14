@@ -35,11 +35,16 @@ AMMO.WORLD_SCALE = 100;
 AMMO.INV_SCALE = 0.01;
 
 AMMO.MAX_BODY = 1024;
+AMMO.MAX_JOINT = 200;
 AMMO.MAX_CAR = 20;
 AMMO.MAX_CAR_WHEEL = 4;
 
 AMMO.V3 = function(x, y, z){
 	return new Ammo.btVector3(x || 0, y || 0, z || 0);
+}
+
+AMMO.V3A = function(A){
+	return new Ammo.btVector3(A[0], A[1], A[2]);
 }
 
 AMMO.copyV3 = function (a,b) { b.setX(a[0]); b.setY(a[1]); b.setZ(a[2]); }
@@ -49,7 +54,9 @@ AMMO.copyV3 = function (a,b) { b.setX(a[0]); b.setY(a[1]); b.setZ(a[2]); }
 //--------------------------------------------------
 
 AMMO.World = function(obj){
+	
 	this.mtx = new Float32Array(AMMO.MAX_BODY*8);
+	this.jmtx = new Float32Array(AMMO.MAX_JOINT*8);
 	this.mtxCar = new Float32Array(AMMO.MAX_CAR*(8+(8*AMMO.MAX_CAR_WHEEL)));
 
 	this.Broadphase = obj.broadphase || "BVT";
@@ -67,6 +74,7 @@ AMMO.World = function(obj){
 	this.CARID = 0;
 
 	this.bodys = null;
+	this.joints = null;
 	this.cars = null;
 
 	this.terrain = null;
@@ -168,7 +176,6 @@ AMMO.World.prototype = {
     upInfo:function(){
     	this.infos[1] = this.BODYID;
     	this.infos[2] = this.CARID;
-    	
     	if (this.last - 1000 > this.tt[0]) { this.tt[0] = this.last; this.infos[0] = this.tt[1]; this.tt[1] = 0; } this.tt[1]++;
     },
     setKey:function(k){
@@ -187,7 +194,7 @@ AMMO.Rigid = function(obj, Parent){
 	this.shape = null;
 	this.forceUpdate = false;
 	this.forceState = false;
-
+	this.limiteY = obj.limiteY || 20;
 	this.init(obj);
 
 	// get only shape for car
@@ -203,14 +210,16 @@ AMMO.Rigid.prototype = {
     	var div = obj.div || [64,64];
 		var pos = obj.pos || [0,0,0];
 		var rot = obj.rot || [0,0,0];
+
 		// phy = [friction, restitution];
 		var phy = obj.phy || [0.5,0];
 		var noSleep = obj.noSleep || false;
+		
 
 		var shape;
 		
 		switch(obj.type){
-			case 'plane': shape = new Ammo.btStaticPlaneShape(AMMO.V3(dir[0], dir[1], dir[2]), 0);break;
+			case 'plane': shape = new Ammo.btStaticPlaneShape(AMMO.V3A(dir), 0);break;
 			case 'box': case 'boxbasic': case 'dice': case 'ground': 
 			    shape = new Ammo.btBoxShape(AMMO.V3(size[0]*0.5, size[1]*0.5, size[2]*0.5)); 
 			break;
@@ -261,7 +270,7 @@ AMMO.Rigid.prototype = {
 		var transform = new Ammo.btTransform();
 		transform.setIdentity();
 		// position
-		transform.setOrigin(AMMO.V3(pos[0], pos[1], pos[2]));
+		transform.setOrigin(AMMO.V3A(pos));
 		// rotation
 		var q = new Ammo.btQuaternion();
 		q.setEulerZYX(rot[2]*AMMO.TORAD,rot[1]*AMMO.TORAD,rot[0]*AMMO.TORAD);
@@ -300,7 +309,6 @@ AMMO.Rigid.prototype = {
 		//this.body.setContactProcessingThreshold(AMMO.BT_LARGE_FLOAT);
 		//this.body.setFriction(phy[0]);
 		//this.body.setRestitution(phy[1]);
-		
 
 		if(noSleep) this.body.setActivationState(AMMO.DISABLE_DEACTIVATION);
 
@@ -313,7 +321,7 @@ AMMO.Rigid.prototype = {
     	this.body.setLinearVelocity(v);
     	this.body.setAngularVelocity(v);
     	this.body.clearForces();
-    	if(obj.pos){ this.body.getCenterOfMassTransform().setOrigin(AMMO.V3(obj.pos[0], obj.pos[1], obj.pos[2], true));}
+    	if(obj.pos){ this.body.getCenterOfMassTransform().setOrigin(AMMO.V3A(obj.pos));}
     	if(obj.rot){
     		var q = new Ammo.btQuaternion();
     		q.setEulerZYX(obj.rot[2]*AMMO.TORAD,obj.rot[1]*AMMO.TORAD,obj.rot[0]*AMMO.TORAD);
@@ -345,6 +353,10 @@ AMMO.Rigid.prototype = {
 	    m[n+5] = p.x();
 	    m[n+6] = p.y();
 	    m[n+7] = p.z();
+
+	    if(this.limiteY !== 0 && m[n+6]<-this.limiteY){
+            this.set({pos:[0, 3+Math.random()*10, 0]});
+        }
     }
 }
 
@@ -379,11 +391,38 @@ AMMO.Terrain.prototype = {
 //--------------------------------------------------
 
 AMMO.Joint = function(obj, Parent){
+	this.parent = Parent;
+	this.joint = null;
 
+	this.body1 = obj.body1;
+	this.body2 = obj.body2;
+
+	var p1 = obj.point1 || [0,0,0];
+	var p2 = obj.point2 || [0,0,0];
+	this.point1 = AMMO.V3A(p1);
+	this.point2 = AMMO.V3A(p2);
+
+	var a1 = obj.axe1 || [0,1,0];
+	var a2 = obj.axe2 || [0,1,0];
+	this.axe1 = AMMO.V3A(a1);
+	this.axe2 = AMMO.V3A(a2);
 }
 
 AMMO.Joint.prototype = {
-	constructor: AMMO.Joint
+	constructor: AMMO.Joint,
+	init:function(obj){
+		switch(obj.type){
+			case "point": this.joint = new Ammo.btPoint2PointConstraint(this.body1, this.body2, this.point1, this.point2); break;
+			case "hinge": this.joint = new Ammo.btHingeConstraint(this.body1, this.body2, this.point1, this.point2, this.axe1, this.axe2, false); break;
+			case "slider": this.joint = new Ammo.btSliderConstraint(this.body1,this.body2,this.point1,this.point2); break;
+			case "conetwist": this.joint = new Ammo.btConeTwistConstraint(this.body1,this.body2,this.point1,this.point2); break;
+			case "gear": this.joint = new Ammo.btGearConstraint(this.body1,this.body2,this.point1,this.point2, this.ratio); break;
+			case "dof": this.joint = new Ammo.btGeneric6DofConstraint(this.body1,this.body2,this.point1,this.point2); break;
+		}
+	},
+	getMatrix:function(id){
+		var m = this.parent.jmtx;
+	}
 }
 
 //--------------------------------------------------
@@ -398,6 +437,7 @@ AMMO.Vehicle = function(obj, Parent){
 	this.pos = obj.pos || [0,0,0];
 	this.rot = obj.rot || [0,0,0];
 	this.phy = obj.phy || [0.5,0];
+	this.limiteY = obj.limiteY || 20;
 	this.massCenter = obj.massCenter || [0,0.05,0];
 
 	this.wRadius = obj.wRadius;
@@ -481,8 +521,6 @@ AMMO.Vehicle = function(obj, Parent){
 	//this.chassis.setActivationState(AMMO.DISABLE_DEACTIVATION);
 
 	this.wheelShape = new Ammo.btCylinderShapeX(AMMO.V3( this.wDeepth , this.wRadius, this.wRadius));
-
-
 
     // create vehicle
     this.init();

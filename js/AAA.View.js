@@ -173,7 +173,17 @@ AAA.View.prototype = {
     },
     render:function(){
         var delta = this.clock.getDelta();
-        if( this.terrain !== null  ) this.terrain.update(delta);
+        if( this.terrain !== null  ){
+            if(this.terrain.isAutoMove) this.terrain.update(delta);
+            if(this.terrain.isMove){
+                var pos = this.terrain.pos;
+                if(this.key[0]==1) pos.y += 1;
+                if(this.key[1]==1) pos.y -= 1;
+                if(this.key[2]==1) pos.x += 1;
+                if(this.key[3]==1) pos.x -= 1;
+                this.terrain.move(pos.x, pos.y, delta);
+            }
+        }
         if(this.isSketch) this.postEffect.render();
         else this.renderer.render( this.scene, this.camera );
         var last = Date.now();
@@ -394,9 +404,9 @@ AAA.Obj = function(obj, Parent){
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'terrain': 
-            this.parent.terrain = new TERRAIN.Generate( div, size );
+            this.parent.terrain = new TERRAIN.Generate( obj );
             this.parent.terrain.init( window.innerWidth, window.innerHeight );
-            this.parent.terrain.anim();// active morph
+            //this.parent.terrain.anim();// active morph
             mesh = this.parent.terrain.container;
             shadow = false;
         break;
@@ -434,10 +444,6 @@ AAA.Obj.prototype = {
             
             mesh.quaternion.set( mtx[n+1], mtx[n+2], mtx[n+3], mtx[n+4] );
             mesh.position.set( mtx[n+5], mtx[n+6], mtx[n+7] );
-
-            if(mtx[n+6]<-20){
-                SET(id, {pos:[0, 3+Math.random()*10, 0]});
-            }
         }
     }
 }
