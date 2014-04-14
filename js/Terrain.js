@@ -43,6 +43,9 @@ TERRAIN.Generate = function( obj ){
     this.lightVal = 0;
     this.lightDir = 1;
     this.pos = {x:0, y:0};
+    this.ease = {x:0, y:0};
+    this.speed = 0.5;
+    this.acc = 0.01;
 
     this.updateNoise = true;
 
@@ -289,12 +292,42 @@ TERRAIN.Generate.prototype = {
                 data[i * 4 + 3] = 255;
             }
         }
-
         this.tmpData = data;
     },
-    move:function(x,y, delta){
-        this.pos.x = x;
-        this.pos.y = y;
+    easing:function(key,R, delta){
+        r = R * (Math.PI / 180);
+        //acceleration
+        if (key[0]) this.ease.y += this.acc;
+        if (key[1]) this.ease.y -= this.acc;
+        if (key[2]) this.ease.x -= this.acc;
+        if (key[3]) this.ease.x += this.acc;
+        //speed limite
+        if (this.ease.x > this.speed) this.ease.x = this.speed;
+        if (this.ease.y > this.speed) this.ease.y = this.speed;
+        if (this.ease.x < -this.speed) this.ease.x = -this.speed;
+        if (this.ease.y < -this.speed) this.ease.y = -this.speed;
+        //break
+        if (!key[0] && !key[1]) {
+            if (this.ease.y > this.acc) this.ease.y -= this.acc;
+            else if (this.ease.y < -this.acc) this.ease.y += this.acc;
+            else this.ease.y = 0;
+        }
+        if (!key[2] && !key[3]) {
+            if (this.ease.x > this.acc) this.ease.x -= this.acc;
+            else if (this.ease.x < -this.acc) this.ease.x += this.acc;
+            else this.ease.x = 0;
+        }
+
+        if (this.ease.x == 0 && this.ease.z == 0) return;
+
+        this.pos.x += (Math.cos(r) * this.ease.x - Math.sin(r) * this.ease.y)*0.01;
+        this.pos.y += (Math.sin(r) * this.ease.x + Math.cos(r) * this.ease.y)*0.01;
+
+        this.update(delta);
+    },
+    move:function(x,y,delta){
+        this.pos.x = x*0.01;
+        this.pos.y = y*0.01;
         this.update(delta);
     },
     update:function (delta) {
@@ -327,10 +360,12 @@ TERRAIN.Generate.prototype = {
                 this.uniformsNoise[ "time" ].value += delta * this.animDelta;
 
                 //this.uniformsNoise[ "offset" ].value.x += delta * 0.05;
-                this.uniformsNoise[ "offset" ].value.x = this.pos.x* 0.01;
-                this.uniformsNoise[ "offset" ].value.y = this.pos.y* 0.01;
+                this.uniformsNoise[ "offset" ].value.x = this.pos.x;//* 0.01;
+                this.uniformsNoise[ "offset" ].value.y = this.pos.y;//* 0.01;
 
-                this.uniformsTerrain[ "uOffset" ].value.x = 8 * this.uniformsNoise[ "offset" ].value.x;//4
+                this.uniformsTerrain[ "uOffset" ].value.x = 8 * this.uniformsNoise[ "offset" ].value.x;//4//8
+                this.uniformsTerrain[ "uOffset" ].value.y = 8 * this.uniformsNoise[ "offset" ].value.y;//4//8
+
 
                 this.quadTarget.material =  this.mlib[ "heightmap" ];
                 View.renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.heightMap, true );

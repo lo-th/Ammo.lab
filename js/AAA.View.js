@@ -176,12 +176,13 @@ AAA.View.prototype = {
         if( this.terrain !== null  ){
             if(this.terrain.isAutoMove) this.terrain.update(delta);
             if(this.terrain.isMove){
-                var pos = this.terrain.pos;
+                this.terrain.easing(this.key, 90-this.cam.horizontal, 1);
+                /*var pos = this.terrain.pos;
                 if(this.key[0]==1) pos.y += 1;
                 if(this.key[1]==1) pos.y -= 1;
                 if(this.key[2]==1) pos.x += 1;
                 if(this.key[3]==1) pos.x -= 1;
-                this.terrain.move(pos.x, pos.y, delta);
+                this.terrain.move(pos.x, pos.y, delta);*/
             }
         }
         if(this.isSketch) this.postEffect.render();
