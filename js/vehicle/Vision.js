@@ -155,7 +155,7 @@ AAA.Vision.prototype = {
     	this.meshs[5]= new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[29]), this.mats[2] );
     	var mm= new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[30]), this.mats[4] );
     	this.meshs[5].add(mm);
-    	this.meshs[5].name = "steering"
+    	this.meshs[5].name = "steering";
 
 
 
@@ -167,7 +167,7 @@ AAA.Vision.prototype = {
 	    	mesh = this.meshs[i];
 	        this.car.add(mesh)
 	        if(mesh.name=='steering'){
-	        	mesh.position.set(0.4,0.75,0.6); mesh.rotation.set(20*AAA.ToRad,0,0*AAA.ToRad)
+	        	mesh.position.set(0.42,0.75,0.6); mesh.rotation.set(20*AAA.ToRad,0,0*AAA.ToRad)
 	        }
 	    }
 

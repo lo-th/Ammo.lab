@@ -499,6 +499,7 @@ AAA.Car = function(obj, Parent){
     var wDeepth = obj.wDeepth || 0.3;
     var nWheels = obj.nWheels || 4;
     this.type = obj.type || 'c1gt';
+    this.steering = null;
 
     this.nWheels = nWheels;
 
@@ -521,19 +522,25 @@ AAA.Car = function(obj, Parent){
             c.rotation.y = 180*AAA.ToRad;
             this.mesh.add(c);
 
+            this.steering = c.children[0];
+
+            console.log(c.children.length)
+
             wheelMesh = c1gt.wheel;
             wRadius = 0.34;
             wDeepth = 0.26;
             size = [1.85,0.5,3.44];//1.465
             wPos = [0.79,0,1.2];
 
-            this.driverPos.position.set(0.4, 0.9, -0.2);
+            this.driverPos.position.set(0.38, 0.9, -0.2);
         break;
         case 'vision':
             this.mesh= new THREE.Object3D();
             var c = vision.car.clone();
             c.position.y = -0.33;
-            this.mesh.add(c)
+            this.mesh.add(c);
+
+            this.steering = c.children[0];
 
             wheelMesh = vision.wheel;
             wRadius = 0.38;
@@ -541,7 +548,7 @@ AAA.Car = function(obj, Parent){
             size = [1.9,0.5,4.6];//1.24
             wPos = [0.85,0,1.42];
 
-            this.driverPos.position.set(0.4, 0.75, -0.1);
+            this.driverPos.position.set(0.42, 0.75, 0);
         break;
 
     }
@@ -594,10 +601,12 @@ AAA.Car.prototype = {
         this.mesh.quaternion.set( m[n+1], m[n+2], m[n+3], m[n+4] );
 
         if(id == this.parent.key[6]){
+            if(this.parent.key[2] ==1) this.steering.rotation.z += 0.1;
+            if(this.parent.key[3] ==1) this.steering.rotation.z -= 0.1;
+              
             this.mesh.updateMatrixWorld();
             var pos = new THREE.Vector3();
             pos.setFromMatrixPosition( this.driverPos.matrixWorld );
-                    //var pos = this.cars[this.key[6]].driverPos.position;
             this.parent.follow(pos);
         }
 

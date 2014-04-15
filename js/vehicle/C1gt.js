@@ -116,6 +116,8 @@ AAA.C1gt.prototype = {
 	    this.meshs[5] = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[12]), this.mats[6] );
 	    this.meshs[5].name = "steering";
 
+	    //this.steering = this.meshs[5];
+
 	   //this.meshs[6] = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 1.8,1.465,3.44 )), this.mats[3] );
 
 
@@ -139,7 +141,7 @@ AAA.C1gt.prototype = {
 	        	mesh.position.set(0.075*2,0.54225*2,-0.025*2); mesh.rotation.set(-5*AAA.ToRad,0,0*AAA.ToRad)
 	        }
 	        if(mesh.name=='steering'){
-	        	mesh.position.set(-0.19*2,0.29*2,-0.3*2); mesh.rotation.set(-20*AAA.ToRad,0,0*AAA.ToRad)
+	        	mesh.position.set(-0.38,0.58,-0.3*2); mesh.rotation.set(-20*AAA.ToRad,0,0*AAA.ToRad)
 	        }
 	    }
 
