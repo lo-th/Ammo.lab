@@ -209,6 +209,7 @@ AAA.View.prototype = {
         this.ground.visible = false;
         this.center.set(0,0,0);
         this.moveCamera();
+        this.key[6] = 0;
     },
     moveCamera:function(){
         this.camera.position.copy(AAA.Orbit(this.center, this.cam.horizontal, this.cam.vertical, this.cam.distance));
@@ -530,7 +531,7 @@ AAA.Car = function(obj, Parent){
             size = [1.85,0.5,3.44];//1.465
             wPos = [0.79,0,1.2];
 
-            this.driverPos.position.set(0.38, 0.9, -0.2);
+            this.driverPos.position.set(0.40, 0.9, -0.2);
         break;
         case 'vision':
             this.mesh= new THREE.Object3D();

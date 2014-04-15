@@ -141,7 +141,7 @@ AAA.C1gt.prototype = {
 	        	mesh.position.set(0.075*2,0.54225*2,-0.025*2); mesh.rotation.set(-5*AAA.ToRad,0,0*AAA.ToRad)
 	        }
 	        if(mesh.name=='steering'){
-	        	mesh.position.set(-0.38,0.58,-0.3*2); mesh.rotation.set(-20*AAA.ToRad,0,0*AAA.ToRad)
+	        	mesh.position.set(-0.40,0.58,-0.3*2); mesh.rotation.set(-20*AAA.ToRad,0,0*AAA.ToRad)
 	        }
 	    }
 
