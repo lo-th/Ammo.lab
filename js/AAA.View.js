@@ -172,18 +172,18 @@ AAA.View.prototype = {
         var delta = this.clock.getDelta();
         if( this.terrain !== null  ){
             if(this.terrain.isAutoMove) this.terrain.update(delta);
-            if(this.terrain.isMove){
-                this.terrain.easing(this.key, 90-this.cam.horizontal, 1);
-                /*var pos = this.terrain.pos;
-                if(this.key[0]==1) pos.y += 1;
-                if(this.key[1]==1) pos.y -= 1;
-                if(this.key[2]==1) pos.x += 1;
-                if(this.key[3]==1) pos.x -= 1;
-                this.terrain.move(pos.x, pos.y, delta);*/
-            }
+            if(this.terrain.isMove) this.terrain.easing(this.key, 90-this.cam.horizontal, 1);   
         }
+        
         if(this.isSketch) this.postEffect.render();
         else this.renderer.render( this.scene, this.camera );
+
+       /* if( this.cars.length !== 0  ){
+            var pos = new THREE.Vector3();
+            pos.setFromMatrixPosition( this.cars[this.key[6]].driverPos.matrixWorld );
+            //var pos = this.cars[this.key[6]].driverPos.position;
+            this.follow(pos);
+        }*/
         var last = Date.now();
         if (last - 1000 > this.tt[0]) { this.tt[0] = last; this.fps = this.tt[1]; this.tt[1] = 0; } this.tt[1]++;
     },
@@ -206,10 +206,17 @@ AAA.View.prototype = {
 
         this.cars.length = 0;
         this.objs.length = 0;
+        this.ground.visible = false;
+        this.center.set(0,0,0);
+        this.moveCamera();
     },
     moveCamera:function(){
         this.camera.position.copy(AAA.Orbit(this.center, this.cam.horizontal, this.cam.vertical, this.cam.distance));
         this.camera.lookAt(this.center);
+    },
+    follow:function(vec){
+        this.center.copy(vec);
+        this.moveCamera();
     },
     onMouseDown:function(e){
         e.preventDefault();
@@ -247,6 +254,7 @@ AAA.View.prototype = {
         if(e.wheelDelta){delta=e.wheelDelta*-1;}
         else if(e.detail){delta=e.detail*20;}
         this.cam.distance+=(delta/100);
+        if(this.cam.distance<0.1)this.cam.distance = 0.1;
         this.moveCamera(); 
     },
     addCar:function(obj){
@@ -420,6 +428,7 @@ AAA.Obj = function(obj, Parent){
     }
 
     if(obj.type == 'ground'){// ground shadow
+        this.parent.ground.visible = true;
         this.parent.ground.scale.set( size[0], 1, size[2] );
         this.parent.ground.position.set( pos[0], pos[1]+(size[1]*0.5), pos[2]);
         if(obj.rot)this.parent.ground.rotation.set( (obj.rot[0])*AAA.ToRad, obj.rot[1]*AAA.ToRad, obj.rot[2]*AAA.ToRad );
@@ -495,6 +504,8 @@ AAA.Car = function(obj, Parent){
 
     var wheelMesh;
 
+    this.driverPos = new THREE.Object3D();
+
     switch(this.type){
 
         case 'basic':
@@ -515,6 +526,8 @@ AAA.Car = function(obj, Parent){
             wDeepth = 0.26;
             size = [1.85,0.5,3.44];//1.465
             wPos = [0.79,0,1.2];
+
+            this.driverPos.position.set(0.4, 0.9, -0.2);
         break;
         case 'vision':
             this.mesh= new THREE.Object3D();
@@ -527,10 +540,13 @@ AAA.Car = function(obj, Parent){
             wDeepth = 0.26;
             size = [1.9,0.5,4.6];//1.24
             wPos = [0.85,0,1.42];
+
+            this.driverPos.position.set(0.4, 0.75, -0.1);
         break;
 
     }
     this.mesh.position.y = 20000;
+    this.mesh.add(this.driverPos);
     //this.mesh.castShadow = true;
     //this.mesh.receiveShadow = true;
 
@@ -576,6 +592,14 @@ AAA.Car.prototype = {
 
         this.mesh.position.set( m[n+5], m[n+6], m[n+7] );
         this.mesh.quaternion.set( m[n+1], m[n+2], m[n+3], m[n+4] );
+
+        if(id == this.parent.key[6]){
+            this.mesh.updateMatrixWorld();
+            var pos = new THREE.Vector3();
+            pos.setFromMatrixPosition( this.driverPos.matrixWorld );
+                    //var pos = this.cars[this.key[6]].driverPos.position;
+            this.parent.follow(pos);
+        }
 
         var i = this.nWheels, wm, w;
         while(i--){

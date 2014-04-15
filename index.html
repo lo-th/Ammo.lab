@@ -112,8 +112,6 @@ function init() {
 
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-    
-
     View = new AAA.View(themes);
     Ambience.init3d(View.renderer);
 
@@ -122,13 +120,14 @@ function init() {
 
     stats.innerHTML = "Loading sea3d models !!"
 
-    
 }
 
 function loop() {
+
     requestAnimationFrame( loop );
     View.render();
     stats.innerHTML = "three: " + View.fps +" fps | ammo: " + ammoInfo[0]+" fps";
+
 }
 
 function displayInfo(){
