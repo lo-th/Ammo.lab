@@ -524,8 +524,6 @@ AAA.Car = function(obj, Parent){
 
             this.steering = c.children[0];
 
-            console.log(c.children.length)
-
             wheelMesh = c1gt.wheel;
             wRadius = 0.34;
             wDeepth = 0.26;
