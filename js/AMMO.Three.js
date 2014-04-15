@@ -470,7 +470,9 @@ AMMO.Vehicle = function(obj, Parent){
     this.wheelAxleCS = AMMO.V3(-1, 0, 0);
 
     //this.shape = new Ammo.btBoxShape(AMMO.V3(this.size[0]*0.5, this.size[1]*0.5, this.size[2]*0.5, true)); 
-    this.shape = new AMMO.Rigid({type:'box', size:this.size}, null);
+    //if(obj.v) this.shape = new AMMO.Rigid({type:'mesh', v:obj.v, mass:obj.mass }, null);
+    if(obj.v) this.shape = new AMMO.Rigid({type:'convex', v:obj.v, mass:obj.mass}, null);
+    else this.shape = new AMMO.Rigid({type:'box', size:this.size}, null);
     
     this.compound = new Ammo.btCompoundShape();
 

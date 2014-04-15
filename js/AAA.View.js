@@ -255,9 +255,11 @@ AAA.View.prototype = {
     addObj:function(obj){
         this.objs[this.objs.length] = new AAA.Obj(obj, this);
     },
-    getVertex:function(name, size) {
+    getVertex:function(name, size, directGeo) {
         var v = [], n;
-        var pp =  this.getGeoByName(name).vertices;
+        var pp;
+        if(name!=="") pp = this.getGeoByName(name).vertices;
+        else if(directGeo) pp = directGeo.vertices;
         var i = pp.length;
         while(i--){
             n = i*3;
@@ -267,9 +269,11 @@ AAA.View.prototype = {
         }
         return v;
     },
-    getFaces:function(name, size) {
+    getFaces:function(name, size, directGeo) {
         var v = [], n, face, va, vb, vc;
-        var geo = this.getGeoByName(name);
+        var geo;
+        if(name !== "") geo = this.getGeoByName(name);
+        else if(directGeo) geo = directGeo;
         var pp = geo.faces;
         var pv = geo.vertices;
         var i = pp.length;
@@ -520,7 +524,7 @@ AAA.Car = function(obj, Parent){
 
             wheelMesh = vision.wheel;
             wRadius = 0.38;
-            wDeepth = 0.22
+            wDeepth = 0.26;
             size = [1.9,0.5,4.6];//1.24
             wPos = [0.85,0,1.42];
         break;
@@ -541,9 +545,9 @@ AAA.Car = function(obj, Parent){
         if(this.type=='basic'){
             w.rotation.z = -Math.PI / 2;
         }else if(this.type=='c1gt'){
-            if(i==0 || i==3) w.rotation.z = 180*AAA.ToRad
+            if(i==0 || i==3) w.rotation.z = 180*AAA.ToRad;
         }else if(this.type=='vision'){
-            if(i==1 || i==2) w.rotation.z = 180*AAA.ToRad
+            if(i==1 || i==2) w.rotation.z = 180*AAA.ToRad;
         }
         this.wheels[i].add(w);
         this.parent.content.add(this.wheels[i]);

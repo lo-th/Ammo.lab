@@ -125,7 +125,7 @@ AAA.C1gt.prototype = {
 	    var mesh;
 	    while(i--){
 	    	mesh = this.meshs[i];
-	        this.car.add(mesh)
+	        this.car.add(mesh);
 	        if(mesh.name=='hood'){
 	        	mesh.position.set(0,0.2935*2,-0.55*2); mesh.rotation.set(0*AAA.ToRad,0,0)
 	        }
@@ -146,8 +146,12 @@ AAA.C1gt.prototype = {
 	    this.wheel = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[13]), this.mats[5] );
 	    this.wheel.name = "wheel";
 
-	    this.shape = new THREE.Mesh( this.geos[14] );
+	    var g = new THREE.Geometry();
+        THREE.GeometryUtils.merge(g, this.geos[14]);
+        g.applyMatrix( new THREE.Matrix4().makeRotationY( 180* (Math.PI / 180) ) );
 
+	    this.shape = new THREE.Mesh( g );
+	    //this.car.add(this.shape);
 	    this.name.length = 0;
 
 	    this.end(); 

@@ -55,7 +55,7 @@ function prevInit() {
     Sources = new Transcode.Loader([ "images/ammo.png", "images/three.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
 
     // init editor
-    Editor = new Editor(themes, 9);
+    Editor = new Editor(themes, 10);
     document.body.appendChild( Editor.domElement );
 
     Ambience = new Ambience();
@@ -191,6 +191,14 @@ var ADD = function(obj){
 
 var CAR = function(obj){ 
     View.addCar(obj);
+    if(obj.type == "c1gt"){
+        obj.v = View.getVertex("", [1,1,1], c1gt.shape.geometry );
+        obj.massCenter =  [0,-0.075,0];
+    }
+    if(obj.type == "vision"){
+        obj.v = View.getFaces("", [1,1,1], vision.shape.geometry );
+        obj.massCenter =  [0,-0.35,0];
+    }
     AmmoWorker.postMessage({ tell:"CAR", obj:obj });
 }
 

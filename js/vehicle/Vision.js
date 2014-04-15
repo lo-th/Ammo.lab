@@ -16,7 +16,7 @@ AAA.Vision = function(endFunction, High){
 	this.name = ['body_top', 'body_side', 'body_back', 'glass_top', 'chassisPlus', 'interiorPlus', 'capot', 'crome', 'interiorSymetrie',
     'glass_wheel_window', 'light_red', 'chassisSymetrie', 'interiorWheelAxe', 'Plaques', 'Bouchon', 'driveMain', 'interiorDeco',
     'frontLight', 'frontLightContour', 'frontLightBack', 'grille++', 'radiateur', 'wheel', 'wheel_j1', 'wheel_j2',//24
-    'sit', 'sit_j1', 'sit_j2', 'full', 'steering', 'steering_j1',
+    'sit', 'sit_j1', 'sit_j2', 'full', 'steering', 'steering_j1',//top
     'door_l', 'door_l_j1', 'door_l_j2', 'door_l_glass',//31-34
     'door_r', 'door_r_j1', 'door_r_j2', 'door_r_glass',//35-38
     ];
@@ -179,7 +179,12 @@ AAA.Vision.prototype = {
 	    this.wheel.add(j2);
 	    this.wheel.name = "wheel";
 
-	    this.shape = new THREE.Mesh( this.geos[29] );
+        g = new THREE.Geometry();
+        THREE.GeometryUtils.merge(g, this.geos[28]);
+       // g.applyMatrix( new THREE.Matrix4().makeRotationY( 180* (Math.PI / 180) ) );
+
+	    this.shape = new THREE.Mesh( g );
+        //this.car.add(this.shape);
 
 	    this.name.length = 0;
 

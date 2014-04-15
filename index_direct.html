@@ -67,7 +67,7 @@ var mtxCar;
 var mtx;
 
 // init editor
-Editor = new Editor(themes,8);
+Editor = new Editor(themes,10);
 document.body.appendChild( Editor.domElement );
 
 Ambience = new Ambience();
@@ -199,6 +199,14 @@ var ADD = function(obj){
 
 var CAR = function(obj){ 
     View.addCar(obj);
+    if(obj.type == "c1gt"){
+        obj.v = View.getVertex("", [1,1,1], c1gt.shape.geometry );
+        obj.massCenter =  [0,-0.075,0];
+    }
+    if(obj.type == "vision"){
+        obj.v = View.getFaces("", [1,1,1], vision.shape.geometry );
+        obj.massCenter =  [0,-0.35,0];
+    }
     world.addCar(obj);
 }
 
