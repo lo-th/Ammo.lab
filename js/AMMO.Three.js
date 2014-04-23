@@ -72,6 +72,7 @@ AMMO.World = function(obj){
 
 	this.BODYID = 0;
 	this.CARID = 0;
+	this.JOINTID = 0;
 
 	this.bodys = null;
 	this.joints = null;
@@ -110,6 +111,7 @@ AMMO.World.prototype = {
 			this.world.setGravity(AMMO.V3(0, this.gravity, 0));
 
 			this.bodys = [];
+			this.joints = [];
 			this.cars = [];
 		}
     },
@@ -127,6 +129,11 @@ AMMO.World.prototype = {
 	        Ammo.destroy( this.cars[i].body );
 	        Ammo.destroy( this.cars[i].vehicle );
 	    }
+	    i = this.JOINTID;
+	    while (i--) {
+	        this.world.removeConstraint(this.joints[i].joint);
+	        Ammo.destroy( this.joints[i].joint );
+	    }
 	    this.world.clearForces();
 	    if(this.terrain!== null) this.terrain = null;
 
@@ -135,6 +142,9 @@ AMMO.World.prototype = {
 
 	    this.cars.length = 0;
 	    this.CARID = 0;
+
+	    this.joints.length = 0;
+	    this.JOINTID = 0;
 
     	this.world.getBroadphase().resetPool(this.world.getDispatcher());
 	    this.world.getConstraintSolver().reset();
@@ -148,6 +158,7 @@ AMMO.World.prototype = {
 		this.world = null;
 
     },
+
     addBody:function(obj){
     	var id = this.BODYID++;
 		this.bodys[id] = new AMMO.Rigid(obj, this );
@@ -156,6 +167,11 @@ AMMO.World.prototype = {
     	var id = this.CARID++;
 		this.cars[id] = new AMMO.Vehicle(obj, this );
     },
+    addJoint:function(obj){
+    	var id = this.JOINTID++;
+		this.joints[id] = new AMMO.Constraint(obj, this );
+    },
+
     step:function(dt){
     	//dt = dt || 1;
     	var now = Date.now();
@@ -180,6 +196,18 @@ AMMO.World.prototype = {
     	this.infos[2] = this.CARID;
     	if (this.last - 1000 > this.tt[0]) { this.tt[0] = this.last; this.infos[0] = this.tt[1]; this.tt[1] = 0; } this.tt[1]++;
     },
+    getByName:function(name){
+        var i, result = null;
+        i = this.BODYID;
+        while(i--){
+            if(this.bodys[i].name == name) result = this.bodys[i];
+        }
+        /*i = this.JOINTID;
+        while(i--){
+            if(this.joints[i].name!== "" && this.joints[i].name == name) result = this.joints[i];
+        }*/
+        return result;
+    },
     setKey:function(k){
     	this.key = k;
     }
@@ -192,6 +220,7 @@ AMMO.World.prototype = {
 
 AMMO.Rigid = function(obj, Parent){
 	this.parent = Parent;
+	this.name = obj.name || "";
 	this.body = null;
 	this.shape = null;
 	this.forceUpdate = false;
@@ -292,14 +321,13 @@ AMMO.Rigid.prototype = {
 		var localInertia = AMMO.V3(0, 0, 0);
 		shape.calculateLocalInertia(mass, localInertia);
 		this.motionState = new Ammo.btDefaultMotionState(transform);
-		//if(noSleep)myMotionState.setActivationState(4);//this.body.setFlags(4);
 
 		var rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, this.motionState, shape, localInertia);
 		rbInfo.set_m_friction(phy[0]);
 		rbInfo.set_m_restitution(phy[1]);
 
 		this.body = new Ammo.btRigidBody(rbInfo);
-		Ammo.destroy(rbInfo);
+		
 
 		//this.body.setLinearVelocity(AMMO.V3(0,0,0));
 		//this.body.setAngularVelocity(AMMO.V3(0,0,0));
@@ -313,10 +341,13 @@ AMMO.Rigid.prototype = {
 		//this.body.setRestitution(phy[1]);
 
 		if(noSleep) this.body.setActivationState(AMMO.DISABLE_DEACTIVATION);
-
 		this.parent.world.addRigidBody(this.body);
-
 		this.body.activate();
+
+		Ammo.destroy(rbInfo);
+    },
+    getBody:function(){
+    	return this.body;
     },
     set:function(obj){
     	var v = AMMO.V3(0,0,0);
@@ -389,18 +420,23 @@ AMMO.Terrain.prototype = {
 }
 
 //--------------------------------------------------
-//  JOINT
+//  CONSTRAINT
 //--------------------------------------------------
 
-AMMO.Joint = function(obj, Parent){
+AMMO.Constraint = function(obj, Parent){
 	this.parent = Parent;
+	this.name = obj.name || "";
 	this.joint = null;
 
-	this.body1 = obj.body1;
-	this.body2 = obj.body2;
+	var collision = obj.collision || false;
+	if(collision)this.NotAllowCollision = false;
+	else this.NotAllowCollision = true;
 
-	var p1 = obj.point1 || [0,0,0];
-	var p2 = obj.point2 || [0,0,0];
+	this.body1 = this.parent.getByName(obj.body1);
+	this.body2 = this.parent.getByName(obj.body2);
+
+	var p1 = obj.pos1 || [0,0,0];
+	var p2 = obj.pos2 || [0,0,0];
 	this.point1 = AMMO.V3A(p1);
 	this.point2 = AMMO.V3A(p2);
 
@@ -408,22 +444,36 @@ AMMO.Joint = function(obj, Parent){
 	var a2 = obj.axe2 || [0,1,0];
 	this.axe1 = AMMO.V3A(a1);
 	this.axe2 = AMMO.V3A(a2);
+
+	this.damping = obj.damping || 1;
+	this.strength = obj.strength || 0.1;
+
+	this.init(obj);
 }
 
-AMMO.Joint.prototype = {
-	constructor: AMMO.Joint,
+AMMO.Constraint.prototype = {
+	constructor: AMMO.Constraint,
 	init:function(obj){
+		
 		switch(obj.type){
-			case "point": this.joint = new Ammo.btPoint2PointConstraint(this.body1, this.body2, this.point1, this.point2); break;
-			case "hinge": this.joint = new Ammo.btHingeConstraint(this.body1, this.body2, this.point1, this.point2, this.axe1, this.axe2, false); break;
-			case "slider": this.joint = new Ammo.btSliderConstraint(this.body1,this.body2,this.point1,this.point2); break;
-			case "conetwist": this.joint = new Ammo.btConeTwistConstraint(this.body1,this.body2,this.point1,this.point2); break;
-			case "gear": this.joint = new Ammo.btGearConstraint(this.body1,this.body2,this.point1,this.point2, this.ratio); break;
-			case "dof": this.joint = new Ammo.btGeneric6DofConstraint(this.body1,this.body2,this.point1,this.point2); break;
+			case "p2p": 
+			    this.joint = new Ammo.btPoint2PointConstraint(this.body1.getBody(), this.body2.getBody(), this.point1, this.point2);
+			    this.joint.get_m_setting().set_m_tau(this.strength);
+                this.joint.get_m_setting().set_m_damping(this.damping); 
+			break;
+			case "hinge": this.joint = new Ammo.btHingeConstraint(this.body1.getBody(), this.body2.getBody(), this.point1, this.point2, this.axe1, this.axe2, false); break;
+			case "slider": this.joint = new Ammo.btSliderConstraint(this.body1.getBody(),this.body2.getBody(),this.point1,this.point2); break;
+			case "conetwist": this.joint = new Ammo.btConeTwistConstraint(this.body1.getBody(),this.body2.getBody(),this.point1,this.point2); break;
+			case "gear": this.joint = new Ammo.btGearConstraint(this.body1.getBody(),this.body2.getBody(),this.point1,this.point2, this.ratio); break;
+			case "dof": this.joint = new Ammo.btGeneric6DofConstraint(this.body1.getBody(),this.body2.getBody(),this.point1,this.point2); break;
 		}
+		//
+
+
+		this.parent.world.addConstraint(this.joint, this.NotAllowCollision);
 	},
 	getMatrix:function(id){
-		var m = this.parent.jmtx;
+		//var m = this.parent.jmtx;
 	}
 }
 

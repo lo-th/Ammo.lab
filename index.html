@@ -55,7 +55,7 @@ function prevInit() {
     Sources = new Transcode.Loader([ "images/ammo.png", "images/three.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
 
     // init editor
-    Editor = new Editor(themes, 11);
+    Editor = new Editor(themes, 12);
     document.body.appendChild( Editor.domElement );
 
     Ambience = new Ambience();
@@ -217,6 +217,10 @@ var ADD = function(obj){
         obj.v = View.getFaces(obj.name, obj.size);
     }
     PostMessage({ tell:"ADD", obj:obj });
+}
+
+var JOINT = function(obj){
+    PostMessage({ tell:"JOINT", obj:obj });
 }
 
 var CAR = function(obj){ 

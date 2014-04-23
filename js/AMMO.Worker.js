@@ -25,6 +25,7 @@ self.onmessage = function (e) {
 	if(phase == "START") STARTWORLD(e.data.option || {});
 	
 	if(phase == "ADD") world.addBody(e.data.obj);
+	if(phase == "JOINT") world.addJoint(e.data.obj);
 	if(phase == "CAR") world.addCar(e.data.obj);
 	if(phase == "SET") if( world.bodys[e.data.id] ) world.bodys[e.data.id].set(e.data.obj);
 	if(phase == "UPTERRAIN") if(world.terrain!== null) world.terrain.update(e.data.Hdata);
