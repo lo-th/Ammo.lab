@@ -276,9 +276,7 @@ var Ambience = function (Pos) {
 	}
 
 	var init3d= function (render){
-		ballRenderer = render;//new THREE.WebGLRenderer({precision: "lowp", antialias:false });
-		//ballRenderer.autoClearColor = false;
-		//ballRenderer.autoClear = false;
+		ballRenderer = render;
 		var s = 1;
 		ballScene = new THREE.Scene();
 		ballCamera = new THREE.CubeCamera( s*0.5, s*1.2, 256 );
@@ -287,6 +285,7 @@ var Ambience = function (Pos) {
 		ballScene.add( ballCamera );
 
 		texture = new THREE.Texture(canvasSphere[0]);
+		texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
 		ballMaterial = new THREE.MeshBasicMaterial({ map:texture });
 		ball = new THREE.Mesh( new THREE.SphereGeometry( 1, 20, 12  ),  ballMaterial);
 		//ball.castShadow = false;
@@ -294,12 +293,11 @@ var Ambience = function (Pos) {
 		ball.scale.set(-s,s,s);
 		ballScene.add( ball );
 
-		
 		texture.needsUpdate = true;
 		ballMaterial.map = texture;
 		ballMaterial.map.needsUpdate = true;
 		ballCamera.updateCubeMap( ballRenderer, ballScene );
-		View.initSky(ballCamera.renderTarget);
+		View.initSky(ballCamera.renderTarget, texture);
 
 		isWith3dRender = true;
 

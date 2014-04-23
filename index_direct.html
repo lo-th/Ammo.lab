@@ -199,14 +199,6 @@ var ADD = function(obj){
 
 var CAR = function(obj){ 
     View.addCar(obj);
-    if(obj.type == "c1gt"){
-        obj.v = View.getVertex("", [1,1,1], c1gt.shape.geometry );
-        obj.massCenter =  [0,-0.075,0];
-    }
-    if(obj.type == "vision"){
-        obj.v = View.getFaces("", [1,1,1], vision.shape.geometry );
-        obj.massCenter =  [0,-0.35,0];
-    }
     world.addCar(obj);
 }
 
@@ -223,6 +215,10 @@ var CLEAR = function(option){
 
 var KEY = function(k){
     world.setKey(k);
+}
+
+var UP_TERRAIN = function(Hdata){ 
+    world.terrain.update(Hdata);
 }
 
 </script>

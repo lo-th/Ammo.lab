@@ -23,6 +23,7 @@ AAA.View = function(Themes){
     this.content = null;
     this.clock = null;
     this.lights = null;
+    this.fog = null;
     this.ground = null;
     this.terrain = null;
     this.postEffect = null;
@@ -34,7 +35,7 @@ AAA.View = function(Themes){
     this.cam = { fov:50, horizontal: 90, vertical: 70, distance: 30, automove: false };
     this.mouse = { ox:0, oy:0, h:0, v:0, rx:0, ry:0, dx:0, dy:0, down:false, moving:false, ray:false, direction:false };
     this.viewSize = { w:window.innerWidth, h:window.innerHeight, mw:1, mh:1};
-    this.key = [0,0,0,0,0,0,0];
+    this.key = [0,0,0,0,0,0,0, 0];
 
     this.themes = Themes || ['1d1f20', '2f3031', '424344', '68696b'];
     this.bgColor = parseInt("0x" + this.themes[0]);
@@ -75,8 +76,12 @@ AAA.View.prototype = {
         //this.container.appendChild( this.renderer.domElement );
 
         this.scene = new THREE.Scene();
+        //this.scene.fog = new THREE.FogExp2( this.bgColor, 0.0025 );
+        
+        this.fog = new THREE.Fog( this.bgColor, 10, 100 );
+        this.scene.fog = this.fog;
 
-        this.camera = new THREE.PerspectiveCamera( this.cam.fov, this.viewSize.w / this.viewSize.h, 0.1, 2000 );
+        this.camera = new THREE.PerspectiveCamera( this.cam.fov, this.viewSize.w / this.viewSize.h, 0.01, 500 );
         this.center = new THREE.Vector3();
         this.moveCamera();
 
@@ -86,6 +91,7 @@ AAA.View.prototype = {
         this.scene.add(this.content);
 
         this.clock = new THREE.Clock();
+        this.delta = 0;
 
         this.lights = [];
 
@@ -136,11 +142,13 @@ AAA.View.prototype = {
         if(this.isSketch){
             this.renderer.setClearColor( this.bgColor, 1);
             this.ground.material.color.setHex(  this.bgColor );
+            this.fog.color.setHex( this.bgColor );
             this.postEffect.clear();
             this.isSketch = false;
         } else{
             this.renderer.setClearColor(0xffffff, 1);
             this.ground.material.color.setHex( 0xffffff );
+            this.fog.color.setHex( 0xffffff );
             this.postEffect = new AAA.PostEffect(this);
             this.postEffect.init();
             this.isSketch = true;
@@ -156,7 +164,8 @@ AAA.View.prototype = {
         this.geoBasic[1] = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
         this.geoBasic[2] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));//cone
     },
-    initSky:function(envtexture){
+    initSky:function(envtexture, texture){
+
         this.sky = envtexture;
         var i = this.mats.length;
         while (i--) {
@@ -164,15 +173,38 @@ AAA.View.prototype = {
             this.mats[i].reflectivity = 0.8;
             this.mats[i].combine = THREE.MixOperation;
         }
+
+        // test spherical shader
+        /*var SphShader = AAA.SEM;
+        SphShader.uniforms[ "tMatCap" ].value = texture;
+        this.mats[3] = new THREE.ShaderMaterial( {
+            uniforms:SphShader.uniforms,
+            vertexShader: SphShader.vertexShader,
+            fragmentShader:SphShader.fragmentShader,
+            shading: THREE.SmoothShading
+        });
+
+        this.mats[4] = new THREE.ShaderMaterial( {
+            uniforms:SphShader.uniforms,
+            vertexShader: SphShader.vertexShader,
+            fragmentShader:SphShader.fragmentShader,
+            shading: THREE.SmoothShading
+        });*/
+
     },
     updateSky:function(envtexture){
         this.sky = envtexture;
     },
     render:function(){
-        var delta = this.clock.getDelta();
+        this.delta = this.clock.getDelta().toFixed(3);
+        //this.key[7] = this.delta;
+
         if( this.terrain !== null  ){
-            if(this.terrain.isAutoMove) this.terrain.update(delta);
-            if(this.terrain.isMove) this.terrain.easing(this.key, 90-this.cam.horizontal, 1);   
+            if(this.terrain.isAutoMove) this.terrain.update(this.delta);
+            if(this.terrain.isMove){
+                this.terrain.easing(this.key, 90-this.cam.horizontal, 1);
+                this.follow(new THREE.Vector3( 0, this.terrain.getZ(0,0)+1, 0 ));
+            }  
         }
         
         if(this.isSketch) this.postEffect.render();
@@ -210,6 +242,7 @@ AAA.View.prototype = {
         this.center.set(0,0,0);
         this.moveCamera();
         this.key[6] = 0;
+        this.key[7] = 0;
     },
     moveCamera:function(){
         this.camera.position.copy(AAA.Orbit(this.center, this.cam.horizontal, this.cam.vertical, this.cam.distance));
@@ -255,7 +288,8 @@ AAA.View.prototype = {
         if(e.wheelDelta){delta=e.wheelDelta*-1;}
         else if(e.detail){delta=e.detail*20;}
         this.cam.distance+=(delta/100);
-        if(this.cam.distance<0.1)this.cam.distance = 0.1;
+        if(this.cam.distance<0.01)this.cam.distance = 0.01;
+        if(this.cam.distance>50)this.cam.distance = 50;
         this.moveCamera(); 
     },
     addCar:function(obj){
@@ -494,13 +528,19 @@ AAA.Joint.prototype = {
 
 AAA.Car = function(obj, Parent){
     this.parent = Parent;
+    this.speed = 0;
     var size = obj.size || [2,0.5,5];
     var wPos = obj.wPos || [1,0,2];
     var wRadius = obj.wRadius || 0.4;
     var wDeepth = obj.wDeepth || 0.3;
     var nWheels = obj.nWheels || 4;
-    this.type = obj.type || 'c1gt';
+    var massCenter = obj.massCenter || [0,0,0];
+    var shape = null;
+
+    this.type = obj.type || 'basic';
     this.steering = null;
+    
+    
 
     this.nWheels = nWheels;
 
@@ -523,21 +563,45 @@ AAA.Car = function(obj, Parent){
             c.rotation.y = 180*AAA.ToRad;
             this.mesh.add(c);
 
+            shape = c1gt.shape;
+            /*shape.geometry.computeBoundingBox();
+            var bBox = shape.geometry.boundingBox;
+             var y0 = bBox.min.y//y[ 0 ];
+             var y1 = bBox.max.y//.y[ 1 ];
+             var bHeight = ( y0 > y1 ) ? y0 - y1 : y1 - y0;*/
+            var centroidY = -0.23;//-(y0 + ( bHeight *0.5 ))+ 0.226//shape.position.y;
+            //var minY = Math.min (minY, bBox.min.y);
+           // console.log(bHeight, centroidY, shape.position.y)
+
+           //var d = shape.clone()
+
+           // this.mesh.add(d);
+           //d.position.y = centroidY;
+            c.position.y = centroidY;
+
+
+
             this.steering = c.children[0];
 
             wheelMesh = c1gt.wheel;
             wRadius = 0.34;
             wDeepth = 0.26;
             size = [1.85,0.5,3.44];//1.465
-            wPos = [0.79,0,1.2];
+            wPos = [0.79,centroidY,1.2];
+            massCenter =  [0,centroidY,0];
 
-            this.driverPos.position.set(0.40, 0.9, -0.2);
+            this.driverPos.position.set(0.40, 0.9+centroidY, -0.2);
         break;
         case 'vision':
             this.mesh= new THREE.Object3D();
             var c = vision.car.clone();
-            c.position.y = -0.33;
             this.mesh.add(c);
+
+            shape = vision.shape;
+
+            var centroidY = -0.326;
+            c.position.y = centroidY;
+
 
             this.steering = c.children[0];
 
@@ -546,6 +610,7 @@ AAA.Car = function(obj, Parent){
             wDeepth = 0.26;
             size = [1.9,0.5,4.6];//1.24
             wPos = [0.85,0,1.42];
+            massCenter =  [0,centroidY,0];
 
             this.driverPos.position.set(0.42, 0.75, 0);
         break;
@@ -587,6 +652,9 @@ AAA.Car = function(obj, Parent){
     obj.wRadius = wRadius;
     obj.wDeepth = wDeepth;
     obj.nWheels = nWheels;
+    obj.massCenter = massCenter;
+    if(shape!==null) obj.v = View.getVertex("", [1,1,1], shape.geometry );
+
 }
 
 AAA.Car.prototype = {
@@ -596,12 +664,13 @@ AAA.Car.prototype = {
         var m = mtxCar;
         var n = id * 40;
 
+        this.speed = m[n+0];
+
         this.mesh.position.set( m[n+5], m[n+6], m[n+7] );
         this.mesh.quaternion.set( m[n+1], m[n+2], m[n+3], m[n+4] );
 
         if(id == this.parent.key[6]){
-            if(this.parent.key[2] ==1) this.steering.rotation.z += 0.1;
-            if(this.parent.key[3] ==1) this.steering.rotation.z -= 0.1;
+            this.steering.rotation.z = m[n+8]*6;
               
             this.mesh.updateMatrixWorld();
             var pos = new THREE.Vector3();
@@ -636,6 +705,7 @@ AAA.PostEffect = function(Parent){
 AAA.PostEffect.prototype = {
     constructor: AAA.PostEffect,
     init:function(){
+
         this.colorBuffer=new THREE.WebGLRenderTarget(1,1,this.parameters);
         //this.blurBuffer=new THREE.WebGLRenderTarget(1,1,parameters);
         this.composer= new THREE.EffectComposer(this.parent.renderer);
@@ -683,3 +753,61 @@ AAA.PostEffect.prototype = {
         this.pass = null;
     }
 }
+
+//-----------------------------------------------------
+// SPHERICAL SHADER
+//-----------------------------------------------------
+/*
+AAA.SEM = {
+    uniforms: {
+        "tMatCap": { type: "t", value: null }
+    },
+    vertexShader: [
+        "varying vec2 vN;",
+        "void main() {",
+            "vec3 e = normalize( vec3( modelViewMatrix * vec4( position, 1.0 ) ) );",
+            "vec3 n = normalize( normalMatrix * normal );",
+            "vec3 r = reflect( e, n );",
+            "float m = 2. * sqrt( pow( r.x, 2. ) + pow( r.y, 2. ) + pow( r.z + 1., 2. ) );",
+            "vN = r.xy / m + .5;",
+            "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1. );",
+        "}"
+    ].join("\n"),
+    fragmentShader: [
+        "uniform sampler2D tMatCap;",
+        "varying vec2 vN;",
+        "void main() {",
+            "vec3 base = texture2D( tMatCap, vN ).rgb;",
+            "gl_FragColor = vec4( base, 1. );",
+        "}"
+    ].join("\n")
+};
+
+AAA.SEM2 = {
+    uniforms: {
+        "tMatCap": { type: "t", value: null }
+    },
+    vertexShader: [
+        "varying vec3 e;",
+        "varying vec3 n;",
+        "void main() {",
+            "e = normalize( vec3( modelViewMatrix * vec4( position, 1.0 ) ) );",
+            "n = normalize( normalMatrix * normal );",
+            "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1. );",
+        "}"
+    ].join("\n"),
+    fragmentShader: [
+        "uniform sampler2D tMatCap;",
+        "varying vec3 e;",
+        "varying vec3 n;",
+        "void main() {",
+            "vec3 r = reflect( e, n );",
+            "//r = e - 2. * dot( n, e ) * n;",
+            "float m = 2. * sqrt( pow( r.x, 2. ) + pow( r.y, 2. ) + pow( r.z + 1., 2. ) );",
+            "vec2 vN = r.xy / m + .5;",
+            "vec3 base = texture2D( tMatCap, vN ).rgb;",
+            "gl_FragColor = vec4( base, 1. );",
+        "}"
+    ].join("\n")
+};
+*/

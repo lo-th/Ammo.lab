@@ -208,7 +208,7 @@ TERRAIN.Generate.prototype = {
                 vertexShader:   params[ i ][ 2 ],
                 fragmentShader: params[ i ][ 1 ],
                 lights:         params[ i ][ 4 ],
-                fog:            false,
+                fog:            true,
                 } );
 
             this.mlib[ params[ i ][ 0 ] ] = material;
@@ -267,8 +267,7 @@ TERRAIN.Generate.prototype = {
            }
         }
 
-        if(AmmoWorker) AmmoWorker.postMessage({tell:"UPTERRAIN", Hdata:this.hfFloatBuffer });
-        else if(world) world.terrain.update(this.hfFloatBuffer);
+        UP_TERRAIN(this.hfFloatBuffer);
     },
     
     generateData : function (width, height, color) {
@@ -389,12 +388,12 @@ TERRAIN.Generate.prototype = {
         this.lightDir *= -1;
     },
     getZ:function (x, z) {
-        if(!this.fullLoaded) return 0;
+        if(this.tmpData==null) return 0;
         var colx =Math.floor((x / this.size[0] + .5) * ( this.div[0]));
         var colz =Math.floor((-z / this.size[2] + .5) * ( this.div[1]));
         var pixel = Math.floor(((colz-1)*this.div[0])+colx)*4;
         var result = (this.tmpData[pixel+0]+this.tmpData[pixel+1]+this.tmpData[pixel+2])*this.ratio;
-        return result-this.seaLevel+4;
+        return result;
     }
 
 }
@@ -588,8 +587,7 @@ TERRAIN.ShaderNoise = {
 
                 "vec4 m = max( 0.6 - vec4( dot( x0, x0 ), dot( x1, x1 ), dot( x2, x2 ), dot( x3, x3 ) ), 0.0 );",
                 'm = m * m;',
-                "return 42.0 * dot( m*m, vec4( dot( p0, x0 ), dot( p1, x1 ),",
-                                              "dot( p2, x2 ), dot( p3, x3 ) ) );",
+                "return 42.0 * dot( m*m, vec4( dot( p0, x0 ), dot( p1, x1 ), dot( p2, x2 ), dot( p3, x3 ) ) );",
 
             "}",
 
@@ -696,6 +694,7 @@ TERRAIN.initShader = function( ){
 
         uniforms: THREE.UniformsUtils.merge( [
 
+            THREE.UniformsLib[ "common" ],
             THREE.UniformsLib[ "fog" ],
             THREE.UniformsLib[ "lights" ],
             THREE.UniformsLib[ "shadowmap" ],
@@ -809,6 +808,7 @@ TERRAIN.initShader = function( ){
 
             THREE.ShaderChunk[ "shadowmap_pars_fragment" ],
             THREE.ShaderChunk[ "fog_pars_fragment" ],
+            THREE.ShaderChunk[ "envmap_pars_fragment" ],
 
             "void main() {",
 
@@ -1018,6 +1018,7 @@ TERRAIN.initShader = function( ){
 
                 THREE.ShaderChunk[ "shadowmap_fragment" ],
                 THREE.ShaderChunk[ "linear_to_gamma_fragment" ],
+                THREE.ShaderChunk[ "envmap_fragment" ],
                 THREE.ShaderChunk[ "fog_fragment" ],
 
             "}"
@@ -1049,6 +1050,7 @@ TERRAIN.initShader = function( ){
             "varying vec3 vViewPosition;",
 
             THREE.ShaderChunk[ "shadowmap_pars_vertex" ],
+            THREE.ShaderChunk[ "envmap_pars_vertex" ],
 
             "void main() {",
 
@@ -1096,6 +1098,7 @@ TERRAIN.initShader = function( ){
                 "vNormal = normalMatrix * normalTex;",
 
                 THREE.ShaderChunk[ "shadowmap_vertex" ],
+                THREE.ShaderChunk[ "envmap_vertex" ],
 
             "}"
 

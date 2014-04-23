@@ -6,16 +6,16 @@ CLEAR({broadphase:"BVT", timer:false, timestep:1/60, iteration:2, G:-10});
 function initDemo()
 {
     NAME("Infinite Terrain", "use arrow key to move terrain");
-    ADD({ type:"ground", size:[40,1,40], pos:[0,0.5,0] });
-    ADD({type:"terrain", pos:[0,0,0], size:[40,3,40], div:[128,128], Move:true });
+    ADD({type:"ground", size:[200,1,200], pos:[0,0.5,0] });
+    ADD({type:"terrain", size:[200,10,200], pos:[0,0,0],  div:[128,128], Move:true });
 
     var max = 50;
     var px, py, pz, sx, sy, sz;
 
     for (var i=0; i!==max; ++i ){
-        sx = 0.1 + Math.random();
-        sy = 0.1 + Math.random();
-        sz = 0.1 + Math.random();
+        sx = 1 + Math.random();
+        sy = 1 + Math.random();
+        sz = 1 + Math.random();
         px = -10+Math.random()*20;
         py = 1+i;
         pz = -10+Math.random()*20;

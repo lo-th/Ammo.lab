@@ -81,14 +81,14 @@ AMMO.World = function(obj){
 
 	this.init();
 
-	this.last = Date.now();; 
+	this.last = Date.now();
 	this.now = 0;
 	this.dt = 0;
 	this.tt = [0 , 0];
 
 	this.infos = [];
 
-	this.key = [0,0,0,0,0,0,0];
+	this.key = [0,0,0,0,0,0,0, 0];
 }
 
 AMMO.World.prototype = {
@@ -160,7 +160,7 @@ AMMO.World.prototype = {
     	//dt = dt || 1;
     	var now = Date.now();
     	this.dt = now - this.last;
-    	this.world.stepSimulation( this.dt, this.iteration);
+    	
     	var i;
     	i = this.BODYID;
 	    while (i--) { this.bodys[i].getMatrix(i); }
@@ -169,6 +169,8 @@ AMMO.World.prototype = {
 	    	if(i==this.key[6])this.cars[i].drive();
 	    	this.cars[i].getMatrix(i);
 	    }
+
+	    this.world.stepSimulation( this.dt, this.iteration);
 
 	    this.last = now;
 	    this.upInfo();
@@ -454,13 +456,18 @@ AMMO.Vehicle = function(obj, Parent){
 	};
 
 
-	this.maxEngineForce = obj.maxEngineForce || 2000.0;
+	this.maxEngineForce = this.settings.engine;//obj.maxEngineForce || 2000.0;
     this.maxBreakingForce = obj.maxBreakingForce || 125.0;
     this.steeringClamp = obj.steeringClamp || 0.51;
 
 	this.engine = 0.0;
     this.breaking = 0.0;
     this.steering = 0.0;
+    this.gas = 0;
+
+    this.incEngine = 5;
+    this.maxSteering = Math.PI / 6;
+	this.incSteering = 0.01;
 
     this.vehicleRayCaster = null;
     this.tuning = null;
@@ -544,8 +551,8 @@ AMMO.Vehicle.prototype = {
 		this.tuning.set_m_maxSuspensionForce(this.settings.force);//6000
 		this.tuning.set_m_frictionSlip( this.settings.frictionSlip);//10.5
 
-		this.maxEngineForce = this.settings.engine;
-		this.maxSteering = 0.3;
+		//this.maxEngineForce = this.settings.engine;
+		
 
 
 	    this.vehicle = new Ammo.btRaycastVehicle(this.tuning, this.body, this.vehicleRayCaster);
@@ -579,7 +586,7 @@ AMMO.Vehicle.prototype = {
     	var m = this.parent.mtxCar;
     	var n = id*40;
 
-		m[n+0] = this.vehicle.getCurrentSpeedKmHour();//this.body.getActivationState();
+		m[n+0] = parseInt(this.vehicle.getCurrentSpeedKmHour());//.toFixed(0);//this.body.getActivationState();
 
 		//var t = this.body.getCenterOfMassTransform();
 		//var t = this.vehicle.getChassisWorldTransform(); 
@@ -613,7 +620,8 @@ AMMO.Vehicle.prototype = {
 	    	r = t.getRotation();
 	        p = t.getOrigin();
 	        w = 8*(i+1);
-	        m[n+w+0] = i;
+	        if(i==0) m[n+w+0] = this.steering;
+	        else m[n+w+0] = i;
 	        m[n+w+1] = r.x();
 		    m[n+w+2] = r.y();
 		    m[n+w+3] = r.z();
@@ -626,21 +634,51 @@ AMMO.Vehicle.prototype = {
     },
     drive:function(){
     	var key = this.parent.key;
-    	var st = 0, f=0, b=0;
-    	if(key[2]==1)st=this.maxSteering;
-    	if(key[3]==1)st=-this.maxSteering;
-    	if(key[2]==0 && key[3]==0) st = 0;
+    	//var lus = key[7];
+    	//if (lus>0.1) lus = 0.1;
+    	
+    	if(key[2]==1)this.steering+=this.incSteering;
+    	if(key[3]==1)this.steering-=this.incSteering;
+    	if(key[2]==0 && key[3]==0) this.steering *= 0.9;//this.steering = 0;
+    	if (this.steering < -this.maxSteering) this.steering = -this.maxSteering;
+		if (this.steering > this.maxSteering) this.steering = this.maxSteering;
 
-    	if(key[0]==1)f=this.maxEngineForce;
-    	if(key[1]==1)f=-0.5*this.maxEngineForce;
-    	if(key[0]==0 && key[1]==0) f=0;
+    	if(key[0]==1)this.engine+=this.incEngine;//this.gas = 1; //
+    	if(key[1]==1)this.engine-=this.incEngine;//this.gas = -1; //
+    	if(key[0]==0 && key[1]==0){
+    		if(this.engine>1)this.engine *= 0.9;
+    		else if (this.engine<-1)this.engine *= 0.9;
+    		else {this.engine = 0; this.breaking=100;}
+    	} //this.gas = 0;
+
+    	//console.log(this.engine)
+
+    	/*if (this.gas > 0) {
+            this.engine += 5;//lus*300; 
+        } else if (this.gas < 0) {
+           if (this.engine>0) {
+               this.engine *= 0.5//-= this.engine*lus*10.0;                           
+           }
+           this.engine -= 3;//lus*200.0;
+        } else {
+        	//this.engine -= this.engine*lus*2.0;
+        	this.engine *= 0.9;
+           //vehicle.setEngineForce(vehicle.getEngineForce()-(vehicle.getEngineForce()*lus*2.0));
+        }*/
+
+        if (this.engine > this.maxEngineForce) this.engine = this.maxEngineForce;
+    	if (this.engine < -this.maxEngineForce) this.engine = -this.maxEngineForce;
+		
+
 
     	var i = this.nWheels;
     	while(i--){
-    		this.vehicle.applyEngineForce( f, i );
-    		this.vehicle.setBrake( b, i );
-    		if(i==0 || i==1)this.vehicle.setSteeringValue( st, i );
+    		this.vehicle.applyEngineForce( this.engine, i );
+    		this.vehicle.setBrake( this.breaking, i );
+    		if(i==0 || i==1) this.vehicle.setSteeringValue( this.steering, i );
     	}
+
+    	//this.steering *= 0.9;
 
     }
 }

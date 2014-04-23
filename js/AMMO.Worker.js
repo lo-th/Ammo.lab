@@ -44,6 +44,7 @@ var UPDATE = function(){
 
 	world.step();
 
+	//self.postMessage({tell:"RUN", mtx:world.mtx, mtxCar:world.mtxCar, infos:world.infos }, [world.mtx.buffer, world.mtxCar.buffer]);
 	self.postMessage({tell:"RUN", mtx:world.mtx, mtxCar:world.mtxCar, infos:world.infos });
 
 	if(isTimout){

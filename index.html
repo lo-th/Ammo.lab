@@ -12,7 +12,7 @@
     input{ margin:0px; padding:4px; }
     #container{ position: absolute; width:100%; height:100%;}
     #interface{ position: absolute; left:10px; top:10px; width:456px; height:20px; }
-    #stats{ position: absolute; left:280px; bottom:0px; height:20px; width:220px;  pointer-events:none; font-size: 12px; word-spacing:-4px; color:#909090;}
+    #stats{ position: absolute; left:280px; bottom:0px; height:20px; width:520px;  pointer-events:none; font-size: 12px; word-spacing:-4px; color:#909090;}
     #info{ pointer-events:none; position: absolute; left:48px; top:18px; width:300px; height:30px; line-height:12px;}
     #note{ pointer-events:none; position: absolute; left:48px; top:58px; width:300px; height:50px; line-height:12px; color:#909090;}
 </style>
@@ -66,15 +66,32 @@ function prevInit() {
 // AMMO WORKER SIDE 
 //-----------------------------------
 
+var workerCount = 1;
+var workers = new Array(workerCount);
+
+for (i = 0; i < workerCount; i++) {
+    workers[i] = new Worker('js/AMMO.Worker.js');
+    workers[i].onmessage = Message;
+    workers[i].postMessage = workers[i].webkitPostMessage || workers[i].postMessage;
+}
+
+
 var ammoInfo = [0];
-var AmmoWorker = new Worker('js/AMMO.Worker.js');
-AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
+//var AmmoWorker = new Worker('js/AMMO.Worker.js');
+//AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
+//AmmoWorker.onmessage = Message;
 
 var c1gt, vision;
 var mtxCar;
-var mtx;
+//var mtx;
+/*var i; 
+var MAX_BODY = 1024;
+var MAX_CAR = 20;
+var MAX_CAR_WHEEL = 4;
+var mtxCar = new Float32Array(MAX_CAR*(8+(8*MAX_CAR_WHEEL)));
+var mtx = new Float32Array(MAX_BODY*8);*/
 
-AmmoWorker.onmessage = function(e) {
+function Message(e) {
 
 	var phase = e.data.tell;
     
@@ -98,9 +115,21 @@ AmmoWorker.onmessage = function(e) {
     if( phase === "CLEAR"){
         View.clearAll();
         if(Editor.getScript()){
-            AmmoWorker.postMessage({tell:"START", option:engineOption });
+            //AmmoWorker.postMessage({tell:"START", option:engineOption });
+            PostMessage({tell:"START", option:engineOption });
             initDemo();
         }
+    }
+}
+
+function PostMessage(obj) {
+    var i = workerCount;
+    while (i--) {
+        /*obj.mtx = mtx;
+        obj.mtxCar = mtxCar;
+        workers[i].postMessage(obj,[mtx.buffer, mtxCar.buffer]);*/
+
+        workers[i].postMessage(obj);
     }
 }
 
@@ -126,7 +155,8 @@ function loop() {
 
     requestAnimationFrame( loop );
     View.render();
-    stats.innerHTML = "three: " + View.fps +" fps | ammo: " + ammoInfo[0]+" fps";
+    stats.innerHTML = "three: " + View.fps +" fps | ammo: " + ammoInfo[0]+" fps";//+ " | delta:" + View.delta;//.toFixed(3);
+    if(View.cars[View.key[6]])stats.innerHTML += "| car speed: " + View.cars[View.key[6]].speed+" km/h";
 
 }
 
@@ -146,7 +176,7 @@ function initGeometry(){
         View.geos[i].name = oName[i];
     }
 
-    c1gt = new AAA.C1gt(initVisionCar, false);
+    c1gt = new AAA.C1gt(initVisionCar, true);
 }
 
 function initVisionCar(){
@@ -156,8 +186,9 @@ function initVisionCar(){
 function initDemo(){
     Editor.hideIntro();
     displayInfo();
+    
     // send AMMO script to worker
-    AmmoWorker.postMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });
+    PostMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });
 
     loop();
     View.container.appendChild( View.renderer.domElement );
@@ -174,7 +205,7 @@ var NAME = function(name, Note){
 }
 
 var SET = function(id, obj){
-    AmmoWorker.postMessage({tell:"SET", id:id, obj:obj });
+    PostMessage({tell:"SET", id:id, obj:obj });
 }
 
 var ADD = function(obj){
@@ -185,29 +216,25 @@ var ADD = function(obj){
     if(obj.type == "mesh"){// get geometry faces vertices 
         obj.v = View.getFaces(obj.name, obj.size);
     }
-    AmmoWorker.postMessage({ tell:"ADD", obj:obj });
+    PostMessage({ tell:"ADD", obj:obj });
 }
 
 var CAR = function(obj){ 
     View.addCar(obj);
-    if(obj.type == "c1gt"){
-        obj.v = View.getVertex("", [1,1,1], c1gt.shape.geometry );
-        obj.massCenter =  [0,-0.075,0];
-    }
-    if(obj.type == "vision"){
-        obj.v = View.getFaces("", [1,1,1], vision.shape.geometry );
-        obj.massCenter =  [0,-0.35,0];
-    }
-    AmmoWorker.postMessage({ tell:"CAR", obj:obj });
+    PostMessage({ tell:"CAR", obj:obj });
 }
 
 var CLEAR = function(obj){
     engineOption = obj || {};
-    AmmoWorker.postMessage({tell:"CLEAR"});
+    PostMessage({tell:"CLEAR"});
 }
 
 var KEY = function(key){
-    AmmoWorker.postMessage({tell:"KEY", key:key});
+    PostMessage({tell:"KEY", key:key});
+}
+
+var UP_TERRAIN = function(Hdata){ 
+    PostMessage({tell:"UPTERRAIN", Hdata:Hdata });
 }
 
 

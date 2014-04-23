@@ -44,7 +44,7 @@ AAA.C1gt.prototype = {
     init:function(){
     	this.geos = [];
     	for(var i=0;i<this.name.length;i++){
-	        this.geos[i] = this.Pool.getGeometry(this.name[i], true, 0.02);
+    		this.geos[i] = this.Pool.getGeometry(this.name[i], true, 0.02);
 	    }
 	    this.textures = [];
 	    var PATH = "images/c1gt/";
@@ -94,6 +94,7 @@ AAA.C1gt.prototype = {
 	    THREE.GeometryUtils.merge(geobody, this.geos[11]);
 
 	    this.meshs[0] = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(geobody), this.mats[0] );
+	    // this.meshs[0] = new THREE.Mesh( geobody, this.mats[0] );
 	    this.meshs[0].add(bodyGlass);
 	    this.meshs[0].add(headlight);
 	    this.meshs[0].add(intern);
