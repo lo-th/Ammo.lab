@@ -1,7 +1,7 @@
 AAA.ToRad = Math.PI / 180;
 
-AAA.Terrain = function(endFunction){
-    this.end = endFunction;
+AAA.Terrain = function(){
+  //  this.end = endFunction;
 
     //this.rootView = null;
     this.div = null;
@@ -58,14 +58,17 @@ AAA.Terrain = function(endFunction){
     this.fullLoaded = false;
     this.ttimerTest = null;
 
-    this.load();
+    this.renderer = null;
+
+    //this.load();
+    AAA.initShader();
 
 
 }
 
 AAA.Terrain.prototype = {
     constructor: AAA.Terrain,
-    load:function(){
+    /*load:function(){
         var PATH = "images/terrain/";
         var i = this.tmaps.length;
         while(i--){
@@ -85,10 +88,15 @@ AAA.Terrain.prototype = {
                 _this.ttextures[i].wrapS = _this.ttextures[i].wrapT = THREE.RepeatWrapping;
             }
 
-            AAA.initShader();
+           // _this.renderer = new THREE.WebGLRenderer( {precision: "lowp", antialias: false, alpha:false } );
+           // _this.renderer.setSize( View.viewSize.w, View.viewSize.h );
+          //   View.container.appendChild( _this.renderer.domElement );
+        //this.renderer.setClearColor( this.bgColor, 1 );
+
+            
             _this.end();
         }
-    },
+    },*/
 
     clear:function () {
         this.container.remove(this.mesh);
@@ -191,7 +199,7 @@ AAA.Terrain.prototype = {
         //this.specularMap = new THREE.WebGLRenderTarget( 512, 512, pars );
         this.specularMap = new THREE.WebGLRenderTarget( 1024, 1024, pars );
 
-        this.applyShader();
+       // this.applyShader();
 
         // TERRAIN SHADER
 
@@ -202,44 +210,44 @@ AAA.Terrain.prototype = {
        // this.uniformsTerrain[ "envMap" ].value = this.envMap;
         //this.uniformsTerrain[ "combine" ].value = THREE.MixOperation;
 
-        this.uniformsTerrain[ "tCube" ].value = View.sky;
+        this.uniformsTerrain[ "tCube" ].value = View.sky2;
         this.uniformsTerrain[ "reflectivity" ].value = 0.5;
         this.uniformsTerrain[ "enableReflection" ].value = true;
 
-        this.uniformsTerrain[ "oceanTexture" ].value = this.ttextures[0];
-        this.uniformsTerrain[ "sandyTexture" ].value = this.ttextures[1];
-        this.uniformsTerrain[ "grassTexture" ].value = this.ttextures[2];
-        this.uniformsTerrain[ "rockyTexture" ].value = this.ttextures[3];
-        this.uniformsTerrain[ "snowyTexture" ].value = this.ttextures[4];
+        this.uniformsTerrain[ "oceanTexture" ].value = Textures.getByName("level0");
+        this.uniformsTerrain[ "sandyTexture" ].value = Textures.getByName("level1");
+        this.uniformsTerrain[ "grassTexture" ].value = Textures.getByName("level2");
+        this.uniformsTerrain[ "rockyTexture" ].value = Textures.getByName("level3");
+        this.uniformsTerrain[ "snowyTexture" ].value = Textures.getByName("level4");
 
         this.uniformsTerrain[ "tNormal" ].value = this.normalMap;
         this.uniformsTerrain[ "uNormalScale" ].value = 3.5;
 
         this.uniformsTerrain[ "tDisplacement" ].value = this.heightMap;
 
-        this.uniformsTerrain[ "tDiffuse1" ].value = this.ttextures[5];
-        this.uniformsTerrain[ "tDiffuse2" ].value = this.ttextures[6];
-        this.uniformsTerrain[ "tSpecular" ].value = this.specularMap;
-        this.uniformsTerrain[ "tDetail" ].value = this.ttextures[7];
+        this.uniformsTerrain[ "tDiffuse1" ].value = Textures.getByName("diffuse1");
+        this.uniformsTerrain[ "tDiffuse2" ].value = Textures.getByName("diffuse2");
+        //this.uniformsTerrain[ "tSpecular" ].value = this.specularMap;
+        this.uniformsTerrain[ "tDetail" ].value = Textures.getByName("normal");
 
         this.uniformsTerrain[ "enableDiffuse1" ].value = true;
         this.uniformsTerrain[ "enableDiffuse2" ].value = true;
-        this.uniformsTerrain[ "enableSpecular" ].value = true;
+        this.uniformsTerrain[ "enableSpecular" ].value = false;
 
         this.uniformsTerrain[ "diffuse" ].value.setHex( 0x303030 );
         this.uniformsTerrain[ "specular" ].value.setHex( 0x606060 );
         this.uniformsTerrain[ "ambient" ].value.setHex( 0x101010 );
 
-        this.uniformsTerrain[ "shininess" ].value = 60;
+        this.uniformsTerrain[ "shininess" ].value = 30;
 
         this.uniformsTerrain[ "uDisplacementScale" ].value = this.size[1];
         this.uniformsTerrain[ "uRepeatOverlay" ].value.set( 12, 12 );
 
         var params = [
-                        [ 'heightmap',  terrainNoise.fragmentShader, terrainNoise.vertexShader, this.uniformsNoise, false ],
-                        [ 'normal',     normalShader.fragmentShader,  normalShader.vertexShader, this.uniformsNormal, false ],
-                        [ 'terrain',    terrainShader.fragmentShader, terrainShader.vertexShader, this.uniformsTerrain, true ]
-                     ];
+            [ 'heightmap',  terrainNoise.fragmentShader, terrainNoise.vertexShader, this.uniformsNoise, false ],
+            [ 'normal',     normalShader.fragmentShader,  normalShader.vertexShader, this.uniformsNormal, false ],
+            [ 'terrain',    terrainShader.fragmentShader, terrainShader.vertexShader, this.uniformsTerrain, false ]
+         ];
 
         var material;
         for( var i = 0; i < params.length; i ++ ) {
@@ -299,7 +307,8 @@ AAA.Terrain.prototype = {
 
         sceneTmp.add( meshTmp );
 
-        View.renderer.render( sceneTmp, this.cameraOrtho, this.specularMap, true );
+        View.renderer.render( sceneTmp, this.cameraOrtho, this.specularMap, false );
+        //this.renderer.render( sceneTmp, this.cameraOrtho, this.specularMap, true );
 
     },
 
@@ -418,12 +427,15 @@ AAA.Terrain.prototype = {
 
                 this.quadTarget.material =  this.mlib[ "heightmap" ];
                 View.renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.heightMap, true );
+                //this.renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.heightMap, true );
 
                 var gl = View.renderer.getContext();
+                //var gl = this.renderer.getContext();
                 gl.readPixels( 0, 0, this.div[0], this.div[1], gl.RGBA, gl.UNSIGNED_BYTE, this.tmpData );
 
                 this.quadTarget.material =  this.mlib[ "normal" ];
                 View.renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.normalMap, true );
+                //this.renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.normalMap, true );
 
                 this.generatePhysics();
            // }
@@ -683,7 +695,7 @@ AAA.ShaderNoise = {
 
 };
 
-AAA.LuminosityShader = {
+/*AAA.LuminosityShader = {
 
     uniforms: {
 
@@ -725,7 +737,7 @@ AAA.LuminosityShader = {
 
     ].join("\n")
 
-};
+};*/
 
 AAA.ShaderTerrain = {};
 AAA.initShader = function( ){
@@ -802,6 +814,8 @@ AAA.initShader = function( ){
             "uniform sampler2D grassTexture;",
             "uniform sampler2D rockyTexture;",
             "uniform sampler2D snowyTexture;",
+
+            "uniform sampler2D fullTexture;",
 
             "uniform samplerCube tCube;",
             "uniform bool useRefract;",
@@ -908,9 +922,12 @@ AAA.initShader = function( ){
 
                     "#endif",
 
-                    //"gl_FragColor = gl_FragColor * mix ( colDiffuse1, colDiffuse2, 1.0 - texture2D( tDisplacement, uvBase ) );",
-                    "gl_FragColor = gl_FragColor * mix ( colDiffuse1, colDiffuse2, 1.0 - texture2D( tDisplacement, uvBase ) )+ water + sandy + grass + rocky + snowy;",
-                    //"gl_FragColor = vec4( gl_FragColor.xyz, 1.0 )+ water + sandy + grass + rocky + snowy;",
+                    "gl_FragColor = gl_FragColor * mix ( colDiffuse1, colDiffuse2, 1.0 - texture2D( tDisplacement, uvBase ) );",
+                    //"gl_FragColor = gl_FragColor * mix ( colDiffuse1, colDiffuse2, 1.0 - texture2D( tDisplacement, uvBase ) )+ water + sandy + grass + rocky + snowy;",
+                    "gl_FragColor = vec4( gl_FragColor.xyz, 1.0 )+ water + sandy + grass + rocky + snowy;",
+                    //"fullTexture = vec4( gl_FragColor.xyz, 1.0 )+ water + sandy + grass + rocky + snowy;",
+                    //"gl_FragColor.xyz = mix( gl_FragColor.xyz, fullTexture, 1.0 );",
+
 
                 " } else if( enableDiffuse1 ) {",
 
@@ -1060,7 +1077,7 @@ AAA.initShader = function( ){
                 "#endif",
 
 
-                "gl_FragColor.xyz = gl_FragColor.xyz * ( totalDiffuse + ambientLightColor * ambient + totalSpecular );",
+                //"gl_FragColor.xyz = gl_FragColor.xyz * ( totalDiffuse + ambientLightColor * ambient + totalSpecular );",
 
                 // reflection test
 

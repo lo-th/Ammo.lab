@@ -19,6 +19,7 @@
 
 <script src="js/AAA.View.js"></script>
 <script src="js/AAA.Terrain.js"></script>
+<script src="js/AAA.Texture.js"></script>
 <script src="js/vehicle/C1gt.js"></script>
 <script src="js/vehicle/Vision.js"></script>
 <script src="js/loth/Transcode.js"></script>
@@ -43,7 +44,7 @@ var note = document.getElementById("note");
 var stats = document.getElementById("stats");
 var demoName = "loth", demoNote = "2014";
 
-var Sources, Editor, Ambience, View, Pool;
+var Sources, Editor, Ambience, View, Pool, Textures;
 
 //-----------------------------------
 // ALL SOURCE LOADED FROM PNG 
@@ -52,7 +53,7 @@ var Sources, Editor, Ambience, View, Pool;
 window.onload = prevInit;
 
 function prevInit() {
-    Sources = new Transcode.Loader([ "images/ammo_new.png", "images/three.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
+    Sources = new Transcode.Loader([ "images/ammo.png", "images/three2.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
 
     // init editor
     Editor = new Editor(themes, 12);
@@ -60,6 +61,8 @@ function prevInit() {
 
     Ambience = new Ambience();
     document.body.appendChild( Ambience.domElement );
+
+    Textures = new AAA.Texture();
 }
 
 //-----------------------------------
@@ -145,7 +148,7 @@ function init() {
     Ambience.init3d(View.renderer);
 
     // load basic model
-    Pool = new SEA3D.Pool('models/geo.sea', initGeometry);
+    Pool = new SEA3D.Pool('models/geo.sea', initTextures);
 
     stats.innerHTML = "Loading sea3d models !!"
 
@@ -168,18 +171,20 @@ function displayInfo(){
 //-----------------------------------------------------
 // MESH IMPORT
 //-----------------------------------------------------
+function initTextures(){
+    Textures.load(initGeometry);
+    stats.innerHTML = "Loading textures !!"
+}
 
 function initGeometry(){
     var oName = ['smoothCube','smoothCylinder','dice','L','T','H'];
-    for(var i=0;i<oName.length;i++){
+    for(var i=0; i<oName.length; i++){
         View.geos[i] = Pool.getGeometry(oName[i], true);
         View.geos[i].name = oName[i];
     }
 
-    c1gt = new AAA.C1gt(initTerrain, true);
-}
-function initTerrain(){
-    terrain = new AAA.Terrain(initVisionCar);
+    stats.innerHTML = "Loading sea3d cars models !!"
+    c1gt = new AAA.C1gt(initVisionCar, true);
 }
 function initVisionCar(){
     vision = new AAA.Vision(initDemo, false);
@@ -192,7 +197,10 @@ function initDemo(){
     // send AMMO script to worker
     PostMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });
 
+    terrain = new AAA.Terrain();
+
     loop();
+
     View.container.appendChild( View.renderer.domElement );
 }
 

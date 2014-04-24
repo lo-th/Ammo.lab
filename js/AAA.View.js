@@ -27,6 +27,7 @@ AAA.View = function(Themes){
     this.ground = null;
     this.postEffect = null;
     this.sky = null;
+    this.sky2 = null;
 
     this.cars = [];
     this.objs = [];
@@ -51,8 +52,11 @@ AAA.View = function(Themes){
     this.tt = [0 , 0];
 
     // for draw sketch
-    this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise.png');
-    this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper.jpg');
+   // this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise.png');
+  //  this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper.jpg');
+
+    //this.tx01 = null;
+    //this.tx02 = null;
 
     this.init();
 }
@@ -94,7 +98,7 @@ AAA.View.prototype = {
         this.clock = new THREE.Clock();
         this.delta = 0;
 
-        this.lights = [];
+        /*this.lights = [];
 
         this.lights[0] = new THREE.AmbientLight( this.bgColor );
         
@@ -109,7 +113,7 @@ AAA.View.prototype = {
         var i = this.lights.length;
         while(i--){
             this.scene.add(this.lights[i]);
-        }
+        }*/
 
         var groundMat = new THREE.MeshBasicMaterial( { color: this.bgColor, transparent:true, opacity:this.debugAlpha } );
         var groundGeo = THREE.BufferGeometryUtils.fromGeometry( new THREE.PlaneGeometry( 1, 1 ) );
@@ -152,7 +156,8 @@ AAA.View.prototype = {
             this.renderer.setClearColor(0xffffff, 1);
             this.ground.material.color.setHex( 0xffffff );
             this.fog.color.setHex( 0xffffff );
-            this.postEffect = new AAA.PostEffect(this);
+            //this.postEffect = new AAA.PostEffect(this);
+            this.postEffect = new AAA.PostEffect();
             this.postEffect.init();
             this.isSketch = true;
         }
@@ -169,7 +174,8 @@ AAA.View.prototype = {
     },
     initSky:function(envtexture, texture){
 
-        this.sky = envtexture;
+        this.sky = envtexture
+        this.sky2 = envtexture
         var i = this.mats.length;
         while (i--) {
             this.mats[i].envMap = this.sky;
@@ -196,12 +202,17 @@ AAA.View.prototype = {
 
     },
     updateSky:function(envtexture){
-        this.sky = envtexture;
+       // this.sky2 = envtexture.clone();
+      //  this.sky = envtexture.clone();
     },
     render:function(){
 
         this.delta = this.clock.getDelta().toFixed(3);
         //this.key[7] = this.delta;
+
+        //this.renderer.clear();
+        //this.renderer.render( this.scene, this.camera );
+        
 
         if( terrain.mesh != null  ){
             if(terrain.isAutoMove) terrain.update(this.delta);
@@ -211,7 +222,7 @@ AAA.View.prototype = {
                 if(this.cars.length > 0)terrain.isMove = false;
             }
         }
-        
+
         if(this.isSketch) this.postEffect.render();
         else this.renderer.render( this.scene, this.camera );
 
@@ -690,7 +701,71 @@ AAA.Car.prototype = {
 //-----------------------------------------------------
 // POST EFFECT SKETCH
 //-----------------------------------------------------
+AAA.PostEffect = function(){
+    //this.parent = Parent;
+    this.composer = null;
+    this.colorBuffer = null;
+    this.blurBuffer = null;
+    this.renderPass = null;
+    this.shader = null;
+    this.pass = null;
+    this.parameters={minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter, format:THREE.RGBFormat, stencilBuffer:false};
+}
+AAA.PostEffect.prototype = {
+    constructor: AAA.PostEffect,
+    init:function(){
 
+        this.colorBuffer=new THREE.WebGLRenderTarget(1,1,this.parameters);
+        //this.blurBuffer=new THREE.WebGLRenderTarget(1,1,parameters);
+        this.composer= new THREE.EffectComposer(View.renderer);
+        this.renderPass = new THREE.RenderPass(View.scene, View.camera );
+        this.composer.addPass( this.renderPass );
+        this.shader={
+            uniforms:{
+                tDiffuse:{type:'t',value:null},
+                tColor:{ type:'t',value:null},
+                tBlur:{type:'t',value:null},
+                tNoise:{type:'t',value:Textures.getByName("noise")},
+                tPaper:{type:'t',value:Textures.getByName("paper")},
+                resolution:{ type:'v2',value:new THREE.Vector2(1,1)}
+            },
+            vertexShader:vs_render,
+            fragmentShader:fs_render
+        }
+        this.pass = new THREE.ShaderPass(this.shader);
+        this.pass.renderToScreen=true;
+        this.composer.addPass(this.pass);
+        this.pass.uniforms.tNoise.value.needsUpdate=true;
+        this.pass.uniforms.tPaper.value.needsUpdate=true;
+        this.resize();
+    },
+    render:function(){
+        if(this.pass && this.composer){
+           // View.renderer.clear();
+            View.renderer.render(View.scene, View.camera, this.colorBuffer, false);
+            this.pass.uniforms.tColor.value=this.colorBuffer;
+            this.composer.render();
+        }
+    },
+    resize:function(){
+        var w = View.viewSize.w* View.viewSize.mw;
+        var h = View.viewSize.h* View.viewSize.mh;
+        this.composer.setSize(w,h);
+        this.pass.uniforms.resolution.value.set(w,h);
+        //this.pass.uniforms.tNoise.value.needsUpdate=true;
+        //this.pass.uniforms.tPaper.value.needsUpdate=true;
+        this.colorBuffer=new THREE.WebGLRenderTarget(w,h,this.parameters);
+    },
+    clear:function(){
+        this.composer = null;
+        this.colorBuffer = null;
+        this.blurBuffer = null;
+        this.renderPass = null;
+        this.shader = null;
+        this.pass = null;
+    }
+}
+/*
 AAA.PostEffect = function(Parent){
     this.parent = Parent;
     this.composer = null;
@@ -752,7 +827,7 @@ AAA.PostEffect.prototype = {
         this.pass = null;
     }
 }
-
+*/
 //-----------------------------------------------------
 // SPHERICAL SHADER
 //-----------------------------------------------------
