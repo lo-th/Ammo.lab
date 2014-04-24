@@ -30,6 +30,7 @@
 
 <script src="js/AMMO.Three.js"></script>
 <script src="js/AAA.View.js"></script>
+<script src="js/AAA.Texture.js"></script>
 <script src="js/vehicle/C1gt.js"></script>
 <script src="js/vehicle/Vision.js"></script>
 <script src="js/loth/Editor.js"></script>
@@ -56,7 +57,7 @@ var note = document.getElementById("note");
 var stats = document.getElementById("stats");
 var demoName = "loth", demoNote = "2014";
 
-var Sources, Editor, Ambience, View, Pool;
+var Sources, Editor, Ambience, View, Pool, Textures;
 
 var world;
 var worldTimer;
@@ -67,7 +68,7 @@ var mtxCar;
 var mtx;
 
 // init editor
-Editor = new Editor(themes,11);
+Editor = new Editor(themes,12);
 document.body.appendChild( Editor.domElement );
 
 Ambience = new Ambience();
@@ -108,11 +109,13 @@ function init() {
    
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
+    Textures = new AAA.Texture();
+
     View = new AAA.View(themes);
     Ambience.init3d(View.renderer);
 
     // load basic model
-    Pool = new SEA3D.Pool('models/geo.sea', initGeometry);
+    Pool = new SEA3D.Pool('models/geo.sea', initTextures);
 
     stats.innerHTML = "Loading sea3d models !!";
 
@@ -130,6 +133,15 @@ function displayInfo(){
 }
 
 //-----------------------------------------------------
+// TEXTURE IMPORT
+//-----------------------------------------------------
+
+function initTextures(){
+    Textures.load(initGeometry);
+    stats.innerHTML = "Loading textures !!"
+}
+
+//-----------------------------------------------------
 // MESH FUNCTION
 //-----------------------------------------------------
 
@@ -140,11 +152,9 @@ function initGeometry() {
         View.geos[i].name = oName[i];
     }
 
-    c1gt = new AAA.C1gt(initTerrain, false);
+    c1gt = new AAA.C1gt(initVisionCar, false);
 }
-function initTerrain(){
-    terrain = new AAA.Terrain(initVisionCar);
-}
+
 function initVisionCar(){
     vision = new AAA.Vision(initFinalDemo, false);
 }
@@ -156,6 +166,9 @@ function initFinalDemo(){
     //introDemo();
     Editor.importScript(startByDemo, true);
     worldTimer = setInterval(updateWorld, 1000/60);
+
+    terrain = new AAA.Terrain();
+
     loop();
     View.container.appendChild( View.renderer.domElement );
 }
@@ -164,15 +177,6 @@ var removeObject = function (n) {
     content.remove( content.children[n] );
 }
 
-/*var clearAll = function (){
-    if(terrain!== null){ terrain.clear(); terrain = null; }
-    var i = content.children.length;
-    while (i--) {
-        content.remove(content.children[ i ]);
-    }
-    meshs.length = 0;
-    cars.length = 0;
-}*/
 
 //-----------------------------------------------------
 // TRANSE SCRIPT

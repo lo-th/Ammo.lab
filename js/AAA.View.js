@@ -77,6 +77,7 @@ AAA.View.prototype = {
         //this.renderer.gammaInput = true;
         //this.renderer.gammaOutput = true;
         this.renderer.shadowMapEnabled = this.isShadow;
+        //this.renderer.shadowMapCullFace = THREE.CullFaceBack;
         //this.renderer.shadowMapType = THREE.BasicShadowMap;
         //this.container.appendChild( this.renderer.domElement );
 
@@ -86,7 +87,7 @@ AAA.View.prototype = {
         this.fog = new THREE.Fog( this.bgColor, 10, 100 );
         this.scene.fog = this.fog;
 
-        this.camera = new THREE.PerspectiveCamera( this.cam.fov, this.viewSize.w / this.viewSize.h, 0.01, 500 );
+        this.camera = new THREE.PerspectiveCamera( this.cam.fov, this.viewSize.w / this.viewSize.h, 0.1, 200 );
         this.center = new THREE.Vector3();
         this.moveCamera();
 
@@ -97,6 +98,28 @@ AAA.View.prototype = {
 
         this.clock = new THREE.Clock();
         this.delta = 0;
+
+        if(this.isShadow){
+            var light = new THREE.DirectionalLight( 0xffffff, 2 );
+            light.position.set( 10, 30, 5 );
+            light.target.position.set( 0, 0, 0 );
+            light.castShadow = this.isShadow;
+            light.onlyShadow = true;
+            light.shadowDarkness = 0.7;
+            light.shadowBias =  -0.00002;
+            light.shadowMapWidth = 1024;
+            light.shadowMapHeight = 1024;
+            light.shadowCameraNear = 10;
+            light.shadowCameraFar = 40;
+            //light.shadowCameraVisible = true;
+            var d = 20;
+            light.shadowCameraLeft = -d;
+            light.shadowCameraRight = d;
+            light.shadowCameraTop = d;
+            light.shadowCameraBottom = -d;
+
+            this.scene.add(light);
+        }
 
         /*this.lights = [];
 
@@ -828,6 +851,72 @@ AAA.PostEffect.prototype = {
     }
 }
 */
+AAA.AREA = {
+    uniforms: {
+        "tMatCap": { type: "t", value: null }
+    },
+    vertexShader: [
+        "#define NVERTS 4",
+        "varying vec3 vNormal;",
+        "varying vec3 vViewPosition;",
+
+        "void main() {",
+            "vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
+            "vNormal = normalize( normalMatrix * normal );",
+            "vViewPosition = -mvPosition.xyz;",
+            "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+        "}"
+    ].join("\n"),
+    fragmentShader: [
+        "#define NVERTS 4",
+
+        "uniform vec3 color;",
+
+        "uniform vec3 lightColor;",
+        "uniform float lightIntensity;",
+        "uniform vec3 lightverts[ NVERTS ];",
+        "uniform mat4 lightMatrixWorld;",
+
+        "varying vec3 vNormal;",
+        "varying vec3 vViewPosition;",
+
+        "void main() {",
+
+            "vec3 normal = normalize( vNormal );",
+            "vec4 lPosition[ NVERTS ];",
+            "vec3 lVector[ NVERTS ];",
+            "// stub in some ambient reflectance",
+            "vec3 ambient = color * vec3( 0.2 );",
+            "// direction vectors from point to area light corners",
+            "for( int i = 0; i < NVERTS; i ++ ) {",
+                "lPosition[ i ] = viewMatrix * lightMatrixWorld * vec4( lightverts[ i ], 1.0 );",
+                "lVector[ i ] = normalize( lPosition[ i ].xyz + vViewPosition.xyz );",
+            "}",
+
+            "// bail if the point is on the wrong side of the light... there must be a better way...",
+            "float tmp = dot( lVector[ 0 ], cross( ( lPosition[ 2 ] - lPosition[ 0 ] ).xyz, ( lPosition[ 1 ] - lPosition[ 0 ] ).xyz ) );",
+            "if ( tmp > 0.0 ) {",
+                "gl_FragColor = vec4( ambient, 1.0 );",
+                "return;",
+            "}",
+
+            "// vector irradiance at point",
+            "vec3 lightVec = vec3( 0.0 );",
+            "for( int i = 0; i < NVERTS; i ++ ) {",
+                "vec3 v0 = lVector[ i ];",
+                "vec3 v1 = lVector[ int( mod( float( i + 1 ), float( NVERTS ) ) ) ];",
+                "lightVec += acos( dot( v0, v1 ) ) * normalize( cross( v0, v1 ) );",
+            "}",
+
+            "// irradiance factor at point",
+            "float factor = max( dot( lightVec, normal ), 0.0 ) / ( 2.0 * 3.14159265 );",
+            "// frag color",
+            "vec3 diffuse = color * lightColor * lightIntensity * factor;",
+            "gl_FragColor = vec4( ambient + diffuse, 1.0 );",
+        "}"
+    ].join("\n")
+};
+
 //-----------------------------------------------------
 // SPHERICAL SHADER
 //-----------------------------------------------------

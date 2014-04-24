@@ -53,6 +53,8 @@ AAA.C1gt.prototype = {
 	    this.c1gtMats[5] = new THREE.MeshBasicMaterial({ name:'wheel', map:Textures.getByName("wheels"), reflectivity:0.2, envMap:View.sky, combine:THREE.MixOperation});
 	    this.c1gtMats[6] = new THREE.MeshBasicMaterial({ name:'steering', color:0x333333, reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation});
 
+	    this.c1gtMatLib = {};
+
     	this.meshs = [];
 
 	    var bodyGlass = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[5]), this.c1gtMats[3] );
@@ -65,6 +67,11 @@ AAA.C1gt.prototype = {
 	    THREE.GeometryUtils.merge(geobody, this.geos[1]);
 	    THREE.GeometryUtils.merge(geobody, this.geos[0]);
 	    THREE.GeometryUtils.merge(geobody, this.geos[11]);
+
+	    /*geobody.merge(this.geos[1], new THREE.Matrix4(), 0);
+	    geobody.merge(this.geos[0], new THREE.Matrix4(), 0);
+	    geobody.merge(this.geos[11], new THREE.Matrix4(), 3);*/
+	    
 
 	    this.meshs[0] = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(geobody), this.c1gtMats[0] );
 	    // this.meshs[0] = new THREE.Mesh( geobody, this.c1gtMats[0] );
@@ -102,6 +109,9 @@ AAA.C1gt.prototype = {
 	    while(i--){
 	    	mesh = this.meshs[i];
 	        this.car.add(mesh);
+	        mesh.castShadow = true;
+	        mesh.receiveShadow = true;
+
 	        if(mesh.name=='hood'){
 	        	mesh.position.set(0,0.2935*2,-0.55*2); mesh.rotation.set(0*AAA.ToRad,0,0)
 	        }
