@@ -18,13 +18,13 @@
 </style>
 
 <script src="js/AAA.View.js"></script>
+<script src="js/AAA.Terrain.js"></script>
 <script src="js/vehicle/C1gt.js"></script>
 <script src="js/vehicle/Vision.js"></script>
 <script src="js/loth/Transcode.js"></script>
 <script src="js/loth/Editor.js"></script>
 <script src="js/loth/Ambience.js"></script>
 <script src="js/loth/AmbienceMapList.js"></script>
-<script src="js/loth/Terrain.js"></script>
 
 </head>
 
@@ -52,7 +52,7 @@ var Sources, Editor, Ambience, View, Pool;
 window.onload = prevInit;
 
 function prevInit() {
-    Sources = new Transcode.Loader([ "images/ammo.png", "images/three.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
+    Sources = new Transcode.Loader([ "images/ammo_new.png", "images/three.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
 
     // init editor
     Editor = new Editor(themes, 12);
@@ -81,9 +81,9 @@ var ammoInfo = [0];
 //AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
 //AmmoWorker.onmessage = Message;
 
-var c1gt, vision;
+var c1gt, vision, terrain;
 var mtxCar;
-//var mtx;
+var mtx;
 /*var i; 
 var MAX_BODY = 1024;
 var MAX_CAR = 20;
@@ -153,7 +153,7 @@ function init() {
 
 function loop() {
 
-    requestAnimationFrame( loop );
+    requestAnimationFrame( loop, View.renderer.domElement );
     View.render();
     stats.innerHTML = "three: " + View.fps +" fps | ammo: " + ammoInfo[0]+" fps";//+ " | delta:" + View.delta;//.toFixed(3);
     if(View.cars[View.key[6]])stats.innerHTML += "| car speed: " + View.cars[View.key[6]].speed+" km/h";
@@ -176,9 +176,11 @@ function initGeometry(){
         View.geos[i].name = oName[i];
     }
 
-    c1gt = new AAA.C1gt(initVisionCar, true);
+    c1gt = new AAA.C1gt(initTerrain, true);
 }
-
+function initTerrain(){
+    terrain = new AAA.Terrain(initVisionCar);
+}
 function initVisionCar(){
     vision = new AAA.Vision(initDemo, false);
 }

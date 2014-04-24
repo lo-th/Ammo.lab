@@ -53,32 +53,37 @@ AAA.C1gt.prototype = {
             this.textures[i] = new THREE.ImageUtils.loadTexture( PATH + this.maps[i] );
         }
 
-        this.timerTest = setInterval(this.loadTextures, 20, this);
+        this.timerTest = setInterval(this.loadCarTextures, 20, this);
 
     },
-    loadTextures:function (parent) {
-        if ( parent.textures.length == parent.maps.length)  {
-            clearInterval(parent.timerTest);
-            var i = parent.textures.length;
-		    while(i--){
-		        parent.textures[i].repeat.set( 1, -1 );
-		        parent.textures[i].format = THREE.RGBFormat;
-		        parent.textures[i].wrapS = parent.textures[i].wrapT = THREE.RepeatWrapping;
-		    }
-            parent.construct();
+    loadCarTextures:function (tt) {
+    	var _this = tt;
+        if ( _this.textures.length == _this.maps.length)  {
+            clearInterval(_this.timerTest);
+            _this.construct();
         }
     },
     construct:function(){
 
     	this.mats = [];
+    	var i;
 
-    	this.mats[0] = new THREE.MeshBasicMaterial({ name:'body', map:this.textures[0], reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation });
-	    this.mats[1] = new THREE.MeshBasicMaterial({ name:'door', map:this.textures[1], reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation });
-	    this.mats[2] = new THREE.MeshBasicMaterial({ name:'intern', map:this.textures[2], reflectivity:0.1, envMap:View.sky, combine:THREE.MixOperation });
-	    this.mats[3] = new THREE.MeshBasicMaterial({ name:'glass', map:this.textures[0], reflectivity:0.8, envMap:View.sky, combine:THREE.MixOperation, transparent:true, opacity:0.3, side:THREE.DoubleSide});
+    	var texture;
+        i = this.textures.length;
+	    while(i--){
+	    	texture = this.textures[i];
+	        texture.repeat.set( 1, -1 );
+	        texture.format = THREE.RGBFormat;
+	        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+	    }
+
+    	this.mats[0] = new THREE.MeshBasicMaterial({ name:'body', map:this.textures[0], reflectivity:0.6, envMap:View.sky, combine:THREE.MixOperation });
+	    this.mats[1] = new THREE.MeshBasicMaterial({ name:'door', map:this.textures[1], reflectivity:0.6, envMap:View.sky, combine:THREE.MixOperation });
+	    this.mats[2] = new THREE.MeshBasicMaterial({ name:'intern', map:this.textures[2], reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation });
+	    this.mats[3] = new THREE.MeshBasicMaterial({ name:'glass', map:this.textures[0], reflectivity:0.9, envMap:View.sky, combine:THREE.MixOperation, transparent:true, opacity:0.3, side:THREE.DoubleSide});
 	    this.mats[4] = new THREE.MeshBasicMaterial({ name:'light', map:this.textures[3], reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation});
 	    this.mats[5] = new THREE.MeshBasicMaterial({ name:'wheel', map:this.textures[4], reflectivity:0.2, envMap:View.sky, combine:THREE.MixOperation});
-	    this.mats[6] = new THREE.MeshBasicMaterial({ name:'steering', color:0x333333, reflectivity:0.1, envMap:View.sky, combine:THREE.MixOperation});
+	    this.mats[6] = new THREE.MeshBasicMaterial({ name:'steering', color:0x333333, reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation});
 
     	this.meshs = [];
 
@@ -124,7 +129,7 @@ AAA.C1gt.prototype = {
 
 	    this.car = new THREE.Object3D();
 
-	    var i = this.meshs.length;
+	    i = this.meshs.length;
 	    var mesh;
 	    while(i--){
 	    	mesh = this.meshs[i];

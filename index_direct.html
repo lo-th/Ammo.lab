@@ -26,14 +26,14 @@
 <script src="lib/loaders/sea3d/SEA3DLZMA.js"></script>
 <script src="lib/loaders/sea3d/SEA3DPool.js"></script>
 <script src="lib/tweenLite.min.js"></script>
-<script src="lib/ammo.js"></script>
+<script src="lib/NewAmmo/ammo.small.js"></script>
 
 <script src="js/AMMO.Three.js"></script>
 <script src="js/AAA.View.js"></script>
 <script src="js/vehicle/C1gt.js"></script>
 <script src="js/vehicle/Vision.js"></script>
 <script src="js/loth/Editor.js"></script>
-<script src="js/loth/Terrain.js"></script>
+<script src="js/AAA.Terrain.js"></script>
 <script src="js/loth/Ambience.js"></script>
 <script src="js/loth/AmbienceMapList.js"></script>
 
@@ -62,7 +62,7 @@ var world;
 var worldTimer;
 var AmmoWorker = null;
 
-var c1gt, vision;
+var c1gt, vision, terrain;
 var mtxCar;
 var mtx;
 
@@ -140,9 +140,11 @@ function initGeometry() {
         View.geos[i].name = oName[i];
     }
 
-    c1gt = new AAA.C1gt(initVisionCar, false);
+    c1gt = new AAA.C1gt(initTerrain, false);
 }
-
+function initTerrain(){
+    terrain = new AAA.Terrain(initVisionCar);
+}
 function initVisionCar(){
     vision = new AAA.Vision(initFinalDemo, false);
 }
@@ -162,7 +164,7 @@ var removeObject = function (n) {
     content.remove( content.children[n] );
 }
 
-var clearAll = function (){
+/*var clearAll = function (){
     if(terrain!== null){ terrain.clear(); terrain = null; }
     var i = content.children.length;
     while (i--) {
@@ -170,7 +172,7 @@ var clearAll = function (){
     }
     meshs.length = 0;
     cars.length = 0;
-}
+}*/
 
 //-----------------------------------------------------
 // TRANSE SCRIPT

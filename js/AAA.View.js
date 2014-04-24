@@ -25,7 +25,6 @@ AAA.View = function(Themes){
     this.lights = null;
     this.fog = null;
     this.ground = null;
-    this.terrain = null;
     this.postEffect = null;
     this.sky = null;
 
@@ -66,13 +65,15 @@ AAA.View.prototype = {
         this.renderer = new THREE.WebGLRenderer( {precision: "lowp", antialias: false, alpha:false } );
         this.renderer.setSize( this.viewSize.w, this.viewSize.h );
         this.renderer.setClearColor( this.bgColor, 1 );
+        //this.renderer.autoClearColor = false;
+        //this.renderer.autoClear = false;
         //this.renderer.sortObjects = false;
         //this.renderer.autoClear = false;
         //this.renderer.autoClearStencil = false;
-        this.renderer.gammaInput = true;
-        this.renderer.gammaOutput = true;
+        //this.renderer.gammaInput = true;
+        //this.renderer.gammaOutput = true;
         this.renderer.shadowMapEnabled = this.isShadow;
-        this.renderer.shadowMapType = THREE.BasicShadowMap;
+        //this.renderer.shadowMapType = THREE.BasicShadowMap;
         //this.container.appendChild( this.renderer.domElement );
 
         this.scene = new THREE.Scene();
@@ -137,6 +138,8 @@ AAA.View.prototype = {
 
         this.initBasicMaterial();
         this.initBasicGeometry();
+
+        //this.render();
     },
     sketchMode:function(){
         if(this.isSketch){
@@ -196,26 +199,22 @@ AAA.View.prototype = {
         this.sky = envtexture;
     },
     render:function(){
+
         this.delta = this.clock.getDelta().toFixed(3);
         //this.key[7] = this.delta;
 
-        if( this.terrain !== null  ){
-            if(this.terrain.isAutoMove) this.terrain.update(this.delta);
-            if(this.terrain.isMove){
-                this.terrain.easing(this.key, 90-this.cam.horizontal, 1);
-                this.follow(new THREE.Vector3( 0, this.terrain.getZ(0,0)+1, 0 ));
-            }  
+        if( terrain.mesh != null  ){
+            if(terrain.isAutoMove) terrain.update(this.delta);
+            if(terrain.isMove){
+                terrain.easing(this.key, 90-this.cam.horizontal, 1);
+                this.follow(new THREE.Vector3( 0, terrain.getZ(0,0)+1, 0 ));
+                if(this.cars.length > 0)terrain.isMove = false;
+            }
         }
         
         if(this.isSketch) this.postEffect.render();
         else this.renderer.render( this.scene, this.camera );
 
-       /* if( this.cars.length !== 0  ){
-            var pos = new THREE.Vector3();
-            pos.setFromMatrixPosition( this.cars[this.key[6]].driverPos.matrixWorld );
-            //var pos = this.cars[this.key[6]].driverPos.position;
-            this.follow(pos);
-        }*/
         var last = Date.now();
         if (last - 1000 > this.tt[0]) { this.tt[0] = last; this.fps = this.tt[1]; this.tt[1] = 0; } this.tt[1]++;
     },
@@ -230,7 +229,7 @@ AAA.View.prototype = {
         if(this.isSketch) this.postEffect.resize();
     },
     clearAll:function (){
-        if(this.terrain!== null){ this.terrain.clear(); this.terrain = null; }
+        if(terrain.mesh!== null){ terrain.clear();  }
         var i = this.content.children.length;
         while (i--) {
             this.content.remove(this.content.children[ i ]);
@@ -449,10 +448,10 @@ AAA.Obj = function(obj, Parent){
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'terrain': 
-            this.parent.terrain = new TERRAIN.Generate( obj );
-            this.parent.terrain.init( window.innerWidth, window.innerHeight );
+            terrain.init( obj );//new TERRAIN.Generate( obj, this.parent );
+            //this.parent.terrain.init( window.innerWidth, window.innerHeight );
             //this.parent.terrain.anim();// active morph
-            mesh = this.parent.terrain.container;
+            mesh = terrain.container;
             shadow = false;
         break;
     }

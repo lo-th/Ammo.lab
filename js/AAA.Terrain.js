@@ -1,10 +1,9 @@
-var TERRAIN = { REVISION: '0.1' };
+AAA.ToRad = Math.PI / 180;
 
-TERRAIN.ToRad = Math.PI / 180;
+AAA.Terrain = function(endFunction){
+    this.end = endFunction;
 
-TERRAIN.Generate = function(  ){
-    this.root = ROOT;
-
+    //this.rootView = null;
     this.div = null;
     this.size = null;
     this.isAutoMove = false;
@@ -25,7 +24,7 @@ TERRAIN.Generate = function(  ){
     this.uniformsTerrain = null;
 
     this.mlib = {};
-    this.textureCounter=0;
+    //this.textureCounter=0;
 
     this.sceneRenderTarget = null;
     this.cameraOrtho = null;
@@ -47,38 +46,47 @@ TERRAIN.Generate = function(  ){
     this.acc = 0.01;
     this.dec = 0.03;
 
+    this.mesh = null;
+
     this.updateNoise = true;
 
     this.tmpData = null;
 
-    this.textures = null;
-    this.maps = ["level0", "level1", "level2", "level3", "level4", "diffuse1", "diffuse2", "normal"]
+    this.ttextures = [];
+    this.tmaps = ["level0", "level1", "level2", "level3", "level4", "diffuse1", "diffuse2", "normal"]
 
     this.fullLoaded = false;
-    this.timerTest = null;
+    this.ttimerTest = null;
 
-    this.end = null;
+    this.load();
+
 
 }
 
-TERRAIN.Generate.prototype = {
-    constructor: TERRAIN.Generate,
-    load:function(endFunction){
-        this.end = endFunction;
+AAA.Terrain.prototype = {
+    constructor: AAA.Terrain,
+    load:function(){
         var PATH = "images/terrain/";
-        var i = this.maps.length;
+        var i = this.tmaps.length;
         while(i--){
-            this.textures[i] = new THREE.ImageUtils.loadTexture( PATH + this.maps[i]+ ".jpg" );
+            //console.log(this.maps[i])
+            this.ttextures[i] = new THREE.ImageUtils.loadTexture( PATH + this.tmaps[i]+ ".jpg" );
         }
-        this.timerTest = setInterval(this.loadTextures, 20, _this);
+        this.ttimerTest = setInterval(this.loadTextures, 20, this);
     },
     loadTextures:function (tt) {
         var _this = tt;
-        if ( _this.textures.length == _this.maps.length)  {
-            clearInterval(_this.timerTest);
+        if ( _this.ttextures.length == _this.tmaps.length)  {
+            clearInterval(_this.ttimerTest);
 
-            TERRAIN.initShader();
-            _this.start();
+            var i = _this.ttextures.length;
+            while(i--){
+                _this.ttextures[i].format = THREE.RGBFormat;
+                _this.ttextures[i].wrapS = _this.ttextures[i].wrapT = THREE.RepeatWrapping;
+            }
+
+            AAA.initShader();
+            _this.end();
         }
     },
 
@@ -90,9 +98,11 @@ TERRAIN.Generate.prototype = {
         this.mlib[ "heightmap" ].dispose();
         this.mlib[ "normal" ].dispose();
         this.mlib[ "terrain" ].dispose();
+
+        this.mesh = null;
     },
-    init:function (obj, Parent) {
-        this.main = Parent;
+    init:function (obj) {
+        //this.rootView = VIEW;
 
         this.div = obj.div || [64,64];
         this.size = obj.size || [256, 30, 256];
@@ -123,8 +133,10 @@ TERRAIN.Generate.prototype = {
         this.container = new THREE.Object3D();
         this.container.add(this.mesh);
 
-        this.W = this.main.viewSize.w || 512;
-        this.H = this.main.viewSize.h || 512;
+        this.W = View.viewSize.w || 512;
+        this.H = View.viewSize.h || 512;
+
+        this.start();
 
         
 
@@ -139,11 +151,7 @@ TERRAIN.Generate.prototype = {
     },
     
     start:function() {
-        var i = this.textures.length;
-        while(i--){
-            this.textures[i].format = THREE.RGBFormat;
-            this.textures[i].wrapS = this.textures[i].wrapT = THREE.RepeatWrapping;
-        }
+        
 
         this.generateData(this.div[0], this.div[1], new THREE.Color(0x000000));
 
@@ -155,7 +163,7 @@ TERRAIN.Generate.prototype = {
 
         // HEIGHT + NORMAL MAPS
 
-        var normalShader = TERRAIN.NormalMapShader;
+        var normalShader = AAA.NormalMapShader;
 
         var pars = { minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat };
 
@@ -178,7 +186,7 @@ TERRAIN.Generate.prototype = {
         this.uniformsNormal.heightMap.value = this.heightMap;
 
         // NOISE
-        var terrainNoise = TERRAIN.ShaderNoise[ "noise" ];
+        var terrainNoise = AAA.ShaderNoise[ "noise" ];
 
         //this.specularMap = new THREE.WebGLRenderTarget( 512, 512, pars );
         this.specularMap = new THREE.WebGLRenderTarget( 1024, 1024, pars );
@@ -187,32 +195,32 @@ TERRAIN.Generate.prototype = {
 
         // TERRAIN SHADER
 
-        var terrainShader = TERRAIN.ShaderTerrain[ "terrain" ];
+        var terrainShader = AAA.ShaderTerrain[ "terrain" ];
 
         this.uniformsTerrain = THREE.UniformsUtils.clone( terrainShader.uniforms );
 
        // this.uniformsTerrain[ "envMap" ].value = this.envMap;
         //this.uniformsTerrain[ "combine" ].value = THREE.MixOperation;
 
-        this.uniformsTerrain[ "tCube" ].value = this.main.sky;
+        this.uniformsTerrain[ "tCube" ].value = View.sky;
         this.uniformsTerrain[ "reflectivity" ].value = 0.5;
         this.uniformsTerrain[ "enableReflection" ].value = true;
 
-        this.uniformsTerrain[ "oceanTexture" ].value = this.textures[0];
-        this.uniformsTerrain[ "sandyTexture" ].value = this.textures[1];
-        this.uniformsTerrain[ "grassTexture" ].value = this.textures[2];
-        this.uniformsTerrain[ "rockyTexture" ].value = this.textures[3];
-        this.uniformsTerrain[ "snowyTexture" ].value = this.textures[4];
+        this.uniformsTerrain[ "oceanTexture" ].value = this.ttextures[0];
+        this.uniformsTerrain[ "sandyTexture" ].value = this.ttextures[1];
+        this.uniformsTerrain[ "grassTexture" ].value = this.ttextures[2];
+        this.uniformsTerrain[ "rockyTexture" ].value = this.ttextures[3];
+        this.uniformsTerrain[ "snowyTexture" ].value = this.ttextures[4];
 
         this.uniformsTerrain[ "tNormal" ].value = this.normalMap;
         this.uniformsTerrain[ "uNormalScale" ].value = 3.5;
 
         this.uniformsTerrain[ "tDisplacement" ].value = this.heightMap;
 
-        this.uniformsTerrain[ "tDiffuse1" ].value = this.textures[5];
-        this.uniformsTerrain[ "tDiffuse2" ].value = this.textures[6];
+        this.uniformsTerrain[ "tDiffuse1" ].value = this.ttextures[5];
+        this.uniformsTerrain[ "tDiffuse2" ].value = this.ttextures[6];
         this.uniformsTerrain[ "tSpecular" ].value = this.specularMap;
-        this.uniformsTerrain[ "tDetail" ].value = this.textures[7];
+        this.uniformsTerrain[ "tDetail" ].value = this.ttextures[7];
 
         this.uniformsTerrain[ "enableDiffuse1" ].value = true;
         this.uniformsTerrain[ "enableDiffuse2" ].value = true;
@@ -262,12 +270,17 @@ TERRAIN.Generate.prototype = {
 
         this.mesh.material = this.mlib[ "terrain" ];
         this.mesh.visible = true;
-        this.update(1);
+        
+        //this.update(1);
+
+        //this.easing([0],0,0.1)
+
+        //this.generatePhysics()
 
     },
     
     applyShader:function () {
-        var shader = TERRAIN.LuminosityShader;
+        var shader = AAA.LuminosityShader;
 
         var shaderMaterial = new THREE.ShaderMaterial( {
 
@@ -330,7 +343,7 @@ TERRAIN.Generate.prototype = {
         }
         this.tmpData = data;
     },
-    easing:function(key,R, delta){
+    easing:function(key, R, delta){
         r = R * (Math.PI / 180);
         //acceleration
         if (key[0]) this.ease.y += this.acc;
@@ -390,7 +403,7 @@ TERRAIN.Generate.prototype = {
 
             this.uniformsTerrain[ "uNormalScale" ].value = THREE.Math.mapLinear( valNorm, 0, 1, 0.6, 3.5 );
 
-            if (  this.updateNoise ) {
+            //if (  this.updateNoise ) {
 
                 this.animDelta = THREE.Math.clamp( this.animDelta + 0.00075 * this.animDeltaDir, 0, 0.05 );
                 this.uniformsNoise[ "time" ].value += delta * this.animDelta;
@@ -413,7 +426,7 @@ TERRAIN.Generate.prototype = {
                 View.renderer.render( this.sceneRenderTarget, this.cameraOrtho, this.normalMap, true );
 
                 this.generatePhysics();
-            }
+           // }
         }
 
     },
@@ -473,7 +486,7 @@ TERRAIN.Water.prototype = {
 }*/
 
 
-TERRAIN.NormalMapShader = {
+AAA.NormalMapShader = {
 
     uniforms: {
 
@@ -521,7 +534,7 @@ TERRAIN.NormalMapShader = {
 };
 
 
-TERRAIN.ShaderNoise = {
+AAA.ShaderNoise = {
 
     'noise' : {
 
@@ -670,7 +683,7 @@ TERRAIN.ShaderNoise = {
 
 };
 
-TERRAIN.LuminosityShader = {
+AAA.LuminosityShader = {
 
     uniforms: {
 
@@ -714,9 +727,9 @@ TERRAIN.LuminosityShader = {
 
 };
 
-TERRAIN.ShaderTerrain = {};
-TERRAIN.initShader = function( ){
-     TERRAIN.ShaderTerrain = {
+AAA.ShaderTerrain = {};
+AAA.initShader = function( ){
+     AAA.ShaderTerrain = {
 
     /* -------------------------------------------------------------------------
     //  Dynamic terrain shader

@@ -448,6 +448,14 @@ AMMO.Constraint = function(obj, Parent){
 	this.damping = obj.damping || 1;
 	this.strength = obj.strength || 0.1;
 
+	this.min = obj.min || 0;
+	this.max = obj.max || 0;
+
+	var spring = obj.spring || [0.9, 0.3, 0.1];
+	this.softness = spring[0];
+	this.bias =  spring[1];
+	this.relaxation =  spring[2];
+
 	this.init(obj);
 }
 
@@ -461,7 +469,10 @@ AMMO.Constraint.prototype = {
 			    this.joint.get_m_setting().set_m_tau(this.strength);
                 this.joint.get_m_setting().set_m_damping(this.damping); 
 			break;
-			case "hinge": this.joint = new Ammo.btHingeConstraint(this.body1.getBody(), this.body2.getBody(), this.point1, this.point2, this.axe1, this.axe2, false); break;
+			case "hinge": 
+			    this.joint = new Ammo.btHingeConstraint(this.body1.getBody(), this.body2.getBody(), this.point1, this.point2, this.axe1, this.axe2, false);
+			    if( this.min!==0 || this.max!==0 )this.joint.setLimit( this.min, this.max, this.softness, this.bias, this.relaxation);
+			break;
 			case "slider": this.joint = new Ammo.btSliderConstraint(this.body1.getBody(),this.body2.getBody(),this.point1,this.point2); break;
 			case "conetwist": this.joint = new Ammo.btConeTwistConstraint(this.body1.getBody(),this.body2.getBody(),this.point1,this.point2); break;
 			case "gear": this.joint = new Ammo.btGearConstraint(this.body1.getBody(),this.body2.getBody(),this.point1,this.point2, this.ratio); break;
