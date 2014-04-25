@@ -11,7 +11,8 @@
     body { background-color: #1d1f20; overflow: hidden; color: #eeeeee; font-family: "SourceCode"; font-size: 12px; }
     #container{ position: absolute; width:100%; height:100%;}
 </style>
-<script src="lib/three.min.js"></script>
+<script src="lib/three.min.67.js"></script>
+<script src="lib/sea.min.js"></script>
 </head>
 
 <body>
@@ -21,8 +22,8 @@
 
 // WestLangley
 
-var renderer, scene, camera, controls;
-var areaLight, material, mesh;
+var renderer, scene, camera, controls, pool;
+var areaLight, material, material2, mesh;
 var t = 0, delta = 0.004;
 
 window.onload = init;
@@ -48,15 +49,15 @@ function init() {
 
 	var geometry = new THREE.PlaneGeometry( 100, 50 );
 
-	var material = new THREE.MeshBasicMaterial( { color: lightColor, transparent: true, opacity: 0.7, side: THREE.FrontSide } );
+	var materialLight = new THREE.MeshBasicMaterial( { color: lightColor, transparent: true, opacity: 0.7, side: THREE.FrontSide } );
 
-	areaLight = new THREE.Mesh( geometry, material );
+	areaLight = new THREE.Mesh( geometry, materialLight );
     
  	areaLight.position.set( 0, 25, -25 );
 	areaLight.rotation.set( 0, 0, 0 );
 	areaLight.scale.set( 1, 1, 1 );
 	scene.add( areaLight );
-
+/*
     // wireframe hack
     //areaLight.add( new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { wireframe: true } ) ) );
     var bb = new THREE.BoxHelper()
@@ -64,7 +65,7 @@ function init() {
     bb.scale.set( 50, 25, 0 );
     areaLight.add( bb );
 
-
+*/
 	// areaLight verts
 	var vertices = areaLight.geometry.vertices;
 	var verts = [];
@@ -77,7 +78,8 @@ function init() {
 	var areaShader = AAA.AREA[ "area" ];
 	//var uniforms = THREE.UniformsUtils.clone( areaShader.uniforms );
 
-	areaShader.uniforms[ "color" ].value = new THREE.Color( 0xaaDDAA );
+	areaShader.uniforms[ "color" ].value = new THREE.Color( 0xDDDDDD );
+	areaShader.uniforms[ "opacity" ].value = 0.9;
     areaShader.uniforms[ "lightColor" ].value = areaLight.material.color;
     areaShader.uniforms[ "lightIntensity" ].value = lightIntensity;
     areaShader.uniforms[ "lightverts" ].value = verts;
@@ -93,29 +95,55 @@ function init() {
 		uniforms        : areaShader.uniforms,
 		vertexShader    : areaShader.vertexShader,
 		fragmentShader  : areaShader.fragmentShader,
-		shading			: THREE.SmoothShading
+		shading			: THREE.SmoothShading,
+		transparent: false
+	} );
+
+	material2 = new THREE.ShaderMaterial( {
+		attributes      : attributes,
+		uniforms        : areaShader.uniforms,
+		vertexShader    : areaShader.vertexShader,
+		fragmentShader  : areaShader.fragmentShader,
+		shading			: THREE.SmoothShading,
+		transparent: true
 	} );
     
 	// plane geometry
 	var geometry = new THREE.PlaneGeometry( 200, 200 );
-	geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
+	//geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
 
 	// plane
 	mesh = new THREE.Mesh( geometry, material );
-	mesh.position.y = - 0.1;
+	//mesh.position.y = - 0.1;
+	mesh.position.z = - 20;
 	scene.add( mesh );
 
-	// torus knot
-	var geometry = new THREE.TorusKnotGeometry( 10, 4, 256, 32, 1, 3, 1 );
-
-	// mesh
-	mesh = new THREE.Mesh( geometry, material );
-	mesh.position.set( 0, 28, 0 );
-	scene.add( mesh );
+	
 
 	animate();
 
 	window.addEventListener( 'resize', resize, false );
+
+	pool = new SEA3D.Pool('models/three.sea', initModel);/**/
+
+}
+
+var logo;
+
+function initModel(){
+	var geo01 = pool.getGeometry('three01', true);
+	var geo02 = pool.getGeometry('three02', true);
+
+	var m01 = new THREE.Mesh( geo01, material );
+	var m02 = new THREE.Mesh( geo02, material2 );
+
+	logo = new THREE.Object3D();
+
+	logo.add( m01 );
+	logo.add( m02 );
+
+	scene.add( logo );
+	logo.position.set( 0, 20, 0 );
 
 }
 
@@ -129,11 +157,13 @@ function animate() {
 
 	requestAnimationFrame( animate );
     
-	areaLight.position.set( 0, 25 + 25 * Math.sin( t ), Math.min( - 25 * Math.cos( t ), 0 ) );
+	/**/areaLight.position.set( 0, 25 + 25 * Math.sin( t ), Math.min( - 25 * Math.cos( t ), 0 ) );
 	areaLight.rotation.set( Math.min( t, Math.PI / 2 ), 0, 0 );
 
 	t += delta;
 	if ( t > 4.4 || t < 0 ) delta = - delta;
+
+	if(logo) logo.rotation.y += 0.01;
 
 	//controls.update();
 
@@ -145,28 +175,40 @@ var AAA={ REVISION: 0.2 };
 
 AAA.AREA = {
 	'area' : {
-    uniforms: {
+    uniforms: THREE.UniformsUtils.merge( [
+
+        THREE.UniformsLib[ "common" ],
+        {
         "color": { type: "c", value: null },
         "lightColor": { type: "c", value: null },
         "lightIntensity": { type: "f", value: null },
         "lightverts": { type: "v3v", value: [] },
-        "lightMatrixWorld": { type: "m4", value: [] }
-    },
+        "lightMatrixWorld": { type: "m4", value: [] },
+        "opacity" : { type: "f", value: 0.1 }
+        
+    }] ),
     vertexShader: [
         "#define NVERTS 4",
         "varying vec3 vNormal;",
         "varying vec3 vViewPosition;",
+        //THREE.ShaderChunk[ "color_pars_vertex" ],
+        THREE.ShaderChunk[ "envmap_pars_vertex" ],
+        //THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
 
         "void main() {",
             "vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
             "vNormal = normalize( normalMatrix * normal );",
             "vViewPosition = -mvPosition.xyz;",
             "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+            //THREE.ShaderChunk[ "color_vertex" ],
+            //THREE.ShaderChunk[ "worldpos_vertex" ],
+            THREE.ShaderChunk[ "envmap_vertex" ],
         "}"
     ].join("\n"),
     fragmentShader: [
         "#define NVERTS 4",
         "uniform vec3 color;",
+        "uniform float opacity;",
         "uniform vec3 lightColor;",
         "uniform float lightIntensity;",
         "uniform vec3 lightverts[ NVERTS ];",
@@ -174,6 +216,10 @@ AAA.AREA = {
 
         "varying vec3 vNormal;",
         "varying vec3 vViewPosition;",
+
+        //THREE.ShaderChunk[ "color_pars_fragment" ],
+        THREE.ShaderChunk[ "envmap_pars_fragment" ],
+        //THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
 
         "void main() {",
             "vec3 normal = normalize( vNormal );",
@@ -186,7 +232,7 @@ AAA.AREA = {
             "}",
             "float tmp = dot( lVector[ 0 ], cross( ( lPosition[ 2 ] - lPosition[ 0 ] ).xyz, ( lPosition[ 1 ] - lPosition[ 0 ] ).xyz ) );",
             "if ( tmp > 0.0 ) {",
-                "gl_FragColor = vec4( ambient, 1.0 );",
+                "gl_FragColor = vec4( ambient, opacity );",
                 "return;",
             "}",
             "vec3 lightVec = vec3( 0.0 );",
@@ -198,7 +244,12 @@ AAA.AREA = {
 
             "float factor = max( dot( lightVec, normal ), 0.0 ) / ( 2.0 * 3.14159265 );",
             "vec3 diffuse = color * lightColor * lightIntensity * factor;",
-            "gl_FragColor = vec4( ambient + diffuse, 1.0 );",
+            "gl_FragColor = vec4( ambient + diffuse, opacity );",
+            //THREE.ShaderChunk[ "logdepthbuf_fragment" ],
+            THREE.ShaderChunk[ "alphatest_fragment" ],
+            //THREE.ShaderChunk[ "color_fragment" ],
+            THREE.ShaderChunk[ "envmap_fragment" ],
+            //THREE.ShaderChunk[ "linear_to_gamma_fragment" ], 
         "}"
     ].join("\n")
 }};
