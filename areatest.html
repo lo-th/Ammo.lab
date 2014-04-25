@@ -23,7 +23,7 @@
 // WestLangley
 
 var renderer, scene, camera, controls, pool;
-var areaLight, material, material2, mesh;
+var areaLight, material0, material1, material2, mesh;
 var t = 0, delta = 0.004;
 
 window.onload = init;
@@ -35,7 +35,7 @@ function init() {
 	renderer = new THREE.WebGLRenderer({ antialias: true, alpha:false });
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	document.getElementById("container").appendChild( renderer.domElement );
-	renderer.setClearColor(  0x2c2c2c , 1 );
+	renderer.setClearColor(  0x222222 , 1 );
 
 	// scene
 	scene = new THREE.Scene();
@@ -50,7 +50,7 @@ function init() {
 
 	var geometry = new THREE.PlaneGeometry( 100, 50 );
 
-	var materialLight = new THREE.MeshBasicMaterial( { color: lightColor, transparent: true, opacity: 0.1, side: THREE.FrontSide } );
+	var materialLight = new THREE.MeshBasicMaterial( { color: lightColor, transparent: true, opacity: 0.01, side: THREE.FrontSide } );
 
 	areaLight = new THREE.Mesh( geometry, materialLight );
     
@@ -86,12 +86,28 @@ function init() {
     areaShader.uniforms[ "lightverts" ].value = verts;
     areaShader.uniforms[ "lightMatrixWorld" ].value = areaLight.matrixWorld;
 
+    var uniforms0 = THREE.UniformsUtils.clone( areaShader.uniforms );
+    uniforms0[ "color" ].value = new THREE.Color( 0xAAAAAA );
+    uniforms0[ "lightColor" ].value = areaLight.material.color;
+    uniforms0[ "lightIntensity" ].value = lightIntensity;
+    uniforms0[ "lightverts" ].value = verts;
+    uniforms0[ "lightMatrixWorld" ].value = areaLight.matrixWorld;
+
 	// attributes
 	var attributes = {
 	};
 
 	// material
-	material = new THREE.ShaderMaterial( {
+	material0 = new THREE.ShaderMaterial( {
+		attributes      : attributes,
+		uniforms        : uniforms0,
+		vertexShader    : areaShader.vertexShader,
+		fragmentShader  : areaShader.fragmentShader,
+		shading			: THREE.SmoothShading,
+		transparent: false
+	} );
+
+	material1 = new THREE.ShaderMaterial( {
 		attributes      : attributes,
 		uniforms        : areaShader.uniforms,
 		vertexShader    : areaShader.vertexShader,
@@ -110,11 +126,11 @@ function init() {
 	} );
     
 	// plane geometry
-	var geometry = new THREE.PlaneGeometry( 400, 60 );
+	var geometry = new THREE.PlaneGeometry( 400, 80 );
 	//geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
 
 	// plane
-	mesh = new THREE.Mesh( geometry, material );
+	mesh = new THREE.Mesh( geometry, material0 );
 	mesh.position.y = 25;
 	mesh.position.z = - 20;
 	scene.add( mesh );
@@ -135,7 +151,7 @@ function initModel(){
 	var geo01 = pool.getGeometry('three01', true);
 	var geo02 = pool.getGeometry('three02', true);
 
-	var m01 = new THREE.Mesh( geo01, material );
+	var m01 = new THREE.Mesh( geo01, material1 );
 	var m02 = new THREE.Mesh( geo02, material2 );
 
 	logo = new THREE.Object3D();
@@ -182,7 +198,7 @@ AAA.AREA = {
         {
         "color": { type: "c", value: null },
         "lightColor": { type: "c", value: null },
-        "lightIntensity": { type: "f", value: null },
+        "lightIntensity": { type: "f", value: 1 },
         "lightverts": { type: "v3v", value: [] },
         "lightMatrixWorld": { type: "m4", value: [] },
         "opacity" : { type: "f", value: 0.1 }
