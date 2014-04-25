@@ -32,9 +32,10 @@ window.onload = init;
 function init() {
 
 	// renderer
-	renderer = new THREE.WebGLRenderer({precision: "lowp", antialias: false, alpha:false });
+	renderer = new THREE.WebGLRenderer({ antialias: true, alpha:false });
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	document.getElementById("container").appendChild( renderer.domElement );
+	renderer.setClearColor(  0x2c2c2c , 1 );
 
 	// scene
 	scene = new THREE.Scene();
@@ -49,7 +50,7 @@ function init() {
 
 	var geometry = new THREE.PlaneGeometry( 100, 50 );
 
-	var materialLight = new THREE.MeshBasicMaterial( { color: lightColor, transparent: true, opacity: 0.7, side: THREE.FrontSide } );
+	var materialLight = new THREE.MeshBasicMaterial( { color: lightColor, transparent: true, opacity: 0.1, side: THREE.FrontSide } );
 
 	areaLight = new THREE.Mesh( geometry, materialLight );
     
@@ -109,12 +110,12 @@ function init() {
 	} );
     
 	// plane geometry
-	var geometry = new THREE.PlaneGeometry( 200, 200 );
+	var geometry = new THREE.PlaneGeometry( 400, 60 );
 	//geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
 
 	// plane
 	mesh = new THREE.Mesh( geometry, material );
-	//mesh.position.y = - 0.1;
+	mesh.position.y = 25;
 	mesh.position.z = - 20;
 	scene.add( mesh );
 
