@@ -9,7 +9,7 @@
     * {  margin: 0; padding: 0; border: 0; }
     @font-face { font-family: "SourceCode"; src:url("images/SourceCodePro.woff") format("woff");}
     body { background-color: #1d1f20; overflow: hidden; color: #eeeeee; font-family: "SourceCode"; font-size: 12px; }
-    #container{ position: absolute; width:100%; height:100%;}
+    #container{ position: absolute; width:100%; height:100%; overflow: hidden;}
 </style>
 <script src="lib/three.min.67.js"></script>
 <script src="lib/sea.min.js"></script>
@@ -23,6 +23,7 @@ var renderer, scene, camera, controls, pool;
 var areaLight, material0, material1, material2, mesh;
 var t = 0, delta = 0.003;
 var ToRad = Math.PI / 180;
+var logo;
 
 window.onload = init;
 
@@ -34,8 +35,8 @@ function init() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	document.getElementById("container").appendChild( renderer.domElement );
 	renderer.setClearColor(  0x030303 , 1 );
-    renderer.gammaInput = true;
-    renderer.gammaOutput = true;
+    //renderer.gammaInput = true;
+    //renderer.gammaOutput = true;
 
 	// scene
 	scene = new THREE.Scene();
@@ -171,12 +172,12 @@ function init() {
 
 	window.addEventListener( 'resize', resize, false );
 
-	//pool = new SEA3D.Pool('models/three.sea', initModel);
-	pool = new SEA3D.Pool('models/three.high.sea', initModel);
+	pool = new SEA3D.Pool('models/three.sea', initModel);
+	//pool = new SEA3D.Pool('models/three.high.sea', initModel);
 
 }
 
-var logo;
+
 
 function initModel(){
 	var geo01 = pool.getGeometry('three01', true, 0.8);
