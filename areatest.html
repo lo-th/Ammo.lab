@@ -24,7 +24,8 @@
 
 var renderer, scene, camera, controls, pool;
 var areaLight, material0, material1, material2, mesh;
-var t = 0, delta = 0.004;
+var t = 0, delta = 0.003;
+var ToRad = Math.PI / 180;
 
 window.onload = init;
 
@@ -35,18 +36,27 @@ function init() {
 	renderer = new THREE.WebGLRenderer({ antialias: true, alpha:false });
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	document.getElementById("container").appendChild( renderer.domElement );
-	renderer.setClearColor(  0x222222 , 1 );
+	//renderer.setClearColor(  0x222222 , 1 );
 
 	// scene
 	scene = new THREE.Scene();
 	
 	// camera
-	camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 1000 );
-	camera.position.set( 0, 25, 150 );
+	camera = new THREE.PerspectiveCamera( 20, window.innerWidth / window.innerHeight, 1, 1000 );
+	camera.position.set( 0, 40, 200 );
+	camera.lookAt(new THREE.Vector3( 0, 20, 0 ))
+
+	var r = "images/sky2/";
+
+	var urls = [ r + "px.jpg", r + "nx.jpg",
+				 r + "py.jpg", r + "ny.jpg",
+				 r + "pz.jpg", r + "nz.jpg" ];
+
+	var textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.CubeRefractionMapping() );
 
 	// area light
 	var lightColor = 0xffffff;
-	var lightIntensity = 1;
+	var lightIntensity = 1.5;
 
 	var geometry = new THREE.PlaneGeometry( 100, 50 );
 
@@ -79,19 +89,36 @@ function init() {
 	var areaShader = AAA.AREA[ "area" ];
 	//var uniforms = THREE.UniformsUtils.clone( areaShader.uniforms );
 
-	areaShader.uniforms[ "color" ].value = new THREE.Color( 0xDDDDDD );
+	areaShader.uniforms[ "color" ].value = new THREE.Color( 0xEEEEEE );
 	areaShader.uniforms[ "opacity" ].value = 0.9;
     areaShader.uniforms[ "lightColor" ].value = areaLight.material.color;
     areaShader.uniforms[ "lightIntensity" ].value = lightIntensity;
     areaShader.uniforms[ "lightverts" ].value = verts;
     areaShader.uniforms[ "lightMatrixWorld" ].value = areaLight.matrixWorld;
 
+    areaShader.uniforms[ "tCube" ].value = textureCube;
+    areaShader.uniforms[ "reflectivity" ].value = 0.5;
+    areaShader.uniforms[ "enableReflection" ].value = true;
+    areaShader.uniforms[ "useRefract" ].value = false;
+
     var uniforms0 = THREE.UniformsUtils.clone( areaShader.uniforms );
-    uniforms0[ "color" ].value = new THREE.Color( 0xAAAAAA );
+    uniforms0[ "color" ].value = new THREE.Color( 0x101010 );
     uniforms0[ "lightColor" ].value = areaLight.material.color;
-    uniforms0[ "lightIntensity" ].value = lightIntensity;
+    uniforms0[ "lightIntensity" ].value = lightIntensity*4;
     uniforms0[ "lightverts" ].value = verts;
     uniforms0[ "lightMatrixWorld" ].value = areaLight.matrixWorld;
+    uniforms0[ "enableReflection" ].value = false;
+
+    var uniforms2 = THREE.UniformsUtils.clone( areaShader.uniforms );
+    uniforms2[ "color" ].value = new THREE.Color( 0x303030 );
+    uniforms2[ "opacity" ].value = 0.8;
+    uniforms2[ "lightColor" ].value = areaLight.material.color;
+    uniforms2[ "lightIntensity" ].value = lightIntensity*2;
+    uniforms2[ "lightverts" ].value = verts;
+    uniforms2[ "lightMatrixWorld" ].value = areaLight.matrixWorld;
+    uniforms2[ "reflectivity" ].value = 0.9;
+    uniforms2[ "enableReflection" ].value = true;
+    uniforms2[ "useRefract" ].value = true;
 
 	// attributes
 	var attributes = {
@@ -113,12 +140,15 @@ function init() {
 		vertexShader    : areaShader.vertexShader,
 		fragmentShader  : areaShader.fragmentShader,
 		shading			: THREE.SmoothShading,
-		transparent: false
+		transparent: false,
+		envmap:textureCube,
+		reflectivity: 0.8,
+        combine:THREE.MixOperation,
 	} );
 
 	material2 = new THREE.ShaderMaterial( {
 		attributes      : attributes,
-		uniforms        : areaShader.uniforms,
+		uniforms        : uniforms2,
 		vertexShader    : areaShader.vertexShader,
 		fragmentShader  : areaShader.fragmentShader,
 		shading			: THREE.SmoothShading,
@@ -126,7 +156,7 @@ function init() {
 	} );
     
 	// plane geometry
-	var geometry = new THREE.PlaneGeometry( 400, 80 );
+	var geometry = new THREE.PlaneGeometry( 400, 40 );
 	//geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
 
 	// plane
@@ -141,18 +171,24 @@ function init() {
 
 	window.addEventListener( 'resize', resize, false );
 
-	pool = new SEA3D.Pool('models/three.sea', initModel);/**/
+	//pool = new SEA3D.Pool('models/three.sea', initModel);
+	pool = new SEA3D.Pool('models/three.high.sea', initModel);
 
 }
 
 var logo;
 
 function initModel(){
-	var geo01 = pool.getGeometry('three01', true);
-	var geo02 = pool.getGeometry('three02', true);
+	var geo01 = pool.getGeometry('three01', true, 0.8);
+	var geo02 = pool.getGeometry('three02', true, 0.8);
+	var geo03 = pool.getGeometry('three03', true, 0.8);
 
 	var m01 = new THREE.Mesh( geo01, material1 );
 	var m02 = new THREE.Mesh( geo02, material2 );
+	m01.rotation.x = m02.rotation.x = 45*ToRad
+	m01.rotation.z = m02.rotation.z = 45*ToRad
+
+	var m03 = new THREE.Mesh( geo03, material1 );
 
 	logo = new THREE.Object3D();
 
@@ -160,7 +196,10 @@ function initModel(){
 	logo.add( m02 );
 
 	scene.add( logo );
-	logo.position.set( 0, 20, 0 );
+	scene.add( m03 );
+	logo.position.set( -20, 31, 0 );
+	m03.position.set( 18, 20, 0 );
+	m03.rotation.x = -0.3
 
 }
 
@@ -174,11 +213,12 @@ function animate() {
 
 	requestAnimationFrame( animate );
     
-	/**/areaLight.position.set( 0, 25 + 25 * Math.sin( t ), Math.min( - 25 * Math.cos( t ), 0 ) );
+	areaLight.position.set( 0, 25 + 25 * Math.sin( t ), Math.min( - 25 * Math.cos( t ), 0 ) );
+	//areaLight.position.set( 0, 40 + 40 * Math.sin( t ), Math.min( - 40 * Math.cos( t ), 0 ) );
 	areaLight.rotation.set( Math.min( t, Math.PI / 2 ), 0, 0 );
 
 	t += delta;
-	if ( t > 4.4 || t < 0 ) delta = - delta;
+	if ( t > 4.4 || t < 0) delta = - delta;
 
 	if(logo) logo.rotation.y += 0.01;
 
@@ -192,24 +232,31 @@ var AAA={ REVISION: 0.2 };
 
 AAA.AREA = {
 	'area' : {
-    uniforms: THREE.UniformsUtils.merge( [
+    uniforms:// THREE.UniformsUtils.merge( [
 
-        THREE.UniformsLib[ "common" ],
+       // THREE.UniformsLib[ "common" ],
         {
         "color": { type: "c", value: null },
         "lightColor": { type: "c", value: null },
         "lightIntensity": { type: "f", value: 1 },
         "lightverts": { type: "v3v", value: [] },
         "lightMatrixWorld": { type: "m4", value: [] },
-        "opacity" : { type: "f", value: 0.1 }
+        "opacity" : { type: "f", value: 1 },
+
+        "tCube" : { type: "t", value: null },
+        "enableReflection": { type: "i", value: 0 },
+        "useRefract" : { type: "i", value: 0 },
+        "reflectivity" : { type: "f", value: 1.0 },
+        "refractionRatio" : { type: "f", value: 0.9 },
+        "combine" : { type: "i", value: 0 },
         
-    }] ),
+    },//] ),
     vertexShader: [
         "#define NVERTS 4",
         "varying vec3 vNormal;",
         "varying vec3 vViewPosition;",
         //THREE.ShaderChunk[ "color_pars_vertex" ],
-        THREE.ShaderChunk[ "envmap_pars_vertex" ],
+        //THREE.ShaderChunk[ "envmap_pars_vertex" ],
         //THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
 
         "void main() {",
@@ -219,7 +266,12 @@ AAA.AREA = {
             "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
             //THREE.ShaderChunk[ "color_vertex" ],
             //THREE.ShaderChunk[ "worldpos_vertex" ],
-            THREE.ShaderChunk[ "envmap_vertex" ],
+           // "	#ifdef USE_ENVMAP",
+            //THREE.ShaderChunk[ "morphnormal_vertex" ],
+				//THREE.ShaderChunk[ "skinnormal_vertex" ],
+				//THREE.ShaderChunk[ "defaultnormal_vertex" ],
+			//"	#endif",	
+           // THREE.ShaderChunk[ "envmap_vertex" ],
         "}"
     ].join("\n"),
     fragmentShader: [
@@ -231,11 +283,18 @@ AAA.AREA = {
         "uniform vec3 lightverts[ NVERTS ];",
         "uniform mat4 lightMatrixWorld;",
 
+        "uniform samplerCube tCube;",
+        "uniform bool useRefract;",
+        "uniform float refractionRatio;",
+        "uniform float reflectivity;",
+        "uniform bool enableReflection;",
+
         "varying vec3 vNormal;",
         "varying vec3 vViewPosition;",
+        "varying vec3 vWorldPosition;",
 
         //THREE.ShaderChunk[ "color_pars_fragment" ],
-        THREE.ShaderChunk[ "envmap_pars_fragment" ],
+        //THREE.ShaderChunk[ "envmap_pars_fragment" ],
         //THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
 
         "void main() {",
@@ -262,10 +321,34 @@ AAA.AREA = {
             "float factor = max( dot( lightVec, normal ), 0.0 ) / ( 2.0 * 3.14159265 );",
             "vec3 diffuse = color * lightColor * lightIntensity * factor;",
             "gl_FragColor = vec4( ambient + diffuse, opacity );",
+
+            // reflection test
+
+            "if ( enableReflection ) {",
+
+            
+                "vec3 viewPosition = normalize( vViewPosition );",
+
+                "vec3 vReflect;",
+                //"vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );",
+                "vec3 cameraToVertex = normalize( vViewPosition - cameraPosition );",
+                "if ( useRefract ) {",
+                    "vReflect = refract( cameraToVertex, normal, refractionRatio );",
+                "} else {",
+                    "vReflect = reflect( cameraToVertex, normal );",
+                "}",
+                "vec4 cubeColor = textureCube( tCube, vec3( -vReflect.x, vReflect.yz ) );",
+                "#ifdef GAMMA_INPUT",
+                    "cubeColor.xyz *= cubeColor.xyz;",
+                "#endif",
+                //"gl_FragColor.xyz = mix( gl_FragColor.xyz, cubeColor.xyz, specularTex.r * reflectivity );",
+                "gl_FragColor.xyz = mix( gl_FragColor.xyz, cubeColor.xyz,  reflectivity );",
+
+            "}",
             //THREE.ShaderChunk[ "logdepthbuf_fragment" ],
-            THREE.ShaderChunk[ "alphatest_fragment" ],
+            //THREE.ShaderChunk[ "alphatest_fragment" ],
             //THREE.ShaderChunk[ "color_fragment" ],
-            THREE.ShaderChunk[ "envmap_fragment" ],
+            //THREE.ShaderChunk[ "envmap_fragment" ],
             //THREE.ShaderChunk[ "linear_to_gamma_fragment" ], 
         "}"
     ].join("\n")
