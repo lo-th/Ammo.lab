@@ -19,7 +19,7 @@
 <div id='container'></div>
 <script>
 
-var renderer, scene, camera, controls, pool;
+var renderer, scene, camera, controls, pool, textureCube;
 var areaLight, material0, material1, material2, mesh;
 var t = 0, delta = 0.003;
 var ToRad = Math.PI / 180;
@@ -31,10 +31,10 @@ window.onload = init;
 function init() {
 
 	// renderer
-	renderer = new THREE.WebGLRenderer({ antialias: true, alpha:false });
+	renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	document.getElementById("container").appendChild( renderer.domElement );
-	renderer.setClearColor(  0x030303 , 1 );
+	//renderer.setClearColor(  0x000000 , 1 );
     //renderer.gammaInput = true;
     //renderer.gammaOutput = true;
 
@@ -46,122 +46,32 @@ function init() {
 	camera.position.set( 0, 40, 250 );
 	camera.lookAt(new THREE.Vector3( 0, 20, 0 ))
 
+    /*var ambient = new THREE.AmbientLight( 0x101010 );
+    scene.add( ambient );
+
+    var directionalLight = new THREE.DirectionalLight( 0xffffff );
+    directionalLight.position.set( 0, 70, 100 );//.normalize();
+    directionalLight.target.position.set(0, 25, 0);
+    scene.add( directionalLight );*/
+
+    var pointLight0 = new THREE.PointLight( 0xFFFFFF,2 );
+    pointLight0.position.set( 0, 70, 100 );
+    scene.add( pointLight0 );
+
+    var pointLight = new THREE.PointLight( 0xff5500,2 );
+    pointLight.position.set( 100, 0, 50 );
+    scene.add( pointLight );
+
+    var pointLight2 = new THREE.PointLight( 0x0055ff,2 );
+    pointLight2.position.set( -100, 0, -50 );
+    scene.add( pointLight2 );
+
+
 	var r = "images/sky2/";
 
-	var urls = [ r + "px.jpg", r + "nx.jpg",
-				 r + "py.jpg", r + "ny.jpg",
-				 r + "pz.jpg", r + "nz.jpg" ];
+	var urls = [ r + "px.jpg", r + "nx.jpg", r + "py.jpg", r + "ny.jpg", r + "pz.jpg", r + "nz.jpg" ];
+	textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.CubeRefractionMapping() );
 
-	var textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.CubeRefractionMapping() );
-
-	// area light
-	var lightColor = 0xffffff;
-	var lightIntensity = 1.5;
-
-	var geometry = new THREE.PlaneGeometry( 100, 50 );
-
-	var materialLight = new THREE.MeshBasicMaterial( { color: lightColor, transparent: true, opacity: 0.1, side: THREE.FrontSide } );
-
-	areaLight = new THREE.Mesh( geometry, materialLight );
-    areaLight.visible = false;
-    
- 	areaLight.position.set( 0, 25, -25 );
-	areaLight.rotation.set( 0, 0, 0 );
-	areaLight.scale.set( 1, 1, 1 );
-	scene.add( areaLight );
-/*
-    // wireframe hack
-    //areaLight.add( new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { wireframe: true } ) ) );
-    var bb = new THREE.BoxHelper()
-    bb.material.color.set( lightColor );
-    bb.scale.set( 50, 25, 0 );
-    areaLight.add( bb );
-
-*/
-	// areaLight verts
-	var vertices = areaLight.geometry.vertices;
-	var verts = [];
-	verts.push( vertices[ 0 ] );
-	verts.push( vertices[ 1 ] );
-	verts.push( vertices[ 3 ] ); // swap 2 & 3; must be in clockwise order; they are not
-	verts.push( vertices[ 2 ] );
-
-	// uniforms
-	var areaShader = AAA.AREA[ "area" ];
-	//var uniforms = THREE.UniformsUtils.clone( areaShader.uniforms );
-
-	areaShader.uniforms[ "color" ].value = new THREE.Color( 0xEEEEEE );
-	areaShader.uniforms[ "opacity" ].value = 0.9;
-    areaShader.uniforms[ "lightColor" ].value = areaLight.material.color;
-    areaShader.uniforms[ "lightIntensity" ].value = lightIntensity;
-    areaShader.uniforms[ "lightverts" ].value = verts;
-    areaShader.uniforms[ "lightMatrixWorld" ].value = areaLight.matrixWorld;
-
-    areaShader.uniforms[ "tCube" ].value = textureCube;
-    areaShader.uniforms[ "reflectivity" ].value = 0.5;
-    areaShader.uniforms[ "enableReflection" ].value = true;
-    areaShader.uniforms[ "useRefract" ].value = false;
-
-    var uniforms0 = THREE.UniformsUtils.clone( areaShader.uniforms );
-    uniforms0[ "color" ].value = new THREE.Color( 0x101010 );
-    uniforms0[ "lightColor" ].value = areaLight.material.color;
-    uniforms0[ "lightIntensity" ].value = lightIntensity*4;
-    uniforms0[ "lightverts" ].value = verts;
-    uniforms0[ "lightMatrixWorld" ].value = areaLight.matrixWorld;
-    uniforms0[ "enableReflection" ].value = false;
-
-    var uniforms2 = THREE.UniformsUtils.clone( areaShader.uniforms );
-    uniforms2[ "color" ].value = new THREE.Color( 0x303030 );
-    uniforms2[ "opacity" ].value = 0.8;
-    uniforms2[ "lightColor" ].value = areaLight.material.color;
-    uniforms2[ "lightIntensity" ].value = lightIntensity*2;
-    uniforms2[ "lightverts" ].value = verts;
-    uniforms2[ "lightMatrixWorld" ].value = areaLight.matrixWorld;
-    uniforms2[ "reflectivity" ].value = 0.9;
-    uniforms2[ "enableReflection" ].value = true;
-    uniforms2[ "useRefract" ].value = true;
-
-	// attributes
-	var attributes = {
-	};
-
-	// material
-	material0 = new THREE.ShaderMaterial( {
-		attributes      : attributes,
-		uniforms        : uniforms0,
-		vertexShader    : areaShader.vertexShader,
-		fragmentShader  : areaShader.fragmentShader,
-		shading			: THREE.SmoothShading,
-		transparent: false
-	} );
-
-	material1 = new THREE.ShaderMaterial( {
-		attributes      : attributes,
-		uniforms        : areaShader.uniforms,
-		vertexShader    : areaShader.vertexShader,
-		fragmentShader  : areaShader.fragmentShader,
-		shading			: THREE.SmoothShading,
-		transparent: false
-	} );
-
-	material2 = new THREE.ShaderMaterial( {
-		attributes      : attributes,
-		uniforms        : uniforms2,
-		vertexShader    : areaShader.vertexShader,
-		fragmentShader  : areaShader.fragmentShader,
-		shading			: THREE.SmoothShading,
-		transparent: true
-	} );
-    
-	// plane geometry
-	var geometry = new THREE.PlaneGeometry( 400, 40 );
-	//geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) );
-
-	// plane
-	mesh = new THREE.Mesh( geometry, material0 );
-	mesh.position.y = 25;
-	mesh.position.z = - 20;
-	scene.add( mesh );
 
 	
 
@@ -169,24 +79,27 @@ function init() {
 
 	window.addEventListener( 'resize', resize, false );
 
-	pool = new SEA3D.Pool('models/three.sea', initModel);
-	//pool = new SEA3D.Pool('models/three.high.sea', initModel);
+	//pool = new SEA3D.Pool('models/three.sea', initModel);
+	pool = new SEA3D.Pool('models/three.high.sea', initModel);
 
 }
 
 
 
 function initModel(){
+    var mat01 = new THREE.MeshPhongMaterial( {color:0xFFFFFF, specular: 0xFFFFFF, shininess: 60, reflectivity:0.6, envMap:textureCube, combine:THREE.MixOperation } );
+    var mat02 = new THREE.MeshPhongMaterial( {color:0xFFFFFF, specular: 0xFFFFFF, shininess: 60, reflectivity:0.6, envMap:textureCube, combine:THREE.MixOperation, transparent: true, opacity:0.6 } );
+
 	var geo01 = pool.getGeometry('three01', true, 0.8);
 	var geo02 = pool.getGeometry('three02', true, 0.8);
 	var geo03 = pool.getGeometry('three03', true, 0.8);
 
-	var m01 = new THREE.Mesh( geo01, material1 );
-	var m02 = new THREE.Mesh( geo02, material2 );
+	var m01 = new THREE.Mesh( geo01, mat01 );
+	var m02 = new THREE.Mesh( geo02, mat02 );
 	m01.rotation.x = m02.rotation.x = 45*ToRad
 	m01.rotation.z = m02.rotation.z = 45*ToRad
 
-	var m03 = new THREE.Mesh( geo03, material1 );
+	var m03 = new THREE.Mesh( geo03, mat01 );
 
 	logo = new THREE.Object3D();
 
@@ -197,8 +110,7 @@ function initModel(){
 	scene.add( m03 );
 	logo.position.set( -20, 31, 0 );
 	m03.position.set( 18, 20, 0 );
-	m03.rotation.x = -0.3
-
+	m03.rotation.x = -0.3;
 }
 
 function resize(){
@@ -210,109 +122,12 @@ function resize(){
 function animate() {
 
 	requestAnimationFrame( animate );
-    
-	areaLight.position.set( 0, 25 + 25 * Math.sin( t ), Math.min( - 25 * Math.cos( t ), 0 ) );
-	areaLight.rotation.set( Math.min( t, Math.PI / 2 ), 0, 0 );
 
-	t += delta;
-	if ( t > 4.4 || t < 0) delta = - delta;
-
-	if(logo) logo.rotation.y += 0.01;
+	if(logo) logo.rotation.y += 0.008;
 
 	renderer.render( scene, camera );
 
 }
-
-var AAA={ REVISION: 0.2 };
-
-AAA.AREA = {
-	'area' : {
-    uniforms: {
-        "color": { type: "c", value: null },
-        "lightColor": { type: "c", value: null },
-        "lightIntensity": { type: "f", value: 1 },
-        "lightverts": { type: "v3v", value: [] },
-        "lightMatrixWorld": { type: "m4", value: [] },
-        "opacity" : { type: "f", value: 1 },
-
-        "tCube" : { type: "t", value: null },
-        "enableReflection": { type: "i", value: 0 },
-        "useRefract" : { type: "i", value: 0 },
-        "reflectivity" : { type: "f", value: 1.0 },
-        "refractionRatio" : { type: "f", value: 0.9 },
-        //"combine" : { type: "i", value: 0 },
-    },
-    vertexShader: [
-        "#define NVERTS 4",
-        "varying vec3 vNormal;",
-        "varying vec3 vViewPosition;",
-
-        "void main() {",
-            "vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
-            "vNormal = normalize( normalMatrix * normal );",
-            "vViewPosition = -mvPosition.xyz;",
-            "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-        "}"
-    ].join("\n"),
-    fragmentShader: [
-        "#define NVERTS 4",
-        "uniform vec3 color;",
-        "uniform float opacity;",
-        "uniform vec3 lightColor;",
-        "uniform float lightIntensity;",
-        "uniform vec3 lightverts[ NVERTS ];",
-        "uniform mat4 lightMatrixWorld;",
-
-        "uniform samplerCube tCube;",
-        "uniform bool useRefract;",
-        "uniform float refractionRatio;",
-        "uniform float reflectivity;",
-        "uniform bool enableReflection;",
-
-        "varying vec3 vNormal;",
-        "varying vec3 vViewPosition;",
-
-        "void main() {",
-            "vec3 normal = normalize( vNormal );",
-            "vec4 lPosition[ NVERTS ];",
-            "vec3 lVector[ NVERTS ];",
-            "vec3 ambient = color * vec3( 0.2 );",
-            "for( int i = 0; i < NVERTS; i ++ ) {",
-                "lPosition[ i ] = viewMatrix * lightMatrixWorld * vec4( lightverts[ i ], 1.0 );",
-                "lVector[ i ] = normalize( lPosition[ i ].xyz + vViewPosition.xyz );",
-            "}",
-            "float tmp = dot( lVector[ 0 ], cross( ( lPosition[ 2 ] - lPosition[ 0 ] ).xyz, ( lPosition[ 1 ] - lPosition[ 0 ] ).xyz ) );",
-            "if ( tmp > 0.0 ) {",
-                "gl_FragColor = vec4( ambient, opacity );",
-                "return;",
-            "}",
-            "vec3 lightVec = vec3( 0.0 );",
-            "for( int i = 0; i < NVERTS; i ++ ) {",
-                "vec3 v0 = lVector[ i ];",
-                "vec3 v1 = lVector[ int( mod( float( i + 1 ), float( NVERTS ) ) ) ];",
-                "lightVec += acos( dot( v0, v1 ) ) * normalize( cross( v0, v1 ) );",
-            "}",
-
-            "float factor = max( dot( lightVec, normal ), 0.0 ) / ( 2.0 * 3.14159265 );",
-            "vec3 diffuse = color * lightColor * lightIntensity * factor;",
-            "gl_FragColor = vec4( ambient + diffuse, opacity );",
-
-            // reflection test
-
-            "if ( enableReflection ) {",
-                "vec3 vReflect;",
-                "vec3 cameraToVertex = normalize( vViewPosition - cameraPosition );",
-                "if ( useRefract ) {",
-                    "vReflect = refract( cameraToVertex, normal, refractionRatio );",
-                "} else {",
-                    "vReflect = reflect( cameraToVertex, normal );",
-                "}",
-                "vec4 cubeColor = textureCube( tCube, vec3( -vReflect.x, vReflect.yz ) );",
-                "gl_FragColor.xyz = mix( gl_FragColor.xyz, cubeColor.xyz,  reflectivity );",
-            "}",
-        "}"
-    ].join("\n")
-}};
 
 </script>
 </body>
