@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <style>
     * {  margin: 0; padding: 0; border: 0; }
-    body { background-color:#000000; overflow:hidden; color:#eeeeee; font-family:"Arial"; font-size:12px; }
+    body { background-color:#880000; overflow:hidden; color:#eeeeee; font-family:"Arial"; font-size:12px; }
     #interface{ position: absolute; left:10px; top:10px; width:100%; height:40px; }
     input{ margin:10px; padding:10px; }
     #but01{ position: absolute; left:0px; top:10px; width: 100px; cursor:pointer;}
@@ -124,7 +124,7 @@ function init() {
         body.attachEvent("onmousewheel" , onMouseWheel); // ie
     }
 
-	pool = new SEA3D.Pool('models/three.sea', initModel);
+	pool = new SEA3D.Pool('models/three_new.sea', initModel);
 
 
 }
@@ -163,7 +163,7 @@ function initModel(){
     var mat02 = new THREE.MeshPhongMaterial( {color:0x101010, specular: 0xFFFFFF, shininess: 60, reflectivity:0.6, envMap:textureCube, combine:THREE.MixOperation, transparent: true, opacity:0.7 } );
 
     //var mat01 = new THREE.MeshBasicMaterial( {color:0xFFFFFF } );
-    //var mat02 = new THREE.MeshBasicMaterial( {color:0x000000, transparent: true, opacity:0 } );
+    //var mat02 = new THREE.MeshBasicMaterial( {color:0x000000, transparent: true, opacity:0.5 } );
 
 
 	var geo01 = pool.getGeometry('three01', true, 1);
@@ -189,15 +189,15 @@ function initModel(){
 	logo.position.set( -30, 3, 0 );
 	
 	logo.rotation.z = 166*ToRad;
-    logo.rotation.x = 20*ToRad;
+    logo.rotation.x = 15*ToRad;
 
-    logoContent.rotation.y = 69*ToRad;
+    logoContent.rotation.y = 45*ToRad;
 
     render();
 }
 
 function resize(){
-    viewSize = {w:window.innerWidth, h:window.innerWidth*0.5};
+   // viewSize = {w:window.innerWidth, h:window.innerWidth*0.5};
     position = "position:absolute; width:"+viewSize.w+"px; height:"+viewSize.h+"px;"
     position+=" margin-left:"+(-viewSize.w*0.5)+"px; margin-top:"+(-viewSize.h*0.5)+"px; left:50%; top:50%";
     svglogoBlack.style.cssText = svglogoWhite.style.cssText = position;
