@@ -7,23 +7,47 @@
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <style>
     * {  margin: 0; padding: 0; border: 0; }
-    body { background-color:#1d1f20; overflow:hidden; color:#eeeeee; font-family:"Arial"; font-size:12px; }
-    #container{ position: absolute; width:100%; height:100%; overflow: hidden;}
+    body { background-color:#000000; overflow:hidden; color:#eeeeee; font-family:"Arial"; font-size:12px; }
+    #interface{ position: absolute; left:10px; top:10px; width:100%; height:40px; }
+    input{ margin:10px; padding:10px; }
+    #but01{ position: absolute; left:0px; top:10px; width: 100px; cursor:pointer;}
+    #but02{ position: absolute; left:104px; top:10px; width: 100px; cursor:pointer;}
+    #but03{ position: absolute; left:208px; top:10px; width: 100px; cursor:pointer;}
+    #but04{ position: absolute; left:312px; top:10px; width: 100px; cursor:pointer;}
+    #container{}
+    #svglogoWhite{display:none;}
+    #svglogoBlack{display:none;}
 </style>
 <script src="lib/three.min.67.js"></script>
 <script src="lib/sea.min.js"></script>
+<div id='interface'>
+<input type="submit" onClick=switchMode(0) value="3d Animation" id="but01">
+<input type="submit" onClick=switchMode(1) value="3d Fixe" id="but02">
+<input type="submit" onClick=switchMode(2) value="svg black" id="but03">
+<input type="submit" onClick=switchMode(3) value="svg white" id="but04">
+</div>
 </head>
 
 <body>
 <div id='container'></div>
+<object type="image/svg+xml" data="images/three_black.svg" id="svglogoBlack"> </object>
+<object type="image/svg+xml" data="images/three_white.svg" id="svglogoWhite"> </object>
 <script>
+
+var container, svglogoBlack, svglogoWhite;
 
 var renderer, scene, camera, controls, pool, textureCube;
 var areaLight, material0, material1, material2, mesh;
-var t = 0, delta = 0.003;
+var isAnimOn = true;
 var ToRad = Math.PI / 180;
-var logo;
+var logo, logoContent, logoText;
 
+var viewSize = {w:1600, h:800}
+
+
+container = document.getElementById("container");
+svglogoBlack = document.getElementById("svglogoBlack");
+svglogoWhite = document.getElementById("svglogoWhite");
 window.onload = init;
 
 
@@ -31,8 +55,8 @@ function init() {
 
 	// renderer
 	renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
-	renderer.setSize( window.innerWidth, window.innerHeight );
-	document.getElementById("container").appendChild( renderer.domElement );
+	renderer.setSize(  viewSize.w,  viewSize.h );
+	container.appendChild( renderer.domElement );
 	//renderer.setClearColor(  0x000000 , 1 );
     //renderer.gammaInput = true;
     //renderer.gammaOutput = true;
@@ -41,9 +65,9 @@ function init() {
 	scene = new THREE.Scene();
 	
 	// camera
-	camera = new THREE.PerspectiveCamera( 20, window.innerWidth / window.innerHeight, 1, 1000 );
-	camera.position.set( 0, 40, 250 );
-	camera.lookAt(new THREE.Vector3( 0, 20, 0 ))
+	camera = new THREE.PerspectiveCamera( 20, viewSize.w / viewSize.h, 1, 1000 );
+	camera.position.set( 0, 0, 204 );
+	camera.lookAt(new THREE.Vector3( 0, 0, 0 ))
 
     /*var ambient = new THREE.AmbientLight( 0x101010 );
     scene.add( ambient );
@@ -72,14 +96,35 @@ function init() {
 	textureCube = THREE.ImageUtils.loadTextureCube( urls, new THREE.CubeRefractionMapping() );
 
 
-	
-
-	animate();
-
 	window.addEventListener( 'resize', resize, false );
+    resize();
 
-	//pool = new SEA3D.Pool('models/three.sea', initModel);
-	pool = new SEA3D.Pool('models/three.high.sea', initModel);
+	pool = new SEA3D.Pool('models/three.sea', initModel);
+
+
+}
+
+function switchMode(n){
+    isAnimOn = false;
+    document.body.style.background = "black";
+    switch(n){
+        case 0:case 1:
+            svglogoWhite.style.display = svglogoBlack.style.display = "none";
+            container.style.display = "block";
+            if(n==0)isAnimOn = true;
+            animate();
+        break;
+        case 2:
+            container.style.display = svglogoWhite.style.display ="none";
+            svglogoBlack.style.display = "block";
+            document.body.style.background = "white";
+        break;
+        case 3:
+            container.style.display = svglogoBlack.style.display ="none";
+            svglogoWhite.style.display = "block";
+            
+        break;
+    }
 
 }
 
@@ -89,43 +134,58 @@ function initModel(){
     var mat01 = new THREE.MeshPhongMaterial( {color:0xFFFFFF, specular: 0xFFFFFF, shininess: 60, reflectivity:0.6, envMap:textureCube, combine:THREE.MixOperation } );
     var mat02 = new THREE.MeshPhongMaterial( {color:0xFFFFFF, specular: 0xFFFFFF, shininess: 60, reflectivity:0.6, envMap:textureCube, combine:THREE.MixOperation, transparent: true, opacity:0.6 } );
 
-	var geo01 = pool.getGeometry('three01', true, 0.8);
-	var geo02 = pool.getGeometry('three02', true, 0.8);
-	var geo03 = pool.getGeometry('three03', true, 0.8);
+    //var mat01 = new THREE.MeshBasicMaterial( {color:0xFFFFFF } );
+    //var mat02 = new THREE.MeshBasicMaterial( {color:0x000000, transparent: true, opacity:1 } );
+
+
+	var geo01 = pool.getGeometry('three01', true, 1);
+	var geo02 = pool.getGeometry('three02', true, 1);
+	var geo03 = pool.getGeometry('three03', true, 1);
 
 	var m01 = new THREE.Mesh( geo01, mat01 );
 	var m02 = new THREE.Mesh( geo02, mat02 );
-	m01.rotation.x = m02.rotation.x = 45*ToRad
-	m01.rotation.z = m02.rotation.z = 45*ToRad
 
-	var m03 = new THREE.Mesh( geo03, mat01 );
+	logoText = new THREE.Mesh( geo03, mat01 );
+    logoText.position.set( 14, -9, 0 );
 
 	logo = new THREE.Object3D();
+    logoContent = new THREE.Object3D();
 
-	logo.add( m01 );
-	logo.add( m02 );
+	logoContent.add( m01 );
+	logoContent.add( m02 );
+
+    logo.add( logoContent );
 
 	scene.add( logo );
-	scene.add( m03 );
-	logo.position.set( -20, 31, 0 );
-	m03.position.set( 18, 20, 0 );
-	m03.rotation.x = -0.3;
+	scene.add( logoText );
+	logo.position.set( -30, 3, 0 );
+	
+	logo.rotation.z = 166*ToRad;
+    logo.rotation.x = 20*ToRad;
+
+    logoContent.rotation.y = 80*ToRad;
+
+    render();
 }
 
 function resize(){
-    renderer.setSize( window.innerWidth,window.innerHeight );
-    camera.aspect = ( window.innerWidth/window.innerHeight );
+    viewSize = {w:window.innerWidth*0.5, h:window.innerWidth*0.25};
+    position = "position:absolute; width:"+viewSize.w+"px; height:"+viewSize.h+"px;"
+    position+=" margin-left:"+(-viewSize.w*0.5)+"px; margin-top:"+(-viewSize.h*0.5)+"px; left:50%; top:50%";
+    container.style.cssText = svglogoBlack.style.cssText = svglogoWhite.style.cssText = position;
+    renderer.setSize(  viewSize.w,  viewSize.h );
+    camera.aspect = ( viewSize.w/viewSize.h );
     camera.updateProjectionMatrix();
 }
 
 function animate() {
+	if(isAnimOn)requestAnimationFrame( animate );
+	if(logoContent) logoContent.rotation.y -= 0.008;
+    render();
+}
 
-	requestAnimationFrame( animate );
-
-	if(logo) logo.rotation.y += 0.008;
-
-	renderer.render( scene, camera );
-
+function render() {
+    renderer.render( scene, camera );
 }
 
 </script>
