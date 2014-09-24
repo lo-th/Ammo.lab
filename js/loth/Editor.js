@@ -337,7 +337,7 @@ var Editor = function (Themes, nDemo) {
 		currentDemo = name;
 		var test = Test || false;
 		MainEditor.contentWindow.setBase(Editor);
-		MainEditor.contentWindow.loadfile("demos/"+name+".html");
+		MainEditor.contentWindow.loadfileJS("demos/"+name+".js");
 		if(test)testCurrentDemo();
 	}
 

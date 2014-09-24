@@ -4,6 +4,7 @@
 <title>Ammo lab</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<link rel="shortcut icon" href="favicon.ico">
 <style>
     * {  margin: 0; padding: 0; border: 0; }
     @font-face { font-family: "SourceCode"; src:url("images/SourceCodePro.woff") format("woff");}
@@ -18,15 +19,10 @@
 </style>
 
 <script src="lib/three.min.js"></script>
-<script src="lib/Detector.js"></script>
-<script src="lib/Effect.js"></script>
-<script src="lib/BufferGeometryUtils.js"></script>
-<script src="lib/loaders/sea3d/SEA3D.js"></script>
-<script src="lib/loaders/sea3d/SEA3DLoader.js"></script>
-<script src="lib/loaders/sea3d/SEA3DLZMA.js"></script>
-<script src="lib/loaders/sea3d/SEA3DPool.js"></script>
+<script src="lib/effect.js"></script>
+<script src="lib/sea3d.min.js"></script>
 <script src="lib/tweenLite.min.js"></script>
-<script src="lib/NewAmmo/ammo.fast.js"></script>
+<script src="lib/ammo.js"></script>
 
 <script src="js/AMMO.Three.js"></script>
 <script src="js/AAA.View.js"></script>
@@ -107,7 +103,7 @@ function updateWorld() {
 
 function init() {
    
-    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+    //if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
     Textures = new AAA.Texture();
 
@@ -146,7 +142,7 @@ function initTextures(){
 //-----------------------------------------------------
 
 function initGeometry() {
-    var oName = ['smoothCube','smoothCylinder','dice','L','T','H'];
+    var oName = ['box','cyl','dice','L','T','H'];
     for(var i=0;i<oName.length;i++){
         View.geos[i] = Pool.getGeometry(oName[i], true);
         View.geos[i].name = oName[i];

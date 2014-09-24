@@ -5,18 +5,52 @@
 		<meta charset="utf-8">
 		<style> html,body { border:none; margin:0px; padding: 0px; width:100%; height:100%;  overflow:hidden; } </style>
 		<link rel="stylesheet" href="css/codemirror.css">
-		<script src="js/loth/Transcode.js"></script>
+		<link rel="stylesheet" href="css/consolas.css">
+		<style>
+		html, body {
+			margin:0; padding:0; border:none; overflow:hidden; width:100%; height:100%; background:#1d1f20 );
+		}
+		#editor { position:absolute; left:0; top:0; width:100%; height:100%; display:block; border:none; }
+		#editor .CodeMirror-linenumber { background: none; color:#343434;}
+		#editor .CodeMirror-gutters {background: none; color:#343434;}
+		#editor .CodeMirror {
+			height: 100%;
+			font-family: Consolas, 'ConsolasRegular', 'Courier New', monospace !important;
+			font-size: 12px;
+			letter-spacing:0px;
+			padding-right:0px;
+			background: none;
+			-webkit-transform: translateZ(0);
+			border:none;
+		}
+
+		#editor .CodeMirror-scroll { overflow: auto;  }
+		#editor .CodeMirror div.CodeMirror-selected { background: rgba(0,0,0,0.5); }
+		#editor .CodeMirror-focused div.CodeMirror-selected { background: rgba(0,0,255,0.1); }
+		#editor .CodeMirror .errorLine { background: rgba(255,0,0,0.25); }
+		#editor .CodeMirror .esprima-error {
+			color: #f00;
+			text-align: right;
+			padding: 0px 20px;
+		}
+		.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}
+		.CodeMirror-focused .cm-matchhighlight { background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFklEQVQI12NgYGBgkKzc8x9CMDAwAAAmhwSbidEoSQAAAABJRU5ErkJggg==);
+			background-position: bottom;
+			background-repeat: repeat-x;
+		}
+		</style>
 	</head>
 	<body>
-		
+	<script src="lib/codemirror.min.js"></script>
+	<!--<script src="js/loth/Transcode.js"></script>-->
+	<div id="editor"></div>    
 	<script>
-	window.onload = prevInit;
-
+	/*window.onload = prevInit;
 	function prevInit() {
-	    var sources = new Transcode.Loader(["images/codemirror.png"], init);
-	}
+	    var sources = new Transcode.Pool(["images/codemirror.png"], init);
+	}*/
 
-	//window.onload = init;
+	window.onload = init;
 	var codeEditor;
 	var fileref;
 	var head;
@@ -24,10 +58,11 @@
 
 	function init() {
 	    head = document.getElementsByTagName("head")[0];
-	    codeEditor = CodeMirror(document.body, {
-	        //lineNumbers: true,
+	    codeEditor = CodeMirror(document.getElementById( 'editor' ), {
+	        lineNumbers: true,
 	        styleActiveLine: true,
 	        matchBrackets: true,
+	        styleActiveLine: true,
 	        theme:'monokai',
 	        mode:'javascript'
 	    });
@@ -37,40 +72,30 @@
 		codeEditor.getInputField().blur();
 	}
 
+	function setBase(b){
+		if(base==null)base = b;
+	}
+
 	function changeTheme(n){
 		if(n==0)codeEditor.setOption("theme", "default");
 		else codeEditor.setOption("theme", "monokai");
 	}
 
-	function setBase(b){
-		if(base==null)base = b;
+	function loadfileJS(url){
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', url, true);
+		xhr.responseType = 'blob';
+		xhr.onload = function(e) {
+		    var reader = new FileReader();
+		    reader.onload = function(e) {
+		    	codeEditor.setValue(e.target.result);
+		    	base.update();
+		    }
+		    reader.readAsText(this.response);
+		};
+		xhr.send();
 	}
 
-	function loadfile(url){
-	    if(fileref) head.removeChild(fileref);
-	    fileref = document.createElement("frame");
-	    fileref.charset = "utf-8";
-	    fileref.id = "fileref";
-	    fileref.type = "text/html";
-	    fileref.src = url;
-
-	    fileref.onreadystatechange = callback;
-	    fileref.onload = callback;
-	    head.appendChild(fileref);
-	}
-
-	function callback(){
-	    var doc; 
-	    var frame = document.getElementById("fileref");
-	    if(frame.contentDocument) doc = frame.contentDocument; 
-	    else doc = frame.contentWindow.document; 
-	    var v = doc.getElementsByTagName("head")[0].innerHTML;
-	    var txt = v.slice(53, -10);
-	    codeEditor.setValue( txt );
-
-	    base.update();
-	}
-
-		</script>
+	</script>
 	</body>
 </html>

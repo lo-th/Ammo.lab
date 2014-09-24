@@ -40,7 +40,7 @@ AAA.View = function(Themes){
     this.themes = Themes || ['1d1f20', '2f3031', '424344', '68696b'];
     this.bgColor = parseInt("0x" + this.themes[0]);
     this.debugColor = parseInt("0x" + this.themes[2]);
-    this.debugAlpha = 0.3;
+    this.debugAlpha = 0.5;
 
     this.isShadow = false;
     this.isSketch = false;
@@ -52,8 +52,8 @@ AAA.View = function(Themes){
     this.tt = [0 , 0];
 
     // for draw sketch
-   // this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise.png');
-  //  this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper.jpg');
+    this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise.png');
+    this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper.jpg');
 
     //this.tx01 = null;
     //this.tx02 = null;
@@ -139,7 +139,7 @@ AAA.View.prototype = {
         }*/
 
         var groundMat = new THREE.MeshBasicMaterial( { color: this.bgColor, transparent:true, opacity:this.debugAlpha } );
-        var groundGeo = THREE.BufferGeometryUtils.fromGeometry( new THREE.PlaneGeometry( 1, 1 ) );
+        var groundGeo = new THREE.PlaneBufferGeometry( 1, 1 );//new THREE.BufferGeometry().fromGeometry( new THREE.PlaneGeometry( 1, 1 ) );
         groundGeo.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
         this.ground = new THREE.Mesh( groundGeo, groundMat );
         this.ground.position.y = -0.1
@@ -179,21 +179,22 @@ AAA.View.prototype = {
             this.renderer.setClearColor(0xffffff, 1);
             this.ground.material.color.setHex( 0xffffff );
             this.fog.color.setHex( 0xffffff );
-            //this.postEffect = new AAA.PostEffect(this);
-            this.postEffect = new AAA.PostEffect();
+            this.postEffect = new AAA.PostEffect(this);
+            //this.postEffect = new AAA.PostEffect();
             this.postEffect.init();
             this.isSketch = true;
         }
     },
     initBasicMaterial:function(){
+        this.debugMaterial = new THREE.MeshBasicMaterial( { color:this.debugColor, wireframe:true, transparent:true, opacity:0, fog: false, depthTest: false, depthWrite: false});
         this.mats[0] = new THREE.MeshBasicMaterial({ color: 0x101010 });
         this.mats[1] = new THREE.MeshBasicMaterial({ color: 0xFFEEEE, name:"actif" });
         this.mats[2] = new THREE.MeshBasicMaterial({ color: 0x101030, name:"static" });
     },
     initBasicGeometry:function(){
-        this.geoBasic[0] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CubeGeometry( 1, 1, 1 ))
-        this.geoBasic[1] = THREE.BufferGeometryUtils.fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
-        this.geoBasic[2] = THREE.BufferGeometryUtils.fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));//cone
+        this.geoBasic[0] = new THREE.BufferGeometry().fromGeometry(new THREE.BoxGeometry( 1, 1, 1 ))
+        this.geoBasic[1] = new THREE.BufferGeometry().fromGeometry(new THREE.SphereGeometry( 1, 20, 16  ));
+        this.geoBasic[2] = new THREE.BufferGeometry().fromGeometry(new THREE.CylinderGeometry( 0, 1, 1, 20, 1 ));//cone
     },
     initSky:function(envtexture, texture){
 
@@ -333,15 +334,29 @@ AAA.View.prototype = {
     },
     getVertex:function(name, size, directGeo) {
         var v = [], n;
-        var pp;
+        var pp, i;
+        var isB = false;
         if(name!=="") pp = this.getGeoByName(name).vertices;
         else if(directGeo) pp = directGeo.vertices;
-        var i = pp.length;
+        if(pp == undefined ){//is buffer
+            if(name!=="") pp = this.getGeoByName(name).attributes.position.array;
+            else if(directGeo) pp = directGeo.attributes.position.array;
+            isB = true;
+            i = pp.length/3;
+        } else {
+            i = pp.length
+        }
         while(i--){
             n = i*3;
-            v[n+0]=pp[i].x*size[0];
-            v[n+1]=pp[i].y*size[1];
-            v[n+2]=pp[i].z*size[2];
+            if(isB){// buffer geometry
+                v[n+0]=pp[n+0]*size[0];
+                v[n+1]=pp[n+1]*size[1];
+                v[n+2]=pp[n+2]*size[2];
+            }else{
+                v[n+0]=pp[i].x*size[0];
+                v[n+1]=pp[i].y*size[1];
+                v[n+2]=pp[i].z*size[2];
+            }
         }
         return v;
     },
@@ -369,7 +384,7 @@ AAA.View.prototype = {
         while(i--){
             if(name==this.geos[i].name) g=this.geos[i];
         }
-        if(buffer) g = THREE.BufferGeometryUtils.fromGeometry(g);
+        if(buffer) g = new THREE.BufferGeometry().fromGeometry(g);
         return g
     },
     onKeyDown:function( e ) {
@@ -441,17 +456,17 @@ AAA.Obj = function(obj, Parent){
     switch(obj.type){
         case 'plane': mesh = new THREE.Object3D(); break;
         case 'boxbasic': case 'ground':
-            mesh = new THREE.BoxHelper();
-            mesh.material.color.set( this.parent.debugColor );
-            mesh.material.opacity = this.parent.debugAlpha;
-            mesh.material.transparent = true;
-            mesh.matrixWorld = new THREE.Matrix4();
-            mesh.scale.set( size[0]*0.5, size[1]*0.5, size[2]*0.5 );
-            mesh.matrixAutoUpdate = true;
+            mesh=new THREE.Mesh(this.parent.geoBasic[0], this.parent.debugMaterial);
+            mesh.scale.set( size[0], size[1], size[2]);
+            var helper = new THREE.BoxHelper(mesh);
+            helper.material.color.set( this.parent.debugColor );
+            helper.material.opacity = this.parent.debugAlpha;
+            helper.material.transparent = true;
+            mesh.add( helper );
             shadow = false;
         break;
         case 'box':
-            mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCube", true), this.parent.mats[1] );
+            mesh = new THREE.Mesh( this.parent.getGeoByName("box", true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'sphere':
@@ -459,7 +474,7 @@ AAA.Obj = function(obj, Parent){
             mesh.scale.set( size[0], size[0], size[0] );
         break;
         case 'cylinder':
-            mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCylinder", true), this.parent.mats[1] );
+            mesh = new THREE.Mesh( this.parent.getGeoByName("cyl", true), this.parent.mats[1] );
             mesh.scale.set( size[0], size[1], size[2] );
         break;
         case 'dice':
@@ -532,16 +547,29 @@ AAA.CapsuleGeometry = function(radius, height, SRadius, SHeight) {
     var sHeight = SHeight || 10;
     var o0 = Math.PI*2;
     var o1 = Math.PI/2
-    var geometry = new THREE.Geometry(); 
+    var g = new THREE.Geometry();
+        var m0 = new THREE.CylinderGeometry(radius, radius, height, sRadius, 1, true);
+        var m1 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1);
+        var m2 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1);
+        var mtx0 = new THREE.Matrix4().makeTranslation(0, 0,0);
+        var mtx1 = new THREE.Matrix4().makeTranslation(0, height*0.5,0);
+        var mtx2 = new THREE.Matrix4().makeTranslation(0, -height*0.5,0);
+        g.merge( m0, mtx0);
+        g.merge( m1, mtx1);
+        g.merge( m2, mtx2);
+        var capsuleGeometry = new THREE.BufferGeometry();
+        capsuleGeometry.fromGeometry(g);
+        return capsuleGeometry;
+   /* var geometry = new THREE.Geometry(); 
     var m0 = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, sRadius, 1, true));
     var m1 = new THREE.Mesh(new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1));
     var m2 = new THREE.Mesh(new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1));
     m1.position.set(0, height*0.5,0);
     m2.position.set(0,-height*0.5,0);
-    THREE.GeometryUtils.merge(geometry, m0);
-    THREE.GeometryUtils.merge(geometry, m1);
-    THREE.GeometryUtils.merge(geometry, m2);
-    return  THREE.BufferGeometryUtils.fromGeometry(geometry);
+    geometry.merge( m0);
+    geometry.merge( m1);
+    geometry.merge( m2);
+    return  new THREE.BufferGeometry().fromGeometry(geometry);*/
 }
 
 //-----------------------------------------------------
@@ -584,10 +612,10 @@ AAA.Car = function(obj, Parent){
     switch(this.type){
 
         case 'basic':
-            this.mesh = new THREE.Mesh( this.parent.getGeoByName("smoothCube", true), this.parent.mats[1] ) || obj.mesh;
+            this.mesh = new THREE.Mesh( this.parent.getGeoByName("box", true), this.parent.mats[1] ) || obj.mesh;
             this.mesh.scale.set( size[0], size[1], size[2] );
 
-            wheelMesh = new THREE.Mesh( this.parent.getGeoByName("smoothCylinder", true), this.parent.mats[2] ) || obj.wheel;
+            wheelMesh = new THREE.Mesh( this.parent.getGeoByName("cyl", true), this.parent.mats[2] ) || obj.wheel;
             wheelMesh.scale.set( wRadius, wDeepth, wRadius );
         break;
         case 'c1gt':
@@ -788,7 +816,8 @@ AAA.PostEffect.prototype = {
         this.pass = null;
     }
 }
-/*
+
+
 AAA.PostEffect = function(Parent){
     this.parent = Parent;
     this.composer = null;
@@ -850,7 +879,8 @@ AAA.PostEffect.prototype = {
         this.pass = null;
     }
 }
-*/
+
+
 AAA.AREA = {
     uniforms: {
         "tMatCap": { type: "t", value: null }

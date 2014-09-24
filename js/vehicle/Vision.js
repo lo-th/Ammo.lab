@@ -41,8 +41,7 @@ AAA.Vision.prototype = {
     constructor: AAA.Vision,
     load:function(){
     	var _this = this;
-    	if(this.isHighModel)this.Pool = new SEA3D.Pool('models/vision.high.sea', function() { _this.init() });
-    	else this.Pool = new SEA3D.Pool('models/vision.sea', function() { _this.init() });
+    	this.Pool = new SEA3D.Pool('models/vision.sea', function() { _this.init() });
     },
     init:function(){
     	this.geos = [];
@@ -68,37 +67,37 @@ AAA.Vision.prototype = {
     	this.meshs = [];
 
     	var g = new THREE.Geometry();
-    	THREE.GeometryUtils.merge(g, this.geos[0]);
-    	THREE.GeometryUtils.merge(g, this.geos[1]);
-    	THREE.GeometryUtils.merge(g, this.geos[2]);
-    	THREE.GeometryUtils.merge(g, this.geos[13]);
-    	this.meshs[0] = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(g), this.mats[1] );
+    	g.merge(this.geos[0]);
+    	g.merge(this.geos[1]);
+    	g.merge(this.geos[2]);
+    	g.merge(this.geos[13]);
+    	this.meshs[0] = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(g), this.mats[1] );
 
     	g = new THREE.Geometry();
-    	THREE.GeometryUtils.merge(g, this.geos[3]);
-    	THREE.GeometryUtils.merge(g, this.geos[9]);
-    	var meshGlass = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(g), this.mats[4] );
+    	g.merge(this.geos[3]);
+    	g.merge(this.geos[9]);
+    	var meshGlass = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(g), this.mats[4] );
 
     	g = new THREE.Geometry();
-    	THREE.GeometryUtils.merge(g, this.geos[5]);
-    	THREE.GeometryUtils.merge(g, this.geos[8]);
-    	THREE.GeometryUtils.merge(g, this.geos[11]);
-    	THREE.GeometryUtils.merge(g, this.geos[12]);
-    	THREE.GeometryUtils.merge(g, this.geos[15]);
-    	THREE.GeometryUtils.merge(g, this.geos[16]);
-    	THREE.GeometryUtils.merge(g, this.geos[19]);
-    	var meshBlack = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(g), this.mats[2] );
+    	g.merge(this.geos[5]);
+    	g.merge(this.geos[8]);
+    	g.merge(this.geos[11]);
+    	g.merge(this.geos[12]);
+    	g.merge(this.geos[15]);
+    	g.merge(this.geos[16]);
+    	g.merge(this.geos[19]);
+    	var meshBlack = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(g), this.mats[2] );
 
     	g = new THREE.Geometry();
-    	THREE.GeometryUtils.merge(g, this.geos[7]);
-    	THREE.GeometryUtils.merge(g, this.geos[14]);
-    	THREE.GeometryUtils.merge(g, this.geos[20]);
-    	THREE.GeometryUtils.merge(g, this.geos[21]);
-    	var meshChrome = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(g), this.mats[3] );
+    	g.merge(this.geos[7]);
+    	g.merge(this.geos[14]);
+    	g.merge(this.geos[20]);
+    	g.merge(this.geos[21]);
+    	var meshChrome = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(g), this.mats[3] );
 
-    	var meshLightBack = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[10]), this.mats[5] );
-    	var meshLightFront = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry( this.geos[17]), this.mats[6] );
-    	var meshLightFront2 = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry( this.geos[18]), this.mats[7] );
+    	var meshLightBack = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[10]), this.mats[5] );
+    	var meshLightFront = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry( this.geos[17]), this.mats[6] );
+    	var meshLightFront2 = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry( this.geos[18]), this.mats[7] );
     	
 
     	this.meshs[0].add(meshBlack);
@@ -110,30 +109,30 @@ AAA.Vision.prototype = {
 
 
     	// hood
-    	this.meshs[1] = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[6]), this.mats[1] );
+    	this.meshs[1] = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[6]), this.mats[1] );
 
     	// door L
-    	var dglass = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[34]), this.mats[4] );
-    	var ddeco = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[32]), this.mats[1] );
-    	var dcc = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[33]), this.mats[3] );
-    	this.meshs[2] = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[31]), this.mats[2] );
+    	var dglass = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[34]), this.mats[4] );
+    	var ddeco = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[32]), this.mats[1] );
+    	var dcc = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[33]), this.mats[3] );
+    	this.meshs[2] = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[31]), this.mats[2] );
     	this.meshs[2].add(dglass);
     	this.meshs[2].add(ddeco);
     	this.meshs[2].add(dcc);
 
     	// door R
-    	dglass = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[38]), this.mats[4] );
-    	ddeco = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[36]), this.mats[1] );
-    	dcc = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[37]), this.mats[3] );
-    	this.meshs[3] = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[35]), this.mats[2] );
+    	dglass = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[38]), this.mats[4] );
+    	ddeco = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[36]), this.mats[1] );
+    	dcc = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[37]), this.mats[3] );
+    	this.meshs[3] = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[35]), this.mats[2] );
     	this.meshs[3].add(dglass);
     	this.meshs[3].add(ddeco);
     	this.meshs[3].add(dcc);
 
     	// sit
-    	var sit1 = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[26]), this.mats[1] );
-    	var sit2 = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[27]), this.mats[2] );
-    	var sit = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[25]), this.mats[3] );
+    	var sit1 = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[26]), this.mats[1] );
+    	var sit2 = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[27]), this.mats[2] );
+    	var sit = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[25]), this.mats[3] );
     	sit.add(sit1);
     	sit.add(sit2);
 
@@ -152,8 +151,8 @@ AAA.Vision.prototype = {
 	    	}
     	}
 
-    	this.meshs[5]= new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[29]), this.mats[2] );
-    	var mm= new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[30]), this.mats[4] );
+    	this.meshs[5]= new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[29]), this.mats[2] );
+    	var mm= new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[30]), this.mats[4] );
     	this.meshs[5].add(mm);
     	this.meshs[5].name = "steering";
 
@@ -172,15 +171,15 @@ AAA.Vision.prototype = {
 	    }
 
 	    // create wheel
-	    var j1 = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[23]), this.mats[1] );
-	    var j2 = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[24]), this.mats[2] );
-	    this.wheel = new THREE.Mesh( THREE.BufferGeometryUtils.fromGeometry(this.geos[22]), this.mats[0] );
+	    var j1 = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[23]), this.mats[1] );
+	    var j2 = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[24]), this.mats[2] );
+	    this.wheel = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(this.geos[22]), this.mats[0] );
 	    this.wheel.add(j1);
 	    this.wheel.add(j2);
 	    this.wheel.name = "wheel";
 
         g = new THREE.Geometry();
-        THREE.GeometryUtils.merge(g, this.geos[28]);
+        g.merge(this.geos[28]);
        // g.applyMatrix( new THREE.Matrix4().makeRotationY( 180* (Math.PI / 180) ) );
 
 	    this.shape = new THREE.Mesh( g );

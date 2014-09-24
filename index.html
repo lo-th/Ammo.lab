@@ -4,6 +4,7 @@
 <title>Ammo lab</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<link rel="shortcut icon" href="favicon.ico">
 <style>
     * {  margin: 0; padding: 0; border: 0; }
     @font-face { font-family: "SourceCode"; src:url("images/SourceCodePro.woff") format("woff");}
@@ -22,6 +23,7 @@
 <script src="js/AAA.Texture.js"></script>
 <script src="js/vehicle/C1gt.js"></script>
 <script src="js/vehicle/Vision.js"></script>
+<!--<script src="js/loth/Transcode_old.js"></script>-->
 <script src="js/loth/Transcode.js"></script>
 <script src="js/loth/Editor.js"></script>
 <script src="js/loth/Ambience.js"></script>
@@ -35,7 +37,7 @@
 <div id="note"></div>
 <div id="stats"></div>
 <script>
-var startByDemo = 'demo05';
+var startByDemo = 'demo00';
 
 var engineOption = { broadphase:"BVT", timer:false, timestep:1/60, iteration:2, G:-10 };
 var themes = ['1d1f20', '2f3031', '424344', '68696b'];
@@ -53,7 +55,8 @@ var Sources, Editor, Ambience, View, Pool, Textures;
 window.onload = prevInit;
 
 function prevInit() {
-    Sources = new Transcode.Loader([ "images/ammo.fast.png", "images/three2.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
+    //Sources = new Transcode.Loader([ "images/ammo.fast.png", "images/three2.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
+    Sources = new Transcode.Pool([ "images/ammo.png", "images/three.png", "images/effect.png", "images/sea3d.png"], init, [1, 0, 0, 0, 0, 0]);
 
     // init editor
     Editor = new Editor(themes, 12);
@@ -99,6 +102,7 @@ function Message(e) {
 	var phase = e.data.tell;
     
 	if( phase === "INIT"){
+	    Sources.clearBlob(0);// clear temp blob of ammo
         Editor.importScript(startByDemo, true);
 	}
 	if( phase === "RUN"){
@@ -142,7 +146,7 @@ function PostMessage(obj) {
 
 function init() {
 
-    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+    //if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
     View = new AAA.View(themes);
     Ambience.init3d(View.renderer);
@@ -182,13 +186,14 @@ function initTextures(){
 //-----------------------------------------------------
 
 function initGeometry(){
-    var oName = ['smoothCube','smoothCylinder','dice','L','T','H'];
+    var oName = ['box','cyl','dice','L','T','H'];
     for(var i=0; i<oName.length; i++){
         View.geos[i] = Pool.getGeometry(oName[i], true);
         View.geos[i].name = oName[i];
     }
 
     stats.innerHTML = "Loading sea3d cars models !!"
+
     c1gt = new AAA.C1gt(initVisionCar, true);
 }
 function initVisionCar(){
@@ -200,7 +205,8 @@ function initDemo(){
     displayInfo();
     
     // send AMMO script to worker
-    PostMessage({tell:"INIT", AmmoUrl:Sources.ref["AMMOX"] });
+    PostMessage({tell:"INIT", AmmoUrl:Sources.ref[0] });
+
 
     terrain = new AAA.Terrain();
 

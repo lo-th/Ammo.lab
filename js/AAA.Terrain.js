@@ -123,15 +123,16 @@ AAA.Terrain.prototype = {
         this.hfFloatBuffer = new Float32Array(this.div[0]*this.div[1]);
 
 
-        var geometry = new THREE.PlaneGeometry(this.size[0], this.size[2], this.div[0], this.div[1]);
+        //var geometry = new THREE.PlaneGeometry(this.size[0], this.size[2], this.div[0], this.div[1]);
+        var geometry = new THREE.PlaneBufferGeometry( this.size[0], this.size[2], this.div[0], this.div[1] );
         geometry.computeFaceNormals();
         geometry.computeVertexNormals();
         geometry.computeTangents();
             
-        var geo = THREE.BufferGeometryUtils.fromGeometry( geometry );
-        geometry.dispose();
+        //var geo = THREE.BufferGeometryUtils.fromGeometry( geometry );
+        //geometry.dispose();
 
-        this.mesh = new THREE.Mesh( geo, new THREE.MeshBasicMaterial( { color:0x555555 } ) );
+        this.mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color:0x555555 } ) );
         this.mesh.rotation.x = -Math.PI / 2;
         this.mesh.visible = false;
 
@@ -267,7 +268,8 @@ AAA.Terrain.prototype = {
 
 
 
-        var plane = new THREE.PlaneGeometry( this.W, this.H );
+        //var plane = new THREE.PlaneGeometry( this.W, this.H );
+        var plane = new THREE.PlaneBufferGeometry( this.W, this.H );
 
         this.quadTarget = new THREE.Mesh( plane, new THREE.MeshBasicMaterial( { color: 0x000000 } ) );
         this.quadTarget.position.z = -500;
