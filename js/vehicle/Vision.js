@@ -10,9 +10,7 @@
 // largeur 1.9m / hauteur 1.24m / longeur 4.6m
 
 AAA.ToRad = Math.PI / 180;
-AAA.Vision = function(endFunction, High){
-	this.end = endFunction;
-	this.isHighModel = High || false;
+AAA.Vision = function(){
 	this.name = ['body_top', 'body_side', 'body_back', 'glass_top', 'chassisPlus', 'interiorPlus', 'capot', 'crome', 'interiorSymetrie',
     'glass_wheel_window', 'light_red', 'chassisSymetrie', 'interiorWheelAxe', 'Plaques', 'Bouchon', 'driveMain', 'interiorDeco',
     'frontLight', 'frontLightContour', 'frontLightBack', 'grille++', 'radiateur', 'wheel', 'wheel_j1', 'wheel_j2',//24
@@ -34,19 +32,20 @@ AAA.Vision = function(endFunction, High){
 
 	this.cars = [];
 
-	this.load();
+	//this.load();
+    this.init();
 }
 
 AAA.Vision.prototype = {
     constructor: AAA.Vision,
-    load:function(){
+    /*load:function(){
     	var _this = this;
     	this.Pool = new SEA3D.Pool('models/vision.sea', function() { _this.init() });
-    },
+    },*/
     init:function(){
     	this.geos = [];
     	for(var i=0;i<this.name.length;i++){
-	        this.geos[i] = this.Pool.getGeometry(this.name[i], true, 0.006);
+	        this.geos[i] = Pool.getGeometry('vision_' + this.name[i], 0.006);
 	    }
 	    this.construct();
     },
@@ -186,8 +185,6 @@ AAA.Vision.prototype = {
         //this.car.add(this.shape);
 
 	    this.name.length = 0;
-
-	    this.end(); 
 
     }
 }

@@ -765,8 +765,8 @@ AAA.PostEffect.prototype = {
                 tDiffuse:{type:'t',value:null},
                 tColor:{ type:'t',value:null},
                 tBlur:{type:'t',value:null},
-                tNoise:{type:'t',value:Textures.getByName("noise")},
-                tPaper:{type:'t',value:Textures.getByName("paper")},
+                tNoise:{type:'t',value:Pool.getTexture("noise")},
+                tPaper:{type:'t',value:Pool.getTexture("paper")},
                 resolution:{ type:'v2',value:new THREE.Vector2(1,1)}
             },
             vertexShader:vs_render,

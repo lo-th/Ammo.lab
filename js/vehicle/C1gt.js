@@ -11,9 +11,7 @@
 
 AAA.ToRad = Math.PI / 180;
 
-AAA.C1gt = function(endFunction, High){
-	this.end = endFunction;
-	this.isHighModel = High || false;
+AAA.C1gt = function(){
 	this.name = ['bottomCar', 'MotorAndBorder', 'doorGlassLeft', 'doorGlassRight', 'trunk', 'glass',
                 'hood', 'headLight', 'doorRight', 'doorLeft', 'interior', 'body', 'steeringWheel', 'wheel', 'shape'];
 	this.c1gtMats = [];
@@ -28,31 +26,32 @@ AAA.C1gt = function(endFunction, High){
 
 	//this.cars = [];
 
-	this.load();
+	//this.load();
+	this.init();
 }
 
 AAA.C1gt.prototype = {
     constructor: AAA.C1gt,
-    load:function(){
+    /*load:function(){
     	var _this = this;
     	//if(this.isHighModel)this.Pool = new SEA3D.Pool('models/c1gt.high.sea', function() { _this.init() });
     	//else
     	this.Pool = new SEA3D.Pool('models/c1gt.sea', function() { _this.init() });
-    },
+    },*/
     init:function(){
     	var i = this.name.length;
     	
     	while(i--){
-    		this.geos[i] = this.Pool.getGeometry(this.name[i], true, 0.02);
+    		this.geos[i] = Pool.getGeometry('c1gt_' +this.name[i], 0.02);
 	    }
 	    console.log(this.geos.length)
 
-    	this.c1gtMats[0] = new THREE.MeshBasicMaterial({ name:'body', map:Textures.getByName("body"), reflectivity:0.6, envMap:View.sky, combine:THREE.MixOperation });
-	    this.c1gtMats[1] = new THREE.MeshBasicMaterial({ name:'door', map:Textures.getByName("bodydoor"), reflectivity:0.6, envMap:View.sky, combine:THREE.MixOperation });
-	    this.c1gtMats[2] = new THREE.MeshBasicMaterial({ name:'intern', map:Textures.getByName("intern"), reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation });
-	    this.c1gtMats[3] = new THREE.MeshBasicMaterial({ name:'glass', map:Textures.getByName("body"), reflectivity:0.9, envMap:View.sky, combine:THREE.MixOperation, transparent:true, opacity:0.3, side:THREE.DoubleSide});
-	    this.c1gtMats[4] = new THREE.MeshBasicMaterial({ name:'light', map:Textures.getByName("light"), reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation});
-	    this.c1gtMats[5] = new THREE.MeshBasicMaterial({ name:'wheel', map:Textures.getByName("wheels"), reflectivity:0.2, envMap:View.sky, combine:THREE.MixOperation});
+    	this.c1gtMats[0] = new THREE.MeshBasicMaterial({ name:'body', map:Pool.getTexture("body", true), reflectivity:0.6, envMap:View.sky, combine:THREE.MixOperation });
+	    this.c1gtMats[1] = new THREE.MeshBasicMaterial({ name:'door', map:Pool.getTexture("bodydoor", true), reflectivity:0.6, envMap:View.sky, combine:THREE.MixOperation });
+	    this.c1gtMats[2] = new THREE.MeshBasicMaterial({ name:'intern', map:Pool.getTexture("intern", true), reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation });
+	    this.c1gtMats[3] = new THREE.MeshBasicMaterial({ name:'glass', map:Pool.getTexture("body", true), reflectivity:0.9, envMap:View.sky, combine:THREE.MixOperation, transparent:true, opacity:0.3, side:THREE.DoubleSide});
+	    this.c1gtMats[4] = new THREE.MeshBasicMaterial({ name:'light', map:Pool.getTexture("light", true), reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation});
+	    this.c1gtMats[5] = new THREE.MeshBasicMaterial({ name:'wheel', map:Pool.getTexture("wheels", true), reflectivity:0.2, envMap:View.sky, combine:THREE.MixOperation});
 	    this.c1gtMats[6] = new THREE.MeshBasicMaterial({ name:'steering', color:0x333333, reflectivity:0.3, envMap:View.sky, combine:THREE.MixOperation});
 
 	    this.c1gtMatLib = {};
@@ -131,8 +130,6 @@ AAA.C1gt.prototype = {
 	    this.shape = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry(g) );
 	    //this.car.add(this.shape);
 	    this.name.length = 0;
-
-	    this.end(); 
 
     }
 }

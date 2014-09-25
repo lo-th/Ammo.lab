@@ -215,21 +215,21 @@ AAA.Terrain.prototype = {
         this.uniformsTerrain[ "reflectivity" ].value = 0.5;
         this.uniformsTerrain[ "enableReflection" ].value = true;
 
-        this.uniformsTerrain[ "oceanTexture" ].value = Textures.getByName("level0");
-        this.uniformsTerrain[ "sandyTexture" ].value = Textures.getByName("level1");
-        this.uniformsTerrain[ "grassTexture" ].value = Textures.getByName("level2");
-        this.uniformsTerrain[ "rockyTexture" ].value = Textures.getByName("level3");
-        this.uniformsTerrain[ "snowyTexture" ].value = Textures.getByName("level4");
+        this.uniformsTerrain[ "oceanTexture" ].value = Pool.getTexture("level0", true);
+        this.uniformsTerrain[ "sandyTexture" ].value = Pool.getTexture("level1", true);
+        this.uniformsTerrain[ "grassTexture" ].value = Pool.getTexture("level2", true);
+        this.uniformsTerrain[ "rockyTexture" ].value = Pool.getTexture("level3", true);
+        this.uniformsTerrain[ "snowyTexture" ].value = Pool.getTexture("level4", true);
 
         this.uniformsTerrain[ "tNormal" ].value = this.normalMap;
         this.uniformsTerrain[ "uNormalScale" ].value = 1.5;
 
         this.uniformsTerrain[ "tDisplacement" ].value = this.heightMap;
 
-        this.uniformsTerrain[ "tDiffuse1" ].value = Textures.getByName("diffuse1");
-        this.uniformsTerrain[ "tDiffuse2" ].value = Textures.getByName("diffuse2");
+        this.uniformsTerrain[ "tDiffuse1" ].value = Pool.getTexture("diffuse1", true);
+        this.uniformsTerrain[ "tDiffuse2" ].value = Pool.getTexture("diffuse2", true);
         //this.uniformsTerrain[ "tSpecular" ].value = this.specularMap;
-        this.uniformsTerrain[ "tDetail" ].value = Textures.getByName("normal");
+        this.uniformsTerrain[ "tDetail" ].value = Pool.getTexture("normal", true);
 
         this.uniformsTerrain[ "enableDiffuse1" ].value = true;
         this.uniformsTerrain[ "enableDiffuse2" ].value = true;

@@ -22,7 +22,6 @@
 
 <script src="js/AAA.View.js"></script>
 <script src="js/AAA.Terrain.js"></script>
-<script src="js/AAA.Texture.js"></script>
 <script src="js/vehicle/C1gt.js"></script>
 <script src="js/vehicle/Vision.js"></script>
 <!--<script src="js/loth/Transcode_old.js"></script>-->
@@ -64,10 +63,9 @@ function prevInit() {
     Editor = new Editor(themes, 12);
     document.body.appendChild( Editor.domElement );
 
+    // init ambience
     Ambience = new Ambience();
     document.body.appendChild( Ambience.domElement );
-
-    Textures = new AAA.Texture();
 }
 
 //-----------------------------------
@@ -154,10 +152,10 @@ function init() {
     Ambience.init3d(View.renderer);
 
     // load basic model
-    Pool = new SEA3D.Pool('models/geo.sea', initTextures);
+    Pool = new SEA3D.Pool();
+    Pool.loadModels(['models/geo.sea', 'models/c1gt.sea', 'models/vision.sea' ], initTextures);
 
-    stats.innerHTML = "Loading sea3d models !!"
-
+    stats.innerHTML = "Loading sea3d models ...";
 }
 
 function loop() {
@@ -179,8 +177,14 @@ function displayInfo(){
 //-----------------------------------------------------
 
 function initTextures(){
-    Textures.load(initGeometry);
-    stats.innerHTML = "Loading textures !!"
+    Pool.loadImages([
+        'images/sketch/noise.png', 'images/sketch/paper.jpg',
+        'images/terrain/level0.jpg', 'images/terrain/level1.jpg', 'images/terrain/level2.jpg','images/terrain/level3.jpg',
+        'images/terrain/level4.jpg', 'images/terrain/diffuse1.jpg', 'images/terrain/diffuse2.jpg', 'images/terrain/normal.jpg',
+        'images/c1gt/body.png', 'images/c1gt/bodydoor.png', 'images/c1gt/intern.png', 'images/c1gt/light.png', 'images/c1gt/wheels.png'
+    ], initGeometry );
+
+    stats.innerHTML = "Loading textures ...";
 }
 
 //-----------------------------------------------------
@@ -190,16 +194,14 @@ function initTextures(){
 function initGeometry(){
     var oName = ['box','cyl','dice','L','T','H'];
     for(var i=0; i<oName.length; i++){
-        View.geos[i] = Pool.getGeometry(oName[i], true);
+        View.geos[i] = Pool.getGeometry('geo_' + oName[i]);
         View.geos[i].name = oName[i];
     }
 
-    stats.innerHTML = "Loading sea3d cars models !!"
+    c1gt = new AAA.C1gt();
+    vision = new AAA.Vision();
 
-    c1gt = new AAA.C1gt(initVisionCar, true);
-}
-function initVisionCar(){
-    vision = new AAA.Vision(initDemo, false);
+    initDemo()
 }
 
 function initDemo(){
