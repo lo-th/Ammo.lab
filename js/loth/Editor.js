@@ -7,6 +7,7 @@ var Editor = function (Themes, nDemo) {
 
 	var maxDemo = nDemo || 7;
 	var themes = Themes || ['1d1f20', '2f3031', '424344'];
+	var fontFamily = "font-family:Consolas, 'ConsolasRegular', 'Courier New', monospace;";
 
 	var degrade01 = '#'+themes[0]+';';//'linear-gradient(45deg, #'+themes[0]+', #'+themes[1]+');';
 	var fullImg = '';//background: url(images/grad.png) no-repeat center center fixed; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover;'
@@ -17,7 +18,7 @@ var Editor = function (Themes, nDemo) {
 
     var container = document.createElement( 'div' );
 	//container.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; bottom:0px; right:0px; color:#CCCCCC; width:100%; height:100% font-size:12px; font-family:SourceCode; pointer-events:none;';
-	container.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; left:0px; width:100%; height:100%; font-size:12px; font-family:SourceCode; pointer-events:none;';
+	container.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; left:0px; width:100%; height:100%; font-size:12px; pointer-events:none;' + fontFamily;
 	
 	container.id = 'Editor';
 
@@ -33,7 +34,7 @@ var Editor = function (Themes, nDemo) {
 
 	var containerEdit = document.createElement( 'div' );
 	//containerEdit.style.cssText = unselect+'position:absolute; margin:0; padding:0; top:0px; left:50%; color:#CCCCCC; width:50%; height:100%; font-size:12px; font-family:SourceCode;  pointer-events:none; display:none; background:' + degrade01;
-	containerEdit.style.cssText = unselect+fullImg+'position:absolute; margin:0; padding:0; top:0px; left:50%; color:#CCCCCC; width:50%; height:100%; font-size:12px; font-family:SourceCode;  pointer-events:none; display:none;';//' background-image:url(images/grad.png)'
+	containerEdit.style.cssText = unselect+fullImg+'position:absolute; margin:0; padding:0; top:0px; left:50%; color:#CCCCCC; width:50%; height:100%; font-size:12px; pointer-events:none; display:none;'+ fontFamily;//' background-image:url(images/grad.png)'
 
 	containerEdit.id = 'EditorRoot';
 	container.appendChild( containerEdit );

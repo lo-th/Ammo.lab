@@ -158,7 +158,10 @@ AMMO.World.prototype = {
 		this.world = null;
 
     },
-
+    worldscale:function(scale){
+        AMMO.WORLD_SCALE = scale || 100;
+        AMMO.INV_SCALE = 1/AMMO.WORLD_SCALE;
+    },
     addBody:function(obj){
     	var id = this.BODYID++;
 		this.bodys[id] = new AMMO.Rigid(obj, this );

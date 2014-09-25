@@ -52,8 +52,8 @@ AAA.View = function(Themes){
     this.tt = [0 , 0];
 
     // for draw sketch
-    this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise.png');
-    this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper.jpg');
+    //this.tx01 = THREE.ImageUtils.loadTexture('images/sketch/noise.png');
+    //this.tx02 = THREE.ImageUtils.loadTexture('images/sketch/paper.jpg');
 
     //this.tx01 = null;
     //this.tx02 = null;
@@ -236,6 +236,7 @@ AAA.View.prototype = {
 
         //this.renderer.clear();
         //this.renderer.render( this.scene, this.camera );
+
         
 
         if( terrain.mesh != null  ){
@@ -557,19 +558,7 @@ AAA.CapsuleGeometry = function(radius, height, SRadius, SHeight) {
         g.merge( m0, mtx0);
         g.merge( m1, mtx1);
         g.merge( m2, mtx2);
-        var capsuleGeometry = new THREE.BufferGeometry();
-        capsuleGeometry.fromGeometry(g);
-        return capsuleGeometry;
-   /* var geometry = new THREE.Geometry(); 
-    var m0 = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, sRadius, 1, true));
-    var m1 = new THREE.Mesh(new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1));
-    var m2 = new THREE.Mesh(new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1));
-    m1.position.set(0, height*0.5,0);
-    m2.position.set(0,-height*0.5,0);
-    geometry.merge( m0);
-    geometry.merge( m1);
-    geometry.merge( m2);
-    return  new THREE.BufferGeometry().fromGeometry(geometry);*/
+        return new THREE.BufferGeometry().fromGeometry(g);
 }
 
 //-----------------------------------------------------
@@ -792,7 +781,7 @@ AAA.PostEffect.prototype = {
     },
     render:function(){
         if(this.pass && this.composer){
-           // View.renderer.clear();
+            //View.renderer.clear();
             View.renderer.render(View.scene, View.camera, this.colorBuffer, false);
             this.pass.uniforms.tColor.value=this.colorBuffer;
             this.composer.render();
@@ -817,7 +806,7 @@ AAA.PostEffect.prototype = {
     }
 }
 
-
+/*
 AAA.PostEffect = function(Parent){
     this.parent = Parent;
     this.composer = null;
@@ -879,8 +868,8 @@ AAA.PostEffect.prototype = {
         this.pass = null;
     }
 }
-
-
+*/
+/*
 AAA.AREA = {
     uniforms: {
         "tMatCap": { type: "t", value: null }
@@ -946,7 +935,7 @@ AAA.AREA = {
         "}"
     ].join("\n")
 };
-
+*/
 //-----------------------------------------------------
 // SPHERICAL SHADER
 //-----------------------------------------------------

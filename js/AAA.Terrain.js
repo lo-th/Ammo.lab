@@ -222,7 +222,7 @@ AAA.Terrain.prototype = {
         this.uniformsTerrain[ "snowyTexture" ].value = Textures.getByName("level4");
 
         this.uniformsTerrain[ "tNormal" ].value = this.normalMap;
-        this.uniformsTerrain[ "uNormalScale" ].value = 3.5;
+        this.uniformsTerrain[ "uNormalScale" ].value = 1.5;
 
         this.uniformsTerrain[ "tDisplacement" ].value = this.heightMap;
 

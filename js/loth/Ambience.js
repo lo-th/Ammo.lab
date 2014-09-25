@@ -10,6 +10,7 @@ var texture;
 var Ambience = function (Pos) {
 	var left = Pos || 140//140;
 	var render3d, scene3d = null;
+	var fontFamily = "font-family:Consolas, 'ConsolasRegular', 'Courier New', monospace;";
 	var unselect = '-o-user-select:none; -ms-user-select:none; -khtml-user-select:none; -webkit-user-select:none; -moz-user-select: none;'
 	var textselect = '-o-user-select:text; -ms-user-select:text; -khtml-user-select:text; -webkit-user-select:text; -moz-user-select: text;'
 	var mini = true;
@@ -18,7 +19,7 @@ var Ambience = function (Pos) {
 	var startHeight = 416;
 
     var container = document.createElement( 'div' );
-	container.style.cssText = unselect+'position:absolute; bottom:0px; left:'+left+'px; color:#CCCCCC; font-size:12px; font-family:SourceCode; text-align:center; pointer-events:none;';
+	container.style.cssText = unselect+'position:absolute; bottom:0px; left:'+left+'px; color:#CCCCCC; font-size:12px; text-align:center; pointer-events:none;' + fontFamily;
 	container.id = 'Ambience';
 
 	var borderL = '-webkit-border-top-left-radius:20px; border-top-left-radius:20px;';
