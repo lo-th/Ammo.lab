@@ -21,8 +21,12 @@ self.onmessage = function ( e ) {
 
     if(m == 'init'){
 
+        console.log('physics init')
+
         importScripts( e.data.blob );
         init();
+
+
 
     }
 
@@ -89,6 +93,8 @@ function init () {
     bodys = [];
     joints = [];
     cars = [];
+
+    console.log('physics  ok')
 
     /*add({type:'plane'});
 
