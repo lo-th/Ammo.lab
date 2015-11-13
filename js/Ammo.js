@@ -36,6 +36,8 @@ var ammo = ( function () {
 
         callback = Callback;
 
+        console.log('init Engine')
+
         worker = new Worker('js/Ammo.worker.js');
         worker.onmessage = this.message;
         worker.postMessage = worker.webkitPostMessage || worker.postMessage;
@@ -50,7 +52,7 @@ var ammo = ( function () {
 
         if(m == 'init'){
 
-            extract.clearBlob('ammo');
+            //extract.clearBlob('ammo');
             if(callback) callback();
 
             ammo.post( 'step' );
