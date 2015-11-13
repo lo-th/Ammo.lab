@@ -75,6 +75,8 @@ var editor = ( function () {
 
     editor.load = function ( url ) {
 
+        console.log(url)
+
         var xhr = new XMLHttpRequest();
         xhr.overrideMimeType('text/plain; charset=x-user-defined'); 
         xhr.open('GET', url, true);
