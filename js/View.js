@@ -33,10 +33,10 @@ var view = ( function () {
 
     view.init = function () {
 
-        canvas = document.createElement('canvas');
+        canvas = document.getElementById('canvas');//createElement('canvas');
         canvas.oncontextmenu = function(e){ e.preventDefault(); };
         canvas.ondrop = function(e) { e.preventDefault(); };
-        document.body.appendChild( canvas );
+        //document.body.appendChild( canvas );
 
         camera = new THREE.PerspectiveCamera(60 , 1 , 1, 1000);
         camera.position.set(0, 0, 30);

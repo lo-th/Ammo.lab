@@ -122,8 +122,7 @@ var extract = ( function () {
             break;
             case 1:// for worker injection
                 var URL = window.URL || window.webkitURL;
-                var bloby = new Blob([ result ], { type: 'application/javascript' });
-                results[name] = URL.createObjectURL( bloby );
+                results[name] = URL.createObjectURL( new Blob([ result ], { type: 'application/javascript' }) );
             break;
             case 2:// only text 
                 results[name] = result;

@@ -39,11 +39,10 @@ var ammo = ( function () {
         
 
         worker = new Worker('js/Ammo.worker.js');
-        var src = extract.get('ammo');
-        console.log('init Engine', src)
+
         worker.onmessage = this.message;
         worker.postMessage = worker.webkitPostMessage || worker.postMessage;
-        worker.postMessage( { m:'init', blob:src  });
+        worker.postMessage( { m:'init', blob: extract.get('ammo')  });
 
     };
 
@@ -54,9 +53,8 @@ var ammo = ( function () {
 
         if(m == 'init'){
 
-            //extract.clearBlob('ammo');
+            extract.clearBlob('ammo');
             if(callback) callback();
-
             ammo.post( 'step' );
 
             return;
