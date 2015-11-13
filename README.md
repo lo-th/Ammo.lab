@@ -1,4 +1,4 @@
-[<img src="http://lo-th.github.io/Ammo.lab/images/logo.jpg"/>](http://lo-th.github.io/Ammo.lab/)
+[<img src="http://lo-th.github.io/Ammo.lab/logo.jpg"/>](http://lo-th.github.io/Ammo.lab/)
 ========
 
 Advanced 3d physics for three.js<br>
