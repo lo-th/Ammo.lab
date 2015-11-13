@@ -1,275 +1,77 @@
 <!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
 <html lang="en">
 <head>
-<title>Ammo lab</title>
+<title>ammo Labs</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-<link rel="shortcut icon" href="favicon.ico">
-<link rel="stylesheet" href="css/consolas.css">
-<style>
-    * {  margin: 0; padding: 0; border: 0; }
-    body { background-color: #1d1f20; overflow: hidden; color: #eeeeee; 
-        font-family: Consolas, 'ConsolasRegular', 'Courier New', monospace; 
-        font-size: 12px; }
-    h3 { margin-left:0px; font-size:20px; font-weight:800; word-spacing:-6px;}
-    input{ margin:0px; padding:4px; }
-    #container{ position: absolute; width:100%; height:100%;}
-    #interface{ position: absolute; left:10px; top:10px; width:456px; height:20px; }
-    #stats{ position: absolute; left:280px; bottom:0px; height:20px; width:520px;  pointer-events:none; font-size: 12px; word-spacing:-4px; color:#909090;}
-    #info{ pointer-events:none; position: absolute; left:48px; top:18px; width:300px; height:30px; line-height:12px;}
-    #note{ pointer-events:none; position: absolute; left:48px; top:58px; width:300px; height:50px; line-height:12px; color:#909090;}
-</style>
+<meta http-equiv="X-UA-Compatible" content="IE=11" />
+<meta http-equiv="Pragma" content="no-cache">
 
-<script src="js/AAA.View.js"></script>
-<script src="js/AAA.Terrain.js"></script>
-<script src="js/vehicle/C1gt.js"></script>
-<script src="js/vehicle/Vision.js"></script>
-<!--<script src="js/loth/Transcode_old.js"></script>-->
-<script src="js/loth/Transcode.js"></script>
-<script src="js/loth/Editor.js"></script>
-<script src="js/loth/Ambience.js"></script>
-<script src="js/loth/AmbienceMapList.js"></script>
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" href="css/lab.css">
+
+<script src="js/Intro.js"></script>
+<script src="js/Extract.js"></script>
+<script src="js/Editor.js"></script>
+<script src="js/View.js"></script>
+<script src="js/Ammo.js"></script>
 
 </head>
-
 <body>
-<div id='container'></div>
-<div id="info"></div>
-<div id="note"></div>
-<div id="stats"></div>
 <script>
-var startByDemo = 'demo00';
+var demo;
 
-var engineOption = { broadphase:"BVT", timer:false, timestep:1/60, iteration:2, G:-10 };
-var themes = ['1d1f20', '2f3031', '424344', '68696b'];
-var info = document.getElementById("info");
-var note = document.getElementById("note");
-var stats = document.getElementById("stats");
-var demoName = "loth", demoNote = "2014";
+intro.init();
+extract.init(['z/code.z', 'z/three.z', 'z/ammo.z'], init, [0,0,1]);
 
-var Sources, Editor, Ambience, View, Pool, Textures;
+function init(){
 
-//-----------------------------------
-// ALL SOURCE LOADED FROM PNG 
-//-----------------------------------
+    intro.clear();
 
-window.onload = prevInit;
-
-function prevInit() {
-    //Sources = new Transcode.Loader([ "images/ammo.fast.png", "images/three2.png", "images/effect.png", "images/tweenLite.png", "images/sea3d.png"], init, [1, 0, 0]);
-    Sources = new Transcode.Pool([ "images/ammo.png", "images/three.png", "images/effect.png", "images/sea3d.png"], init, [1, 0, 0, 0, 0, 0]);
-
-    // init editor
-    Editor = new Editor(themes, 12);
-    document.body.appendChild( Editor.domElement );
-
-    // init ambience
-    Ambience = new Ambience();
-    document.body.appendChild( Ambience.domElement );
-}
-
-//-----------------------------------
-// AMMO WORKER SIDE 
-//-----------------------------------
-
-var workerCount = 1;
-var workers = new Array(workerCount);
-
-for (i = 0; i < workerCount; i++) {
-    workers[i] = new Worker('js/AMMO.Worker.js');
-    workers[i].onmessage = Message;
-    workers[i].postMessage = workers[i].webkitPostMessage || workers[i].postMessage;
-}
-
-
-var ammoInfo = [0];
-//var AmmoWorker = new Worker('js/AMMO.Worker.js');
-//AmmoWorker.postMessage = AmmoWorker.webkitPostMessage || AmmoWorker.postMessage;
-//AmmoWorker.onmessage = Message;
-
-var c1gt, vision, terrain;
-var mtxCar;
-var mtx;
-/*var i; 
-var MAX_BODY = 1024;
-var MAX_CAR = 20;
-var MAX_CAR_WHEEL = 4;
-var mtxCar = new Float32Array(MAX_CAR*(8+(8*MAX_CAR_WHEEL)));
-var mtx = new Float32Array(MAX_BODY*8);*/
-
-function Message(e) {
-
-	var phase = e.data.tell;
-    
-	if( phase === "INIT"){
-	    Sources.clearBlob(0);// clear temp blob of ammo
-        Editor.importScript(startByDemo, true);
-	}
-	if( phase === "RUN"){
-		ammoInfo = e.data.infos;
-		mtx = e.data.mtx;
-        mtxCar = e.data.mtxCar;
-		var mesh, m, n;
-    	var i = ammoInfo[1];
-        while (i--) {
-            View.objs[i].update(i);
-    	}
-        i = ammoInfo[2];
-        while (i--) {
-            View.cars[i].update(i);
-        }
-	}
-    if( phase === "CLEAR"){
-        View.clearAll();
-        if(Editor.getScript()){
-            //AmmoWorker.postMessage({tell:"START", option:engineOption });
-            PostMessage({tell:"START", option:engineOption });
-            initDemo();
-        }
-    }
-}
-
-function PostMessage(obj) {
-    var i = workerCount;
-    while (i--) {
-        /*obj.mtx = mtx;
-        obj.mtxCar = mtxCar;
-        workers[i].postMessage(obj,[mtx.buffer, mtxCar.buffer]);*/
-
-        workers[i].postMessage(obj);
-    }
-}
-
-//-----------------------------------
-// THREE SIDE 
-//-----------------------------------
-
-function init() {
-
-    //if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-
-    View = new AAA.View(themes);
-    Ambience.init3d(View.renderer);
-
-    // load basic model
-    Pool = new SEA3D.Pool();
-    Pool.loadModels(['models/geo.sea', 'models/c1gt.sea', 'models/vision.sea' ], initTextures);
-
-    stats.innerHTML = "Loading sea3d models ...";
-}
-
-function loop() {
-
-    requestAnimationFrame( loop, View.renderer.domElement );
-    View.render();
-    stats.innerHTML = "three: " + View.fps +" fps | ammo: " + ammoInfo[0]+" fps";//+ " | delta:" + View.delta;//.toFixed(3);
-    if(View.cars[View.key[6]])stats.innerHTML += "| car speed: " + View.cars[View.key[6]].speed+" km/h";
-
-}
-
-function displayInfo(){
-    info.innerHTML = "<h3>Ammo.lab</h3><br>"+demoName;
-    note.innerHTML = demoNote;
-}
-
-//-----------------------------------------------------
-// TEXTURE IMPORT
-//-----------------------------------------------------
-
-function initTextures(){
-    Pool.loadImages([
-        'images/sketch/noise.png', 'images/sketch/paper.jpg',
-        'images/terrain/level0.jpg', 'images/terrain/level1.jpg', 'images/terrain/level2.jpg','images/terrain/level3.jpg',
-        'images/terrain/level4.jpg', 'images/terrain/diffuse1.jpg', 'images/terrain/diffuse2.jpg', 'images/terrain/normal.jpg',
-        'images/c1gt/body.png', 'images/c1gt/bodydoor.png', 'images/c1gt/intern.png', 'images/c1gt/light.png', 'images/c1gt/wheels.png'
-    ], initGeometry );
-
-    stats.innerHTML = "Loading textures ...";
-}
-
-//-----------------------------------------------------
-// MESH IMPORT
-//-----------------------------------------------------
-
-function initGeometry(){
-    var oName = ['box','cyl','dice','L','T','H'];
-    for(var i=0; i<oName.length; i++){
-        View.geos[i] = Pool.getGeometry('geo_' + oName[i]);
-        View.geos[i].name = oName[i];
-    }
-
-    c1gt = new AAA.C1gt();
-    vision = new AAA.Vision();
-
-    initDemo()
-}
-
-function initDemo(){
-    Editor.hideIntro();
-    displayInfo();
-    
-    // send AMMO script to worker
-    PostMessage({tell:"INIT", AmmoUrl:Sources.ref[0] });
-
-
-    terrain = new AAA.Terrain();
+    view.init();
+    editor.init( launch );
+    ammo.init( ready );
 
     loop();
 
-    View.container.appendChild( View.renderer.domElement );
 }
 
-//-----------------------------------------------------
-// TRANSE SCRIPT
-//-----------------------------------------------------
+function ready() {
 
-var NAME = function(name, Note){
-    demoName = name;
-    demoNote = Note || '';
-    displayInfo();
-}
+    editor.load('demos/test_Base.js');
 
-var SET = function(id, obj){
-    PostMessage({tell:"SET", id:id, obj:obj });
-}
+};
 
-var ADD = function(obj){
-    View.addObj(obj);
-    if(obj.type == "convex"){// get geometry vertices 
-        obj.v = View.getVertex(obj.name, obj.size);
-    }
-    if(obj.type == "mesh"){// get geometry faces vertices 
-        obj.v = View.getFaces(obj.name, obj.size);
-    }
-    PostMessage({ tell:"ADD", obj:obj });
-}
+function loop() {
 
-var JOINT = function(obj){
-    PostMessage({ tell:"JOINT", obj:obj });
-}
+    view.render();
+    requestAnimationFrame(loop);
 
-var CAR = function(obj){ 
-    View.addCar(obj);
-    PostMessage({ tell:"CAR", obj:obj });
-}
+};
 
-var CLEAR = function(obj){
-    engineOption = obj || {};
-    PostMessage({tell:"CLEAR"});
-}
+function launch (name) {
+    
+    //console.log(name);
+    //location.hash = startTest;
+    //title.innerHTML = startTest;
+    //ResetWorld();
+    //world.SetGravity(new b2Vec2(0, -9.81));
+    //var bd = new b2BodyDef;
+    //g_groundBody = world.CreateBody(bd);
+    ammo.reset();
+    view.reset();
 
-var KEY = function(key){
-    PostMessage({tell:"KEY", key:key});
-}
+    demo = new window[name];
 
-var UP_TERRAIN = function(Hdata){ 
-    PostMessage({tell:"UPTERRAIN", Hdata:Hdata });
-}
+};
 
+function add ( o ) {
 
-//var GET = function(names){ AmmoWorker.postMessage({tell:"GET", names:names}); }
-//var CAM = function(h, v, d){ TE.changeView(h, v, d); }
+    view.add( o );
+    ammo.add( o );
+
+};
 
 </script>
-</body>
-</html>
+</body></html>
