@@ -36,12 +36,14 @@ var ammo = ( function () {
 
         callback = Callback;
 
-        console.log('init Engine')
+        
 
         worker = new Worker('js/Ammo.worker.js');
+        var src = extract.get('ammo');
+        console.log('init Engine', src)
         worker.onmessage = this.message;
         worker.postMessage = worker.webkitPostMessage || worker.postMessage;
-        worker.postMessage( { m:'init', blob: extract.get('ammo') });
+        worker.postMessage( { m:'init', blob:src  });
 
     };
 
