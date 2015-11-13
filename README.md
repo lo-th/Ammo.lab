@@ -3,6 +3,6 @@
 
 Advanced 3d physics for three.js<br>
 use compressed full version of [ammo.js](https://github.com/kripken/ammo.js)<br>
-( Bullet: 6.15 Mb > ammo.js: 3.53 Mb > Ammo.lab: 555 Kb )<br>
+( Bullet: 6.15 Mo > ammo.js: 1.42 Mo > ammo.z: 220 Kb )<br>
 
 [HOME PAGE](http://lo-th.github.io/Ammo.lab/)<br>
