@@ -7,7 +7,7 @@ function demo() {
     var i, j, k, pos;
 
     var d = 1;// meter
-    var s = 0.5;
+    var s = 2;
     var x = 6, y = 10, z = 6;
 
     var decaleX = - ((x*0.5) * d) + (d*0.5);
