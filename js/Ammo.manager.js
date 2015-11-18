@@ -27,13 +27,16 @@ var ammo = ( function () {
 
     var worker, callback;
 
-    //var ar, dr;
-    var ar;// = new Float32Array( 1000*8 );
-    var dr;// = new Float32Array( 20*40 );
+    // main transphere array
+    var ar, dr;
 
-    //var d = [16.667, 0, 0];
-    var d = [16, 0, 0];
-    var delta = 0;
+    var fps = 0;
+    var time = 0;
+    var sendTime = 0;
+    var delay = 0;
+    var temp = 0;
+    var count = 0;
+    var timer = 0;
 
     ammo = function () {};
 
@@ -59,54 +62,39 @@ var ammo = ( function () {
             extract.clearBlob('ammo');
             if(callback) callback();
 
-            //ammo.post( 'step' );
-
-            //return;
-
         }
 
         if(m == 'step'){
-
-            
             
             ar = e.data.ar;
             dr = e.data.dr;
 
             view.update( ar, dr );
 
-            delta = now() - d[2];
-            d[1] = Math.max(0, d[0] - ( delta ) );
+            time = now();
 
-            ammo.post( m );
+            // delay
+            delay = (16.67 - ( time - sendTime )).toFixed(2);
+            if(delay < 0) delay = 0;
 
-            //view.update(ar);
+            // fps
+            if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
 
-            
+            tell( delay +' ms<br>' + fps +' fps');
 
-            //delta = now() - d[2];
-
-            //d[1] = Math.max(0, d[0] - ( delta ) );
-            //d[1] = d[0] - ( delta );
-            //d[1] = d[1] < 0 ? 0 : d[1];
-            
-            //setTimeout( function(){ ammo.post( m ); } , d[1] );
-
-            //ammo.post( m );
+            //timer = setTimeout( this.post , delay );
+            timer = setInterval( sendData, delay );
 
         }
 
     };
 
-    ammo.post = function( m ) {
+    function sendData(){
 
-        d[2] = now();
-
-        //console.log(d[1]*0.001)
-        
-        //worker.postMessage( { m:m, time:d[1]*0.001, ar:ar, dr:dr } , [ ar.buffer, dr.buffer ] );
-        worker.postMessage( { m:m, t:d[1], ar:ar, dr:dr } , [ ar.buffer, dr.buffer ] );
-
-        //view.update(ar);
+        //clearTimeout(timer);
+        clearInterval( timer );
+        sendTime = now();
+        worker.postMessage( { m:'step', ar:ar, dr:dr } , [ ar.buffer, dr.buffer ] );
 
     };
 
@@ -117,9 +105,6 @@ var ammo = ( function () {
     }
 
     ammo.reset = function() {
-
-        //ar = new Float32Array( 1000*8 );
-        //dr = new Float32Array( 20*40 );
 
         worker.postMessage( { m:'reset' });
 

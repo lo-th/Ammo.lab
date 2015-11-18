@@ -14,7 +14,7 @@ var solver, collision, dispatcher, broadphase, trans;
 var bodys, joints, cars, solide;
 
 var dm = 0.033
-var dt = 0.0165;//6;//7;
+var dt = 0.01667;//6;//7;
 var it = 1;//1;//2;
 var ddt = 1;
 
@@ -30,6 +30,42 @@ var dr = new Float32Array( 20*40 );
 var hdata = null;
 var terrainNeedUpdate = false;
 
+var fixedTime = 0.01667;
+var last_step = Date.now();
+var timePassed = 0;
+
+function stepAdvanced () {
+
+    var time = Date.now();
+    var seconds = ( time - last_step ) * 0.001;
+    last_step = time;
+
+    var maxSubSteps = 1;
+    var fixedTimeStep = seconds;
+
+    timePassed += seconds;
+    //timeStep < maxSubSteps * fixedTimeStep
+
+    if ( timePassed > fixedTime ) {
+        maxSubSteps = ~~ ( seconds * 60 ); //Math.ceil ( seconds / fixedTime );
+        fixedTimeStep = seconds / maxSubSteps;
+    }
+
+    world.stepSimulation( seconds, maxSubSteps, fixedTimeStep );
+
+}
+
+function stepDelta () {
+
+    var time = Date.now();
+    var seconds = ( time - last_step ) * 0.001;
+    last_step = time;
+
+    //console.log(seconds)
+
+    world.stepSimulation( seconds, 1, seconds );
+
+}
 
 self.onmessage = function ( e ) {
 
@@ -80,15 +116,20 @@ self.onmessage = function ( e ) {
         ar = e.data.ar;
         dr = e.data.dr;
 
-       //dt = e.data.t * 0.001;
+        //dt = e.data.t * 0.001;
+        preStep();
 
         step();
 
-        //postStep( m );
+        postStep();
 
-        setTimeout( function(){ postStep(); } , e.data.t );
+        //clearTimeout(timer)
+        //timer = setTimeout( function(){ postStep(); } , e.data.t );
 
         //self.postMessage({ m:m, ar:ar, dr:dr },[ ar.buffer, dr.buffer ]);
+
+        //if(isTimout)clearTimeout(timer);
+        //else clearInterval(timer);
         
     }
 
@@ -109,13 +150,14 @@ function preStep () {
 
 function step (t) {
 
-    preStep();
+    
 
     world.stepSimulation( dt, it );
     //world.stepSimulation( dm, it, dt );
+    //stepDelta();
 
     var i = bodys.length, a = ar, n, b, p, r;
-    var j , w, t;
+    var j, w, t;
 
     while(i--){
 
@@ -191,8 +233,6 @@ function step (t) {
             a[n+w+7] = r.w();
         }
 
-
-
     }
 
     //self.postMessage({ m:'step', ar:ar, dr:dr });//,[ ar.buffer, dr.buffer ]);
@@ -266,7 +306,7 @@ function init () {
 
     //timer = setInterval( step, 16.667 );
 
-     postStep()
+    postStep();
     
 
 };
@@ -312,8 +352,6 @@ function reset () {
         world.removeRigidBody( b.getRigidBody() );
         Ammo.destroy( b.getRigidBody() );
         
-
-
     }
 
     //world.getBroadphase().resetPool( world.getDispatcher() );
@@ -505,21 +543,7 @@ function getByName(name){
 }
 
 
-/*public function updatePhysics00():void
-        {
-            if (_world == null) return;
-            var currentTime:Number = getTimer();
-            var secondsPassed:Number = (currentTime - _last_step) / 1000.0;
-            _last_step = currentTime;
-            var steps:int = 1;
-            var subStepTime:Number = secondsPassed;
-            if ( timePassed > _nFixedTimeStep ) {
-                steps = Math.ceil ( secondsPassed/ _nFixedTimeStep );
-                subStepTime = secondsPassed / steps;
-            }
-            _world.step ( secondsPassed, steps, subStepTime );
-        }
-*/
+
 //--------------------------------------------------
 //
 //  CONSTRAINT JOINT

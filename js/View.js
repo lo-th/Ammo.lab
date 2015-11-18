@@ -20,7 +20,7 @@ Math.int = function(x) { return ~~x; };
 
 var view = ( function () {
 
-    var canvas, renderer, scene, camera, controls;
+    var canvas, renderer, scene, camera, controls, debug;
     var vs = { w:1, h:1, l:400 };
     
     var meshs = [];
@@ -36,6 +36,8 @@ var view = ( function () {
     view = function () {};
 
     view.init = function () {
+
+        debug = document.getElementById('debug');
 
         canvas = document.getElementById('canvas');//createElement('canvas');
         canvas.oncontextmenu = function(e){ e.preventDefault(); };
@@ -396,10 +398,18 @@ var view = ( function () {
 
     };
 
+    view.tell = function ( str ) {
+
+        debug.innerHTML = str;
+
+    };
+
     view.resize = function () {
 
         vs.h = window.innerHeight;
         vs.w = window.innerWidth - vs.x;
+
+        debug.style.left = vs.x +'px';
 
         canvas.style.left = vs.x +'px';
         camera.aspect = vs.w / vs.h;

@@ -15,12 +15,13 @@
 <script src="js/Extract.js"></script>
 <script src="js/Editor.js"></script>
 <script src="js/View.js"></script>
-<script src="js/Ammo.js"></script>
+<script src="js/Ammo.manager.js"></script>
 <script src="js/Perlin.js"></script>
 
 </head>
 <body>
 <canvas id="canvas"></canvas>
+<div id="debug"></div>
 <img style="position: absolute; top: 0; right: 0; border: 0;" src="images/ribbon.png"></a>
 <a id="ribbon" href="https://github.com/lo-th/Ammo.lab"></a>
 <script>
@@ -86,7 +87,13 @@ function cam ( h,v,d,t ){
 
     view.moveCamera( h, v, d, t );
 
-}
+};
+
+function tell ( str ) {
+
+    view.tell( str );
+
+};
 
 
 </script>

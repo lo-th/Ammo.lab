@@ -12,7 +12,7 @@
 html, body {
 
 	font-family: monospace;
-	font-size: 10px;
+	font-size: 11px;
     height:100%;
     background:#0d0d0d;
     color:#dedede;
@@ -29,9 +29,18 @@ body{
     background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAAAAACMmsGiAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABdJREFUCB1jUlGRkWH6CQRMf//y8oJZAFUaCmUwcfODAAAAAElFTkSuQmCC);
 }
 
-canvas { position: absolute; top:0; left:50%; pointer-events:auto; width:50%; height:100%; }
+canvas { 
+    position: absolute; top:0; left:50%; pointer-events:auto; width:50%; height:100%; 
+}
 
-.menu{
+#debug {
+
+    position:absolute;
+    padding: 10px 10px;
+
+}
+
+.menu {
     position:absolute;
     top : 0px; left:0px;
     width:100%;
@@ -48,11 +57,11 @@ canvas { position: absolute; top:0; left:50%; pointer-events:auto; width:50%; he
     border-bottom:1px solid rgba(255, 255, 255, 0.2);
     z-index: 2;
 }
-.menuButton{
+
+.menuButton {
     position:absolute;
     padding-left: 20px;
     padding-top: 10px;
-    /*width:100%;*/
     height: 40px;
     left:-10px;
     right:0px;
@@ -63,13 +72,13 @@ canvas { position: absolute; top:0; left:50%; pointer-events:auto; width:50%; he
 
 }
 
-.title{
+.title {
     position:absolute;
     font-size: 16px;
     left:10px;
     bottom:30px;
 }
-.subtitle{
+.subtitle {
     position:absolute;
     left:10px;
     bottom:10px;
@@ -77,7 +86,7 @@ canvas { position: absolute; top:0; left:50%; pointer-events:auto; width:50%; he
     height:20px;
 }
 
-.info{
+.info {
     pointer-events:none; position:absolute;
     left:10px;
     top:40px;
@@ -85,7 +94,7 @@ canvas { position: absolute; top:0; left:50%; pointer-events:auto; width:50%; he
     height:200px;
 }
 
-.error{
+.error {
     pointer-events:none; position:absolute;
     right:10px;
     bottom:30px;
@@ -95,7 +104,7 @@ canvas { position: absolute; top:0; left:50%; pointer-events:auto; width:50%; he
     text-align:right;
 }
 
-#ribbon{
+#ribbon {
     position: absolute; top:-50px; right:48px;
     width:30px; height:200px; background:none; 
     pointer-events:auto; cursor:pointer;
