@@ -4,7 +4,7 @@ function demo() {
 
     add ({type:'plane', pos:[0,-0.1,0], friction:0.6 });
 
-    var i, j, k;
+    var i, j, k, pos;
 
     var d = 0.2;
     var s = 0.3;
@@ -16,7 +16,8 @@ function demo() {
     for(k = 0; k<y; k++){
     for(j = 0; j<z; j++){
     for(i = 0; i<x; i++){
-        add ({ type:'box', size:[d,d,d], pos:[i*d + decaleX,k*d,j*d + decaleZ], mass:0.2, friction:0.4, restitution:0.1, state:2 });
+        pos = [ i*d + decaleX, k*d, j*d + decaleZ ];
+        add ({ type:'box', size:[d,d,d], pos:pos, mass:0.2, friction:0.4, restitution:0.1, state:2 });
     }}}
 
     add({ type:'sphere', size:[s,s,s], pos:[0,100,0], mass:1, friction:0.3, restitution:0.3 });
