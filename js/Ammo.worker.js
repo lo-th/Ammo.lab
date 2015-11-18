@@ -15,7 +15,7 @@ var bodys, joints, cars, solide;
 
 var dm = 0.033
 var dt = 0.01667;//6;//7;
-var it = 1;//1;//2;
+var it = 2;//1;//2;
 var ddt = 1;
 
 var terrainData = null;
@@ -111,68 +111,65 @@ self.onmessage = function ( e ) {
 
     if(m == 'step'){
 
-        //world.stepSimulation( dt, it );
+        // ------- pre step
+
+        if( terrainNeedUpdate ) terrain_data();
+
+        // ------- buffer data
 
         ar = e.data.ar;
         dr = e.data.dr;
 
-        //dt = e.data.t * 0.001;
-        preStep();
+        // ------- step
 
-        step();
+        world.stepSimulation( dt, it );
 
-        postStep();
+        var i = bodys.length, a = ar, n, b, p, r;
+        var j, w, t;
 
-        //clearTimeout(timer)
-        //timer = setTimeout( function(){ postStep(); } , e.data.t );
+        while(i--){
 
-        //self.postMessage({ m:m, ar:ar, dr:dr },[ ar.buffer, dr.buffer ]);
+            n = i * 8;
+            b = bodys[i];
+            
+            a[n] = b.isActive() ? 1 : 0;
 
-        //if(isTimout)clearTimeout(timer);
-        //else clearInterval(timer);
-        
-    }
+            if ( a[n] ) {
 
-};
+                b.getMotionState().getWorldTransform( trans );
 
+                p = trans.getOrigin();
+                r = trans.getRotation();
 
-//--------------------------------------------------
-//
-//  STEP
-//
-//--------------------------------------------------
+                a[n+1] = p.x();
+                a[n+2] = p.y();
+                a[n+3] = p.z();
 
-function preStep () {
+                a[n+4] = r.x();
+                a[n+5] = r.y();
+                a[n+6] = r.z();
+                a[n+7] = r.w();
 
-    if( terrainNeedUpdate ) terrain_data();
+            }
 
-}
+        }
 
-function step (t) {
+        i = cars.length;
+        a = dr;
 
-    
+        while(i--){
 
-    world.stepSimulation( dt, it );
-    //world.stepSimulation( dm, it, dt );
-    //stepDelta();
+            n = i * 40;
+            b = cars[i];
 
-    var i = bodys.length, a = ar, n, b, p, r;
-    var j, w, t;
+            // speed km/h
+            a[n+0] = b.getRigidBody().getLinearVelocity().length() * 9.8;
 
-    while(i--){
-
-        n = i * 8;
-        b = bodys[i];
-        
-        a[n] = b.isActive() ? 1 : 0;
-
-        if ( a[n] ) {
-
-            b.getMotionState().getWorldTransform( trans );
-
+            b.getRigidBody().getMotionState().getWorldTransform( trans );
             p = trans.getOrigin();
             r = trans.getRotation();
 
+            // chassis pos / rot
             a[n+1] = p.x();
             a[n+2] = p.y();
             a[n+3] = p.z();
@@ -182,62 +179,38 @@ function step (t) {
             a[n+6] = r.z();
             a[n+7] = r.w();
 
+            // wheels pos / rot
+            j = 4;
+            while(j--){
+                b.updateWheelTransform( j, true );
+                t = b.getWheelTransformWS( j );
+                p = t.getOrigin();
+                r = t.getRotation();
+               
+                w = 8 * ( j + 1 );
+
+                if( j == 0 ) a[n+w] = b.getWheelInfo(0).get_m_steering();
+                else a[n+w] = i;
+                a[n+w+1] = p.x();
+                a[n+w+2] = p.y();
+                a[n+w+3] = p.z();
+
+                a[n+w+4] = r.x();
+                a[n+w+5] = r.y();
+                a[n+w+6] = r.z();
+                a[n+w+7] = r.w();
+            }
+
         }
 
+        // ------- post step
+
+        self.postMessage({ m:'step', ar:ar, dr:dr },[ ar.buffer, dr.buffer ]);
+        
     }
 
-    i = cars.length;
-    a = dr;
+};
 
-    while(i--){
-
-        n = i * 40;
-        b = cars[i];
-
-        // speed km/h
-        a[n+0] = b.getRigidBody().getLinearVelocity().length() * 9.8;
-
-        b.getRigidBody().getMotionState().getWorldTransform( trans );
-        p = trans.getOrigin();
-        r = trans.getRotation();
-
-        // chassis pos / rot
-        a[n+1] = p.x();
-        a[n+2] = p.y();
-        a[n+3] = p.z();
-
-        a[n+4] = r.x();
-        a[n+5] = r.y();
-        a[n+6] = r.z();
-        a[n+7] = r.w();
-
-        // wheels pos / rot
-        j = 4;
-        while(j--){
-            b.updateWheelTransform( j, true );
-            t = b.getWheelTransformWS( j );
-            p = t.getOrigin();
-            r = t.getRotation();
-           
-            w = 8 * ( j + 1 );
-
-            if( j == 0 ) a[n+w] = b.getWheelInfo(0).get_m_steering();
-            else a[n+w] = i;
-            a[n+w+1] = p.x();
-            a[n+w+2] = p.y();
-            a[n+w+3] = p.z();
-
-            a[n+w+4] = r.x();
-            a[n+w+5] = r.y();
-            a[n+w+6] = r.z();
-            a[n+w+7] = r.w();
-        }
-
-    }
-
-    //self.postMessage({ m:'step', ar:ar, dr:dr });//,[ ar.buffer, dr.buffer ]);
-
-}
 
 function postStep(){
 
