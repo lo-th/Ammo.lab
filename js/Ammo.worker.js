@@ -608,7 +608,7 @@ function vehicle ( o ) {
         mass:400,
         engine:600, 
         stiffness: 20,//40, 
-        relaxation: 2.3,//0.85, 
+        damping: 2.3,//0.85, 
         compression: 4.4,//0.82, 
         travel: 500, 
         force: 6000, 
@@ -676,7 +676,7 @@ function vehicle ( o ) {
     // 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car
     tuning.set_m_suspensionStiffness(setting.stiffness); //100;
     // 0.1 to 0.3 are good values
-    tuning.set_m_suspensionDamping(setting.relaxation);//0.87
+    tuning.set_m_suspensionDamping(setting.damping);//0.87
     tuning.set_m_suspensionCompression(setting.compression);//0.82
     tuning.set_m_maxSuspensionTravelCm(setting.travel);//500
     tuning.set_m_maxSuspensionForce(setting.force);//6000
