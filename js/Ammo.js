@@ -61,7 +61,7 @@ var ammo = ( function () {
 
             //ammo.post( 'step' );
 
-            return;
+            //return;
 
         }
 
