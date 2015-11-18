@@ -15,7 +15,7 @@ var bodys, joints, cars, solide;
 
 var dm = 0.033
 var dt = 0.01667;//6;//7;
-var it = 2;//1;//2;
+var it = 1;//1;//2;
 var ddt = 1;
 
 var terrainData = null;
@@ -423,11 +423,11 @@ function add ( o, onlyShape ) {
             }
             if(mass == 0){ 
                 // btScaledBvhTriangleMeshShape -- if scaled instances
-                shape = new Ammo.btBvhTriangleMeshShape(mTriMesh, true, true);
+                shape = new Ammo.btBvhTriangleMeshShape( mTriMesh, true, true );
             }else{ 
                 // btGimpactTriangleMeshShape -- complex?
                 // btConvexHullShape -- possibly better?
-                shape = new Ammo.btConvexTriangleMeshShape(mTriMesh,true);
+                shape = new Ammo.btConvexTriangleMeshShape( mTriMesh, true );
             }
         break;
 
@@ -481,7 +481,7 @@ function add ( o, onlyShape ) {
     AMMO.DISABLE_DEACTIVATION = 4;
     AMMO.DISABLE_SIMULATION = 5;
     */
-    body.setActivationState( 1 );
+    body.setActivationState( o.state || 1 );
     //body.setCollisionFlags();
 
     // push only dynamique
@@ -567,7 +567,7 @@ function addJoint ( o ) {
     joints.name = o.name || "";
     joints.push( joint );
 
-}
+};
 
 //--------------------------------------------------
 //
@@ -696,21 +696,22 @@ function vehicle ( o ) {
 
     cars.push( car );
 
-
-}
+};
 
 function addWheel ( car, x,y,z,radius,tuning,settings, isFrontWheel ) {
+
     var wheelDir = vec3(0, -1, 0);
     var wheelAxe = vec3(-1, 0, 0);
 
     var wheel = car.addWheel( vec3(x, y, z), wheelDir, wheelAxe, settings.reslength, radius, tuning, isFrontWheel);
     wheel.set_m_rollInfluence(settings.roll);
-}
+
+};
 
 function drive () {
 
 
-}
+};
 
 /*vehicle.prototype = {
     constructor: vehicle,

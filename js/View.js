@@ -22,6 +22,8 @@ var view = ( function () {
 
     var canvas, renderer, scene, camera, controls, debug;
     var vs = { w:1, h:1, l:400 };
+
+    var helper;
     
     var meshs = [];
     var terrains = [];
@@ -88,7 +90,7 @@ var view = ( function () {
         mat['move'] = new THREE.MeshBasicMaterial({ color:0xFF8800, name:'move', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x888888, name:'sleep', wireframe:true });
 
-        var helper = new THREE.GridHelper( 200, 50 );
+        helper = new THREE.GridHelper( 200, 50 );
         helper.setColors( 0x999999, 0x999999 );
         helper.material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, transparent:true, opacity:0.1 } );
         scene.add( helper );
@@ -186,9 +188,13 @@ var view = ( function () {
     view.add = function ( o ) {
 
         var type = o.type || 'box';
+        var size = o.size || [1,1,1];
+        var pos = o.pos || [0,0,0];
+        var rot = o.rot || [0,0,0];
         var mesh = null;
 
         if(type == 'plane'){
+            helper.position.set( pos[0], pos[1], pos[2] )
             ammo.send( 'add', o ); 
             return;
         }
@@ -198,9 +204,7 @@ var view = ( function () {
             return;
         }
 
-        var size = o.size || [1,1,1];
-        var pos = o.pos || [0,0,0];
-        var rot = o.rot || [0,0,0];
+        
 
         if(size.length == 1){ size[1] = size[0]; }
         if(size.length == 2){ size[2] = size[0]; }
