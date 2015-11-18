@@ -2,7 +2,7 @@ function demo() {
 
     cam ( 0, 10, 10 );
 
-    add ({type:'plane', pos:[0,-0.1,0], friction:0.2 });
+    add ({type:'plane', pos:[0,-0.1,0], friction:0.6 });
 
     var i, j, k;
 
@@ -16,7 +16,7 @@ function demo() {
     for(k = 0; k<y; k++){
     for(j = 0; j<z; j++){
     for(i = 0; i<x; i++){
-        add ({ type:'box', size:[d,d,d], pos:[i*d + decaleX,k*d,j*d + decaleZ], mass:0.2, friction:0.3, state:2 });
+        add ({ type:'box', size:[d,d,d], pos:[i*d + decaleX,k*d,j*d + decaleZ], mass:0.2, friction:0.4, restitution:0.1, state:2 });
     }}}
 
     add({ type:'sphere', size:[s,s,s], pos:[0,100,0], mass:1, friction:0.3, restitution:0.3 });
