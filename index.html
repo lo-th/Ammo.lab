@@ -16,6 +16,7 @@
 <script src="js/Editor.js"></script>
 <script src="js/View.js"></script>
 <script src="js/Ammo.js"></script>
+<script src="js/Perlin.js"></script>
 
 </head>
 <body>
@@ -24,6 +25,8 @@
 <a id="ribbon" href="https://github.com/lo-th/Ammo.lab"></a>
 <script>
 var demo;
+var demoName = 'basic';
+var demos = ['basic', 'terrain'];
 
 intro.init();
 extract.init(['z/code.z', 'z/three.z', 'z/ammo.z'], init, [0,0,1]);
@@ -42,7 +45,10 @@ function init(){
 
 function ready() {
 
-    editor.load('demos/test_Base.js');
+    var hash = location.hash.substr( 1 );
+
+    if(hash !=='') demoName = hash;
+    editor.load('demos/' + demoName + '.js');
 
 };
 
@@ -54,27 +60,34 @@ function loop() {
 };
 
 function launch (name) {
-    
-    //console.log(name);
-    //location.hash = startTest;
-    //title.innerHTML = startTest;
-    //ResetWorld();
-    //world.SetGravity(new b2Vec2(0, -9.81));
-    //var bd = new b2BodyDef;
-    //g_groundBody = world.CreateBody(bd);
+
+    location.hash = name;
+
     ammo.reset();
     view.reset();
 
-    demo = new window[name];
+    demo = new window['demo'];
 
 };
 
 function add ( o ) {
 
     view.add( o );
-    ammo.add( o );
 
 };
+
+function car ( o ) {
+
+    view.vehicle( o );
+
+};
+
+function cam ( h,v,d,t ){
+
+    view.moveCamera( h, v, d, t );
+
+}
+
 
 </script>
 </body></html>

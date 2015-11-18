@@ -22,7 +22,11 @@ var view = ( function () {
 
     var canvas, renderer, scene, camera, controls;
     var vs = { w:1, h:1, l:400 };
+    
     var meshs = [];
+    var terrains = [];
+    var cars = [];
+
 
     var geo = {};
     var mat = {};
@@ -42,6 +46,7 @@ var view = ( function () {
         camera.position.set(0, 0, 30);
         controls = new THREE.OrbitControls( camera, canvas );
         controls.target.set(0, 0, 0);
+        controls.enableKeys = false;
 
         controls.update();
 
@@ -69,9 +74,15 @@ var view = ( function () {
         geo['cylinder'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(1,1,1) );
         geo['cone'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(0,1,0.5) );
        // geo['capsule'] =  this.capsuleGeo( 1 , 1 );
+        geo['wheel'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(1,1,1) );
+        //geo['cylinder'].rotateZ( -Math.PI90 );
+        geo['wheel'].rotateZ( -Math.PI90 );
+
+        //w[i].rotation.z = -Math.PI90;
 
 
         //mat['statique'] = new THREE.MeshBasicMaterial({ color:0x444444, name:'statique' });
+        mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'terrain', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0xFF8800, name:'move', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x888888, name:'sleep', wireframe:true });
 
@@ -84,6 +95,26 @@ var view = ( function () {
 
         window.addEventListener( 'resize', view.resize, false );
         this.resize();
+
+    };
+
+    view.moveCamera = function( h, v, d, target ){
+
+        if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
+        camera.position.copy( this.orbit( h, v-90, d ) );
+        controls.update();
+
+    };
+
+    view.orbit = function( h, v, d ) {
+
+        var p = new THREE.Vector3();
+        var phi = v * Math.degtorad;
+        var theta = h * Math.degtorad;
+        p.x = ( d * Math.sin(phi) * Math.cos(theta)) + controls.target.x;
+        p.z = ( d * Math.sin(phi) * Math.sin(theta)) + controls.target.z;
+        p.y = ( d * Math.cos(phi)) + controls.target.y;
+        return p;
 
     };
 
@@ -109,17 +140,44 @@ var view = ( function () {
 
     view.reset = function () {
 
-        var m;
-        while( meshs.length > 0 ){ 
-            m = meshs.pop();
-            scene.remove( m );
+        var c, i;
+
+        while( meshs.length > 0 ){
+            scene.remove( meshs.pop() );
+        }
+
+        while( terrains.length > 0 ){ 
+            scene.remove( terrains.pop() );
         }
 
         while( extraGeo.length > 0 ){ 
             extraGeo.pop().dispose();
         }
 
+        while( cars.length > 0 ){
+            c = cars.pop();
+            scene.remove( c.body );
+            i = 4;
+            while(i--){
+                scene.remove( c.w[i] );
+            }
+        }
+
         
+
+    };
+
+    view.findRotation = function ( r ) {
+
+        if( r[0] > Math.TwoPI || r[1] > Math.TwoPI || r[2] > Math.TwoPI ){
+            // is in degree
+            r[0] *= Math.degtorad;
+            r[1] *= Math.degtorad;
+            r[2] *= Math.degtorad;
+
+        }
+
+        return r;
 
     };
 
@@ -128,15 +186,28 @@ var view = ( function () {
         var type = o.type || 'box';
         var mesh = null;
 
-        if(type == 'plane') return;
+        if(type == 'plane'){
+            ammo.send( 'add', o ); 
+            return;
+        }
+
+        if(type == 'terrain'){
+            this.terrain( o ); 
+            return;
+        }
 
         var size = o.size || [1,1,1];
         var pos = o.pos || [0,0,0];
         var rot = o.rot || [0,0,0];
 
+        if(size.length == 1){ size[1] = size[0]; }
+        if(size.length == 2){ size[2] = size[0]; }
+
+        this.findRotation( rot );
+
         if(type == 'capsule'){
             var g = this.capsuleGeo( size[0] , size[1]*0.5 );
-            extraGeo.push(g)
+            extraGeo.push(g);
             mesh = new THREE.Mesh( g, mat.move );
         }
         else{ 
@@ -146,17 +217,131 @@ var view = ( function () {
 
         
         mesh.position.set( pos[0], pos[1], pos[2] );
+        mesh.rotation.set( rot[0], rot[1], rot[2] );
+
+        // copy rotation quaternion
+        o.quat = mesh.quaternion.toArray();
 
         scene.add(mesh);
 
-        //meshs.unshift( mesh );
+        // push only dynamique
         if( o.mass !== 0 ) meshs.push( mesh );
+
+        // send to ammo worker
+
+        ammo.send( 'add', o );
 
     };
 
-    view.update = function(ar){
+    view.vehicle = function( o ) {
 
-        var i = meshs.length, a = ar, n, m;
+        var type = o.type || 'box';
+        var size = o.size || [2,0.5,4];
+        var pos = o.pos || [0,0,0];
+        var rot = o.rot || [0,0,0];
+
+        var massCenter = o.massCenter || [0,0.25,0];
+
+        this.findRotation( rot );
+
+        // chassis
+        var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
+        g.translate( massCenter[0], massCenter[1], massCenter[2] );
+        extraGeo.push( g );
+        var mesh = new THREE.Mesh( g, mat.move );
+
+        //mesh.scale.set( size[0], size[1], size[2] );
+        mesh.position.set( pos[0], pos[1], pos[2] );
+        mesh.rotation.set( rot[0], rot[1], rot[2] );
+
+        // copy rotation quaternion
+        o.quat = mesh.quaternion.toArray();
+
+        scene.add( mesh );
+
+        // wheels
+
+        var radius = o.radius || 0.4;
+        var deep = o.deep || 0.3;
+        var wPos = o.wPos || [1, -0.25, 1.6];
+
+        var w = [];
+
+        var i = 4;
+        while(i--){
+            w[i] = new THREE.Mesh( geo['wheel'], mat.move );
+            w[i].scale.set( deep, radius, radius );
+
+            //w[i].position.set( pos[0], pos[1], pos[2] );
+            //w[i].rotation.set( rot[0], rot[1], rot[2] );
+            scene.add( w[i] );
+        }
+
+        var car = { body:mesh, w:w };
+
+        cars.push( car );
+
+        ammo.send( 'vehicle', o );
+
+    };
+
+    view.terrain = function ( o ) {
+
+        var i, x, y, n;
+
+        var div = o.div || [64,64];
+        var size = o.size || [100,10,100];
+        var pos = o.pos || [0,0,0];
+
+        var complex = o.complex || 30;
+
+        var lng = div[0] * div[1]
+        var data = new Float32Array( lng );
+        var hdata =  new Float32Array( lng );
+        var perlin = new Perlin();
+        var sc = 1 / complex;
+
+        i = lng;
+        while(i--){
+            var x = i % div[0], y = ~~ ( i / div[0] );
+            data[ i ] = 0.5 + ( perlin.noise( x * sc, y * sc ) * 0.5); // 0,1
+        }
+
+        var g = new THREE.PlaneBufferGeometry( size[0], size[2], div[0] - 1, div[1] - 1 );
+        g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array(lng*3), 3 ) );
+        g.rotateX( -Math.PI90 );
+
+        extraGeo.push( g );
+
+        var vertices = g.attributes.position.array;
+        var colors = g.attributes.color.array;
+
+        i = lng;
+        while(i--){
+            n = i * 3;
+            hdata[i] = data[ i ] * size[1]; // final size
+            vertices[ n + 1 ] = hdata[i];   // pos y
+            colors[ n + 1 ] = data[ i ] * 0.5;    // green color
+        }
+
+        var mesh = new THREE.Mesh( g, mat.terrain );
+        mesh.position.set( pos[0], pos[1], pos[2] );
+
+        scene.add( mesh );
+        terrains.push( mesh );
+
+        o.hdata = hdata;
+        o.size = size;
+        o.div = div;
+        o.pos = pos;
+
+        ammo.send( 'add', o ); 
+
+    };
+
+    view.update = function(ar, dr){
+
+        var i = meshs.length, a = ar, n, m, j, w;
 
         while(i--){
             m = meshs[i];
@@ -172,6 +357,28 @@ var view = ( function () {
 
                 if ( m.material.name == 'move' ) m.material = mat.sleep;
             
+            }
+
+        }
+
+        // update car
+        i = cars.length;
+        a = dr;
+
+        while(i--){
+            m = cars[i];
+            n = i * 40;
+
+            m.body.position.set( a[n+1], a[n+2], a[n+3] );
+            m.body.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
+
+            j = 4;
+            while(j--){
+
+               w = 8 * ( j + 1 );
+               m.w[j].position.set( a[n+w+1], a[n+w+2], a[n+w+3] );
+               m.w[j].quaternion.set( a[n+w+4], a[n+w+5], a[n+w+6], a[n+w+7] );
+
             }
 
         }
