@@ -41,8 +41,6 @@ var ammo = ( function () {
 
         callback = Callback;
 
-        
-
         worker = new Worker('js/Ammo.worker.js');
 
         worker.onmessage = this.message;

@@ -43,9 +43,12 @@ self.onmessage = function ( e ) {
 
         importScripts( e.data.blob );
 
-        init();
+        
 
         self.postMessage({ m:'init' });
+
+
+        init();
 
       //n = 'step'
 
