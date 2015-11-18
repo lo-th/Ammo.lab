@@ -1,10 +1,10 @@
 function demo() {
 
-    cam ( 0, 0, 50 );
+    cam ( 0, 10, 40 );
 
-    // basic body type
+    // basic geometry body
 
-    add({type:'plane'});
+    add({type:'plane'}); // infinie plane
 
     var i = 200, pos = [], s, d, rot = [0,0,90];
     
@@ -29,7 +29,3 @@ function demo() {
     }
 
 };
-
-//TestBase.prototype.Step = function() {
-  
-//};

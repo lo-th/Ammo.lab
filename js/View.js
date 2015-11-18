@@ -299,13 +299,13 @@ var view = ( function () {
         var size = o.size || [100,10,100];
         var pos = o.pos || [0,0,0];
 
-        var complex = o.complex || 30;
+        var complexity = o.complexity || 30;
 
         var lng = div[0] * div[1]
         var data = new Float32Array( lng );
         var hdata =  new Float32Array( lng );
         var perlin = new Perlin();
-        var sc = 1 / complex;
+        var sc = 1 / complexity;
 
         i = lng;
         while(i--){

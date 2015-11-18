@@ -4,6 +4,11 @@
 *    |___|_|_| |_| |_|
 *    @author lo.th / http://lo-th.github.io/labs/
 *    AMMO worker ultimate
+*    By default, Bullet assumes units to be in meters and time in seconds. 
+*    Moving objects are assumed to be in the range of 0.05 units, about the size of a pebble, 
+*    to 10, the size of a truck. 
+*    The simulation steps in fraction of seconds (1/60 sec or 60 hertz), 
+*    and gravity in meters per square second (9.8 m/s^2).
 */
 
 'use strict';
@@ -585,7 +590,7 @@ function addJoint ( o ) {
 
 function vehicle ( o ) {
 
-    var type = o.type || 'basic';
+    var type = o.type || 'box';
 
     var size = o.size || [2,0.5,4];
     var pos = o.pos || [0,0,0];
@@ -599,7 +604,8 @@ function vehicle ( o ) {
     var deep = o.deep || 0.3;
     var wPos = o.wPos || [1, 0, 1.6];
 
-    var settings = o.setting || {
+    var setting = o.setting || {
+        mass:400,
         engine:600, 
         stiffness: 20,//40, 
         relaxation: 2.3,//0.85, 
@@ -611,7 +617,7 @@ function vehicle ( o ) {
         roll: 0//0.1 // basculement du vehicle  
     };
 
-    var maxEngineForce = settings.engine;
+    var maxEngineForce = setting.engine;
     var maxBreakingForce = o.maxBreakingForce || 125.0;
     var steeringClamp = o.steeringClamp || 0.51;
 
@@ -642,14 +648,12 @@ function vehicle ( o ) {
     startTransform.setOrigin( v3( pos ) );
     startTransform.setRotation( q4( quat ) );
 
-    var mass = o.mass || 400;
-
     var localInertia = vec3(0, 0, 0);
-    compound.calculateLocalInertia( mass, localInertia );
+    compound.calculateLocalInertia( setting.mass, localInertia );
     //shape.calculateLocalInertia( mass, localInertia );
     var motionState = new Ammo.btDefaultMotionState( startTransform );
 
-    var rb = new Ammo.btRigidBodyConstructionInfo(mass, motionState, compound, localInertia);
+    var rb = new Ammo.btRigidBodyConstructionInfo( setting.mass, motionState, compound, localInertia);
     //var rb = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
     
     rb.set_m_friction( o.friction || 0.5 );
@@ -670,21 +674,21 @@ function vehicle ( o ) {
     var tuning = new Ammo.btVehicleTuning();
 
     // 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car
-    tuning.set_m_suspensionStiffness(settings.stiffness); //100;
+    tuning.set_m_suspensionStiffness(setting.stiffness); //100;
     // 0.1 to 0.3 are good values
-    tuning.set_m_suspensionDamping(settings.relaxation);//0.87
-    tuning.set_m_suspensionCompression(settings.compression);//0.82
-    tuning.set_m_maxSuspensionTravelCm(settings.travel);//500
-    tuning.set_m_maxSuspensionForce(settings.force);//6000
-    tuning.set_m_frictionSlip(settings.frictionSlip);//10.5
+    tuning.set_m_suspensionDamping(setting.relaxation);//0.87
+    tuning.set_m_suspensionCompression(setting.compression);//0.82
+    tuning.set_m_maxSuspensionTravelCm(setting.travel);//500
+    tuning.set_m_maxSuspensionForce(setting.force);//6000
+    tuning.set_m_frictionSlip(setting.frictionSlip);//10.5
 
     var car = new Ammo.btRaycastVehicle(tuning, body, vehicleRayCaster);
     car.setCoordinateSystem( 0, 1, 2 );
 
-    addWheel( car, wPos[0], wPos[1], wPos[2], radius, tuning, settings, true);
-    addWheel( car, -wPos[0], wPos[1], wPos[2], radius, tuning, settings, true);
-    addWheel( car, -wPos[0], wPos[1], -wPos[2], radius, tuning, settings, false);
-    addWheel( car, wPos[0], wPos[1], -wPos[2], radius, tuning, settings, false);
+    addWheel( car, wPos[0], wPos[1], wPos[2], radius, tuning, setting, true);
+    addWheel( car, -wPos[0], wPos[1], wPos[2], radius, tuning, setting, true);
+    addWheel( car, -wPos[0], wPos[1], -wPos[2], radius, tuning, setting, false);
+    addWheel( car, wPos[0], wPos[1], -wPos[2], radius, tuning, setting, false);
     
     world.addAction( car );
     world.addRigidBody( body );
@@ -698,13 +702,13 @@ function vehicle ( o ) {
 
 };
 
-function addWheel ( car, x,y,z,radius,tuning,settings, isFrontWheel ) {
+function addWheel ( car, x,y,z, radius, tuning, setting, isFrontWheel ) {
 
     var wheelDir = vec3(0, -1, 0);
     var wheelAxe = vec3(-1, 0, 0);
 
-    var wheel = car.addWheel( vec3(x, y, z), wheelDir, wheelAxe, settings.reslength, radius, tuning, isFrontWheel);
-    wheel.set_m_rollInfluence(settings.roll);
+    var wheel = car.addWheel( vec3(x, y, z), wheelDir, wheelAxe, setting.reslength, radius, tuning, isFrontWheel);
+    wheel.set_m_rollInfluence( setting.roll );
 
 };
 
