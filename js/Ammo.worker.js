@@ -16,12 +16,13 @@
 
 var world = null;
 var solver, collision, dispatcher, broadphase, trans;
-var bodys, joints, cars, solide;
+var bodys, joints, cars, solids, heros;
 
 var dm = 0.033
 var dt = 0.01667;//6;//7;
 var it = 1;//1;//2;
 var ddt = 1;
+var key = [ 0,0,0,0,0,0,0,0 ];
 
 var terrainData = null;
 
@@ -81,24 +82,15 @@ self.onmessage = function ( e ) {
 
     if(m == 'init'){
 
-        //console.log('physics init')
-
         importScripts( e.data.blob );
-
-        
-
         self.postMessage({ m:'init' });
-
-
         init();
-
-      //n = 'step'
-
-
 
     }
 
     if(m == 'reset') reset();
+
+    if(m == 'key') key = e.data.o;
 
     if(m == 'add') add( e.data.o );
 
@@ -112,9 +104,7 @@ self.onmessage = function ( e ) {
 
         hdata = e.data.hdata;
         terrainNeedUpdate = true;
-
         
-
     }
 
     if(m == 'step'){
@@ -280,7 +270,8 @@ function init () {
     bodys = [];
     joints = [];
     cars = [];
-    solide = [];
+    heros = [];
+    solids = [];
 
 
     //self.postMessage({ m:'init' });
@@ -309,9 +300,9 @@ function reset () {
 
     }
 
-    while( solide.length > 0 ){
+    while( solids.length > 0 ){
 
-        b = solide.pop();
+        b = solids.pop();
         world.removeRigidBody( b );
         Ammo.destroy( b );
 
@@ -494,7 +485,7 @@ function add ( o, onlyShape ) {
     //body.setCollisionFlags();
 
     if ( mass !== 0 ) bodys.push( body ); // only dynamique
-    else solide.push( body ); // only static
+    else solids.push( body ); // only static
 
 }
 
@@ -599,14 +590,26 @@ function addJoint ( o ) {
 };
 
 
-
-
-
 //--------------------------------------------------
 //
 //  CHARACTER
 //
 //--------------------------------------------------
+
+function character ( o ) {
+
+    var size = o.size || [1,1,1];
+    var shape = new Ammo.btCapsuleShape(size[0], size[1]*0.5);
+    var ghostObject = new Ammo.btGhostObject( shape );
+    ghostObject.friction = o.friction || 0.1;
+    ///ghostObject.collisionFlags = AWPCollisionFlags.CF_CHARACTER_OBJECT;
+
+    var hero = new Ammo.btKinematicCharacterController( ghostObject, 0.1 );
+    world.addAction( hero );
+
+    heros.push( hero );
+
+}
 
 
 

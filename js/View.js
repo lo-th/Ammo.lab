@@ -28,12 +28,13 @@ var view = ( function () {
     var meshs = [];
     var terrains = [];
     var cars = [];
-
+    var heros = [];
+    var extraGeo = [];
 
     var geo = {};
     var mat = {};
 
-    var extraGeo = [];
+    var key = [ 0,0,0,0,0,0,0,0 ];
 
     view = function () {};
 
@@ -41,18 +42,11 @@ var view = ( function () {
 
         debug = document.getElementById('debug');
 
-        canvas = document.getElementById('canvas');//createElement('canvas');
+        canvas = document.getElementById('canvas');
         canvas.oncontextmenu = function(e){ e.preventDefault(); };
         canvas.ondrop = function(e) { e.preventDefault(); };
-        //document.body.appendChild( canvas );
 
-        camera = new THREE.PerspectiveCamera(60 , 1 , 1, 1000);
-        camera.position.set(0, 0, 30);
-        controls = new THREE.OrbitControls( camera, canvas );
-        controls.target.set(0, 0, 0);
-        controls.enableKeys = false;
-
-        controls.update();
+        // RENDERER
 
         try {
             renderer = new THREE.WebGLRenderer({canvas:canvas, precision:"mediump", antialias: false, alpha: true });
@@ -71,19 +65,29 @@ var view = ( function () {
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
 
+        // SCENE
+
         scene = new THREE.Scene();
+
+        // CAMERA / CONTROLER
+
+        camera = new THREE.PerspectiveCamera(60 , 1 , 1, 1000);
+        camera.position.set(0, 0, 30);
+        controls = new THREE.OrbitControls( camera, canvas );
+        controls.target.set(0, 0, 0);
+        controls.enableKeys = false;
+        controls.update();
+
+        // GEOMETRY
 
         geo['box'] =  new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(1,1,1) );
         geo['sphere'] = new THREE.SphereBufferGeometry(1);
         geo['cylinder'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(1,1,1) );
         geo['cone'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(0,1,0.5) );
-       // geo['capsule'] =  this.capsuleGeo( 1 , 1 );
         geo['wheel'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(1,1,1) );
-        //geo['cylinder'].rotateZ( -Math.PI90 );
         geo['wheel'].rotateZ( -Math.PI90 );
 
-        //w[i].rotation.z = -Math.PI90;
-
+        // MATERIAL
 
         //mat['statique'] = new THREE.MeshBasicMaterial({ color:0x444444, name:'statique' });
         mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'terrain', wireframe:true });
@@ -91,15 +95,65 @@ var view = ( function () {
         mat['move'] = new THREE.MeshBasicMaterial({ color:0xFF8800, name:'move', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x888888, name:'sleep', wireframe:true });
 
+        // GROUND
+
         helper = new THREE.GridHelper( 200, 50 );
         helper.setColors( 0x999999, 0x999999 );
         helper.material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, transparent:true, opacity:0.1 } );
         scene.add( helper );
 
-        // event
+        // EVENT
 
         window.addEventListener( 'resize', view.resize, false );
+
+        document.addEventListener( 'keydown', view.keyDown, false );
+        document.addEventListener( 'keyup', view.keyUp, false );
+
+        canvas.addEventListener('mouseover', function () { editor.unFocus(); } );
+
         this.resize();
+
+    };
+
+    view.keyDown = function ( e ) {
+
+        if( editor.getFocus() ) return;
+        e = e || window.event;
+        switch ( e.keyCode ) {
+            case 38: case 87: case 90: key[0] = 1; break; // up, W, Z
+            case 40: case 83:          key[1] = 1; break; // down, S
+            case 37: case 65: case 81: key[2] = 1; break; // left, A, Q
+            case 39: case 68:          key[3] = 1; break; // right, D
+            case 17: case 67:          key[4] = 1; break; // ctrl, C
+            case 69:                   key[5] = 1; break; // E
+            case 32:                   key[6] = 1; break; // space
+            case 16:                   key[7] = 1; break; // shift
+        }
+
+        // send to worker
+        ammo.send( 'key', key );
+
+        //console.log( String.fromCharCode(e.which) );
+
+    };
+
+    view.keyUp = function ( e ) {
+
+        if( editor.getFocus() ) return;
+        e = e || window.event;
+        switch( e.keyCode ) {
+            case 38: case 87: case 90: key[0] = 0; break; // up, W, Z
+            case 40: case 83:          key[1] = 0; break; // down, S
+            case 37: case 65: case 81: key[2] = 0; break; // left, A, Q
+            case 39: case 68:          key[3] = 0; break; // right, D
+            case 17: case 67:          key[4] = 0; break; // ctrl, C
+            case 69:                   key[5] = 0; break; // E
+            case 32:                   key[6] = 0; break; // space
+            case 16:                   key[7] = 0; break; // shift
+        }
+
+        // send to worker
+        ammo.send( 'key', key );
 
     };
 
@@ -168,8 +222,6 @@ var view = ( function () {
             }
         }
 
-        
-
     };
 
     view.findRotation = function ( r ) {
@@ -237,8 +289,7 @@ var view = ( function () {
         // push only dynamique
         if( o.mass !== 0 ) meshs.push( mesh );
 
-        // send to ammo worker
-
+        // send to worker
         ammo.send( 'add', o );
 
     };
@@ -293,6 +344,7 @@ var view = ( function () {
 
         cars.push( car );
 
+        // send to worker
         ammo.send( 'vehicle', o );
 
     };
@@ -370,6 +422,7 @@ var view = ( function () {
         o.div = div;
         o.pos = pos;
 
+        // send to worker
         ammo.send( 'add', o ); 
 
     };
@@ -433,11 +486,7 @@ var view = ( function () {
 
     };
 
-    view.tell = function ( str ) {
-
-        debug.innerHTML = str;
-
-    };
+    view.tell = function ( str ) { debug.innerHTML = str; };
 
     view.resize = function () {
 

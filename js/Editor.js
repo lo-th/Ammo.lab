@@ -229,6 +229,12 @@ var editor = ( function () {
 
     },
 
+    editor.getFocus = function () {
+
+        return isFocus;
+
+    },
+
     editor.validate = function ( value ) {
 
         //var _this = this;
