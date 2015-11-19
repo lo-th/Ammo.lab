@@ -55,7 +55,7 @@ var view = ( function () {
         controls.update();
 
         try {
-            renderer = new THREE.WebGLRenderer({canvas:canvas, precision:"mediump", antialias: true,  alpha: true });
+            renderer = new THREE.WebGLRenderer({canvas:canvas, precision:"mediump", antialias: false, alpha: true });
         } catch( error ) {
             view.errorMsg('<p>Sorry, your browser does not support WebGL.</p>'
                         + '<p>This application uses WebGL to quickly draw'
@@ -87,6 +87,7 @@ var view = ( function () {
 
         //mat['statique'] = new THREE.MeshBasicMaterial({ color:0x444444, name:'statique' });
         mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'terrain', wireframe:true });
+        mat['rigid'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'rigid', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0xFF8800, name:'move', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x888888, name:'sleep', wireframe:true });
 
@@ -225,6 +226,9 @@ var view = ( function () {
         mesh.position.set( pos[0], pos[1], pos[2] );
         mesh.rotation.set( rot[0], rot[1], rot[2] );
 
+        // color
+        //this.meshColor( mesh, 1, 0.5, 0 );
+
         // copy rotation quaternion
         o.quat = mesh.quaternion.toArray();
 
@@ -263,6 +267,8 @@ var view = ( function () {
         // copy rotation quaternion
         o.quat = mesh.quaternion.toArray();
 
+        
+
         scene.add( mesh );
 
         // wheels
@@ -288,6 +294,29 @@ var view = ( function () {
         cars.push( car );
 
         ammo.send( 'vehicle', o );
+
+    };
+
+    view.meshColor = function( m, r,g,b ){
+
+        var g = m.geometry;
+        if(!g.attributes.color){ 
+            //console.log('no color')
+            var l = g.attributes.position.array.length;
+            g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( l ), 3 ));
+        }
+        var colors = g.attributes.color.array;
+
+        var i = colors.length/3, n;
+        while(i--){
+            n = i * 3;
+            colors[ n  ] = r;
+            colors[ n + 1 ] = g;
+            colors[ n + 2 ] = b;
+        }
+
+        g.attributes.color.needsUpdate = true;
+
 
     };
 
@@ -353,10 +382,12 @@ var view = ( function () {
             m = meshs[i];
             n = i * 8;
 
-            if ( a[n] ) {
+            if ( a[n] > 0 ) {
+                //if(i == 2) tell(a[n]* 9.8)
                 
                 m.position.set( a[n+1], a[n+2], a[n+3] );
                 m.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
+
                 if ( m.material.name == 'sleep' ) m.material = mat.move;
 
             } else {

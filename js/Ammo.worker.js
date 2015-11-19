@@ -28,8 +28,9 @@ var terrainData = null;
 var timer = 0;
 
 // main transphere array
-var ar = new Float32Array( 1000*8 );
-var dr = new Float32Array( 20*40 );
+var ar = new Float32Array( 1000*8 ); // rigid buffer max 1000
+var dr = new Float32Array( 20*40 ); // car buffer max 20
+var jr = new Float32Array( 400*4 ); // joint buffer 400
 
 // for terrain
 var hdata = null;
@@ -105,6 +106,8 @@ self.onmessage = function ( e ) {
 
     if(m == 'gravity') gravity( e.data.g );
 
+    if(m == 'apply') apply( e.data.o );
+
     if(m == 'terrain'){
 
         hdata = e.data.hdata;
@@ -137,7 +140,7 @@ self.onmessage = function ( e ) {
             n = i * 8;
             b = bodys[i];
             
-            a[n] = b.isActive() ? 1 : 0;
+            a[n] = b.getLinearVelocity().length();//b.isActive() ? 1 : 0;
 
             if ( a[n] ) {
 
@@ -168,7 +171,7 @@ self.onmessage = function ( e ) {
             b = cars[i];
 
             // speed km/h
-            a[n+0] = b.getRigidBody().getLinearVelocity().length() * 9.8;
+            a[n+0] = b.getCurrentSpeedKmHour();//getRigidBody().getLinearVelocity().length() * 9.8;
 
             b.getRigidBody().getMotionState().getWorldTransform( trans );
             p = trans.getOrigin();
@@ -329,6 +332,7 @@ function reset () {
         //Ammo.destroy( b );
         world.removeRigidBody( b.getRigidBody() );
         Ammo.destroy( b.getRigidBody() );
+        world.removeAction(b);
         
     }
 
@@ -489,9 +493,29 @@ function add ( o, onlyShape ) {
     body.setActivationState( o.state || 1 );
     //body.setCollisionFlags();
 
-    // push only dynamique
-    if ( mass !== 0 ) bodys.push( body );
-    else solide.push( body );
+    if ( mass !== 0 ) bodys.push( body ); // only dynamique
+    else solide.push( body ); // only static
+
+}
+
+//--------------------------------------------------
+//
+//  FORCE
+//
+//--------------------------------------------------
+
+function apply ( o ) {
+
+    var b = getByName(o.name);
+    switch(o.type){
+        case 'force' : b.applyForce( v3(o.v1), v3(o.v2) ); break;
+        case 'torque' : b.applyTorque( v3(o.v1) ); break;
+        case 'localTorque' : b.applyLocalTorque( v3(o.v1) ); break;
+        case 'centralForce' : b.applyCentralForce( v3(o.v1) ); break;
+        case 'centralLocalForce' : b.applyCentralLocalForce( v3(o.v1) ); break;
+        case 'impulse' : b.applyImpulse( v3(o.v1), v3(o.v2) ); break;
+        case 'centralImpulse' : b.applyCentralImpulse( v3(o.v1) ); break;
+    }
 
 }
 
@@ -573,6 +597,10 @@ function addJoint ( o ) {
     joints.push( joint );
 
 };
+
+
+
+
 
 //--------------------------------------------------
 //
@@ -694,6 +722,7 @@ function vehicle ( o ) {
     world.addRigidBody( body );
 
     //console.log( car );
+    //console.log( tuning );
     //console.log( car.getWheelInfo(0) );
 
     body.activate();
@@ -709,6 +738,7 @@ function addWheel ( car, x,y,z, radius, tuning, setting, isFrontWheel ) {
 
     var wheel = car.addWheel( vec3(x, y, z), wheelDir, wheelAxe, setting.reslength, radius, tuning, isFrontWheel);
     wheel.set_m_rollInfluence( setting.roll );
+    //wheel.set_m_engineForce( setting.engine )
 
 };
 
