@@ -27,7 +27,7 @@
 <script>
 var demo;
 var demoName = 'basic';
-var demos = [ 'basic', 'terrain', 'supermaket' ];
+var demos = [ 'basic', 'terrain', 'supermaket', 'loadtest' ];
 
 intro.init();
 extract.init(['z/code.z', 'z/three.z', 'z/ammo.z'], init, [0,0,1]);
@@ -95,6 +95,11 @@ function tell ( str ) {
 
 };
 
+function load ( name, callback ) {
+
+    view.load( name, callback );
+
+};
 
 </script>
 </body></html>

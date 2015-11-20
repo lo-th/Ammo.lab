@@ -157,6 +157,33 @@ var view = ( function () {
 
     };
 
+    // LOAD
+
+    view.load = function ( name, callback ) {
+
+        var loader = new THREE.SEA3D();
+
+        loader.onComplete = function( e ) {
+
+            var i = loader.geometries.length, g;
+            while(i--){
+                g = loader.geometries[i];
+                //console.log(g.name);
+                geo[g.name] = g;
+            };
+
+            if(callback) callback();
+
+            //console.log('loaded !! ', loader);
+
+        };
+
+        loader.load( 'models/'+ name +'.sea' );
+
+    };
+
+    // CAMERA
+
     view.moveCamera = function( h, v, d, target ){
 
         if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
@@ -187,7 +214,7 @@ var view = ( function () {
         var m0 = new THREE.CylinderGeometry(radius, radius, height, sRadius, 1, true);
         var m1 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1);
         var m2 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1);
-        var mtx0 = new THREE.Matrix4().makeTranslation(0, 0,0);
+        var mtx0 = new THREE.Matrix4().makeTranslation(0,0,0);
         var mtx1 = new THREE.Matrix4().makeTranslation(0, height*0.5,0);
         var mtx2 = new THREE.Matrix4().makeTranslation(0, -height*0.5,0);
         g.merge( m0, mtx0);
@@ -277,6 +304,9 @@ var view = ( function () {
         
         mesh.position.set( pos[0], pos[1], pos[2] );
         mesh.rotation.set( rot[0], rot[1], rot[2] );
+
+        // force physics type of shape
+        if( o.shape ) o.type = o.shape;
 
         // color
         //this.meshColor( mesh, 1, 0.5, 0 );
