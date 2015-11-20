@@ -96,8 +96,9 @@ var view = ( function () {
         //mat['statique'] = new THREE.MeshBasicMaterial({ color:0x444444, name:'statique' });
         mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'terrain', wireframe:true });
         mat['rigid'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'rigid', wireframe:true });
-        mat['move'] = new THREE.MeshBasicMaterial({ color:0xFF8800, name:'move', wireframe:true });
-        mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x888888, name:'sleep', wireframe:true });
+        mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
+        mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
+        mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
 
         // GROUND
 
@@ -517,6 +518,9 @@ var view = ( function () {
 
             if ( a[n] > 0 ) {
                 //if(i == 2) tell(a[n]* 9.8)
+
+                if( a[n] > 50 && m.material.name == 'move' ) m.material = mat.movehigh;
+                else if(a[n] < 50 && m.material.name !== 'move') m.material = mat.move;
                 
                 m.position.set( a[n+1], a[n+2], a[n+3] );
                 m.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
@@ -525,7 +529,7 @@ var view = ( function () {
 
             } else {
 
-                if ( m.material.name == 'move' ) m.material = mat.sleep;
+                if ( m.material.name == 'move' || m.material.name == 'movehigh' ) m.material = mat.sleep;
             
             }
 

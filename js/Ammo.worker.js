@@ -130,7 +130,7 @@ self.onmessage = function ( e ) {
             n = i * 8;
             b = bodys[i];
             
-            a[n] = b.getLinearVelocity().length();//b.isActive() ? 1 : 0;
+            a[n] = b.getLinearVelocity().length() * 9.8;//b.isActive() ? 1 : 0;
 
             if ( a[n] ) {
 
