@@ -21,7 +21,7 @@ function afterLoad () {
         pos[1] = Math.rand(2,20) + ( i*h );
         pos[2] = Math.rand(-5,5);
 
-        add({ type:'smbox', shape:'box', size:[d,d,d], pos:pos, mass:0.2});
+        add({ type:'box', shape:'box', size:[d,d,d], pos:pos, mass:0.2});
 
     }
 

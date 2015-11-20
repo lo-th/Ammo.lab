@@ -36,13 +36,17 @@ var view = ( function () {
 
     var key = [ 0,0,0,0,0,0,0,0 ];
 
+    var environment, envcontext, nEnv = 0;
+    var envLists = ['wireframe', 'ceramic','plastic','smooth', 'metal','chrome','brush','black','glow','red','sky'];
+
+
     view = function () {};
 
     view.init = function () {
 
         debug = document.getElementById('debug');
 
-        canvas = document.getElementById('canvas');
+        canvas = document.getElementById('canvas3d');
         canvas.oncontextmenu = function(e){ e.preventDefault(); };
         canvas.ondrop = function(e) { e.preventDefault(); };
 
@@ -112,6 +116,52 @@ var view = ( function () {
         canvas.addEventListener('mouseover', function () { editor.unFocus(); } );
 
         this.resize();
+        this.initEnv()
+
+    };
+
+    view.initEnv = function () {
+
+        var env = document.createElement( 'div' );
+        env.className = 'env';
+        var canvas = document.createElement( 'canvas' );
+        canvas.width = canvas.height = 64;
+        env.appendChild( canvas );
+        document.body.appendChild( env );
+        envcontext = canvas.getContext('2d');
+        this.loadEnv();
+        env.onclick = this.loadEnv;
+        env.oncontextmenu = this.loadEnv;//function(e){ e.preventDefault(); };
+
+    };
+
+    view.loadEnv = function (e) {
+
+        var b = 0;
+
+        if(e){ 
+            e.preventDefault();
+            b = e.button;
+            if( b == 0 ) nEnv++;
+            else nEnv--;
+            if( nEnv == envLists.length ) nEnv = 0;
+            if( nEnv < 0 ) nEnv = envLists.length-1;
+        }
+
+        var img = new Image();
+        img.onload = function(){
+            
+            envcontext.drawImage(img,0,0,64,64);
+            
+            envMap = new THREE.Texture(img);
+            envMap.mapping = THREE.SphericalReflectionMapping;
+            envMap.format = THREE.RGBFormat;
+            envMap.needsUpdate = true;
+
+            //if(phy_material)phy_material.envMap = envMap
+        }
+
+        img.src = 'textures/spherical/'+ envLists[nEnv] +'.jpg';
 
     };
 
