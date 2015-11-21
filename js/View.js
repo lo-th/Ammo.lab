@@ -36,7 +36,7 @@ var view = ( function () {
 
     var key = [ 0,0,0,0,0,0,0,0 ];
 
-    var environment, envcontext, nEnv = 0;
+    var environment, envcontext, nEnv = 0, isWirframe = true;
     var envLists = ['wireframe', 'ceramic','plastic','smooth', 'metal','chrome','brush','black','glow','red','sky'];
 
 
@@ -53,7 +53,7 @@ var view = ( function () {
         // RENDERER
 
         try {
-            renderer = new THREE.WebGLRenderer({canvas:canvas, precision:"mediump", antialias: false, alpha: true });
+            renderer = new THREE.WebGLRenderer({canvas:canvas, precision:"mediump", antialias:true, alpha:true });
         } catch( error ) {
             view.errorMsg('<p>Sorry, your browser does not support WebGL.</p>'
                         + '<p>This application uses WebGL to quickly draw'
@@ -93,12 +93,12 @@ var view = ( function () {
 
         // MATERIAL
 
-        //mat['statique'] = new THREE.MeshBasicMaterial({ color:0x444444, name:'statique' });
         mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'terrain', wireframe:true });
-        mat['rigid'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'rigid', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
+
+        console.log(mat.sleep.vertexColors)
 
         // GROUND
 
@@ -121,6 +121,57 @@ var view = ( function () {
 
     };
 
+    view.changeMaterial = function (type) {
+
+        var m, name, color, vertexcolor, matType, i, j;
+
+        if(type == 0){
+            isWirframe = true;
+            for( var mm in mat ){
+                m = mat[mm];
+                name = m.name; color = m.color;  vertexcolor = m.vertexColors;
+                mat[name] = new THREE.MeshBasicMaterial({ vertexColors:vertexcolor, color:color, name:name, wireframe:true });
+            }
+
+        }else{
+
+            isWirframe = false;
+            for( var mm in mat ){
+                m = mat[mm];
+                name = m.name; color = m.color;  vertexcolor = m.vertexColors;
+                mat[name] = new THREE.MeshStandardMaterial({ vertexColors:vertexcolor, color:color, name:name, wireframe:false, envMap:envMap, metalness:0.8, roughness:0.4 });
+            }
+
+        }
+
+        // reapply material
+
+        i = meshs.length;
+        while(i--){
+            name = meshs[i].material.name;
+            meshs[i].material = mat[name];
+        }
+
+        i = cars.length;
+        while(i--){
+            name = cars[i].body.material.name;
+            cars[i].body.material = mat[name];
+            j = 4;
+            while(j--){
+                name = cars[i].w[j].material.name;
+                cars[i].w[j].material = mat[name];
+            }
+        }
+
+        i = terrains.length;
+        while(i--){
+            name = terrains[i].material.name;
+            terrains[i].material = mat[name];
+        }
+
+
+    }
+
     view.initEnv = function () {
 
         var env = document.createElement( 'div' );
@@ -130,9 +181,9 @@ var view = ( function () {
         env.appendChild( canvas );
         document.body.appendChild( env );
         envcontext = canvas.getContext('2d');
-        this.loadEnv();
         env.onclick = this.loadEnv;
-        env.oncontextmenu = this.loadEnv;//function(e){ e.preventDefault(); };
+        env.oncontextmenu = this.loadEnv;
+        this.loadEnv();
 
     };
 
@@ -159,7 +210,16 @@ var view = ( function () {
             envMap.format = THREE.RGBFormat;
             envMap.needsUpdate = true;
 
-            //if(phy_material)phy_material.envMap = envMap
+            if( nEnv == 0 && !isWirframe ) view.changeMaterial( 0 );
+            if( nEnv !== 0  ) {
+                if(isWirframe) view.changeMaterial( 1 );
+                else{
+                   for( var mm in mat ){
+                       mat[mm].envMap = envMap;
+                   }
+               }
+            }
+
         }
 
         img.src = 'textures/spherical/'+ envLists[nEnv] +'.jpg';
@@ -491,6 +551,8 @@ var view = ( function () {
             vertices[ n + 1 ] = hdata[i];   // pos y
             colors[ n + 1 ] = data[ i ] * 0.5;    // green color
         }
+
+        g.computeVertexNormals();
 
         var mesh = new THREE.Mesh( g, mat.terrain );
         mesh.position.set( pos[0], pos[1], pos[2] );

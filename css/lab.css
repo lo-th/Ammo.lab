@@ -66,6 +66,23 @@ body{
     z-index: 2;
 }
 
+.menuPins {
+    right:20px;
+    top:10px;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    font-size: 18px;
+    -ms-transform: rotate(90deg);
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+    line-height:17px;
+    font-weight: bold;
+    border:1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    text-align: center;
+}
+
 .menuButton {
     position:absolute;
     padding-left: 20px;

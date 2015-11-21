@@ -54,6 +54,12 @@ var editor = ( function () {
         menu.className = 'menu';
         content.appendChild( menu );
 
+        menuPins = document.createElement('div');
+        menuPins.className = 'menuPins';
+        content.appendChild( menuPins );
+        menuPins.innerHTML = '>';
+        
+
         /*var mid = document.createElement('div');
         mid.className = 'separator_mid';
         mid.innerHTML = '||';
