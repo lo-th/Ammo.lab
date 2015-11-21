@@ -106,7 +106,11 @@ var extract = ( function () {
          
         for (var i = 0, len = r.length; i < len; ++i){ ar[i] = r.charCodeAt(i) & 0xff; };
 
-        e.decompress( ar, function on_complete(result) { _this.add(result, name, Type); }); ;
+        e.decompress( 
+            ar, 
+            function on_complete(result) { _this.add( result, name, Type ); },
+            function on_progress(percent) { intro.message( 'decompress ' + fname + ' ' + (~~(percent*100))+'%' ); } 
+        );
 
     };
 

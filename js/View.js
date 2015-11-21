@@ -98,8 +98,6 @@ var view = ( function () {
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
 
-        console.log(mat.sleep.vertexColors)
-
         // GROUND
 
         helper = new THREE.GridHelper( 200, 50 );
