@@ -109,7 +109,7 @@ var extract = ( function () {
         e.decompress( 
             ar, 
             function on_complete(result) { _this.add( result, name, Type ); },
-            function on_progress(percent) { intro.message( 'decompress ' + fname + ' ' + (~~(percent*100))+'%' ); } 
+            function on_progress(percent) { intro.message( 'decompress ' + name + '.z ' + (~~(percent*100))+'%' ); } 
         );
 
     };
