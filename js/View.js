@@ -85,8 +85,8 @@ var view = ( function () {
         // GEOMETRY
 
         geo['box'] =  new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(1,1,1) );
-        geo['sphere'] = new THREE.SphereBufferGeometry(1);
-        geo['cylinder'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(1,1,1) );
+        geo['sphere'] = new THREE.SphereBufferGeometry(1,12,10);
+        geo['cylinder'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(1,1,1,12,1) );
         geo['cone'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(0,1,0.5) );
         geo['wheel'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(1,1,1) );
         geo['wheel'].rotateZ( -Math.PI90 );
