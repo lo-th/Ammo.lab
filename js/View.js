@@ -640,7 +640,6 @@ var view = ( function () {
         vs.w = window.innerWidth - vs.x;
 
         debug.style.left = vs.x +'px';
-
         canvas.style.left = vs.x +'px';
         camera.aspect = vs.w / vs.h;
         camera.updateProjectionMatrix();

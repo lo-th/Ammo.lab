@@ -4,6 +4,7 @@
 *    |___|_|_| |_| |_|
 *    @author lo.th / http://lo-th.github.io/labs/
 *    AMMO worker ultimate
+*
 *    By default, Bullet assumes units to be in meters and time in seconds. 
 *    Moving objects are assumed to be in the range of 0.05 units, about the size of a pebble, 
 *    to 10, the size of a truck. 
@@ -12,7 +13,7 @@
 */
 
 'use strict';
-//var Module = { TOTAL_MEMORY: 256*1024*1024 };
+var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
 var world = null;
 var solver, collision, dispatcher, broadphase, trans;

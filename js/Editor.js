@@ -44,8 +44,6 @@ var editor = ( function () {
             tabSize: 4, indentUnit: 4, highlightSelectionMatches: {showToken: /\w/}
         });
 
-        //codeContent.focus();
-
         separator = document.createElement('div');
         separator.className = 'separator';
         document.body.appendChild( separator );
@@ -58,7 +56,7 @@ var editor = ( function () {
         menuPins.className = 'menuPins';
         content.appendChild( menuPins );
         menuPins.innerHTML = '>';
-        
+
 
         /*var mid = document.createElement('div');
         mid.className = 'separator_mid';
@@ -108,7 +106,7 @@ var editor = ( function () {
     editor.menu_move = function ( e ) {
 
         if( !isMenu ) return;
-
+        nextDemo = null;
         var y = ~~ (e.clientY*0.025);
         var i = menu.childNodes.length, b;
         while(i--){
@@ -117,21 +115,22 @@ var editor = ( function () {
                 if(y === i ){
                     nextDemo = demos[b.name];
                     b.style.background = '#0d44AA';
-                } else b.style.background = '#0d0d0d';
+                } else{
+                    b.style.background = '#0d0d0d';
+                }
             }
         }
 
     };
 
-    editor.menu_down = function () { 
+    editor.menu_down = function () {
+
         if(isMenu){
             if( nextDemo !== null ){
                 this.load('demos/' + nextDemo + '.js');
                 nextDemo = null;
                 this.menu_hide();
-                
             }
-
         } else {
 
             var lng = demos.length, name, n=1;
@@ -139,11 +138,9 @@ var editor = ( function () {
 
             isMenu = true;
 
-            for( var i = 0; i<lng ; i++ ) {
+            for( var i = 0; i < lng ; i++ ) {
                 name = demos[i];
-                if( name !== fileName ){
-                    this.addButton( demos[i], i, n++ );
-                }
+                if( name !== fileName ) this.addButton( demos[i], i, n++ );
             }
         }
         
@@ -160,8 +157,6 @@ var editor = ( function () {
                 menu.removeChild( b );
             }
         }
-
-        //menu.innerHTML = '&bull; ' + fileName;
 
     };
 
@@ -205,8 +200,6 @@ var editor = ( function () {
 
         separator.style.left = (left-10) + 'px';
         content.style.width = (left-10) + 'px';
-        //codeContent.style.width = (left-10) + 'px';
-
         code.refresh();
 
     };
@@ -243,7 +236,6 @@ var editor = ( function () {
 
     editor.validate = function ( value ) {
 
-        //var _this = this;
         return code.operation( function () {
             while ( errorLines.length > 0 ) code.removeLineClass( errorLines.shift(), 'background', 'errorLine' );
             var i = widgets.length;
@@ -284,12 +276,11 @@ var editor = ( function () {
         clearTimeout( interval );
         var value = code.getValue();
         if( this.validate( value ) ) interval = setTimeout( function() { editor.inject( value ); }, 500);
-        //editor.focus();
+
     },
 
     editor.inject = function ( value ) {
 
-        //var name = value.substring(value.indexOf("function")+9, value.indexOf("("));
         var oScript = document.createElement("script");
         oScript.language = "javascript";
         oScript.type = "text/javascript";
