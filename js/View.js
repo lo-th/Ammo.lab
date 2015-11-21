@@ -75,20 +75,20 @@ var view = ( function () {
 
         // CAMERA / CONTROLER
 
-        camera = new THREE.PerspectiveCamera(60 , 1 , 1, 1000);
-        camera.position.set(0, 0, 30);
+        camera = new THREE.PerspectiveCamera( 60 , 1 , 1, 1000 );
+        camera.position.set( 0, 0, 30 );
         controls = new THREE.OrbitControls( camera, canvas );
-        controls.target.set(0, 0, 0);
+        controls.target.set( 0, 0, 0 );
         controls.enableKeys = false;
         controls.update();
 
         // GEOMETRY
 
         geo['box'] =  new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(1,1,1) );
-        geo['sphere'] = new THREE.SphereBufferGeometry(1,12,10);
-        geo['cylinder'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(1,1,1,12,1) );
-        geo['cone'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(0,1,0.5) );
-        geo['wheel'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry(1,1,1) );
+        geo['sphere'] = new THREE.SphereBufferGeometry( 1, 12, 10 );
+        geo['cylinder'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 1,1,1,12,1 ) );
+        geo['cone'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 0,1,0.5 ) );
+        geo['wheel'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 1,1,1 ) );
         geo['wheel'].rotateZ( -Math.PI90 );
 
         // MATERIAL
@@ -121,30 +121,32 @@ var view = ( function () {
 
     };
 
-    view.changeMaterial = function (type) {
+    view.changeMaterial = function ( type ) {
 
-        var m, name, color, vertexcolor, matType, i, j;
+        var m, matType, name, i, j;
 
-        if(type == 0){
+        if( type == 0 ) {
             isWirframe = true;
-            for( var mm in mat ){
-                m = mat[mm];
-                name = m.name; color = m.color.getHex();  vertexcolor = m.vertexColors;
-                mat[name] = new THREE.MeshBasicMaterial({ vertexColors:vertexcolor, color:color, name:name, wireframe:true });
-            }
-
+            matType = 'MeshBasicMaterial';
         }else{
-
             isWirframe = false;
-            for( var mm in mat ){
-                m = mat[mm];
-                name = m.name; color = m.color.getHex();  vertexcolor = m.vertexColors;
-                mat[name] = new THREE.MeshStandardMaterial({ vertexColors:vertexcolor, color:color, name:name, wireframe:false, envMap:envMap, metalness:0.8, roughness:0.4 });
-            }
-
+            matType = 'MeshStandardMaterial';
         }
 
-        // reapply material
+        // create new material
+
+        for( var old in mat ) {
+            m = mat[old];
+            name = m.name;
+            mat[name] = new THREE[matType]({ vertexColors:m.vertexColors, color:m.color.getHex(), name:name, wireframe:isWirframe, transparent:m.transparent, opacity:m.opacity });
+            if(!isWirframe){
+                mat[name].envMap = envMap;
+                mat[name].metalness = 0.8;
+                mat[name].roughness = 0.4;
+            }
+        }
+
+        // re-apply material
 
         i = meshs.length;
         while(i--){
@@ -168,7 +170,6 @@ var view = ( function () {
             name = terrains[i].material.name;
             terrains[i].material = mat[name];
         }
-
 
     }
 
@@ -214,12 +215,11 @@ var view = ( function () {
             if( nEnv !== 0  ) {
                 if(isWirframe) view.changeMaterial( 1 );
                 else{
-                   for( var mm in mat ){
+                    for( var mm in mat ){
                        mat[mm].envMap = envMap;
-                   }
-               }
+                    }
+                }
             }
-
         }
 
         img.src = 'textures/spherical/'+ envLists[nEnv] +'.jpg';
