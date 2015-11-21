@@ -20,6 +20,7 @@ var editor = ( function () {
     var fileName = '';
     var isMenu = false;
     var nextDemo = null;
+    var selectColor = '#105AE2';
 
     editor = function () {};
 
@@ -85,11 +86,13 @@ var editor = ( function () {
         this.resize();
 
     };
+
     editor.menu_select = function () { 
 
         menu.style.background = 'rgba(255, 255, 255, 0.2)';
         menu.style.borderBottom = '1px solid rgba(255, 255, 255, 0)';
         menu.style.color = '#000000';
+        menuPins.style.background = selectColor;
 
     };
 
@@ -98,7 +101,7 @@ var editor = ( function () {
         menu.style.background = 'none';
         menu.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
         menu.style.color = '#d2cec8';
-
+        menuPins.style.background = '#0d0d0d';
         if( isMenu ) this.menu_hide();
 
     };
@@ -114,7 +117,7 @@ var editor = ( function () {
                 b = menu.childNodes[i];
                 if(y === i ){
                     nextDemo = demos[b.name];
-                    b.style.background = '#105AE2';
+                    b.style.background = selectColor;
                 } else{
                     b.style.background = '#0d0d0d';
                 }

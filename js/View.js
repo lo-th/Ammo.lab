@@ -129,7 +129,7 @@ var view = ( function () {
             isWirframe = true;
             for( var mm in mat ){
                 m = mat[mm];
-                name = m.name; color = m.color;  vertexcolor = m.vertexColors;
+                name = m.name; color = m.color.getHex();  vertexcolor = m.vertexColors;
                 mat[name] = new THREE.MeshBasicMaterial({ vertexColors:vertexcolor, color:color, name:name, wireframe:true });
             }
 
@@ -138,7 +138,7 @@ var view = ( function () {
             isWirframe = false;
             for( var mm in mat ){
                 m = mat[mm];
-                name = m.name; color = m.color;  vertexcolor = m.vertexColors;
+                name = m.name; color = m.color.getHex();  vertexcolor = m.vertexColors;
                 mat[name] = new THREE.MeshStandardMaterial({ vertexColors:vertexcolor, color:color, name:name, wireframe:false, envMap:envMap, metalness:0.8, roughness:0.4 });
             }
 
