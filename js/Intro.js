@@ -34,26 +34,29 @@ var intro = ( function () {
 
         content = document.createElement( 'div' );
         //content.style.cssText = "-webkit-filter: drop-shadow( 1px 1px 1px #00ffff ); -ms-filter: 'progid:DXImageTransform.Microsoft.Shadow( Strength=4, Direction=135, Color='#00ffff' )'; filter: drop-shadow( 1px 1px 1px #00ffff ); text-align:center; position:absolute; margin:0; padding:0; top:50%; left:50%; width:300px; height:150px; margin-left:-150px; margin-top:-75px; display:block; pointer-events:none";
-        content.style.cssText = "text-align:center; position:absolute; margin:0; padding:0; top:50%; left:50%; width:300px; height:150px; margin-left:-150px; margin-top:-75px; display:block; pointer-events:none";
+        content.style.cssText = "text-align:center; position:absolute; margin:0; padding:0; top:50%; left:50%; width:375px; height:150px; margin-left:-187px; margin-top:-75px; display:block; pointer-events:none";
         
         document.body.appendChild( content );
 
-        logo = document.createElement( 'div' );
-        logo.style.cssText = introStyle;
-        logo.innerHTML = icon_libs;
+        logo = document.createElement( 'img' );
+        logo.src = 'textures/logo.png';
+
+        //logo = document.createElement( 'div' );
+        //logo.style.cssText = introStyle;
+        //logo.innerHTML = icon_libs;
         content.appendChild( logo );
 
-        logotext = document.createElement( 'div' );
+        /*logotext = document.createElement( 'div' );
         logotext.style.cssText = introStyle + 'margin-top:-30px;'; 
         logotext.innerHTML = "Ammo.lab";
-        content.appendChild( logotext );
+        content.appendChild( logotext );*/
 
     };
 
     intro.clear = function () {
 
         content.removeChild( logo );
-        content.removeChild( logotext );
+        //content.removeChild( logotext );
         document.body.removeChild( content );
 
     };

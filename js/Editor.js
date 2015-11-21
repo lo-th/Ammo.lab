@@ -114,7 +114,7 @@ var editor = ( function () {
                 b = menu.childNodes[i];
                 if(y === i ){
                     nextDemo = demos[b.name];
-                    b.style.background = '#0d44AA';
+                    b.style.background = '#105AE2';
                 } else{
                     b.style.background = '#0d0d0d';
                 }
