@@ -17,7 +17,7 @@ var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
 var world = null;
 var solver, collision, dispatcher, broadphase, trans;
-var bodys, joints, cars, solids, heros;
+var bodys, joints, cars, solids, heros, carsInfo;
 
 var dm = 0.033
 var dt = 0.01667;//6;//7;
@@ -111,6 +111,8 @@ self.onmessage = function ( e ) {
     if(m == 'step'){
 
         // ------- pre step
+
+        drive( 0 );
 
         if( terrainNeedUpdate ) terrain_data();
 
@@ -217,6 +219,13 @@ function postStep(){
 
 };
 
+function control( o ){
+
+    key = o;
+    drive( 0 );
+
+};
+
 //--------------------------------------------------
 //
 //  AMMO MATH
@@ -271,6 +280,7 @@ function init () {
     bodys = [];
     joints = [];
     cars = [];
+    carsInfo = [];
     heros = [];
     solids = [];
 
@@ -321,6 +331,7 @@ function reset () {
     while( cars.length > 0){
 
         b = cars.pop();
+        carsInfo.pop();
         //Ammo.destroy( b );
         world.removeRigidBody( b.getRigidBody() );
         Ammo.destroy( b.getRigidBody() );
@@ -612,8 +623,6 @@ function character ( o ) {
 
 }
 
-
-
 //--------------------------------------------------
 //
 //  VEHICLE
@@ -649,14 +658,16 @@ function vehicle ( o ) {
         roll: 0//0.1 // basculement du vehicle  
     };
 
-    var maxEngineForce = setting.engine;
-    var maxBreakingForce = o.maxBreakingForce || 125.0;
-    var steeringClamp = o.steeringClamp || 0.51;
+    var carInfo = {
+        steering:0, 
+        engine:0, 
+        breaking:0, 
 
-    var engine = 0.0;
-    var breaking = 0.0;
-    var steering = 0.0;
-    var gas = 0;
+        incSteering:0.01, 
+        maxSteering:Math.PI/6, 
+        incEngine:5, 
+        maxEngine:600 
+    };
 
     var incEngine = 5;
     var maxSteering = Math.PI / 6;
@@ -732,6 +743,7 @@ function vehicle ( o ) {
     body.activate();
 
     cars.push( car );
+    carsInfo.push( carInfo );
 
 };
 
@@ -742,102 +754,39 @@ function addWheel ( car, x,y,z, radius, tuning, setting, isFrontWheel ) {
 
     var wheel = car.addWheel( vec3(x, y, z), wheelDir, wheelAxe, setting.reslength, radius, tuning, isFrontWheel);
     wheel.set_m_rollInfluence( setting.roll );
-    //wheel.set_m_engineForce( setting.engine )
 
 };
 
-function drive () {
+function drive ( id ) {
 
+    var id = id || 0;
+    if( !cars[id] ) return;
 
-};
+    var car = cars[id];
+    var u = carsInfo[id];
 
-/*vehicle.prototype = {
-    constructor: vehicle,
+    if( key[2] == 1 ) u.steering += u.incSteering;
+    if( key[3] == 1 ) u.steering -= u.incSteering;
+    if( key[2] == 0 && key[3] == 0 ) u.steering *= 0.9;
+    if( u.steering < -u.maxSteering ) u.steering = -u.maxSteering;
+    if( u.steering > u.maxSteering ) u.steering = u.maxSteering;
 
-    addWheel:function( x,y,z, isFrontWheel ){
-        var wheelDir = vec3(0, -1, 0);
-        var wheelAxe = vec3(-1, 0, 0);
-
-        var wheel = this.vehicle.addWheel( vec3(x, y, z), wheelDir, wheelAxe, this.settings.reslength, this.radius, this.tuning, isFrontWheel);
-        wheel.set_m_rollInfluence(this.settings.roll);
-    },
-
-    getMatrix:function(id){
-        //var trans = this.parent.transform;
-        var m = dr;
-        var n = id*40;
-
-        m[n+0] = 0//this.vehicle.getCurrentSpeedKmHour().toFixed(0)*1;//this.body.getActivationState();
-
-        //var t = this.body.getCenterOfMassTransform();
-        //var t = this.vehicle.getChassisWorldTransform(); 
-
-        this.body.getMotionState().getWorldTransform( trans );
-        var pos = trans.getOrigin();
-        var rot = trans.getRotation();
-
-        if(this.type==='basic'){
-            m[n+1] = pos.x()+this.massCenter[0];
-            m[n+2] = pos.y()+this.massCenter[1];
-            m[n+3] = pos.z()+this.massCenter[2];
-        }else{
-            m[n+1] = pos.x();
-            m[n+2] = pos.y();
-            m[n+3] = pos.z();
-        }
-        m[n+4] = rot.x();
-        m[n+5] = rot.y();
-        m[n+6] = rot.z();
-        m[n+7] = rot.w();
-
-        var i = this.nWheels;
-        var w, t;
-        while(i--){
-            this.vehicle.updateWheelTransform( i, true );
-            t = this.vehicle.getWheelTransformWS( i );
-            pos = t.getOrigin();
-            rot = t.getRotation();
-           
-            w = 8*(i+1);
-            if(i==0) m[n+w] = this.steering;
-            else m[n+w] = i;
-            m[n+w+1] = pos.x();
-            m[n+w+2] = pos.y();
-            m[n+w+3] = pos.z();
-            m[n+w+4] = rot.x();
-            m[n+w+5] = rot.y();
-            m[n+w+6] = rot.z();
-            m[n+w+7] = rot.w();
-        }
-    },
-    drive:function(){
-        
-
-        if(key.left===1)this.steering+=this.incSteering;
-        if(key.right===1)this.steering-=this.incSteering;
-        if(key.left===0 && key.right==0) this.steering *= 0.9;//this.steering = 0;
-        if (this.steering < -this.maxSteering) this.steering = -this.maxSteering;
-        if (this.steering > this.maxSteering) this.steering = this.maxSteering;
-
-        if(key.up===1)this.engine+=this.incEngine;//this.gas = 1; //
-        if(key.down===1)this.engine-=this.incEngine;//this.gas = -1; //
-        if (this.engine > this.maxEngineForce) this.engine = this.maxEngineForce;
-        if (this.engine < -this.maxEngineForce) this.engine = -this.maxEngineForce;
-        
-        if(key.up===0 && key.down===0){
-            if(this.engine>1) this.engine *= 0.9;
-            else if (this.engine<-1)this.engine *= 0.9;
-            else {this.engine = 0; this.breaking=10;}
-        }
-
-        
-        var i = this.nWheels;
-        while(i--){
-            this.vehicle.applyEngineForce( this.engine, i );
-            this.vehicle.setBrake( this.breaking, i );
-            if(i==0 || i==1) this.vehicle.setSteeringValue( this.steering, i );
-        }
-        //this.steering *= 0.9;
-
+    if( key[0] == 1 ) u.engine += u.incEngine;
+    if( key[1] == 1 ) u.engine -= u.incEngine;
+    if( u.engine > u.maxEngineForce ) u.engine = u.maxEngine;
+    if( u.engine < -u.maxEngineForce ) u.engine = -u.maxEngine;
+    
+    if( key[0] == 0 && key[1] == 0 ){
+        if( u.engine > 1 ) u.engine *= 0.9;
+        else if ( u.engine < -1 ) u.engine *= 0.9;
+        else { u.engine = 0; u.breaking = 10; }
     }
-}*/
+
+    var i = car.getNumWheels();
+    while(i--){
+        if( i == 0 || i == 1 ) car.setSteeringValue( u.steering, i );
+        car.applyEngineForce( u.engine, i );
+        car.setBrake( u.breaking, i );
+    }
+
+};

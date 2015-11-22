@@ -92,7 +92,7 @@ var extract = ( function () {
         var x = new XMLHttpRequest(); 
         x.overrideMimeType('text/plain; charset=x-user-defined'); 
         x.open('GET', Url, true);
-        x.onload = function(){ _this.read(x.responseText, Url, Type, callback ); }
+        x.onload = function(){ _this.read( x.responseText, Url, Type, callback ); }
         x.send();
 
     };

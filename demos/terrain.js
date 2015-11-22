@@ -22,6 +22,8 @@ function demo() {
 
     // ammo car shape
 
+    // ! \\ click on view and use key to controle car
+
     var carSetup = {
         mass:400,
         engine:600, 
