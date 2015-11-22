@@ -37,7 +37,7 @@ var view = ( function () {
     var key = [ 0,0,0,0,0,0,0,0 ];
 
     var environment, envcontext, nEnv = 0, isWirframe = true;
-    var envLists = ['wireframe', 'ceramic','plastic','smooth', 'metal','chrome','brush','black','glow','red','sky'];
+    var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
 
 
     view = function () {};
@@ -433,7 +433,76 @@ var view = ( function () {
 
     };
 
-    view.vehicle = function( o ) {
+    view.getVertex = function ( Geometry, Size, Name ) {
+
+        var v = [];
+        var pp, i, n;
+        var isBuffer = false;
+        var size = Size || [1,1,1];
+
+        var geometry = Geometry ? Geometry : this.getGeoByName( Name );
+        pp = geometry.vertices;
+
+        if( pp == undefined ) {
+            isBuffer = true;
+            pp = geometry.attributes.position.array;
+            i = ~~ (pp.length/3);
+        } else {
+            i = pp.length;
+        }
+
+        while(i--){
+            n = i * 3;
+            if( isBuffer ){
+                v[n+0] = pp[n+0]*size[0];
+                v[n+1] = pp[n+1]*size[1];
+                v[n+2] = pp[n+2]*size[2];
+            }else{
+                v[n+0] = pp[i].x*size[0];
+                v[n+1] = pp[i].y*size[1];
+                v[n+2] = pp[i].z*size[2];
+            }
+        }
+        return v;
+
+    };
+
+    view.getFaces = function ( Geometry, Size, Name ) {
+
+        var v = [];
+        var n, face, va, vb, vc;
+        var size = Size || [1,1,1];
+        var geometry = Geometry ? Geometry : this.getGeoByName( Name );
+
+        var pp = geometry.faces;
+        var pv = geometry.vertices;
+        var i = pp.length;
+        while(i--){
+            n = i * 9;
+            face = pp[i];
+            va = pv[face.a]; vb = pv[face.b]; vc = pv[face.c];
+            v[n+0] = va.x*size[0]; v[n+1]=va.y*size[1]; v[n+2]=va.z*size[2];
+            v[n+3] = vb.x*size[0]; v[n+4]=vb.y*size[1]; v[n+5]=vb.z*size[2];
+            v[n+6] = vc.x*size[0]; v[n+7]=vc.y*size[1]; v[n+8]=vc.z*size[2];
+        }
+        return v;
+
+    };
+
+    view.getGeoByName = function ( name, Buffer ) {
+
+        var g;
+        var i = geo.length;
+        var buffer = Buffer || false;
+        while(i--){
+            if( name == geo[i].name) g = geo[i];
+        }
+        if( buffer ) g = new THREE.BufferGeometry().fromGeometry( g );
+        return g;
+
+    };
+
+    view.vehicle = function ( o ) {
 
         var type = o.type || 'box';
         var size = o.size || [2,0.5,4];
