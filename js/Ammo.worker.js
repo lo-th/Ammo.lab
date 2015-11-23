@@ -226,6 +226,7 @@ function control( o ){
 
 };
 
+
 //--------------------------------------------------
 //
 //  AMMO MATH
@@ -428,9 +429,9 @@ function add ( o, onlyShape ) {
             var v2 = vec3();
             var vx = o.v;
             for (var i = 0, fMax = vx.length; i < fMax; i+=9){
-                v0.setValue( vx[i+0], vx[i+1], vx[i+2] );
-                v1.setValue( vx[i+3], vx[i+4], vx[i+5] );
-                v2.setValue( vx[i+6], vx[i+7], vx[i+8] );
+                v0.setValue( vx[i+0]*size[0], vx[i+1]*size[1], vx[i+2]*size[2] );
+                v1.setValue( vx[i+3]*size[0], vx[i+4]*size[1], vx[i+5]*size[2] );
+                v2.setValue( vx[i+6]*size[0], vx[i+7]*size[1], vx[i+8]*size[2] );
                 mTriMesh.addTriangle(v0,v1,v2, removeDuplicateVertices);
             }
             if(mass == 0){ 
@@ -448,9 +449,9 @@ function add ( o, onlyShape ) {
             var v = vec3(0,0,0);
             var vx = o.v;
             for (var i = 0, fMax = vx.length; i < fMax; i+=3){
-                copyV3([vx[i+0], vx[i+1], vx[i+2]], v);
+                copyV3([ vx[i]*size[0], vx[i+1]*size[1], vx[i+2]*size[2] ], v);
                 shape.addPoint(v);
-            }
+            };
         break;
 
         case 'terrain': 
@@ -499,7 +500,18 @@ function add ( o, onlyShape ) {
     if ( mass !== 0 ) bodys.push( body ); // only dynamique
     else solids.push( body ); // only static
 
-}
+};
+
+function getByName(name){
+
+    var i = bodys.length, b;
+    while(i--){
+        b = bodys[i];
+        if(name == b.name) return b;
+    }
+
+};
+
 
 //--------------------------------------------------
 //
@@ -520,7 +532,14 @@ function apply ( o ) {
         case 'centralImpulse' : b.applyCentralImpulse( v3(o.v1) ); break;
     }
 
-}
+};
+
+
+//--------------------------------------------------
+//
+//  TERRAIN
+//
+//--------------------------------------------------
 
 function terrain_data(){
 
@@ -536,17 +555,6 @@ function terrain_data(){
     terrainNeedUpdate = false;
 
 };
-
-function getByName(name){
-
-    var i = bodys.length, b;
-    while(i--){
-        b = bodys[i];
-        if(name == b.name) return b;
-    }
-
-}
-
 
 
 //--------------------------------------------------

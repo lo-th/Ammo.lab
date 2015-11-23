@@ -26,6 +26,7 @@ var view = ( function () {
     var helper;
     
     var meshs = [];
+    var statics = [];
     var terrains = [];
     var cars = [];
     var heros = [];
@@ -88,12 +89,13 @@ var view = ( function () {
         geo['sphere'] = new THREE.SphereBufferGeometry( 1, 12, 10 );
         geo['cylinder'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 1,1,1,12,1 ) );
         geo['cone'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 0,1,0.5 ) );
-        geo['wheel'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 1,1,1 ) );
+        geo['wheel'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 1,1,1, 18 ) );
         geo['wheel'].rotateZ( -Math.PI90 );
 
         // MATERIAL
 
         mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'terrain', wireframe:true });
+        mat['statique'] = new THREE.MeshBasicMaterial({ color:0x9999ff, name:'statique', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
@@ -150,7 +152,13 @@ var view = ( function () {
         while(i--){
             name = meshs[i].material.name;
             meshs[i].material = mat[name];
-        }
+        };
+
+        i = statics.length;
+        while(i--){
+            name = statics[i].material.name;
+            statics[i].material = mat[name];
+        };
 
         i = cars.length;
         while(i--){
@@ -161,13 +169,13 @@ var view = ( function () {
                 name = cars[i].w[j].material.name;
                 cars[i].w[j].material = mat[name];
             }
-        }
+        };
 
         i = terrains.length;
         while(i--){
             name = terrains[i].material.name;
             terrains[i].material = mat[name];
-        }
+        };
 
     }
 
@@ -341,6 +349,10 @@ var view = ( function () {
             scene.remove( meshs.pop() );
         }
 
+        while( statics.length > 0 ){
+            scene.remove( statics.pop() );
+        }
+
         while( terrains.length > 0 ){ 
             scene.remove( terrains.pop() );
         }
@@ -376,6 +388,9 @@ var view = ( function () {
 
     view.add = function ( o ) {
 
+        var statique = o.mass == 0 ? true : false;
+        var material = statique ? mat.statique : mat.move;
+
         var type = o.type || 'box';
         var size = o.size || [1,1,1];
         var pos = o.pos || [0,0,0];
@@ -394,19 +409,20 @@ var view = ( function () {
         }
 
         
-
         if(size.length == 1){ size[1] = size[0]; }
         if(size.length == 2){ size[2] = size[0]; }
 
         this.findRotation( rot );
 
-        if(type == 'capsule'){
+        
+        
+        if( type == 'capsule' ){
             var g = this.capsuleGeo( size[0] , size[1]*0.5 );
             extraGeo.push(g);
-            mesh = new THREE.Mesh( g, mat.move );
+            mesh = new THREE.Mesh( g, material );
         }
         else{ 
-            mesh = new THREE.Mesh( geo[type], mat.move );
+            mesh = new THREE.Mesh( geo[type], material );
             mesh.scale.set( size[0], size[1], size[2] );
         }
 
@@ -417,6 +433,10 @@ var view = ( function () {
         // force physics type of shape
         if( o.shape ) o.type = o.shape;
 
+
+        if(o.type == 'mesh') o.v = view.getFaces( geo[type], size );
+        if(o.type == 'convex') o.v = view.getVertex( geo[type], size );
+
         // color
         //this.meshColor( mesh, 1, 0.5, 0 );
 
@@ -425,66 +445,61 @@ var view = ( function () {
 
         scene.add(mesh);
 
-        // push only dynamique
-        if( o.mass !== 0 ) meshs.push( mesh );
+        // push 
+        if( statique ) statics.push( mesh );
+        else meshs.push( mesh );
 
         // send to worker
         ammo.send( 'add', o );
 
     };
 
-    view.getVertex = function ( Geometry, Size, Name ) {
+    view.getVertex = function ( Geometry, Name ) {
 
         var v = [];
         var pp, i, n;
-        var isBuffer = false;
-        var size = Size || [1,1,1];
-
         var geometry = Geometry ? Geometry : this.getGeoByName( Name );
         pp = geometry.vertices;
 
-        if( pp == undefined ) {
-            isBuffer = true;
-            pp = geometry.attributes.position.array;
-            i = ~~ (pp.length/3);
+        if( pp == undefined ) { // is BufferGeometry
+            v = geometry.attributes.position.array;
         } else {
             i = pp.length;
-        }
-
-        while(i--){
-            n = i * 3;
-            if( isBuffer ){
-                v[n+0] = pp[n+0]*size[0];
-                v[n+1] = pp[n+1]*size[1];
-                v[n+2] = pp[n+2]*size[2];
-            }else{
-                v[n+0] = pp[i].x*size[0];
-                v[n+1] = pp[i].y*size[1];
-                v[n+2] = pp[i].z*size[2];
+            while(i--){
+                n = i * 3;
+                v[n+0] = pp[i].x;
+                v[n+1] = pp[i].y;
+                v[n+2] = pp[i].z;
             }
         }
+
+        console.log(v)
         return v;
 
     };
 
-    view.getFaces = function ( Geometry, Size, Name ) {
+    view.getFaces = function ( Geometry, Name ) {
 
         var v = [];
         var n, face, va, vb, vc;
-        var size = Size || [1,1,1];
         var geometry = Geometry ? Geometry : this.getGeoByName( Name );
 
         var pp = geometry.faces;
-        var pv = geometry.vertices;
-        var i = pp.length;
-        while(i--){
-            n = i * 9;
-            face = pp[i];
-            va = pv[face.a]; vb = pv[face.b]; vc = pv[face.c];
-            v[n+0] = va.x*size[0]; v[n+1]=va.y*size[1]; v[n+2]=va.z*size[2];
-            v[n+3] = vb.x*size[0]; v[n+4]=vb.y*size[1]; v[n+5]=vb.z*size[2];
-            v[n+6] = vc.x*size[0]; v[n+7]=vc.y*size[1]; v[n+8]=vc.z*size[2];
+        if( pp == undefined ) { // is BufferGeometry
+            v = geometry.attributes.position.array;
+        } else {
+            var pv = geometry.vertices;
+            var i = pp.length;
+            while(i--){
+                n = i * 9;
+                face = pp[i];
+                va = pv[face.a]; vb = pv[face.b]; vc = pv[face.c];
+                v[n+0] = va.x; v[n+1]=va.y; v[n+2]=va.z;
+                v[n+3] = vb.x; v[n+4]=vb.y; v[n+5]=vb.z;
+                v[n+6] = vc.x; v[n+7]=vc.y; v[n+8]=vc.z;
+            }
         }
+        
         return v;
 
     };
@@ -557,7 +572,7 @@ var view = ( function () {
 
     };
 
-    view.meshColor = function( m, r,g,b ){
+    /*view.meshColor = function( m, r,g,b ){
 
         var g = m.geometry;
         if(!g.attributes.color){ 
@@ -578,7 +593,7 @@ var view = ( function () {
         g.attributes.color.needsUpdate = true;
 
 
-    };
+    };*/
 
     view.terrain = function ( o ) {
 
@@ -616,7 +631,7 @@ var view = ( function () {
             n = i * 3;
             hdata[i] = data[ i ] * size[1]; // final size
             vertices[ n + 1 ] = hdata[i];   // pos y
-            colors[ n + 1 ] = data[ i ] * 0.5;    // green color
+            colors[ n + 1 ] = data[ i ] * 0.5; // green color
         }
 
         g.computeVertexNormals();
