@@ -112,6 +112,8 @@ self.onmessage = function ( e ) {
 
         // ------- pre step
 
+        key = e.data.key;
+
         drive( 0 );
 
         if( terrainNeedUpdate ) terrain_data();

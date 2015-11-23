@@ -95,7 +95,7 @@ var view = ( function () {
         // MATERIAL
 
         mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'terrain', wireframe:true });
-        mat['statique'] = new THREE.MeshBasicMaterial({ color:0x9999ff, name:'statique', wireframe:true });
+        mat['statique'] = new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
@@ -248,7 +248,7 @@ var view = ( function () {
         }
 
         // send to worker
-        ammo.send( 'key', key );
+        //ammo.send( 'key', key );
 
         //console.log( String.fromCharCode(e.which) );
 
@@ -270,7 +270,13 @@ var view = ( function () {
         }
 
         // send to worker
-        ammo.send( 'key', key );
+        //ammo.send( 'key', key );
+
+    };
+
+    view.getKey = function () {
+
+        return key;
 
     };
 

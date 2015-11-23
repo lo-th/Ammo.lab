@@ -94,7 +94,7 @@ var ammo = ( function () {
         //clearTimeout(timer);
         clearInterval( timer );
         sendTime = now();
-        worker.postMessage( { m:'step', ar:ar, dr:dr } , [ ar.buffer, dr.buffer ] );
+        worker.postMessage( { m:'step', key:view.getKey(), ar:ar, dr:dr } , [ ar.buffer, dr.buffer ] );
 
     };
 
