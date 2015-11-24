@@ -5,7 +5,7 @@ function demo () {
     // infinie plane
     add({type:'plane', group:1});
 
-    add({ type:'box', name:'bob', size:[2,2,2], pos:[0,1,0], mass:10, flag:2, state:4 });
+    add({ type:'box', name:'bob', size:[2,2,2], pos:[0,1,0], mass:10, flag:2, state:4, friction:0.01 });
 
     
     var s, x, y;

@@ -29,6 +29,8 @@ var terrainData = null;
 var timer = 0;
 var isBuffer;
 
+var tmpset = null;
+
 // main transphere array
 var ar = new Float32Array( 1000*8 ); // rigid buffer max 1000
 var dr = new Float32Array( 10*40 ); // car buffer max 10
@@ -119,7 +121,8 @@ self.onmessage = function ( e ) {
 
     if(m == 'add') add( e.data.o );
 
-    if(m == 'set') set( e.data.o );
+    //if(m == 'set') set( e.data.o );
+    if(m == 'set') tmpset = e.data.o;
 
     if(m == 'vehicle') vehicle( e.data.o );
 
@@ -144,6 +147,8 @@ self.onmessage = function ( e ) {
 
         drive( 0 );
         move( 0 );
+
+        if(tmpset!==null) set();
 
         if( terrainNeedUpdate ) terrain_data();
 
@@ -450,6 +455,8 @@ function dispose () {
 
 function set ( o ) {
 
+    o = tmpset;
+
     //console.log('yyy')
 
     var b = getByName( o.name );
@@ -461,6 +468,8 @@ function set ( o ) {
 
     //b.setWorldTransform(t);
     b.getMotionState().setWorldTransform(t);
+
+    tmpset = null;
 
 };
 
