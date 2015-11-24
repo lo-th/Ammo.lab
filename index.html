@@ -27,7 +27,7 @@
 <script>
 var demo;
 var demoName = 'basic';
-var demos = [ 'basic', 'terrain', 'supermaket', 'loadtest', 'car' ];
+var demos = [ 'basic', 'terrain', 'supermaket', 'loadtest', 'car', 'character', 'collision' ];
 
 intro.init();
 extract.init(['z/code.z', 'z/three.z', 'z/ammo.z'], init, [0,0,1]);
@@ -80,6 +80,12 @@ function add ( o ) {
 function car ( o ) {
 
     view.vehicle( o );
+
+};
+
+function character ( o ) {
+
+    view.character( o );
 
 };
 

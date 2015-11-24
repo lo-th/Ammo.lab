@@ -95,7 +95,8 @@ var view = ( function () {
         // MATERIAL
 
         mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'terrain', wireframe:true });
-        mat['statique'] = new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true });
+        mat['statique'] = new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6 });
+        mat['hero'] = new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
@@ -114,7 +115,7 @@ var view = ( function () {
         document.addEventListener( 'keydown', view.keyDown, false );
         document.addEventListener( 'keyup', view.keyUp, false );
 
-        canvas.addEventListener('mouseover', function () { editor.unFocus(); } );
+        
 
         this.resize();
         this.initEnv()
@@ -178,6 +179,18 @@ var view = ( function () {
         };
 
     }
+
+    view.needFocus = function () {
+
+        canvas.addEventListener('mouseover', editor.unFocus, false );
+
+    };
+
+    view.haveFocus = function () {
+
+        canvas.removeEventListener('mouseover', editor.unFocus, false );
+
+    };
 
     view.initEnv = function () {
 
@@ -363,6 +376,10 @@ var view = ( function () {
             scene.remove( terrains.pop() );
         }
 
+        while( heros.length > 0 ){ 
+            scene.remove( heros.pop() );
+        }
+
         while( extraGeo.length > 0 ){ 
             extraGeo.pop().dispose();
         }
@@ -523,6 +540,33 @@ var view = ( function () {
 
     };
 
+    view.character = function ( o ) {
+
+        var size = o.size || [0.5,1,1];
+        var pos = o.pos || [0,3,0];
+        var rot = o.rot || [0,0,0];
+
+        var g = this.capsuleGeo( size[0] , size[1]*0.5 );
+        extraGeo.push(g);
+        var mesh = new THREE.Mesh( g, mat.hero );
+
+        mesh.position.set( pos[0], pos[1], pos[2] );
+        mesh.rotation.set( rot[0], rot[1], rot[2] );
+
+        // copy rotation quaternion
+        o.quat = mesh.quaternion.toArray();
+        o.pos = pos;
+        o.size = size;
+
+        scene.add(mesh);
+        heros.push(mesh);
+
+
+        // send to worker
+        ammo.send( 'character', o );
+
+    }
+
     view.vehicle = function ( o ) {
 
         var type = o.type || 'box';
@@ -658,7 +702,7 @@ var view = ( function () {
 
     };
 
-    view.update = function(ar, dr){
+    view.update = function(ar, dr, hr, jr){
 
         var i = meshs.length, a = ar, n, m, j, w;
 
@@ -682,6 +726,18 @@ var view = ( function () {
                 if ( m.material.name == 'move' || m.material.name == 'movehigh' ) m.material = mat.sleep;
             
             }
+
+        }
+        // updtae character
+        i = heros.length;
+        a = hr;
+
+        while(i--){
+            m = heros[i];
+            n = i * 8;
+
+            m.position.set( a[n+1], a[n+2], a[n+3] );
+            m.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
 
         }
 

@@ -12,7 +12,7 @@ var editor = ( function () {
     var callback = function(){};
     var isSelfDrag = false;
     var isFocus = false;
-    var dragView = false;
+    //var dragView = false;
     var errorLines = [];
     var widgets = [];
     var interval = null;
@@ -66,28 +66,24 @@ var editor = ( function () {
 
         var _this = this;
         code.on('change', function () { _this.onChange() } );
-        code.on('focus', function () { isFocus = true; } );
+        code.on('focus', function () { isFocus = true; view.needFocus(); } );
         code.on('blur', function () { isFocus = false; } );
         code.on('drop', function () { if ( !isSelfDrag ) code.setValue(''); else isSelfDrag = false; } );
         code.on('dragstart', function () { isSelfDrag = true; } );
-        //this.code.on('dragend', function(e) { _this.isSelfDrag=false; } );
 
-        separator.addEventListener('mouseover', function () { _this.mid_select(); } );
-        separator.addEventListener('mouseout', function () { if(!dragView) _this.mid_unselect(); } );
+        separator.addEventListener('mouseover', editor.mid_over, false );
+        separator.addEventListener('mouseout', editor.mid_out, false );
+        separator.addEventListener('mousedown', editor.mid_down, false );
 
-        separator.addEventListener('mousedown', function () { dragView = true;  } );
-        document.addEventListener('mouseup', function () { dragView = false;  _this.mid_unselect(); } );
-        document.addEventListener('mousemove', function (e) { if( dragView ){ left = e.clientX+10; _this.resize(); } } );
+        menu.addEventListener('mouseover', editor.menu_over, false );
+        menu.addEventListener('mouseout', editor.menu_out, false );
+        menu.addEventListener('mousedown', editor.menu_down, false );
 
-        menu.addEventListener('mouseover', function () { _this.menu_select(); } );
-        menu.addEventListener('mouseout', function () { _this.menu_unselect(); } );
-        menu.addEventListener('mousedown', function () { _this.menu_down(); } );
-        menu.addEventListener('mousemove', function (e) { _this.menu_move(e); } );
         this.resize();
 
     };
 
-    editor.menu_select = function () { 
+    editor.menu_over = function () { 
 
         menu.style.background = 'rgba(255, 255, 255, 0.2)';
         menu.style.borderBottom = '1px solid rgba(255, 255, 255, 0)';
@@ -96,7 +92,7 @@ var editor = ( function () {
 
     };
 
-    editor.menu_unselect = function () { 
+    editor.menu_out = function () { 
 
         menu.style.background = 'none';
         menu.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
@@ -130,9 +126,9 @@ var editor = ( function () {
 
         if(isMenu){
             if( nextDemo !== null ){
-                this.load('demos/' + nextDemo + '.js');
+                editor.load('demos/' + nextDemo + '.js');
                 nextDemo = null;
-                this.menu_hide();
+                editor.menu_hide();
             }
         } else {
 
@@ -143,8 +139,10 @@ var editor = ( function () {
 
             for( var i = 0; i < lng ; i++ ) {
                 name = demos[i];
-                if( name !== fileName ) this.addButton( demos[i], i, n++ );
+                if( name !== fileName ) editor.addButton( demos[i], i, n++ );
             }
+
+            menu.addEventListener('mousemove', editor.menu_move, false );
         }
         
     };
@@ -160,6 +158,7 @@ var editor = ( function () {
                 menu.removeChild( b );
             }
         }
+        menu.removeEventListener('mousemove', editor.menu_move, false );
 
     };
 
@@ -176,7 +175,7 @@ var editor = ( function () {
 
     };
 
-    editor.mid_select = function () { 
+    editor.mid_over = function () { 
 
         separator.style.background = 'rgba(255, 255, 255, 0.2)';
         separator.style.borderLeft = '1px solid rgba(255, 255, 255, 0)';
@@ -185,7 +184,7 @@ var editor = ( function () {
 
     };
 
-    editor.mid_unselect = function () { 
+    editor.mid_out = function () { 
 
         separator.style.background = 'none';
         separator.style.borderLeft = '1px solid rgba(255, 255, 255, 0.2)';
@@ -194,9 +193,25 @@ var editor = ( function () {
 
     };
 
-    editor.resize = function () {
+    editor.mid_down = function () {
 
-        if(view){ 
+        document.addEventListener('mouseup', editor.mid_up, false );
+        document.addEventListener('mousemove', editor.resize, false );
+
+    };
+
+    editor.mid_up = function () {
+
+        document.removeEventListener('mouseup', editor.mid_up, false );
+        document.removeEventListener('mousemove', editor.resize, false );
+
+    };
+
+    editor.resize = function ( e ) {
+
+        if( e ) left = e.clientX + 10;
+
+        if(view){
             view.setLeft( left );
             view.resize();
         }
@@ -222,6 +237,7 @@ var editor = ( function () {
     editor.unFocus = function () {
 
         code.getInputField().blur();
+        view.haveFocus();
 
     };
 

@@ -27,9 +27,14 @@ var ammo = ( function () {
 
     var worker, callback;
 
-    // main transphere array
-    var ar, dr;
+    var isBuffer = true;
+    var framerate = 60;
+    var iteration = 3;
 
+    // main transphere array
+    var ar, dr, hr, jr;
+
+    var timerate = (1/framerate) * 1000;
     var fps = 0;
     var time = 0;
     var sendTime = 0;
@@ -48,7 +53,7 @@ var ammo = ( function () {
 
         worker.onmessage = this.message;
         worker.postMessage = worker.webkitPostMessage || worker.postMessage;
-        worker.postMessage( { m:'init', blob: extract.get('ammo')  });
+        worker.postMessage( { m: 'init', blob: extract.get('ammo'), isBuffer: isBuffer, framerate:1/framerate, iteration:iteration });
 
     };
 
@@ -65,25 +70,30 @@ var ammo = ( function () {
         }
 
         if(m == 'step'){
+
+            time = now();
             
             ar = e.data.ar;
             dr = e.data.dr;
+            hr = e.data.hr;
+            jr = e.data.jr;
 
-            view.update( ar, dr );
+            //view.update( ar, dr );
 
-            time = now();
+            //time = now();
 
             // delay
-            delay = (16.67 - ( time - sendTime )).toFixed(2);
+            delay = ( timerate - ( time - sendTime ) ).toFixed(2);
             if(delay < 0) delay = 0;
 
             // fps
             if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
 
-            tell( delay +' ms<br>' + fps +' fps');
+            
 
-            //timer = setTimeout( this.post , delay );
-            timer = setInterval( sendData, delay );
+            timer = setTimeout( sendData , delay );
+            view.update( ar, dr, hr, jr );
+            //timer = setInterval( sendData, delay );
 
         }
 
@@ -91,10 +101,15 @@ var ammo = ( function () {
 
     function sendData(){
 
-        //clearTimeout(timer);
-        clearInterval( timer );
+        clearTimeout(timer);
+        //clearInterval( timer );
         sendTime = now();
-        worker.postMessage( { m:'step', key:view.getKey(), ar:ar, dr:dr } , [ ar.buffer, dr.buffer ] );
+
+        if( isBuffer ) worker.postMessage( { m:'step', key:view.getKey(), ar:ar, dr:dr, hr:hr, jr:jr } , [ ar.buffer, dr.buffer, hr.buffer, jr.buffer ] );
+        else worker.postMessage( { m:'step', key:view.getKey() } );
+
+        tell( delay +' ms<br>' + fps +' fps');
+        
 
     };
 

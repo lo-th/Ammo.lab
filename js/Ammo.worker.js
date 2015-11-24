@@ -19,7 +19,6 @@ var world = null;
 var solver, collision, dispatcher, broadphase, trans;
 var bodys, joints, cars, solids, heros, carsInfo;
 
-var dm = 0.033
 var dt = 0.01667;//6;//7;
 var it = 1;//1;//2;
 var ddt = 1;
@@ -28,11 +27,13 @@ var key = [ 0,0,0,0,0,0,0,0 ];
 var terrainData = null;
 
 var timer = 0;
+var isBuffer;
 
 // main transphere array
 var ar = new Float32Array( 1000*8 ); // rigid buffer max 1000
-var dr = new Float32Array( 20*40 ); // car buffer max 20
-var jr = new Float32Array( 400*4 ); // joint buffer 400
+var dr = new Float32Array( 10*40 ); // car buffer max 10
+var jr = new Float32Array( 100*4 ); // joint buffer max 100
+var hr = new Float32Array( 10*8 ); // hero buffer max 10
 
 // for terrain
 var hdata = null;
@@ -41,6 +42,26 @@ var terrainNeedUpdate = false;
 var fixedTime = 0.01667;
 var last_step = Date.now();
 var timePassed = 0;
+
+var FLAGS = {
+    STATIC_OBJECT : 1,
+    KINEMATIC_OBJECT : 2,
+    NO_CONTACT_RESPONSE : 4,
+    CUSTOM_MATERIAL_CALLBACK : 8,
+    CHARACTER_OBJECT : 16,
+    DISABLE_VISUALIZE_OBJECT : 32,
+    DISABLE_SPU_COLLISION_PROCESSING : 64 
+};
+
+var GROUP = { 
+  DEFAULT_FILTER : 1, 
+  STATIC_FILTER : 2, 
+  KINEMATIC_FILTER : 4, 
+  DEBRIS_FILTER : 8, 
+  SENSOR_TRIGGER : 16, 
+  CHARACTER_FILTER : 32, 
+  ALL_FILTER : -1 
+}
 
 function stepAdvanced () {
 
@@ -83,6 +104,9 @@ self.onmessage = function ( e ) {
 
     if(m == 'init'){
 
+        isBuffer = e.data.isBuffer;
+        dt = e.data.framerate;
+        it = e.data.iteration || 1;
         importScripts( e.data.blob );
         self.postMessage({ m:'init' });
         init();
@@ -96,6 +120,8 @@ self.onmessage = function ( e ) {
     if(m == 'add') add( e.data.o );
 
     if(m == 'vehicle') vehicle( e.data.o );
+
+    if(m == 'character') character( e.data.o );
 
     if(m == 'gravity') gravity( e.data.g );
 
@@ -115,17 +141,25 @@ self.onmessage = function ( e ) {
         key = e.data.key;
 
         drive( 0 );
+        move( 0 );
 
         if( terrainNeedUpdate ) terrain_data();
 
         // ------- buffer data
 
-        ar = e.data.ar;
-        dr = e.data.dr;
+        if( isBuffer ){
+
+            ar = e.data.ar;
+            dr = e.data.dr;
+            hr = e.data.hr;
+            jr = e.data.jr;
+            
+        }
 
         // ------- step
 
-        world.stepSimulation( dt, it );
+        //world.stepSimulation( dt, it );
+        world.stepSimulation( dt, 0, dt );
 
         var i = bodys.length, a = ar, n, b, p, r;
         var j, w, t;
@@ -139,8 +173,8 @@ self.onmessage = function ( e ) {
 
             if ( a[n] ) {
 
-                b.getMotionState().getWorldTransform( trans );
-
+                //b.getMotionState().getWorldTransform( trans );
+                trans = b.getWorldTransform();
                 p = trans.getOrigin();
                 r = trans.getRotation();
 
@@ -157,6 +191,35 @@ self.onmessage = function ( e ) {
 
         }
 
+        i = heros.length;
+        a = hr;
+
+        while(i--){
+
+            n = i*8;
+            b = heros[i];
+
+            
+
+            //b.playerStep( world, dt );
+
+            //b.getGhostObject().getWorldTransform( trans );
+            trans = b.getGhostObject().getWorldTransform();
+            p = trans.getOrigin();
+            r = trans.getRotation();
+
+            a[n+1] = p.x();
+            a[n+2] = p.y();
+            a[n+3] = p.z();
+
+            a[n+4] = r.x();
+            a[n+5] = r.y();
+            a[n+6] = r.z();
+            a[n+7] = r.w();
+
+        }
+
+
         i = cars.length;
         a = dr;
 
@@ -169,6 +232,7 @@ self.onmessage = function ( e ) {
             a[n+0] = b.getCurrentSpeedKmHour();//getRigidBody().getLinearVelocity().length() * 9.8;
 
             b.getRigidBody().getMotionState().getWorldTransform( trans );
+            //trans = b.getRigidBody().getWorldTransform();
             p = trans.getOrigin();
             r = trans.getRotation();
 
@@ -208,7 +272,8 @@ self.onmessage = function ( e ) {
 
         // ------- post step
 
-        self.postMessage({ m:'step', ar:ar, dr:dr },[ ar.buffer, dr.buffer ]);
+        if( isBuffer ) self.postMessage({ m:'step', ar:ar, dr:dr, hr:hr, jr:jr },[ ar.buffer, dr.buffer, hr.buffer, jr.buffer ]);
+        else self.postMessage( { m:'step', ar:ar, dr:dr, hr:hr, jr:jr } );
         
     }
 
@@ -217,7 +282,8 @@ self.onmessage = function ( e ) {
 
 function postStep(){
 
-    self.postMessage({ m:'step', ar:ar, dr:dr },[ ar.buffer, dr.buffer ]);
+    if( isBuffer ) self.postMessage({ m:'step', ar:ar, dr:dr, hr:hr, jr:jr },[ ar.buffer, dr.buffer, hr.buffer, jr.buffer ]);
+    else self.postMessage( { m:'step', ar:ar, dr:dr } );
 
 };
 
@@ -225,6 +291,7 @@ function control( o ){
 
     key = o;
     drive( 0 );
+    move( 0 );
 
 };
 
@@ -265,18 +332,20 @@ function init () {
     dispatcher = new Ammo.btCollisionDispatcher( collision );
     trans = new Ammo.btTransform();
 
-    var type = 3;
+    var type = 2;
+    var s = 1000;
 
     switch( type ){
 
         //case 1: broadphase = new Ammo.btSimpleBroadphase(); break;
-        case 2: broadphase = new Ammo.btAxisSweep3( vec3(-1,-1,-1), vec3(1,1,1), 4096 ); break;//16384;
+        case 2: broadphase = new Ammo.btAxisSweep3( vec3(-s,-s,-s), vec3(s,s,s), 4096 ); break;//16384;
         case 3: broadphase = new Ammo.btDbvtBroadphase(); break;
         
     }
 
     world = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
     world.setGravity( vec3(0, -9.8, 0) );
+    //broadphase.getOverlappingPairCache().setInternalGhostPairCallback( new Ammo.btGhostPairCallback() );
 
     //console.log(world);
 
@@ -342,6 +411,17 @@ function reset () {
         
     }
 
+    while( heros.length > 0){
+
+        b = heros.pop();
+        //carsInfo.pop();
+        //Ammo.destroy( b );
+        world.removeRigidBody( b.getGhostObject() );
+        Ammo.destroy( b.getGhostObject() );
+        world.removeAction(b);
+        
+    }
+
     //world.getBroadphase().resetPool( world.getDispatcher() );
     //world.getConstraintSolver().reset();
 
@@ -366,7 +446,7 @@ function dispose () {
 //
 //--------------------------------------------------
 
-function add ( o, onlyShape ) {
+function add ( o, extra ) {
 
     var type = o.type || 'box';
 
@@ -465,11 +545,15 @@ function add ( o, onlyShape ) {
 
     if(shape.setMargin){ shape.setMargin( margin ); }
 
-    if( onlyShape ) return shape;
+    if( extra == 'isShape' ) return shape;
+    if( extra == 'isGhost' ){ 
+        var ghost = new Ammo.btGhostObject();
+        ghost.setCollisionShape( shape );
+        return ghost;
+    }
 
     var startTransform = new Ammo.btTransform();
     startTransform.setIdentity();
-
     startTransform.setOrigin( v3( pos ) );
     startTransform.setRotation( q4( quat ) );
 
@@ -481,13 +565,30 @@ function add ( o, onlyShape ) {
     rb.set_m_friction( o.friction || 0.5 );
     rb.set_m_restitution( o.restitution || 0 );
 
+
+
     var body = new Ammo.btRigidBody( rb );
-    world.addRigidBody( body );
+    if ( mass !== 0 ){
+        body.setCollisionFlags(o.flag || 0);
+        //body.setCollisionFlags(1); 
+        world.addRigidBody( body, o.group || 1, o.mask || -1 );
+        //console.log(body)
+    } else {
+        body.setCollisionFlags(o.flag || 1); 
+        //body.setCollisionFlags( FLAGS.STATIC_OBJECT | FLAGS.KINEMATIC_OBJECT ) ;
+        world.addCollisionObject( body, o.group || 2, o.mask || -1 );
+    }
+
+
+    
+
+    //body.setContactProcessingThreshold ??
+
     body.activate();
 
     body.name = o.name || '';
 
-    body.isKinematic = o.kinematic || false;
+    //body.isKinematic = o.kinematic || false;
 
     /*
     AMMO.ACTIVE = 1;
@@ -612,6 +713,45 @@ function addJoint ( o ) {
 };
 
 
+
+/*
+ enum   CollisionFlags { 
+  CF_STATIC_OBJECT = 1, 
+  CF_KINEMATIC_OBJECT = 2, 
+  CF_NO_CONTACT_RESPONSE = 4, 
+  CF_CUSTOM_MATERIAL_CALLBACK = 8, 
+  CF_CHARACTER_OBJECT = 16, 
+  CF_DISABLE_VISUALIZE_OBJECT = 32, 
+  CF_DISABLE_SPU_COLLISION_PROCESSING = 64 
+}
+ 
+enum    CollisionObjectTypes { 
+  CO_COLLISION_OBJECT =1, 
+  CO_RIGID_BODY =2, 
+  CO_GHOST_OBJECT =4, 
+  CO_SOFT_BODY =8, 
+  CO_HF_FLUID =16, 
+  CO_USER_TYPE =32, 
+  CO_FEATHERSTONE_LINK =64 
+}
+ 
+enum    AnisotropicFrictionFlags { 
+  CF_ANISOTROPIC_FRICTION_DISABLED =0, 
+  CF_ANISOTROPIC_FRICTION = 1, 
+  CF_ANISOTROPIC_ROLLING_FRICTION = 2 
+}
+
+enum    CollisionFilterGroups { 
+  DefaultFilter = 1, 
+  StaticFilter = 2, 
+  KinematicFilter = 4, 
+  DebrisFilter = 8, 
+  SensorTrigger = 16, 
+  CharacterFilter = 32, 
+  AllFilter = -1 
+}
+*/
+
 //--------------------------------------------------
 //
 //  CHARACTER
@@ -620,16 +760,105 @@ function addJoint ( o ) {
 
 function character ( o ) {
 
+    var stepHeight = 0.3;
+
+    var startTransform = new Ammo.btTransform();
+    startTransform.setIdentity();
+    startTransform.setOrigin( v3( o.pos ) );
+    startTransform.setRotation( q4( o.quat ) );
+
     var size = o.size || [1,1,1];
     var shape = new Ammo.btCapsuleShape(size[0], size[1]*0.5);
-    var ghostObject = new Ammo.btGhostObject( shape );
-    ghostObject.friction = o.friction || 0.1;
-    ///ghostObject.collisionFlags = AWPCollisionFlags.CF_CHARACTER_OBJECT;
+    //var shape = new Ammo.btBoxShape( vec3( size[0]*0.5, size[1]*0.5, size[2]*0.5 ) );
+    //var localInertia = vec3();
+    //shape.calculateLocalInertia( 10, localInertia );
+    //var body = new Ammo.btGhostObject();
+    var localInertia = vec3(0, 0, 0);
+    shape.calculateLocalInertia( 1, localInertia );
+    //shape.calculateLocalInertia( mass, localInertia );
+    //var motionState = new Ammo.btDefaultMotionState( startTransform );
 
-    var hero = new Ammo.btKinematicCharacterController( ghostObject, 0.1 );
-    world.addAction( hero );
+    //var rb = new Ammo.btRigidBodyConstructionInfo( 1, motionState, shape, localInertia);
+    //var body = new Ammo.btRigidBody( rb );
+    var body = new Ammo.btPairCachingGhostObject();
+    body.setCollisionShape(shape);
+    body.setCollisionFlags( o.flag || 16 );
+    console.log(body);
+    ///body.setWorldTransform( startTransform );
+    
+    //
+   /* 
+    
+    body.setCollisionFlags( FLAGS.CHARACTER_OBJECT );
+    body.setFriction( o.friction || 0.1 );
+    body.setRestitution( o.restitution || 0 );
+    body.setActivationState( 4 );
+    ///ghostObject.collisionFlags = AWPCollisionFlags.CF_CHARACTER_OBJECT;*/
+    
+
+    var hero = new Ammo.btKinematicCharacterController( body, shape, stepHeight);
+    //hero.setUseGhostSweepTest(true);
+
+    console.log(hero);
+    //hero.setGravity( vec3(0, -9.8, 0) );
+    hero.setFallSpeed(0.1);
+    hero.warp(v3(o.pos));
+    hero.setVelocityForTimeInterval(vec3(), 1);
+
+    //world.addCollisionObject( ghostObject, o.group || 1, o.mask || -1 );
+    //world.addAction( hero ); 
+    /*world.addCollisionObject( body, GROUP.CHARACTER_FILTER, GROUP.STATIC_FILTER | GROUP.DEFAULT_FILTER );
+    //world.addCollisionObject( body );
+    //world.addRigidBody( body );*/
+    //body.activate();
+
+    
+    world.addCollisionObject( body, o.group || 32, o.mask || 1|2 );
+    //world.addRigidBody( body)//, o.group || 32, o.mask || 1|2 );
+    world.addAction( hero ); 
+
+    //console.log( body, hero, body.getCollisionFlags() );
 
     heros.push( hero );
+
+}
+
+function move ( id ) {
+
+    var id = id || 0;
+    if( !heros[id] ) return;
+
+    var walkDirection = vec3(0,0,0);
+    var walkSpeed = 1;
+
+    var xform = heros[id].getGhostObject().getWorldTransform();
+
+    var forwardDir = xform.getBasis().getRow(2);
+    var upDir  = xform.getBasis().getRow(1);
+    var strafeDir = xform.getBasis().getRow(0);
+
+    forwardDir.normalize();
+    upDir.normalize();
+    strafeDir.normalize();
+
+    if( key[0] == 1 ) walkDirection.op_add(forwardDir);
+    if( key[1] == 1 ) walkDirection.op_sub(forwardDir);
+
+    if( key[2] == 1 ) walkDirection.op_add(strafeDir);
+    if( key[3] == 1 ) walkDirection.op_sub(strafeDir);
+
+    walkDirection.op_mul(walkSpeed);
+
+
+    //console.log(heros[id].onGround())
+
+
+
+
+    heros[id].setWalkDirection(walkDirection);
+   // heros[id].preStep ( world );
+   //heros[id].setVelocityForTimeInterval(vec3(), 1);
+
 
 }
 
@@ -684,8 +913,8 @@ function vehicle ( o ) {
     var incSteering = 0.01;
 
     var shape;
-    if(o.carshape) shape = add( { type:'convex', v:o.carshape }, true);
-    else shape = add( { type:'box', size:size }, true);
+    if(o.carshape) shape = add( { type:'convex', v:o.carshape }, 'isShape');
+    else shape = add( { type:'box', size:size }, 'isShape');
     
     var compound = new Ammo.btCompoundShape();
 
