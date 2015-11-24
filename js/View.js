@@ -21,6 +21,7 @@ Math.int = function(x) { return ~~x; };
 var view = ( function () {
 
     var canvas, renderer, scene, camera, controls, debug;
+    var ray, mouse, content, targetMouse, rayCallBack, moveplane, isWithRay = false;;
     var vs = { w:1, h:1, l:400 };
 
     var helper;
@@ -74,6 +75,9 @@ var view = ( function () {
 
         scene = new THREE.Scene();
 
+        content = new THREE.Object3D();
+        scene.add(content);
+
         // CAMERA / CONTROLER
 
         camera = new THREE.PerspectiveCamera( 60 , 1 , 1, 1000 );
@@ -103,10 +107,15 @@ var view = ( function () {
 
         // GROUND
 
-        helper = new THREE.GridHelper( 200, 50 );
-        helper.setColors( 0x999999, 0x999999 );
-        helper.material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, transparent:true, opacity:0.1 } );
+        helper = new THREE.GridHelper( 50, 2 );
+        helper.setColors( 0xFFFFFF, 0x666666 );
+        helper.material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, transparent:true, opacity:0.2 } );
         scene.add( helper );
+
+        // RAYCAST
+
+        ray = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
 
         // EVENT
 
@@ -121,6 +130,54 @@ var view = ( function () {
         this.initEnv()
 
     };
+
+    view.removeRay = function(){
+        if(isWithRay){
+            isWithRay = false;
+
+            canvas.removeEventListener( 'mousemove', view.rayTest, false );
+            rayCallBack = null;
+
+            content.remove(moveplane);
+            scene.remove(targetMouse);
+
+        }
+    }
+
+    view.activeRay = function ( callback ) {
+
+        isWithRay = true;
+
+        var g = new THREE.PlaneBufferGeometry(100,100);
+        g.rotateX( -Math.PI90 );
+        moveplane = new THREE.Mesh( g,  new THREE.MeshBasicMaterial({ color:0xFFFFFF, transparent:true, opacity:0 }));
+        content.add(moveplane);
+        //moveplane.visible = false;
+
+        targetMouse = new THREE.Mesh( geo['box'] ,  new THREE.MeshBasicMaterial({color:0xFF0000}));
+        scene.add(targetMouse);
+
+        canvas.addEventListener( 'mousemove', view.rayTest, false );
+
+        rayCallBack = callback;
+
+    };
+
+    view.rayTest = function (e) {
+        //vs.h = window.innerHeight;
+        //vs.w = window.innerWidth - vs.x;
+        mouse.x = ( (e.clientX- vs.x )/ vs.w ) * 2 - 1;
+        mouse.y = - ( e.clientY / vs.h ) * 2 + 1;
+
+        ray.setFromCamera( mouse, camera );
+        var intersects = ray.intersectObjects( content.children, true );
+        if ( intersects.length) {
+            targetMouse.position.copy( intersects[0].point )
+            //paddel.position.copy( intersects[0].point.add(new THREE.Vector3( 0, 20, 0 )) );
+
+            rayCallBack( targetMouse );
+        }
+    }
 
     view.changeMaterial = function ( type ) {
 
@@ -258,12 +315,14 @@ var view = ( function () {
             case 69:                   key[5] = 1; break; // E
             case 32:                   key[6] = 1; break; // space
             case 16:                   key[7] = 1; break; // shift
+
+            case 71:                   view.sh_grid(); break; // shift
         }
 
         // send to worker
         //ammo.send( 'key', key );
 
-        //console.log( String.fromCharCode(e.which) );
+        //console.log( e.which, String.fromCharCode(e.which) );
 
     };
 
@@ -292,6 +351,12 @@ var view = ( function () {
         return key;
 
     };
+
+    view.sh_grid = function(){
+
+        if(helper.visible) helper.visible = false;
+        else helper.visible = true;
+    }
 
     // LOAD
 
@@ -361,6 +426,8 @@ var view = ( function () {
     };
 
     view.reset = function () {
+
+        view.removeRay();
 
         var c, i;
 

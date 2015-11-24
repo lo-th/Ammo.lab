@@ -10,11 +10,7 @@ function demo () {
         ragdoll(i, 0, 2+(1.5*i), 0 );
 
     }
-
-
-
-
-}
+};
 
 function ragdoll (id, x, y, z) {
 
@@ -23,6 +19,10 @@ function ragdoll (id, x, y, z) {
     var p = {x:x, y:y, z:z};
     var spring = [2, 0.3, 0.1]; // softness, bias, relaxation
     var type = 'box';
+
+    // joint is default joint_hinge
+    // joint can be :
+    // joint_hinge, joint_p2p, joint_slider, joint_conetwist, joint_gear, joint_dof
 
     // body
 
@@ -65,4 +65,4 @@ function ragdoll (id, x, y, z) {
     add({type:"joint", body1:'L_leg'+id, body2:'LF_leg'+id, pos1:[0,-0.1,0], pos2:[0,0.1,0], axe1:[1,0,0], axe2:[1,0,0], min:2, max:60, collision:collision});
     add({type:"joint", body1:'R_leg'+id, body2:'RF_leg'+id, pos1:[0,-0.1,0], pos2:[0,0.1,0], axe1:[1,0,0], axe2:[1,0,0], min:2, max:60, collision:collision});
 
-}
+};

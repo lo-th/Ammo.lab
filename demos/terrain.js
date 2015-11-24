@@ -16,7 +16,7 @@ function demo() {
         restitution: 0.0,
     });
 
-    add ({ type:'sphere', size:[1], pos:[0,20,0], mass:0.2 });
+    add ({ type:'sphere', size:[1], pos:[0,20,5], mass:0.2 });
     add ({ type:'sphere', size:[1], pos:[5,20,5], mass:0.2 });
     add ({ type:'sphere', size:[1], pos:[-5,20,-5], mass:0.2 });
 

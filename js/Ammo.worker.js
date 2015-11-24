@@ -119,6 +119,8 @@ self.onmessage = function ( e ) {
 
     if(m == 'add') add( e.data.o );
 
+    if(m == 'set') set( e.data.o );
+
     if(m == 'vehicle') vehicle( e.data.o );
 
     if(m == 'character') character( e.data.o );
@@ -231,8 +233,8 @@ self.onmessage = function ( e ) {
             // speed km/h
             a[n+0] = b.getCurrentSpeedKmHour();//getRigidBody().getLinearVelocity().length() * 9.8;
 
-            b.getRigidBody().getMotionState().getWorldTransform( trans );
-            //trans = b.getRigidBody().getWorldTransform();
+            //b.getRigidBody().getMotionState().getWorldTransform( trans );
+            trans = b.getRigidBody().getWorldTransform();
             p = trans.getOrigin();
             r = trans.getRotation();
 
@@ -446,6 +448,22 @@ function dispose () {
 //
 //--------------------------------------------------
 
+function set ( o ) {
+
+    //console.log('yyy')
+
+    var b = getByName( o.name );
+
+    var t = new Ammo.btTransform();
+    t.setIdentity();
+    t.setOrigin( v3( o.pos ) );
+    t.setRotation( q4( o.quat ) );
+
+    //b.setWorldTransform(t);
+    b.getMotionState().setWorldTransform(t);
+
+};
+
 function add ( o, extra ) {
 
     var type = o.type || 'box';
@@ -572,12 +590,14 @@ function add ( o, extra ) {
         body.setCollisionFlags(o.flag || 0);
         //body.setCollisionFlags(1); 
         world.addRigidBody( body, o.group || 1, o.mask || -1 );
-        //console.log(body)
+        
     } else {
         body.setCollisionFlags(o.flag || 1); 
         //body.setCollisionFlags( FLAGS.STATIC_OBJECT | FLAGS.KINEMATIC_OBJECT ) ;
         world.addCollisionObject( body, o.group || 2, o.mask || -1 );
     }
+
+    //console.log(body.getMotionState())
 
 
     
