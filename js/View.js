@@ -397,7 +397,7 @@ var view = ( function () {
 
     view.findRotation = function ( r ) {
 
-        if( r[0] > Math.TwoPI || r[1] > Math.TwoPI || r[2] > Math.TwoPI ){
+        if( Math.abs(r[0]) > Math.TwoPI || Math.abs(r[1]) > Math.TwoPI || Math.abs(r[2]) > Math.TwoPI ){
             // is in degree
             r[0] *= Math.degtorad;
             r[1] *= Math.degtorad;
@@ -419,6 +419,20 @@ var view = ( function () {
         var pos = o.pos || [0,0,0];
         var rot = o.rot || [0,0,0];
         var mesh = null;
+
+        if(type.substring(0,5) == 'joint') {
+
+            if( ( Math.abs(o.min) > Math.TwoPI || Math.abs(o.max) > Math.TwoPI ) && type !== 'jointDistance' ){
+                // is in degree
+                o.min *= Math.degtorad;
+                o.max *= Math.degtorad;
+
+            } 
+
+            ammo.send( 'add', o );
+            return;
+
+        }
 
         if(type == 'plane'){
             helper.position.set( pos[0], pos[1], pos[2] )

@@ -696,7 +696,7 @@ function addJoint ( o ) {
             joint.get_m_setting().set_m_tau( o.strength || 0.1 );
             joint.get_m_setting().set_m_damping( o.damping || 1 ); 
         break;
-        case "joint_hinge": 
+        case "joint_hinge": case "joint":
             joint = new Ammo.btHingeConstraint( body1, body2, point1, point2, axe1, axe2, false);
             if( min!==0 || max!==0 ) joint.setLimit( min, max, softness, bias, relaxation);
         break;
@@ -792,9 +792,10 @@ function character ( o ) {
     body.setCollisionFlags( FLAGS.CHARACTER_OBJECT );
     body.setFriction( o.friction || 0.1 );
     body.setRestitution( o.restitution || 0 );
-    body.setActivationState( 4 );
+   
     ///ghostObject.collisionFlags = AWPCollisionFlags.CF_CHARACTER_OBJECT;*/
-    
+    body.setActivationState( 4 );
+    body.activate();
 
     var hero = new Ammo.btKinematicCharacterController( body, shape, stepHeight);
     //hero.setUseGhostSweepTest(true);
@@ -810,10 +811,10 @@ function character ( o ) {
     /*world.addCollisionObject( body, GROUP.CHARACTER_FILTER, GROUP.STATIC_FILTER | GROUP.DEFAULT_FILTER );
     //world.addCollisionObject( body );
     //world.addRigidBody( body );*/
-    //body.activate();
+    
 
     
-    world.addCollisionObject( body, o.group || 32, o.mask || 1|2 );
+    world.addCollisionObject( body, o.group || 32, o.mask || -1 );
     //world.addRigidBody( body)//, o.group || 32, o.mask || 1|2 );
     world.addAction( hero ); 
 
