@@ -24,7 +24,7 @@ function rayMove ( m ) {
 
     var o = {
         name:'bob',
-        pos:[m.position.x, m.position.y, m.position.z],
+        pos:[m.position.x, m.position.y+1.1, m.position.z],
         quat: m.quaternion.toArray()
     }
 
