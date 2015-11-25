@@ -14,7 +14,10 @@ function afterLoad () {
 
     // ammo car shape
 
-    // ! \\ click on view and use key to controle car
+    // ! \\ click on view and use key to controle character
+
+    // ? \\ character don't work now
+
 
     character ({ 
         flag:16,

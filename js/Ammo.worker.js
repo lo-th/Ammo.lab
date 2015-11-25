@@ -20,7 +20,7 @@ var solver, collision, dispatcher, broadphase, trans;
 var bodys, joints, cars, solids, heros, carsInfo;
 
 var dt = 0.01667;//6;//7;
-var it = 1;//1;//2;
+var it = 1;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
@@ -33,7 +33,7 @@ var tmpset = null;
 
 // main transphere array
 var ar = new Float32Array( 1000*8 ); // rigid buffer max 1000
-var dr = new Float32Array( 10*40 ); // car buffer max 10
+var dr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
 var jr = new Float32Array( 100*4 ); // joint buffer max 100
 var hr = new Float32Array( 10*8 ); // hero buffer max 10
 
@@ -232,7 +232,7 @@ self.onmessage = function ( e ) {
 
         while(i--){
 
-            n = i * 40;
+            n = i * 56;
             b = cars[i];
 
             // speed km/h
@@ -254,7 +254,8 @@ self.onmessage = function ( e ) {
             a[n+7] = r.w();
 
             // wheels pos / rot
-            j = 4;
+            a[n+8] = b.getNumWheels();
+            j = a[n+8];//2, 4 or 6;
             while(j--){
                 b.updateWheelTransform( j, true );
                 t = b.getWheelTransformWS( j );
@@ -263,8 +264,8 @@ self.onmessage = function ( e ) {
                
                 w = 8 * ( j + 1 );
 
-                if( j == 0 ) a[n+w] = b.getWheelInfo(0).get_m_steering();
-                else a[n+w] = i;
+                if( j == 1 ) a[n+w] = b.getWheelInfo(0).get_m_steering();
+                //else a[n+w] = i;
                 a[n+w+1] = p.x();
                 a[n+w+2] = p.y();
                 a[n+w+3] = p.z();
@@ -493,7 +494,7 @@ function add ( o, extra ) {
     var pos = o.pos || [0,0,0];
     var quat = o.quat || [0,0,0,1];
     //var rot = o.rot || [0,0,0];
-    var margin = o.margin || 0.05;
+    var margin = o.margin || 0.04; // 0.04 is default
 
     if( type == 'terrain' ){
         var div = o.div || [64,64];
@@ -525,7 +526,7 @@ function add ( o, extra ) {
         case 'box': shape = new Ammo.btBoxShape( vec3( size[0]*0.5, size[1]*0.5, size[2]*0.5 ) ); break;
         case 'sphere': shape = new Ammo.btSphereShape(size[0]); break;  
         case 'cylinder': shape = new Ammo.btCylinderShape(vec3(size[0], size[1]*0.5, size[1]*0.5)); break;
-        case 'cone': shape = new Ammo.btConeShape(size[0], size[1]*0.5); break;
+        case 'cone': shape = new Ammo.btConeShape( size[0], size[1]*0.5 ); break;
         case 'capsule': shape = new Ammo.btCapsuleShape(size[0], size[1]*0.5); break;
         
         case 'compound': shape = new Ammo.btCompoundShape(); break;
@@ -905,8 +906,6 @@ function vehicle ( o ) {
     var size = o.size || [2,0.5,4];
     var pos = o.pos || [0,0,0];
     var quat = o.quat || [0,0,0,1];
-
-    //var limiteY = o.limiteY || 20;
     var massCenter = o.massCenter || [0,0.25,0];
 
     // wheels
@@ -938,10 +937,6 @@ function vehicle ( o ) {
         maxEngine:600 
     };
 
-    var incEngine = 5;
-    var maxSteering = Math.PI / 6;
-    var incSteering = 0.01;
-
     var shape;
     if(o.carshape) shape = add( { type:'convex', v:o.carshape }, 'isShape');
     else shape = add( { type:'box', size:size }, 'isShape');
@@ -960,7 +955,7 @@ function vehicle ( o ) {
     startTransform.setOrigin( v3( pos ) );
     startTransform.setRotation( q4( quat ) );
 
-    var localInertia = vec3(0, 0, 0);
+    var localInertia = vec3();
     compound.calculateLocalInertia( setting.mass, localInertia );
     //shape.calculateLocalInertia( mass, localInertia );
     var motionState = new Ammo.btDefaultMotionState( startTransform );
@@ -975,8 +970,8 @@ function vehicle ( o ) {
 
     var body = new Ammo.btRigidBody( rb );
     //body.setCenterOfMassTransform( localTransform );
-    body.setAngularVelocity( vec3( 0, 0, 0));
-    body.setLinearVelocity( vec3( 0, 0, 0));
+    body.setAngularVelocity( vec3() );
+    body.setLinearVelocity( vec3() );
     body.setActivationState( 4 );
 
     //console.log( body );
@@ -997,11 +992,25 @@ function vehicle ( o ) {
     var car = new Ammo.btRaycastVehicle(tuning, body, vehicleRayCaster);
     car.setCoordinateSystem( 0, 1, 2 );
 
-    addWheel( car, wPos[0], wPos[1], wPos[2], radius, tuning, setting, true);
-    addWheel( car, -wPos[0], wPos[1], wPos[2], radius, tuning, setting, true);
-    addWheel( car, -wPos[0], wPos[1], -wPos[2], radius, tuning, setting, false);
-    addWheel( car, wPos[0], wPos[1], -wPos[2], radius, tuning, setting, false);
+    var numWheels = o.numWheels || 4, p, fw;
+
+    for( var i = 0; i < numWheels; i++ ){
+
+        if(i==0){ p = vec3(  wPos[0], wPos[1],  wPos[2] ); fw = true; }
+        if(i==1){ p = vec3( -wPos[0], wPos[1],  wPos[2] ); fw = true; }
+        if(i==2){ p = vec3( -wPos[0], wPos[1], -wPos[2] ); fw = false; }
+        if(i==3){ p = vec3(  wPos[0], wPos[1], -wPos[2] ); fw = false; }
+        if(i==4){ p = vec3( -wPos[0], wPos[1], -wPos[3] ); fw = false; }
+        if(i==5){ p = vec3(  wPos[0], wPos[1], -wPos[3] ); fw = false; }
+
+        if( numWheels == 2 ){ // moto
+            if(i==1){ p = vec3( -wPos[0], wPos[1],  -wPos[2] ); fw = false; }
+        }
+
+        addWheel( car, p, radius, tuning, setting, fw );
     
+    };
+
     world.addAction( car );
     world.addRigidBody( body );
 
@@ -1016,12 +1025,12 @@ function vehicle ( o ) {
 
 };
 
-function addWheel ( car, x,y,z, radius, tuning, setting, isFrontWheel ) {
+function addWheel ( car, p, radius, tuning, setting, isFrontWheel ) {
 
     var wheelDir = vec3(0, -1, 0);
     var wheelAxe = vec3(-1, 0, 0);
 
-    var wheel = car.addWheel( vec3(x, y, z), wheelDir, wheelAxe, setting.reslength, radius, tuning, isFrontWheel);
+    var wheel = car.addWheel( p, wheelDir, wheelAxe, setting.reslength, radius, tuning, isFrontWheel );
     wheel.set_m_rollInfluence( setting.roll );
 
 };
@@ -1033,6 +1042,7 @@ function drive ( id ) {
 
     var car = cars[id];
     var u = carsInfo[id];
+    var wn = car.getNumWheels();
 
     if( key[2] == 1 ) u.steering += u.incSteering;
     if( key[3] == 1 ) u.steering -= u.incSteering;
@@ -1051,9 +1061,10 @@ function drive ( id ) {
         else { u.engine = 0; u.breaking = 10; }
     }
 
-    var i = car.getNumWheels();
+    var i = wn;
     while(i--){
-        if( i == 0 || i == 1 ) car.setSteeringValue( u.steering, i );
+        if( i == 0 ) car.setSteeringValue( u.steering, i );
+        if(wn !== 2 && i == 1 ) car.setSteeringValue( u.steering, i );
         car.applyEngineForce( u.engine, i );
         car.setBrake( u.breaking, i );
     }

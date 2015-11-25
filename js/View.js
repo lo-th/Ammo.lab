@@ -44,7 +44,7 @@ var view = ( function () {
 
     view = function () {};
 
-    view.init = function () {
+    view.init = function ( callback ) {
 
         debug = document.getElementById('debug');
 
@@ -80,7 +80,7 @@ var view = ( function () {
 
         // CAMERA / CONTROLER
 
-        camera = new THREE.PerspectiveCamera( 60 , 1 , 1, 1000 );
+        camera = new THREE.PerspectiveCamera( 60 , 1 , 0.1, 1000 );
         camera.position.set( 0, 0, 30 );
         controls = new THREE.OrbitControls( camera, canvas );
         controls.target.set( 0, 0, 0 );
@@ -127,7 +127,10 @@ var view = ( function () {
         
 
         this.resize();
-        this.initEnv()
+        this.initEnv();
+
+        // charge basic geometry
+        this.load ( 'basic', callback );
 
     };
 
@@ -684,9 +687,15 @@ var view = ( function () {
 
         var w = [];
 
+        var gw = geo['wheel'];
+        var gwr = geo['wheel'].clone();
+        gwr.rotateY( Math.PI );
+        extraGeo.push( gwr );
+
         var i = 4;
         while(i--){
-            w[i] = new THREE.Mesh( geo['wheel'], mat.move );
+            if(i==1 || i==2) w[i] = new THREE.Mesh( gw, mat.move );
+            else w[i] = new THREE.Mesh( gwr, mat.move );
             w[i].scale.set( deep, radius, radius );
 
             //w[i].position.set( pos[0], pos[1], pos[2] );
@@ -828,15 +837,16 @@ var view = ( function () {
 
         while(i--){
             m = cars[i];
-            n = i * 40;
+            n = i * 56;
 
             m.body.position.set( a[n+1], a[n+2], a[n+3] );
             m.body.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
 
-            j = 4;
+            j = a[n+8];
             while(j--){
 
                w = 8 * ( j + 1 );
+               //if( j == 1 ) steering = a[n+w];// for drive wheel
                m.w[j].position.set( a[n+w+1], a[n+w+2], a[n+w+3] );
                m.w[j].quaternion.set( a[n+w+4], a[n+w+5], a[n+w+6], a[n+w+7] );
 

@@ -27,7 +27,7 @@
 <script>
 var demo;
 var demoName = 'basic';
-var demos = [ 'basic', 'terrain', 'supermaket', 'loadtest', 'car', 'character', 'collision', 'ragdoll', 'kinematics' ];
+var demos = [ 'basic', 'terrain', 'supermaket', 'car', 'character', 'collision', 'ragdoll', 'kinematics', 'multyCars' ];
 
 intro.init();
 extract.init(['z/code.z', 'z/three.z', 'z/ammo.z'], init, [0,0,1]);
@@ -35,16 +35,19 @@ extract.init(['z/code.z', 'z/three.z', 'z/ammo.z'], init, [0,0,1]);
 function init(){
 
     intro.clear();
+    view.init( afterLoad );
 
-    view.init();
+};
+
+function afterLoad () {
+
     editor.init( launch );
     ammo.init( ready );
-
     loop();
 
-}
+};
 
-function ready() {
+function ready () {
 
     var hash = location.hash.substr( 1 );
 
@@ -53,7 +56,7 @@ function ready() {
 
 };
 
-function loop() {
+function loop () {
 
     view.render();
     requestAnimationFrame(loop);
