@@ -910,7 +910,7 @@ function vehicle ( o ) {
 
     // wheels
     var radius = o.radius || 0.4;
-    var deep = o.deep || 0.3;
+    //var deep = o.deep || 0.3;
     var wPos = o.wPos || [1, 0, 1.6];
 
     var setting = o.setting || {
@@ -938,7 +938,8 @@ function vehicle ( o ) {
     };
 
     var shape;
-    if(o.carshape) shape = add( { type:'convex', v:o.carshape }, 'isShape');
+    if( type == 'mesh' ) shape = add( { type:'mesh', v:o.v }, 'isShape');
+    else if( type == 'convex' ) shape = add( { type:'convex', v:o.v }, 'isShape');
     else shape = add( { type:'box', size:size }, 'isShape');
     
     var compound = new Ammo.btCompoundShape();
@@ -992,7 +993,7 @@ function vehicle ( o ) {
     var car = new Ammo.btRaycastVehicle(tuning, body, vehicleRayCaster);
     car.setCoordinateSystem( 0, 1, 2 );
 
-    var numWheels = o.numWheels || 4, p, fw;
+    var numWheels = o.nw || 4, p, fw;
 
     for( var i = 0; i < numWheels; i++ ){
 

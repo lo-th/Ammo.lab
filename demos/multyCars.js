@@ -6,25 +6,80 @@ function demo () {
 
 }
 
+var CARS = [
+   { size:[1.8, 1.4, 4.8],  n:'001', name:'fordM'  , wPos:[0.76, 0, 1.46],       radius:0.36, nw:4, w:'1', mass:1109 },
+   { size:[1.8, 1.8, 4.5],  n:'002', name:'vaz'    , wPos:[0.72, 0, 1.31],       radius:0.36, nw:4, w:'1', mass:1003 },
+   { size:[2.2, 1.5, 5.0],  n:'003', name:'coupe'  , wPos:[0.96, 0, 1.49],       radius:0.36, nw:4, w:'1', mass:900 },
+   { size:[2.2, 1.9, 5.2],  n:'004', name:'c4'     , wPos:[0.93, 0, 1.65],       radius:0.40, nw:4, w:'2', mass:1181 },
+   { size:[2.2, 1.8, 5.2],  n:'005', name:'ben'    , wPos:[0.88, 0, 1.58],       radius:0.40, nw:4, w:'2' },
+   { size:[2.1, 1.7, 5.4],  n:'006', name:'taxi'   , wPos:[0.90, 0, 1.49],       radius:0.40, nw:4, w:'2' },
+   { size:[2.2, 1.9, 5.4],  n:'007', name:'207'    , wPos:[0.94, 0, 1.60],       radius:0.40, nw:4, w:'2', mass:1156 },
+   { size:[2.3, 1.7, 5.9],  n:'008', name:'police' , wPos:[0.96, 0, 1.67],       radius:0.40, nw:4, w:'2' },
+   { size:[2.7, 2.6, 6.2],  n:'009', name:'van1'   , wPos:[1.14, 0, 1.95],       radius:0.46, nw:4, w:'3' },
+   { size:[2.2, 2.8, 6.6],  n:'010', name:'van2'   , wPos:[0.89, 0, 2.10],       radius:0.40, nw:4, w:'2' },
+   { size:[2.8, 3.2, 7.0],  n:'011', name:'van3'   , wPos:[0.90, 0.26, 1.83],    radius:0.46, nw:4, w:'3', mass:2400 },
+   { size:[2.8, 3.9, 8.9],  n:'012', name:'truck1' , wPos:[1.00, 0, 2.58, 1.23], radius:0.57, nw:6, w:'4' },
+   { size:[3.0, 3.4, 10.6], n:'013', name:'truck2' , wPos:[1.17, 0, 3.64, 2.37], radius:0.57, nw:6, w:'4' },
+   { size:[3.0, 3.4, 12.7], n:'014', name:'bus'    , wPos:[1.25, 0, 2.49],       radius:0.64, nw:4, w:'5', mass:11450 },
+];
+
 function afterLoad () {
 
     add({type:'plane'}); // infinie plane
 
-    var CARS = [
-       { size:[1.8, 1.4, 4.8],  n:'001', name:'fordM'  , wPos:[0.76, 0, 1.46],       nr:0.36, nw:4 },
-       { size:[1.8, 1.8, 4.5],  n:'002', name:'vaz'    , wPos:[0.72, 0, 1.31],       nr:0.36, nw:4 },
-       { size:[2.2, 1.5, 5.0],  n:'003', name:'coupe'  , wPos:[0.96, 0, 1.49],       nr:0.36, nw:4 },
-       { size:[2.2, 1.9, 5.2],  n:'004', name:'c4'     , wPos:[0.93, 0, 1.65],       nr:0.40, nw:4 },
-       { size:[2.2, 1.8, 5.2],  n:'005', name:'ben'    , wPos:[0.88, 0, 1.58],       nr:0.40, nw:4 },
-       { size:[2.1, 1.7, 5.4],  n:'006', name:'taxi'   , wPos:[0.90, 0, 1.49],       nr:0.40, nw:4 },
-       { size:[2.2, 1.9, 5.4],  n:'007', name:'207'    , wPos:[0.94, 0, 1.60],       nr:0.40, nw:4 },
-       { size:[2.3, 1.7, 5.9],  n:'008', name:'police' , wPos:[0.96, 0, 1.67],       nr:0.40, nw:4 },
-       { size:[2.7, 2.6, 6.2],  n:'009', name:'van1'   , wPos:[1.14, 0, 1.95],       nr:0.46, nw:4 },
-       { size:[2.2, 2.8, 6.6],  n:'010', name:'van2'   , wPos:[0.89, 0, 2.10],       nr:0.40, nw:4 },
-       { size:[2.8, 3.2, 7.0],  n:'011', name:'van3'   , wPos:[0.90, 0.26, 1.83],    nr:0.46, nw:4 },
-       { size:[2.8, 3.9, 8.9],  n:'012', name:'truck1' , wPos:[1.00, 0, 2.58, 1.23], nr:0.57, nw:6 },
-       { size:[3.0, 3.4, 10.6], n:'013', name:'truck2' , wPos:[1.17, 0, 3.64, 2.37], nr:0.57, nw:6 },
-       { size:[3.0, 3.4, 12.7], n:'014', name:'bus'    , wPos:[1.25, 0, 2.49],       nr:0.64, nw:4 },
-    ];
+    preparGeometry();
+    for (var i = 0; i<CARS.length; i++){
+        addVehicle( i, [-25+(i*4), 5,0], 'convex');
+    }
+
+}
+
+function preparGeometry(){
+    var geo = view.getGeo();
+    var i = CARS.length, o;
+    while(i--){
+        o = CARS[i];
+        geo['mcar'+o.n].translate( 0, -o.radius, 0 );
+        geo['down'+o.n].translate( 0, -o.radius, 0 );
+        if( geo['inside'+o.n] ) geo['inside'+o.n].translate( 0, -o.radius, 0 );
+    }
+}
+
+
+function addVehicle (id, pos, type) {
+
+    var o = CARS[id];
+    o.type = type || 'box';
+    var geo = view.getGeo();
+    var mat = view.getMat();
+    o.pos = pos || [0,10,0];
+
+    var chassis = geo['mcar'+o.n];
+    var down = geo['down'+o.n];
+    var inside = geo['inside'+o.n] ? geo['inside'+o.n] : null;
+    
+    var mesh = new THREE.Group();
+
+    mesh.add( new THREE.Mesh( chassis, mat.move ));
+    mesh.add( new THREE.Mesh( down, mat.move ));
+    if( inside ) mesh.add( new THREE.Mesh( inside, mat.move ));
+
+
+    o.massCenter = [0,o.radius,0];
+
+    if(o.type == 'mesh'){
+        o.v = view.getFaces( chassis );
+    }else if(o.type == 'convex'){
+        o.massCenter = [0,-o.radius,0];
+        o.v = view.getVertex( chassis );
+        mesh.children[0].position.y = -o.radius*0.25;
+        mesh.children[1].position.y = -o.radius*0.25;
+        if(mesh.children[2]) mesh.children[2].position.y = -o.radius*0.25;
+    }
+    
+    o.mesh = mesh;
+    o.wheel = geo['w00' + o.w ];
+
+    car( o );
 
 }

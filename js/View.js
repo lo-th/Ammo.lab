@@ -134,6 +134,18 @@ var view = ( function () {
 
     };
 
+    view.getGeo = function () {
+        return geo;
+    };
+
+    view.getMat = function () {
+        return mat;
+    };
+
+    view.getScene = function () {
+        return scene;
+    };
+
     view.removeRay = function(){
         if(isWithRay){
             isWithRay = false;
@@ -184,7 +196,7 @@ var view = ( function () {
 
     view.changeMaterial = function ( type ) {
 
-        var m, matType, name, i, j;
+        var m, matType, name, i, j, k;
 
         if( type == 0 ) {
             isWirframe = true;
@@ -223,9 +235,18 @@ var view = ( function () {
 
         i = cars.length;
         while(i--){
-            name = cars[i].body.material.name;
-            cars[i].body.material = mat[name];
-            j = 4;
+            if(cars[i].body.material == undefined){
+                k = cars[i].body.children.length;
+                while(k--){
+                    name = cars[i].body.children[k].material.name;
+                    cars[i].body.children[k].material = mat[name]
+                }
+            }else{
+                name = cars[i].body.material.name;
+                cars[i].body.material = mat[name];
+            }
+            
+            j = cars[i].w.length;
             while(j--){
                 name = cars[i].w[j].material.name;
                 cars[i].w[j].material = mat[name];
@@ -457,7 +478,7 @@ var view = ( function () {
         while( cars.length > 0 ){
             c = cars.pop();
             scene.remove( c.body );
-            i = 4;
+            i = c.w.length;
             while(i--){
                 scene.remove( c.w[i] );
             }
@@ -541,8 +562,8 @@ var view = ( function () {
         if( o.shape ) o.type = o.shape;
 
 
-        if(o.type == 'mesh') o.v = view.getFaces( geo[type], size );
-        if(o.type == 'convex') o.v = view.getVertex( geo[type], size );
+        if(o.type == 'mesh') o.v = view.getFaces( geo[type] );
+        if(o.type == 'convex') o.v = view.getVertex( geo[type] );
 
         // color
         //this.meshColor( mesh, 1, 0.5, 0 );
@@ -580,7 +601,7 @@ var view = ( function () {
             }
         }
 
-        console.log(v)
+        //console.log(v)
         return v;
 
     };
@@ -663,10 +684,16 @@ var view = ( function () {
         this.findRotation( rot );
 
         // chassis
-        var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
-        g.translate( massCenter[0], massCenter[1], massCenter[2] );
-        extraGeo.push( g );
-        var mesh = new THREE.Mesh( g, mat.move );
+        var mesh;
+        if( o.mesh ){ 
+            mesh = o.mesh;
+        } else {
+            var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
+            g.translate( massCenter[0], massCenter[1], massCenter[2] );
+            extraGeo.push( g );
+            mesh = new THREE.Mesh( g, mat.move );
+        } 
+        
 
         //mesh.scale.set( size[0], size[1], size[2] );
         mesh.position.set( pos[0], pos[1], pos[2] );
@@ -687,25 +714,28 @@ var view = ( function () {
 
         var w = [];
 
-        var gw = geo['wheel'];
-        var gwr = geo['wheel'].clone();
+        var needScale = o.wheel==undefined ? true : false;
+
+        var gw = o.wheel || geo['wheel'];
+        var gwr = gw.clone();
         gwr.rotateY( Math.PI );
         extraGeo.push( gwr );
 
-        var i = 4;
+        var i = o.nw || 4;
         while(i--){
             if(i==1 || i==2) w[i] = new THREE.Mesh( gw, mat.move );
             else w[i] = new THREE.Mesh( gwr, mat.move );
-            w[i].scale.set( deep, radius, radius );
+            if( needScale) w[i].scale.set( deep, radius, radius )
 
-            //w[i].position.set( pos[0], pos[1], pos[2] );
-            //w[i].rotation.set( rot[0], rot[1], rot[2] );
             scene.add( w[i] );
         }
 
         var car = { body:mesh, w:w };
 
         cars.push( car );
+
+        if( o.mesh ) o.mesh = null;
+        if( o.wheel ) o.wheel = null;
 
         // send to worker
         ammo.send( 'vehicle', o );
