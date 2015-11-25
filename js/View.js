@@ -38,6 +38,8 @@ var view = ( function () {
 
     var key = [ 0,0,0,0,0,0,0,0 ];
 
+    var imagesLoader;
+
     var environment, envcontext, nEnv = 0, isWirframe = true;
     var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
 
@@ -102,6 +104,7 @@ var view = ( function () {
         mat['statique'] = new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6 });
         mat['hero'] = new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
+        mat['cars'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'cars', wireframe:true, transparent:true });
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
 
@@ -124,6 +127,8 @@ var view = ( function () {
         document.addEventListener( 'keydown', view.keyDown, false );
         document.addEventListener( 'keyup', view.keyUp, false );
 
+        imagesLoader = new THREE.TextureLoader();
+
         
 
         this.resize();
@@ -133,6 +138,15 @@ var view = ( function () {
         this.load ( 'basic', callback );
 
     };
+
+    view.addMap = function(name, matName) {
+        var map = imagesLoader.load( "textures/"+ name );
+        //map.wrapS = THREE.RepeatWrapping;
+        //map.wrapT = THREE.RepeatWrapping;
+        map.flipY = false;
+
+        mat[matName].map = map;
+    }
 
     view.getGeo = function () {
         return geo;
@@ -211,7 +225,7 @@ var view = ( function () {
         for( var old in mat ) {
             m = mat[old];
             name = m.name;
-            mat[name] = new THREE[matType]({ vertexColors:m.vertexColors, color:m.color.getHex(), name:name, wireframe:isWirframe, transparent:m.transparent, opacity:m.opacity });
+            mat[name] = new THREE[matType]({ map:m.map, vertexColors:m.vertexColors, color:m.color.getHex(), name:name, wireframe:isWirframe, transparent:m.transparent, opacity:m.opacity });
             if(!isWirframe){
                 mat[name].envMap = envMap;
                 mat[name].metalness = 0.8;
@@ -725,7 +739,8 @@ var view = ( function () {
         while(i--){
             if(i==1 || i==2) w[i] = new THREE.Mesh( gw, mat.move );
             else w[i] = new THREE.Mesh( gwr, mat.move );
-            if( needScale) w[i].scale.set( deep, radius, radius )
+            if( needScale ) w[i].scale.set( deep, radius, radius );
+            else w[i].material = mat.cars;
 
             scene.add( w[i] );
         }

@@ -7,25 +7,27 @@ function demo () {
 }
 
 var CARS = [
-   { size:[1.8, 1.4, 4.8],  n:'001', name:'fordM'  , wPos:[0.76, 0, 1.46],       radius:0.36, nw:4, w:'1', mass:1109 },
-   { size:[1.8, 1.8, 4.5],  n:'002', name:'vaz'    , wPos:[0.72, 0, 1.31],       radius:0.36, nw:4, w:'1', mass:1003 },
-   { size:[2.2, 1.5, 5.0],  n:'003', name:'coupe'  , wPos:[0.96, 0, 1.49],       radius:0.36, nw:4, w:'1', mass:900 },
-   { size:[2.2, 1.9, 5.2],  n:'004', name:'c4'     , wPos:[0.93, 0, 1.65],       radius:0.40, nw:4, w:'2', mass:1181 },
-   { size:[2.2, 1.8, 5.2],  n:'005', name:'ben'    , wPos:[0.88, 0, 1.58],       radius:0.40, nw:4, w:'2' },
-   { size:[2.1, 1.7, 5.4],  n:'006', name:'taxi'   , wPos:[0.90, 0, 1.49],       radius:0.40, nw:4, w:'2' },
-   { size:[2.2, 1.9, 5.4],  n:'007', name:'207'    , wPos:[0.94, 0, 1.60],       radius:0.40, nw:4, w:'2', mass:1156 },
-   { size:[2.3, 1.7, 5.9],  n:'008', name:'police' , wPos:[0.96, 0, 1.67],       radius:0.40, nw:4, w:'2' },
-   { size:[2.7, 2.6, 6.2],  n:'009', name:'van1'   , wPos:[1.14, 0, 1.95],       radius:0.46, nw:4, w:'3' },
-   { size:[2.2, 2.8, 6.6],  n:'010', name:'van2'   , wPos:[0.89, 0, 2.10],       radius:0.40, nw:4, w:'2' },
-   { size:[2.8, 3.2, 7.0],  n:'011', name:'van3'   , wPos:[0.90, 0.26, 1.83],    radius:0.46, nw:4, w:'3', mass:2400 },
-   { size:[2.8, 3.9, 8.9],  n:'012', name:'truck1' , wPos:[1.00, 0, 2.58, 1.23], radius:0.57, nw:6, w:'4' },
-   { size:[3.0, 3.4, 10.6], n:'013', name:'truck2' , wPos:[1.17, 0, 3.64, 2.37], radius:0.57, nw:6, w:'4' },
-   { size:[3.0, 3.4, 12.7], n:'014', name:'bus'    , wPos:[1.25, 0, 2.49],       radius:0.64, nw:4, w:'5', mass:11450 },
+   { size:[1.8, 1.4, 4.8],  n:'001', name:'fordM'  , wPos:[0.76, 0, 1.46],          radius:0.36, nw:4, w:'1', mass:1109 },
+   { size:[1.8, 1.8, 4.5],  n:'002', name:'vaz'    , wPos:[0.72, 0, 1.31],          radius:0.36, nw:4, w:'1', mass:1003 },
+   { size:[2.2, 1.5, 5.0],  n:'003', name:'coupe'  , wPos:[0.96, 0, 1.49],          radius:0.36, nw:4, w:'1', mass:900 },
+   { size:[2.2, 1.9, 5.2],  n:'004', name:'c4'     , wPos:[0.93, 0, 1.65],          radius:0.40, nw:4, w:'2', mass:1181 },
+   { size:[2.2, 1.8, 5.2],  n:'005', name:'ben'    , wPos:[0.88, 0, 1.58],          radius:0.40, nw:4, w:'2' },
+   { size:[2.1, 1.7, 5.4],  n:'006', name:'taxi'   , wPos:[0.90, 0, 1.49],          radius:0.40, nw:4, w:'2' },
+   { size:[2.2, 1.9, 5.4],  n:'007', name:'207'    , wPos:[0.94, 0, 1.60],          radius:0.40, nw:4, w:'2', mass:1156 },
+   { size:[2.3, 1.7, 5.9],  n:'008', name:'police' , wPos:[0.96, 0, 1.67],          radius:0.40, nw:4, w:'2' },
+   { size:[2.7, 2.6, 6.2],  n:'009', name:'van1'   , wPos:[1.14, 0, 1.95],          radius:0.46, nw:4, w:'3' },
+   { size:[2.2, 2.8, 6.6],  n:'010', name:'van2'   , wPos:[0.89, 0, 2.10],          radius:0.40, nw:4, w:'2' },
+   { size:[2.8, 3.2, 7.0],  n:'011', name:'van3'   , wPos:[0.90, 0, 1.83, 0, 0.26], radius:0.46, nw:4, w:'3', mass:2400 },
+   { size:[2.8, 3.9, 8.9],  n:'012', name:'truck1' , wPos:[1.00, 0, 2.58, 1.23],    radius:0.57, nw:6, w:'4' },
+   { size:[3.0, 3.4, 10.6], n:'013', name:'truck2' , wPos:[1.17, 0, 3.64, 2.37],    radius:0.57, nw:6, w:'4' },
+   { size:[3.0, 3.4, 12.7], n:'014', name:'bus'    , wPos:[1.25, 0, 2.49],          radius:0.64, nw:4, w:'5', mass:11450 },
 ];
 
 function afterLoad () {
 
     add({type:'plane'}); // infinie plane
+
+    view.addMap('cars.png', 'cars');
 
     preparGeometry();
     for (var i = 0; i<CARS.length; i++){
@@ -60,8 +62,8 @@ function addVehicle (id, pos, type) {
     
     var mesh = new THREE.Group();
 
-    mesh.add( new THREE.Mesh( chassis, mat.move ));
-    mesh.add( new THREE.Mesh( down, mat.move ));
+    mesh.add( new THREE.Mesh( chassis, mat.cars ));
+    mesh.add( new THREE.Mesh( down, mat.cars ));
     if( inside ) mesh.add( new THREE.Mesh( inside, mat.move ));
 
 
