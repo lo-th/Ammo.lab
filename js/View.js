@@ -438,6 +438,7 @@ var view = ( function () {
 
         if (currentCar == -1) return;
         if( carsSpeed[currentCar] < 10 && carsSpeed[currentCar] > -10 ) return;
+        if(cars[currentCar] == undefined ) return;
 
         var mesh = cars[currentCar].body;
 
@@ -459,7 +460,8 @@ var view = ( function () {
     view.moveCamera = function ( h, v, d, target ) {
 
         if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
-        camera.position.copy( this.orbit( h, v-90, d ) );
+        //camera.position.copy( this.orbit( h, v-90, d ) );
+        camera.position.lerp( this.orbit( h, v-90, d ), 0.3 );
         controls.update();
 
     };
