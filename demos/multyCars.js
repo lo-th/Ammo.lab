@@ -18,9 +18,10 @@ function afterLoad () {
         addVehicle( i, [-25+(i*4), 5,0], 'convex');
     }
 
-    // ! \\ set the car we drive n: 0 to 13
+    // ! \\ set the car we drive 0 to 13
     // use keyboard to controle car 
-    ammo.send('setDriveCar', { n:0 });
+    view.setDriveCar( 0 );
+    view.activeFollow();
 
 };
 

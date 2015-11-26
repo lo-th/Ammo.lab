@@ -30,6 +30,7 @@ var view = ( function () {
     var statics = [];
     var terrains = [];
     var cars = [];
+    var carsSpeed = [];
     var heros = [];
     var extraGeo = [];
 
@@ -39,6 +40,8 @@ var view = ( function () {
     var key = [ 0,0,0,0,0,0,0,0 ];
 
     var imagesLoader;
+    var currentCar = -1;
+    var isCamFollow = false;
 
     var environment, envcontext, nEnv = 0, isWirframe = true;
     var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
@@ -423,7 +426,35 @@ var view = ( function () {
 
     // CAMERA
 
-    view.moveCamera = function( h, v, d, target ){
+    view.activeFollow = function () {
+
+        isCamFollow = true;
+
+    };
+
+    view.follow = function () {
+
+        if (currentCar == -1) return;
+        if( carsSpeed[currentCar] < 10 && carsSpeed[currentCar] > -10 ) return;
+
+        var mesh = cars[currentCar].body;
+
+        var matrix = new THREE.Matrix4();
+        matrix.extractRotation( mesh.matrix );
+
+        var front = new THREE.Vector3( 0, 0, 1 );
+        front.applyMatrix4( matrix );
+        //matrix.multiplyVector3( front );
+
+        var target = mesh.position;
+        //var front = cars[currentCar].body.position;
+        var h = Math.atan2( front.z, front.x ) * Math.radtodeg;
+
+        view.moveCamera( h, 20, 10, target );
+
+    };
+
+    view.moveCamera = function ( h, v, d, target ) {
 
         if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
         camera.position.copy( this.orbit( h, v-90, d ) );
@@ -442,6 +473,13 @@ var view = ( function () {
         return p;
 
     };
+
+    view.setDriveCar = function ( n ) {
+
+        currentCar = n;
+        ammo.send('setDriveCar', { n:n });
+
+    }
 
     view.capsuleGeo = function( radius, height, SRadius, SHeight ) {
 
@@ -491,6 +529,7 @@ var view = ( function () {
 
         while( cars.length > 0 ){
             c = cars.pop();
+            carsSpeed.pop();
             scene.remove( c.body );
             i = c.w.length;
             while(i--){
@@ -748,6 +787,7 @@ var view = ( function () {
         var car = { body:mesh, w:w };
 
         cars.push( car );
+        carsSpeed.push( 0 );
 
         if( o.mesh ) o.mesh = null;
         if( o.wheel ) o.wheel = null;
@@ -884,6 +924,8 @@ var view = ( function () {
             m = cars[i];
             n = i * 56;
 
+            carsSpeed[i] = a[n];
+
             m.body.position.set( a[n+1], a[n+2], a[n+3] );
             m.body.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
 
@@ -929,6 +971,7 @@ var view = ( function () {
 
     view.render = function () {
 
+        if( isCamFollow ) this.follow();
         renderer.render( scene, camera );
 
     };
