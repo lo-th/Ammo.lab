@@ -498,7 +498,7 @@ function add ( o, extra ) {
     var pos = o.pos || [0,0,0];
     var quat = o.quat || [0,0,0,1];
     //var rot = o.rot || [0,0,0];
-    var margin = o.margin || 0.04; // 0.04 is default
+    var margin = o.margin || 0.04; // 0.04 is default // 0.005
 
     if( type == 'terrain' ){
         var div = o.div || [64,64];
@@ -575,7 +575,7 @@ function add ( o, extra ) {
 
     }
 
-    if(shape.setMargin){ shape.setMargin( margin ); }
+    if(shape.setMargin !== undefined ){ shape.setMargin( margin ); }
 
     if( extra == 'isShape' ) return shape;
     if( extra == 'isGhost' ){ 

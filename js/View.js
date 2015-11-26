@@ -62,7 +62,7 @@ var view = ( function () {
         try {
             renderer = new THREE.WebGLRenderer({canvas:canvas, precision:"mediump", antialias:true, alpha:true });
         } catch( error ) {
-            view.errorMsg('<p>Sorry, your browser does not support WebGL.</p>'
+            intro.message('<p>Sorry, your browser does not support WebGL.</p>'
                         + '<p>This application uses WebGL to quickly draw'
                         + ' AMMO Physics.</p>'
                         + '<p>AMMO Physics can be used without WebGL, but unfortunately'
@@ -70,6 +70,8 @@ var view = ( function () {
                         + '<p>Have a great day!</p>');
             return;
         }
+
+        intro.clear();
 
         renderer.setClearColor(0x000000, 0);
         renderer.setPixelRatio( window.devicePixelRatio );

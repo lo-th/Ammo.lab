@@ -65,11 +65,14 @@ var extract = ( function () {
     var callback = function(){};
     var results = {};
     var type = [];
+    var msg;
 
 
-    extract = function () {};
+    var extract = function () {};
 
-    extract.init = function (Urls, Callback, Type) {
+    extract.init = function (Urls, Callback, Type, Msg) {
+
+        msg = Msg || null;
 
         urls = Urls;
         if(Callback) callback = Callback;
@@ -109,7 +112,7 @@ var extract = ( function () {
         e.decompress( 
             ar, 
             function on_complete(result) { _this.add( result, name, Type ); },
-            function on_progress(percent) { intro.message( 'decompress ' + name + '.z ' + (~~(percent*100))+'%' ); } 
+            function on_progress(percent) { if(msg)msg( 'decompress ' + name + '.z ' + (~~(percent*100))+'%' ); } 
         );
 
     };

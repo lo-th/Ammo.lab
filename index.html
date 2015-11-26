@@ -11,30 +11,32 @@
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" href="css/lab.css">
 
+
 <script src="js/Intro.js"></script>
 <script src="js/Extract.js"></script>
 <script src="js/Editor.js"></script>
 <script src="js/View.js"></script>
 <script src="js/Ammo.manager.js"></script>
 <script src="js/Perlin.js"></script>
-
 </head>
+
 <body>
 <canvas id="canvas3d"></canvas>
 <div id="debug"></div>
 <img style="position: absolute; top: 0; right: 0; border: 0;" src="textures/ribbon.png"></a>
 <a id="ribbon" href="https://github.com/lo-th/Ammo.lab"></a>
+
 <script>
+
 var demo;
 var demoName = 'basic';
 var demos = [ 'basic', 'terrain', 'supermaket', 'car', 'character', 'collision', 'ragdoll', 'kinematics', 'multyCars' ];
 
 intro.init();
-extract.init(['z/code.z', 'z/three.z', 'z/ammo.z'], init, [0,0,1]);
+extract.init(['z/code.z', 'z/three.z', 'z/ammo.z'], init, [0,0,1], intro.message );
 
 function init(){
 
-    intro.clear();
     view.init( afterLoad );
 
 };
@@ -111,4 +113,5 @@ function load ( name, callback ) {
 };
 
 </script>
-</body></html>
+</body>
+</html>
