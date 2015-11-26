@@ -1,10 +1,28 @@
 function demo () {
 
     cam ( 0, 20, 100 );
-
     load ( 'cars', afterLoad );
 
 }
+
+function afterLoad () {
+
+    // infinie plane
+    add({type:'plane'});
+    // load cars map
+    view.addMap('cars.png', 'cars');
+    // make cars geometry
+    preparGeometry();
+    // create cars
+    for (var i = 0; i<CARS.length; i++){
+        addVehicle( i, [-25+(i*4), 5,0], 'convex');
+    }
+
+    // ! \\ set the car we drive
+    // use keyboard to controle car 
+    ammo.send('setDriveCar', { n:0 });
+
+};
 
 var CARS = [
    { size:[1.8, 1.4, 4.8],  n:'001', name:'fordM'  , radius:0.36, nw:4, w:'1', mass:1109,  wPos:[0.76, 0, 1.46] },
@@ -23,35 +41,18 @@ var CARS = [
    { size:[3.0, 3.4, 12.7], n:'014', name:'bus'    , radius:0.64, nw:4, w:'5', mass:11450, wPos:[1.25, 0, 2.49] },
 ];
 
-function afterLoad () {
+function preparGeometry () {
 
-    add({type:'plane'}); // infinie plane
-
-    view.addMap('cars.png', 'cars');
-
-    preparGeometry();
-    for (var i = 0; i<CARS.length; i++){
-        addVehicle( i, [-25+(i*4), 5,0], 'convex');
-    }
-
-}
-
-function preparGeometry(){
     var geo = view.getGeo();
     var i = CARS.length, o;
     while(i--){
         o = CARS[i];
         geo['mcar'+o.n].translate( 0, -o.radius, 0 );
         geo['down'+o.n].translate( 0, -o.radius, 0 );
-        if( geo['inside'+o.n] ){ 
-            geo['inside'+o.n].translate( 0, -o.radius, 0 );
-            //geo['inside'+o.n].computeVertexNormals();
-        }
-        //geo['mcar'+o.n].computeVertexNormals();
-        //geo['down'+o.n].computeVertexNormals();
-        
+        if( geo['inside'+o.n] ) geo['inside'+o.n].translate( 0, -o.radius, 0 );
     }
-}
+
+};
 
 
 function addVehicle (id, pos, type) {
@@ -90,4 +91,4 @@ function addVehicle (id, pos, type) {
 
     car( o );
 
-}
+};

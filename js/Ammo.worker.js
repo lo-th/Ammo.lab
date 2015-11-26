@@ -31,6 +31,8 @@ var isBuffer;
 
 var tmpset = null;
 
+var currentCar = 0;
+
 // main transphere array
 var ar = new Float32Array( 1000*8 ); // rigid buffer max 1000
 var dr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
@@ -119,6 +121,8 @@ self.onmessage = function ( e ) {
 
     if(m == 'key') key = e.data.o;
 
+    if(m == 'setDriveCar') currentCar = e.data.o.n;
+
     if(m == 'add') add( e.data.o );
 
     //if(m == 'set') set( e.data.o );
@@ -145,7 +149,7 @@ self.onmessage = function ( e ) {
 
         key = e.data.key;
 
-        drive( 0 );
+        drive( currentCar );
         move( 0 );
 
         if(tmpset!==null) set();
