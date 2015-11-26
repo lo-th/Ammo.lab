@@ -938,7 +938,7 @@ function vehicle ( o ) {
     };
 
     var shape;
-    if( type == 'mesh' ) shape = add( { type:'mesh', v:o.v }, 'isShape');
+    if( type == 'mesh' ) shape = add( { type:'mesh', v:o.v, mass:1 }, 'isShape');
     else if( type == 'convex' ) shape = add( { type:'convex', v:o.v }, 'isShape');
     else shape = add( { type:'box', size:size }, 'isShape');
     
@@ -996,6 +996,8 @@ function vehicle ( o ) {
     var numWheels = o.nw || 4, p, fw;
 
     for( var i = 0; i < numWheels; i++ ){
+        
+        if( i==2 && wPos[4]) wPos[0]+=wPos[4]; 
 
         if(i==0){ p = vec3(  wPos[0], wPos[1],  wPos[2] ); fw = true; }
         if(i==1){ p = vec3( -wPos[0], wPos[1],  wPos[2] ); fw = true; }

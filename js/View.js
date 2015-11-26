@@ -407,7 +407,7 @@ var view = ( function () {
             var i = loader.geometries.length, g;
             while(i--){
                 g = loader.geometries[i];
-                //console.log(g.name);
+                console.log(g.name);
                 geo[g.name] = g;
             };
 
