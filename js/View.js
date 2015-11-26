@@ -453,15 +453,15 @@ var view = ( function () {
         //var front = cars[currentCar].body.position;
         var h = Math.atan2( front.z, front.x ) * Math.radtodeg;
 
-        view.moveCamera( h, 20, 10, target );
+        view.moveCamera( h, 20, 10, 0.3, target );
 
     };
 
-    view.moveCamera = function ( h, v, d, target ) {
-
+    view.moveCamera = function ( h, v, d, l, target ) {
+        l = l || 1;
         if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
         //camera.position.copy( this.orbit( h, v-90, d ) );
-        camera.position.lerp( this.orbit( h, v-90, d ), 0.3 );
+        camera.position.lerp( this.orbit( h, v-90, d ), l );
         controls.update();
 
     };
