@@ -36,6 +36,7 @@ function afterLoad () {
 
         mass:1000,// mass of vehicle in kg
         engine:1000, // Maximum driving force of the vehicle
+        acceleration:10, // engine increment 
 
         // suspension setting
 

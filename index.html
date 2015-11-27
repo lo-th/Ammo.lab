@@ -96,7 +96,8 @@ function character ( o ) {
 
 function cam ( h,v,d,t ){
 
-    view.moveCamera( h, v, d, t );
+    t = { x:0, y:0, z:0 }
+    view.moveCamera( h, v, d, 0, t );
 
 };
 

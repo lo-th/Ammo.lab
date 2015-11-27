@@ -12,7 +12,7 @@ function demo() {
         complexity : 30, // complexity of noise
         flipEdge : false, // inverse the triangle
         hdt : 'PHY_FLOAT', // height data type PHY_FLOAT, PHY_UCHAR, PHY_SHORT
-        friction: 0.4, 
+        friction: 0.6, 
         restitution: 0.0,
     });
 
@@ -23,19 +23,6 @@ function demo() {
     // ammo car shape
 
     // ! \\ click on view and use key to controle car
-
-    var carSetup = {
-        mass:400,
-        engine:600, 
-        stiffness: 20,// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car 
-        damping: 2.3,// 0.1 to 0.3 are good values 
-        compression: 4.4,//0.82, 
-        travel: 500, 
-        force: 6000, 
-        frictionSlip: 1000,//20.5, 
-        reslength: 0.1,  // suspension Length
-        roll: 0//0.1 // vehicle barrel chance
-    };
 
     car ({ 
         type:'box', 
@@ -52,8 +39,6 @@ function demo() {
         radius:0.4,// wheels radius
         deep:0.3, // wheels deep
         wPos:[1, 0, 1.6], // wheels position on chassis
-
-        setting : carSetup 
 
     });
 

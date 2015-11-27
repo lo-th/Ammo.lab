@@ -23,7 +23,7 @@ var bodys, joints, cars, solids, heros, carsInfo;
 var rigids;
 
 var dt = 0.01667;//6;//7;
-var it = 1;// default is 1. 2 or more make simulation more accurate.
+var it = 3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
@@ -152,7 +152,7 @@ self.onmessage = function ( e ) {
 
         key = e.data.key;
 
-        drive( currentCar );
+        //drive( currentCar );
         move( 0 );
 
         if(tmpset!==null) set();
@@ -172,8 +172,10 @@ self.onmessage = function ( e ) {
 
         // ------- step
 
-        //world.stepSimulation( dt, it );
-        world.stepSimulation( dt, 0, dt );
+        world.stepSimulation( dt, it );
+        //world.stepSimulation( dt, it, dt );
+
+        drive( currentCar );
 
         var i = bodys.length, a = ar, n, b, p, r;
         var j, w, t;
@@ -929,10 +931,10 @@ function vehicle ( o ) {
         engine:0, 
         breaking:0, 
 
-        incSteering:0.01, 
-        maxSteering:Math.PI/6, 
-        incEngine:5, 
-        maxEngine:600 
+        incSteering: o.incSteering || 0.01, 
+        maxSteering: o.maxSterring || Math.PI/6,
+        incEngine: o.acceleration || 5, 
+        maxEngine: o.engine || 600 
     };
 
     //----------------------------
