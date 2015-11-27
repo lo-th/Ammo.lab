@@ -8,33 +8,20 @@ function demo() {
 
 function afterLoad () {
 
-    add({type:'plane'}); // infinie plane
+    add({type:'plane', friction:1, restitution:0.4 }); // infinie plane
 
-    add({ type:'track', shape:'mesh', size:[1,1,1], pos:[0,0,0], mass:0 });
+    add({ type:'track', shape:'mesh', size:[1,1,1], pos:[0,0,0], mass:0, friction:1, restitution:0.4 });
 
     // ammo car shape
 
     // ! \\ click on view and use key to controle car
 
-    var carSetup = {
-        mass:400,
-        engine:600, 
-        stiffness: 20,// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car 
-        damping: 2.3,// 0.1 to 0.3 are good values 
-        compression: 4.4,//0.82, 
-        travel: 500, 
-        force: 6000, 
-        frictionSlip: 1000,//20.5, 
-        reslength: 0.1,  // suspension Length
-        roll: 0//0.1 // vehicle barrel chance
-    };
-
     car ({ 
         type:'box', 
-        pos:[0,2,0], // start position of car 
+        pos:[0,1,0], // start position of car 
         rot:[0,90,0], // start rotation of car
-        size:[2,0.5,4], // chassis size
-        massCenter:[0,0.25,0], // local center of mass (best is on chassis bottom)
+        size:[1.7,0.1,4], // chassis size
+        massCenter:[0,0.1,0], // local center of mass (best is on chassis bottom)
 
         friction: 0.6, 
         restitution: 0.0, 
@@ -42,11 +29,40 @@ function afterLoad () {
         angularDamping: 0.3,
 
         radius:0.4,// wheels radius
-        deep:0.3, // wheels deep
+        deep:0.3, // wheels deep only for three cylinder
         wPos:[1, 0, 1.6], // wheels position on chassis
 
-        setting : carSetup 
+        // car setting
+
+        mass:1000,// mass of vehicle in kg
+        engine:1000, // Maximum driving force of the vehicle
+
+        // suspension setting
+
+        // Damping relaxation should be slightly larger than compression
+        s_compression: 2.4,// 0.1 to 0.3 are real values 
+        s_relaxation: 4.4, 
+
+        s_stiffness: 100,// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car 
+        s_travel: 10, // The maximum distance the suspension can be compressed in Cm
+        s_force: 10000, // Maximum suspension force
+        s_length: 0.1,  // suspension resistance Length in meter
+
+        // wheel setting
+
+        // friction: The constant friction of the wheels on the surface.
+        // For realistic TS It should be around 0.8. 
+        // But may be greatly increased to improve controllability (1000 and more)
+        // Set large (10000.0) for kart racers
+        w_friction: 1000,
+        // roll: reduces torque from the wheels
+        // reducing vehicle barrel chance
+        // 0 - no torque, 1 - the actual physical behavior
+        w_roll: 0.01
 
     });
+
+    view.setDriveCar( 0 );
+    view.activeFollow();
 
 };

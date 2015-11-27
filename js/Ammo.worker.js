@@ -17,7 +17,10 @@ var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
 var world = null;
 var solver, collision, dispatcher, broadphase, trans;
+// array
 var bodys, joints, cars, solids, heros, carsInfo;
+// object
+var rigids;
 
 var dt = 0.01667;//6;//7;
 var it = 1;// default is 1. 2 or more make simulation more accurate.
@@ -368,6 +371,9 @@ function init () {
     heros = [];
     solids = [];
 
+    // use for get object by name
+    rigids = {};
+
 
     //self.postMessage({ m:'init' });
 
@@ -433,6 +439,9 @@ function reset () {
         world.removeAction(b);
         
     }
+
+    // clear body name object
+    rigids = {};
 
     //world.getBroadphase().resetPool( world.getDispatcher() );
     //world.getConstraintSolver().reset();
@@ -620,7 +629,9 @@ function add ( o, extra ) {
 
     body.activate();
 
-    body.name = o.name || '';
+    //body.name = o.name || '';
+    var name = o.name || '';
+    if(name) rigids[name] = body;
 
     //body.isKinematic = o.kinematic || false;
 
@@ -641,11 +652,13 @@ function add ( o, extra ) {
 
 function getByName(name){
 
-    var i = bodys.length, b;
+    return rigids[name];
+
+    /*var i = bodys.length, b;
     while(i--){
         b = bodys[i];
         if(name == b.name) return b;
-    }
+    }*/
 
 };
 
@@ -741,7 +754,7 @@ function addJoint ( o ) {
     }
 
     world.addConstraint( joint, noAllowCollision );
-    joints.name = o.name || "";
+    joints.name = o.name || '';
     joints.push( joint );
 
 };
@@ -910,25 +923,6 @@ function vehicle ( o ) {
     var size = o.size || [2,0.5,4];
     var pos = o.pos || [0,0,0];
     var quat = o.quat || [0,0,0,1];
-    var massCenter = o.massCenter || [0,0.25,0];
-
-    // wheels
-    var radius = o.radius || 0.4;
-    //var deep = o.deep || 0.3;
-    var wPos = o.wPos || [1, 0, 1.6];
-
-    var setting = o.setting || {
-        mass:400,
-        engine:600, 
-        stiffness: 20,//40, 
-        damping: 2.3,//0.85, 
-        compression: 4.4,//0.82, 
-        travel: 500, 
-        force: 6000, 
-        frictionSlip: 1000,//20.5, 
-        reslength: 0.1,  // suspension Length
-        roll: 0//0.1 // basculement du vehicle  
-    };
 
     var carInfo = {
         steering:0, 
@@ -941,37 +935,49 @@ function vehicle ( o ) {
         maxEngine:600 
     };
 
+    //----------------------------
+    // car shape 
+
     var shape;
     if( type == 'mesh' ) shape = add( { type:'mesh', v:o.v, mass:1 }, 'isShape');
     else if( type == 'convex' ) shape = add( { type:'convex', v:o.v }, 'isShape');
     else shape = add( { type:'box', size:size }, 'isShape');
-    
-    var compound = new Ammo.btCompoundShape();
 
+    //----------------------------
     // move center of mass
+
+    var massCenter = o.massCenter || [0,0.25,0];
     var localTransform = new Ammo.btTransform();
     localTransform.setIdentity();
     localTransform.setOrigin( v3( massCenter ) );
+    var compound = new Ammo.btCompoundShape();
     compound.addChildShape( localTransform, shape );
+
+    //----------------------------
+    // position rotation of car 
 
     var startTransform = new Ammo.btTransform();
     startTransform.setIdentity();
-
     startTransform.setOrigin( v3( pos ) );
     startTransform.setRotation( q4( quat ) );
 
+    //----------------------------
+    // physics setting
+
+    // mass of vehicle in kg
+    var mass = o.mass || 1000
     var localInertia = vec3();
-    compound.calculateLocalInertia( setting.mass, localInertia );
-    //shape.calculateLocalInertia( mass, localInertia );
+    compound.calculateLocalInertia( mass, localInertia );
     var motionState = new Ammo.btDefaultMotionState( startTransform );
 
-    var rb = new Ammo.btRigidBodyConstructionInfo( setting.mass, motionState, compound, localInertia);
-    //var rb = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
-    
+    var rb = new Ammo.btRigidBodyConstructionInfo( mass, motionState, compound, localInertia);
     rb.set_m_friction( o.friction || 0.5 );
     rb.set_m_restitution( o.restitution || 0 );
     rb.set_m_linearDamping( o.linearDamping || 0 );
     rb.set_m_angularDamping( o.angularDamping || 0 );
+
+    //----------------------------
+    // car body
 
     var body = new Ammo.btRigidBody( rb );
     //body.setCenterOfMassTransform( localTransform );
@@ -979,21 +985,48 @@ function vehicle ( o ) {
     body.setLinearVelocity( vec3() );
     body.setActivationState( 4 );
 
-    //console.log( body );
+    //----------------------------
+    // suspension setting
 
-    // create vehicle
-    var vehicleRayCaster = new Ammo.btDefaultVehicleRaycaster( world );
     var tuning = new Ammo.btVehicleTuning();
-
     // 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car
-    tuning.set_m_suspensionStiffness(setting.stiffness); //100;
-    // 0.1 to 0.3 are good values
-    tuning.set_m_suspensionDamping(setting.damping);//0.87
-    tuning.set_m_suspensionCompression(setting.compression);//0.82
-    tuning.set_m_maxSuspensionTravelCm(setting.travel);//500
-    tuning.set_m_maxSuspensionForce(setting.force);//6000
-    tuning.set_m_frictionSlip(setting.frictionSlip);//10.5
+    tuning.set_m_suspensionStiffness( o.s_stiffness || 40 );
+    // The damping coefficient for when the suspension is compressed. Set
+    // to k * 2.0 * btSqrt(m_suspensionStiffness) so k is proportional to critical damping.
+    // k = 0.0 undamped & bouncy, k = 1.0 critical damping
+    // k = 0.1 to 0.3 are good values , default 0.84
+    tuning.set_m_suspensionCompression( o.s_compression || 2.4 );
+    // The damping coefficient for when the suspension is expanding.
+    // m_suspensionDamping should be slightly larger than set_m_suspensionCompression, eg k = 0.2 to 0.5, default : 0.88
+    tuning.set_m_suspensionDamping( o.s_relaxation || 2.8 );
 
+     // The maximum distance the suspension can be compressed in Cm
+    tuning.set_m_maxSuspensionTravelCm( o.s_travel || 40 );
+    // Maximum suspension force
+    tuning.set_m_maxSuspensionForce( o.s_force || 6000 );
+    // suspension resistance Length
+    // The maximum length of the suspension (metres)
+    var s_length = o.s_length || 0.1;
+
+    //----------------------------
+    // wheel setting
+
+    var radius = o.radius || 0.4;
+    var wPos = o.wPos || [1, 0, 1.6];
+    // friction: The constant friction of the wheels on the surface.
+    // For realistic TS It should be around 0.8. default 10.5
+    // But may be greatly increased to improve controllability (1000 and more)
+    // Set large (10000.0) for kart racers
+    tuning.set_m_frictionSlip( o.w_friction || 1000 );
+    // roll: reduces torque from the wheels
+    // reducing vehicle barrel chance
+    // 0 - no torque, 1 - the actual physical behavior
+    var w_roll = o.w_roll || 0.1;
+
+    //----------------------------
+    // create vehicle
+
+    var vehicleRayCaster = new Ammo.btDefaultVehicleRaycaster( world );
     var car = new Ammo.btRaycastVehicle(tuning, body, vehicleRayCaster);
     car.setCoordinateSystem( 0, 1, 2 );
 
@@ -1014,7 +1047,7 @@ function vehicle ( o ) {
             if(i==1){ p = vec3( -wPos[0], wPos[1],  -wPos[2] ); fw = false; }
         }
 
-        addWheel( car, p, radius, tuning, setting, fw );
+        addWheel( car, p, radius, tuning, s_length, w_roll, fw );
     
     };
 
@@ -1022,8 +1055,11 @@ function vehicle ( o ) {
     world.addRigidBody( body );
 
     //console.log( car );
-    //console.log( tuning );
-    //console.log( car.getWheelInfo(0) );
+    //console.log( body );
+    console.log( tuning );
+    //console.log( car.getWheelInfo(0).get_m_wheelsDampingRelaxation() );
+    //console.log( car.getWheelInfo(0).get_m_wheelsDampingCompression() );
+    console.log( car.getWheelInfo(0).get_m_suspensionRestLength1() );
 
     body.activate();
 
@@ -1032,13 +1068,13 @@ function vehicle ( o ) {
 
 };
 
-function addWheel ( car, p, radius, tuning, setting, isFrontWheel ) {
+function addWheel ( car, p, radius, tuning, s_length, w_roll, isFrontWheel ) {
 
     var wheelDir = vec3(0, -1, 0);
     var wheelAxe = vec3(-1, 0, 0);
 
-    var wheel = car.addWheel( p, wheelDir, wheelAxe, setting.reslength, radius, tuning, isFrontWheel );
-    wheel.set_m_rollInfluence( setting.roll );
+    var wheel = car.addWheel( p, wheelDir, wheelAxe, s_length, radius, tuning, isFrontWheel );
+    wheel.set_m_rollInfluence( w_roll );
 
 };
 

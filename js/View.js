@@ -20,7 +20,7 @@ Math.int = function(x) { return ~~x; };
 
 var view = ( function () {
 
-    var canvas, renderer, scene, camera, controls, debug;
+    var canvas, renderer, scene, camera, controls, clock, debug;
     var ray, mouse, content, targetMouse, rayCallBack, moveplane, isWithRay = false;;
     var vs = { w:1, h:1, l:400 };
 
@@ -458,6 +458,7 @@ var view = ( function () {
     };
 
     view.moveCamera = function ( h, v, d, l, target ) {
+
         l = l || 1;
         if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
         //camera.position.copy( this.orbit( h, v-90, d ) );
@@ -483,7 +484,7 @@ var view = ( function () {
         currentCar = n;
         ammo.send('setDriveCar', { n:n });
 
-    }
+    };
 
     view.capsuleGeo = function( radius, height, SRadius, SHeight ) {
 
@@ -727,7 +728,7 @@ var view = ( function () {
         // send to worker
         ammo.send( 'character', o );
 
-    }
+    };
 
     view.vehicle = function ( o ) {
 
