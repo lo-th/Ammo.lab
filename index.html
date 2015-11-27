@@ -82,6 +82,12 @@ function add ( o ) {
 
 };
 
+function substep ( substep ) {
+
+    ammo.send( 'substep', {substep:substep} ) ;
+
+};
+
 function car ( o ) {
 
     view.vehicle( o );

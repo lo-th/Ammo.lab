@@ -28,13 +28,13 @@ var ammo = ( function () {
     var worker, callback;
 
     var isBuffer = true;
-    var framerate = 60;
-    var iteration = 10;
+    var timestep = 1/60;
+    var substep = 7;
 
     // main transphere array
     var ar, dr, hr, jr;
 
-    var timerate = (1/framerate) * 1000;
+    var timerate = timestep * 1000;
     var fps = 0;
     var time = 0;
     var sendTime = 0;
@@ -53,7 +53,7 @@ var ammo = ( function () {
 
         worker.onmessage = this.message;
         worker.postMessage = worker.webkitPostMessage || worker.postMessage;
-        worker.postMessage( { m: 'init', blob: extract.get('ammo'), isBuffer: isBuffer, framerate:1/framerate, iteration:iteration });
+        worker.postMessage( { m: 'init', blob: extract.get('ammo'), isBuffer: isBuffer, timestep:timestep, substep:substep });
 
     };
 

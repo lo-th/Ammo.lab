@@ -22,8 +22,8 @@ var bodys, joints, cars, solids, heros, carsInfo;
 // object
 var rigids;
 
-var dt = 0.01667;//6;//7;
-var it = 4;//3;// default is 1. 2 or more make simulation more accurate.
+var timestep = 0.01667;//6;//7;
+var substep = 4;//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
@@ -82,7 +82,7 @@ function stepAdvanced () {
     timePassed += seconds;
     //timeStep < maxSubSteps * fixedTimeStep
 
-    if ( timePassed > fixedTime ) {
+    if ( timePassed >= fixedTime ) {
         maxSubSteps = ~~ ( seconds * 60 ); //Math.ceil ( seconds / fixedTime );
         fixedTimeStep = seconds / maxSubSteps;
     }
@@ -112,8 +112,8 @@ self.onmessage = function ( e ) {
     if(m == 'init'){
 
         isBuffer = e.data.isBuffer;
-        dt = e.data.framerate;
-        it = e.data.iteration || 1;
+        timestep = e.data.timestep;
+        substep = e.data.substep || 1;
         importScripts( e.data.blob );
         self.postMessage({ m:'init' });
         init();
@@ -125,10 +125,10 @@ self.onmessage = function ( e ) {
     if(m == 'key') key = e.data.o;
 
     if(m == 'setDriveCar') currentCar = e.data.o.n;
+    if(m == 'substep') substep = e.data.o.substep;
 
     if(m == 'add') add( e.data.o );
 
-    //if(m == 'set') set( e.data.o );
     if(m == 'set') tmpset = e.data.o;
 
     if(m == 'vehicle') vehicle( e.data.o );
@@ -172,7 +172,7 @@ self.onmessage = function ( e ) {
 
         // ------- step
 
-        world.stepSimulation( dt, it );
+        world.stepSimulation( timestep, substep );
         //world.stepSimulation( dt, it, dt );
 
         drive( currentCar );
