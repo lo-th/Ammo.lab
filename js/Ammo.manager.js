@@ -29,7 +29,7 @@ var ammo = ( function () {
 
     var isBuffer = true;
     var framerate = 60;
-    var iteration = 3;
+    var iteration = 10;
 
     // main transphere array
     var ar, dr, hr, jr;

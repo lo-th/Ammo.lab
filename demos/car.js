@@ -8,9 +8,9 @@ function demo() {
 
 function afterLoad () {
 
-    add({type:'plane', friction:1, restitution:0.4 }); // infinie plane
+    add({type:'plane', friction:0.6, restitution:0.1 }); // infinie plane
 
-    add({ type:'track', shape:'mesh', size:[1,1,1], pos:[0,0,0], mass:0, friction:1, restitution:0.4 });
+    add({ type:'track', shape:'mesh', size:[1,1,1], pos:[0,0,0], mass:0, friction:0.6, restitution:0.1 });
 
     // ammo car shape
 
@@ -20,8 +20,8 @@ function afterLoad () {
         type:'box', 
         pos:[0,1,0], // start position of car 
         rot:[0,90,0], // start rotation of car
-        size:[1.7,0.1,4], // chassis size
-        massCenter:[0,0.1,0], // local center of mass (best is on chassis bottom)
+        size:[ 1.6, 0.4, 3.6 ], // chassis size
+        massCenter:[ 0, -0.2, 0 ], // local center of mass (best is on chassis bottom)
 
         friction: 0.6, 
         restitution: 0.0, 
@@ -30,7 +30,7 @@ function afterLoad () {
 
         radius:0.4,// wheels radius
         deep:0.3, // wheels deep only for three cylinder
-        wPos:[1, 0, 1.6], // wheels position on chassis
+        wPos:[1, -0.2, 1.6], // wheels position on chassis
 
         // car setting
 
@@ -42,7 +42,7 @@ function afterLoad () {
 
         // Damping relaxation should be slightly larger than compression
         s_compression: 2.4,// 0.1 to 0.3 are real values 
-        s_relaxation: 4.4, 
+        s_relaxation: 2.8, 
 
         s_stiffness: 100,// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car 
         s_travel: 10, // The maximum distance the suspension can be compressed in Cm

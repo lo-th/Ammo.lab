@@ -23,7 +23,7 @@ var bodys, joints, cars, solids, heros, carsInfo;
 var rigids;
 
 var dt = 0.01667;//6;//7;
-var it = 3;// default is 1. 2 or more make simulation more accurate.
+var it = 4;//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
