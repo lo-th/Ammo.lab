@@ -1,10 +1,13 @@
 function demo() {
 
+    // more substep more accurate simulation default set to 7
+    //substep( 7 );
+
     cam ( 0, 10, 40 );
 
     load ( 'track', afterLoad );
 
-}
+};
 
 function afterLoad () {
 
@@ -14,7 +17,7 @@ function afterLoad () {
 
     // ammo car shape
 
-    // ! \\ click on view and use key to controle car
+    // ! \\ go on view and use keyboard to controle car
 
     car ({ 
         type:'box', 
@@ -41,13 +44,13 @@ function afterLoad () {
         // suspension setting
 
         // Damping relaxation should be slightly larger than compression
-        s_compression: 2.4,// 0.1 to 0.3 are real values 
-        s_relaxation: 2.8, 
+        s_compression: 2.4,// 0.1 to 0.3 are real values default 0.84
+        s_relaxation: 2.8, // The damping coefficient for when the suspension is expanding. default : 0.88
 
         s_stiffness: 100,// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car 
         s_travel: 10, // The maximum distance the suspension can be compressed in Cm
         s_force: 10000, // Maximum suspension force
-        s_length: 0.1,  // suspension resistance Length in meter
+        s_length: 0.1, // The maximum length of the suspension in meter
 
         // wheel setting
 
