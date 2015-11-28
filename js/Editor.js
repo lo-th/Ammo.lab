@@ -97,8 +97,8 @@ var editor = ( function () {
         menu.style.background = 'none';
         menu.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
         menu.style.color = '#d2cec8';
-        menuPins.style.background = '#0d0d0d';
-        if( isMenu ) this.menu_hide();
+        menuPins.style.background = 'none';
+        if( isMenu ) editor.menu_hide();
 
     };
 

@@ -18,11 +18,16 @@ html, body {
     color:#dedede;
     /*color:#d2cec8;text-shadow: 1px 1px 1px rgba(0,0,0,0.3);*/
     overflow:hidden;
-    /*font-smooth: never;
-    -webkit-font-smoothing : none;*/
+    font-smooth: never;
+    -webkit-font-smoothing : none;
     pointer-events:none;
+    /*text-shadow: 0.5px 0.5px 2px #000000;*/
 }
 
+/*body{
+    background-image: url(../textures/bg.png);
+    background-repeat: repeat-x;
+}*/
 body{
     background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAAAAACMmsGiAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABdJREFUCB1jUlGRkWH6CQRMf//y8oJZAFUaCmUwcfODAAAAAElFTkSuQmCC);
 }
@@ -81,7 +86,7 @@ body{
     border:1px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
     text-align: center;
-    background:#0d0d0d;
+    background:none;
     z-index: 3;
 }
 

@@ -223,6 +223,7 @@ var view = ( function () {
         }else{
             isWirframe = false;
             matType = 'MeshStandardMaterial';
+            //this.addShadow();
         }
 
         // create new material
@@ -629,6 +630,9 @@ var view = ( function () {
         // copy rotation quaternion
         o.quat = mesh.quaternion.toArray();
 
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+
         scene.add(mesh);
 
         // push 
@@ -981,6 +985,105 @@ var view = ( function () {
 
     };
 
+
+    view.addShadow = function(){
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.soft = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.cullFace = THREE.CullFaceBack;
+
+       /* var TransparentShadow = [
+
+            "uniform vec3 diffuse;",
+            "uniform float opacity;",
+
+            THREE.ShaderChunk[ "common" ],
+            THREE.ShaderChunk[ "color_pars_fragment" ],
+            THREE.ShaderChunk[ "uv_pars_fragment" ],
+            THREE.ShaderChunk[ "uv2_pars_fragment" ],
+            THREE.ShaderChunk[ "map_pars_fragment" ],
+            THREE.ShaderChunk[ "alphamap_pars_fragment" ],
+            THREE.ShaderChunk[ "aomap_pars_fragment" ],
+            THREE.ShaderChunk[ "envmap_pars_fragment" ],
+            THREE.ShaderChunk[ "fog_pars_fragment" ],
+            THREE.ShaderChunk[ "shadowmap_pars_fragment" ],
+            THREE.ShaderChunk[ "specularmap_pars_fragment" ],
+            THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
+
+            "void main() {",
+
+            "   vec3 outgoingLight = vec3( 0.0 );",
+            "   vec4 diffuseColor = vec4( diffuse, opacity );",
+            "   vec3 totalAmbientLight = vec3( 1.0 );", // hardwired
+            "   vec3 shadowMask = vec3( 1.0 );",
+
+                THREE.ShaderChunk[ "logdepthbuf_fragment" ],
+                THREE.ShaderChunk[ "map_fragment" ],
+                THREE.ShaderChunk[ "color_fragment" ],
+                THREE.ShaderChunk[ "alphamap_fragment" ],
+                THREE.ShaderChunk[ "alphatest_fragment" ],
+                THREE.ShaderChunk[ "specularmap_fragment" ],
+                THREE.ShaderChunk[ "aomap_fragment" ],
+                THREE.ShaderChunk[ "shadowmap_fragment" ],
+
+            "   outgoingLight = diffuseColor.rgb * totalAmbientLight * shadowMask;",
+
+                THREE.ShaderChunk[ "envmap_fragment" ],
+
+                THREE.ShaderChunk[ "linear_to_gamma_fragment" ],
+
+                THREE.ShaderChunk[ "fog_fragment" ],
+
+            "   gl_FragColor = vec4( outgoingLight, diffuseColor.a - outgoingLight.x );",
+
+            "}"
+
+        ].join( "\n" );
+
+        var ShadowMaterial = new THREE.ShaderMaterial({
+            uniforms: THREE.ShaderLib['basic'].uniforms,
+            vertexShader: THREE.ShaderLib['basic'].vertexShader,
+            fragmentShader: TransparentShadow,
+            transparent:true,
+            depthWrite: false, 
+            fog:false
+        });*/
+
+        var plane = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100, 8, 8 ) );
+        plane.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI*0.5));
+                
+        scene.add( plane );
+        plane.castShadow = false;
+        plane.receiveShadow = true;
+
+
+        var light = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 2, 10, 2 );
+        light.position.set(  0, 200, 0 );
+        light.target.position.set( 0, 0, 0 );
+
+        light.castShadow = true;
+
+        light.shadowCameraNear = 50;
+        light.shadowCameraFar = 400;
+        light.shadowCameraFov = 50;
+        light.shadowDarkness = 0.6;
+        light.shadowMapWidth = 2048;
+        light.shadowMapHeight = 2048;
+        light.shadowBias =  -0.005;
+        //light.shadowCameraFov = 70;
+        scene.add( light );
+
+        //var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.8 );
+        //hemiLight.color.setHSL( 0.6, 1, 0.6 );
+        //hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+        //hemiLight.position.set( 0, 10, 0 );
+        //scene.add( hemiLight );
+
+
+    }
+
     return view;
 
 })();
+
+
