@@ -42,6 +42,7 @@ var view = ( function () {
     var imagesLoader;
     var currentCar = -1;
     var isCamFollow = false;
+    var isWithShadow = false;
 
     var environment, envcontext, nEnv = 0, isWirframe = true;
     var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
@@ -60,7 +61,7 @@ var view = ( function () {
         // RENDERER
 
         try {
-            renderer = new THREE.WebGLRenderer({canvas:canvas, precision:"mediump", antialias:true, alpha:true });
+            renderer = new THREE.WebGLRenderer({canvas:canvas, precision:"mediump", antialias:true, alpha:false });
         } catch( error ) {
             intro.message('<p>Sorry, your browser does not support WebGL.</p>'
                         + '<p>This application uses WebGL to quickly draw'
@@ -73,7 +74,7 @@ var view = ( function () {
 
         intro.clear();
 
-        renderer.setClearColor(0x000000, 0);
+        renderer.setClearColor(0x1C1C1C, 1);
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
@@ -117,7 +118,7 @@ var view = ( function () {
 
         helper = new THREE.GridHelper( 50, 2 );
         helper.setColors( 0xFFFFFF, 0x666666 );
-        helper.material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, transparent:true, opacity:0.2 } );
+        helper.material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, transparent:true, opacity:0.1 } );
         scene.add( helper );
 
         // RAYCAST
@@ -987,70 +988,16 @@ var view = ( function () {
 
 
     view.addShadow = function(){
+
+        isWithShadow = true;
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.soft = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.shadowMap.cullFace = THREE.CullFaceBack;
 
-       /* var TransparentShadow = [
-
-            "uniform vec3 diffuse;",
-            "uniform float opacity;",
-
-            THREE.ShaderChunk[ "common" ],
-            THREE.ShaderChunk[ "color_pars_fragment" ],
-            THREE.ShaderChunk[ "uv_pars_fragment" ],
-            THREE.ShaderChunk[ "uv2_pars_fragment" ],
-            THREE.ShaderChunk[ "map_pars_fragment" ],
-            THREE.ShaderChunk[ "alphamap_pars_fragment" ],
-            THREE.ShaderChunk[ "aomap_pars_fragment" ],
-            THREE.ShaderChunk[ "envmap_pars_fragment" ],
-            THREE.ShaderChunk[ "fog_pars_fragment" ],
-            THREE.ShaderChunk[ "shadowmap_pars_fragment" ],
-            THREE.ShaderChunk[ "specularmap_pars_fragment" ],
-            THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
-
-            "void main() {",
-
-            "   vec3 outgoingLight = vec3( 0.0 );",
-            "   vec4 diffuseColor = vec4( diffuse, opacity );",
-            "   vec3 totalAmbientLight = vec3( 1.0 );", // hardwired
-            "   vec3 shadowMask = vec3( 1.0 );",
-
-                THREE.ShaderChunk[ "logdepthbuf_fragment" ],
-                THREE.ShaderChunk[ "map_fragment" ],
-                THREE.ShaderChunk[ "color_fragment" ],
-                THREE.ShaderChunk[ "alphamap_fragment" ],
-                THREE.ShaderChunk[ "alphatest_fragment" ],
-                THREE.ShaderChunk[ "specularmap_fragment" ],
-                THREE.ShaderChunk[ "aomap_fragment" ],
-                THREE.ShaderChunk[ "shadowmap_fragment" ],
-
-            "   outgoingLight = diffuseColor.rgb * totalAmbientLight * shadowMask;",
-
-                THREE.ShaderChunk[ "envmap_fragment" ],
-
-                THREE.ShaderChunk[ "linear_to_gamma_fragment" ],
-
-                THREE.ShaderChunk[ "fog_fragment" ],
-
-            "   gl_FragColor = vec4( outgoingLight, diffuseColor.a - outgoingLight.x );",
-
-            "}"
-
-        ].join( "\n" );
-
-        var ShadowMaterial = new THREE.ShaderMaterial({
-            uniforms: THREE.ShaderLib['basic'].uniforms,
-            vertexShader: THREE.ShaderLib['basic'].vertexShader,
-            fragmentShader: TransparentShadow,
-            transparent:true,
-            depthWrite: false, 
-            fog:false
-        });*/
-
-        var plane = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100, 8, 8 ) );
+        var plane = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100, 8, 8 ), new THREE.MeshBasicMaterial({color:0X1C1C1C}) );
         plane.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI*0.5));
+        plane.position.y = -0.01;
                 
         scene.add( plane );
         plane.castShadow = false;
