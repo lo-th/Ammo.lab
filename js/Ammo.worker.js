@@ -215,8 +215,6 @@ self.onmessage = function ( e ) {
             n = i*8;
             b = heros[i];
 
-            
-
             //b.playerStep( world, dt );
 
             //b.getGhostObject().getWorldTransform( trans );
@@ -726,8 +724,8 @@ function addJoint ( o ) {
 
     var point1 = v3( o.pos1 || [0,0,0] );
     var point2 = v3( o.pos2 || [0,0,0] );
-    var axe1 = v3( o.axe1 || [0,1,0] );
-    var axe2 = v3( o.axe2 || [0,1,0] );
+    var axe1 = v3( o.axe1 || [1,0,0] );
+    var axe2 = v3( o.axe2 || [1,0,0] );
 
     var min = o.min || 0;
     var max = o.max || 0;
@@ -736,6 +734,7 @@ function addJoint ( o ) {
     var softness = spring[0];
     var bias =  spring[1];
     var relaxation =  spring[2];
+    var useReferenceFrameA = false;
 
     var joint = null;
 
@@ -746,7 +745,7 @@ function addJoint ( o ) {
             joint.get_m_setting().set_m_damping( o.damping || 1 ); 
         break;
         case "joint_hinge": case "joint":
-            joint = new Ammo.btHingeConstraint( body1, body2, point1, point2, axe1, axe2, false);
+            joint = new Ammo.btHingeConstraint( body1, body2, point1, point2, axe1, axe2, useReferenceFrameA );
             if( min!==0 || max!==0 ) joint.setLimit( min, max, softness, bias, relaxation);
         break;
         case "joint_slider": joint = new Ammo.btSliderConstraint( body1, body2, point1, point2); break;
