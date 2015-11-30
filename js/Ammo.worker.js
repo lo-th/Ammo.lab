@@ -331,6 +331,26 @@ var q4 = function( a ){
 
 var copyV3 = function (a,b) { b.setX(a[0]); b.setY(a[1]); b.setZ(a[2]); };
 
+var barycentricCoordinates = function( pos, p1, p2, p3 ) {
+
+    var edge1 = v3( [ p2.x-p1.x, p2.y-p1.y, p2.z-p1.z ]);
+    var edge2 = v3( [ p3.x-p1.x, p3.y-p1.y, p3.z-p1.z ]);
+
+    // Area of triangle ABC              
+    var p1p2p3 = edge1.cross(edge2).length2();              
+    // Area of BCP              
+    var p2p3p = (p3 - p2).cross(pos - p2).length2();              
+    // Area of CAP              
+    var p3p1p = edge2.cross(pos - p3).length2(); 
+
+    var s = Math.sqrt(p2p3p / p1p2p3);              
+    var t = Math.sqrt(p3p1p / p1p2p3);              
+    var w = 1 - s - t;
+
+    return v3([s,t,w])
+
+};
+
 
 //--------------------------------------------------
 //
@@ -930,10 +950,10 @@ function vehicle ( o ) {
         engine:0, 
         breaking:0, 
 
-        incSteering: o.incSteering || 0.01, 
-        maxSteering: o.maxSterring || Math.PI/6,
+        incSteering: o.incSteering || 0.04, 
+        maxSteering: o.maxSterring || 0.3,//Math.PI/6,
         incEngine: o.acceleration || 5, 
-        maxEngine: o.engine || 600 
+        maxEngine: o.engine || 1000 
     };
 
     //----------------------------
@@ -991,23 +1011,23 @@ function vehicle ( o ) {
 
     var tuning = new Ammo.btVehicleTuning();
     // 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car
-    tuning.set_m_suspensionStiffness( o.s_stiffness || 40 );
+    tuning.set_m_suspensionStiffness( o.s_stiffness || 20 );
     // The damping coefficient for when the suspension is compressed. Set
     // to k * 2.0 * btSqrt(m_suspensionStiffness) so k is proportional to critical damping.
     // k = 0.0 undamped & bouncy, k = 1.0 critical damping
     // k = 0.1 to 0.3 are good values , default 0.84
-    tuning.set_m_suspensionCompression( o.s_compression || 2.4 );
+    tuning.set_m_suspensionCompression( o.s_compression || 4.4 );
     // The damping coefficient for when the suspension is expanding.
     // m_suspensionDamping should be slightly larger than set_m_suspensionCompression, eg k = 0.2 to 0.5, default : 0.88
-    tuning.set_m_suspensionDamping( o.s_relaxation || 2.8 );
+    tuning.set_m_suspensionDamping( o.s_relaxation || 2.3 );
 
-     // The maximum distance the suspension can be compressed in Cm
-    tuning.set_m_maxSuspensionTravelCm( o.s_travel || 40 );
+     // The maximum distance the suspension can be compressed in Cm // default 500
+    tuning.set_m_maxSuspensionTravelCm( o.s_travel || 400 );
     // Maximum suspension force
-    tuning.set_m_maxSuspensionForce( o.s_force || 6000 );
+    tuning.set_m_maxSuspensionForce( o.s_force || 10000 );
     // suspension resistance Length
     // The maximum length of the suspension (metres)
-    var s_length = o.s_length || 0.1;
+    var s_length = o.s_length || 0.6;
 
     //----------------------------
     // wheel setting
@@ -1057,10 +1077,11 @@ function vehicle ( o ) {
 
     //console.log( car );
     //console.log( body );
-    console.log( tuning );
+    //console.log( tuning );
     //console.log( car.getWheelInfo(0).get_m_wheelsDampingRelaxation() );
     //console.log( car.getWheelInfo(0).get_m_wheelsDampingCompression() );
-    console.log( car.getWheelInfo(0).get_m_suspensionRestLength1() );
+    //console.log( car.getWheelInfo(0).get_m_suspensionRestLength1() );
+    console.log( car.getWheelInfo(0).get_m_maxSuspensionTravelCm() );
 
     body.activate();
 

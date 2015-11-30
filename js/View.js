@@ -43,6 +43,7 @@ var view = ( function () {
     var currentCar = -1;
     var isCamFollow = false;
     var isWithShadow = false;
+    var shadowGround, light, ambient;
 
     var environment, envcontext, nEnv = 0, isWirframe = true;
     var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
@@ -51,6 +52,8 @@ var view = ( function () {
     view = function () {};
 
     view.init = function ( callback ) {
+
+        clock = new THREE.Clock();
 
         debug = document.getElementById('debug');
 
@@ -74,8 +77,9 @@ var view = ( function () {
 
         intro.clear();
 
-        renderer.setClearColor(0x1C1C1C, 1);
+        renderer.setClearColor(0x2A2A2A, 1);
         renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.sortObjects = true;
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
 
@@ -221,10 +225,11 @@ var view = ( function () {
         if( type == 0 ) {
             isWirframe = true;
             matType = 'MeshBasicMaterial';
+            this.removeShadow();
         }else{
             isWirframe = false;
             matType = 'MeshStandardMaterial';
-            //this.addShadow();
+            this.addShadow();
         }
 
         // create new material
@@ -235,8 +240,8 @@ var view = ( function () {
             mat[name] = new THREE[matType]({ map:m.map, vertexColors:m.vertexColors, color:m.color.getHex(), name:name, wireframe:isWirframe, transparent:m.transparent, opacity:m.opacity });
             if(!isWirframe){
                 mat[name].envMap = envMap;
-                mat[name].metalness = 0.8;
-                mat[name].roughness = 0.4;
+                mat[name].metalness = 0.5;
+                mat[name].roughness = 0.5;
             }
         }
 
@@ -750,6 +755,11 @@ var view = ( function () {
         var mesh;
         if( o.mesh ){ 
             mesh = o.mesh;
+            var k = mesh.children.length;
+                while(k--){
+                    mesh.children[k].castShadow = true;
+                    mesh.children[k].receiveShadow = true;
+                }
         } else {
             var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
             g.translate( massCenter[0], massCenter[1], massCenter[2] );
@@ -765,7 +775,8 @@ var view = ( function () {
         // copy rotation quaternion
         o.quat = mesh.quaternion.toArray();
 
-        
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
 
         scene.add( mesh );
 
@@ -790,6 +801,9 @@ var view = ( function () {
             else w[i] = new THREE.Mesh( gwr, mat.move );
             if( needScale ) w[i].scale.set( deep, radius, radius );
             else w[i].material = mat.cars;
+
+            w[i].castShadow = true;
+            w[i].receiveShadow = true;
 
             scene.add( w[i] );
         }
@@ -874,6 +888,9 @@ var view = ( function () {
         var mesh = new THREE.Mesh( g, mat.terrain );
         mesh.position.set( pos[0], pos[1], pos[2] );
 
+        mesh.castShadow = false;
+        mesh.receiveShadow = true;
+
         scene.add( mesh );
         terrains.push( mesh );
 
@@ -884,6 +901,8 @@ var view = ( function () {
 
         // send to worker
         ammo.send( 'add', o ); 
+
+        if(shadowGround) scene.remove(shadowGround);
 
     };
 
@@ -955,14 +974,14 @@ var view = ( function () {
 
     view.setLeft = function ( x ) { vs.x = x; };
 
-    view.errorMsg = function ( msg ) {
+    /*view.errorMsg = function ( msg ) {
 
         var er = document.createElement('div');
         er.style.textAlign = 'center';
         er.innerHTML = msg;
         document.body.appendChild(er);
 
-    };
+    };*/
 
     view.tell = function ( str ) { debug.innerHTML = str; };
 
@@ -981,13 +1000,32 @@ var view = ( function () {
 
     view.render = function () {
 
+        var delta = clock.getDelta();
         if( isCamFollow ) this.follow();
         renderer.render( scene, camera );
 
     };
 
+    //--------------------------------------
+    //   SHADOW
+    //--------------------------------------
+
+    view.removeShadow = function(){
+
+        if(!isWithShadow) return;
+        isWithShadow = false;
+
+        renderer.shadowMap.enabled = false;
+
+        if(shadowGround) scene.remove(shadowGround);
+        scene.remove(light);
+        scene.remove(ambient);
+
+    };
 
     view.addShadow = function(){
+
+        if(isWithShadow) return;
 
         isWithShadow = true;
         renderer.shadowMap.enabled = true;
@@ -995,36 +1033,55 @@ var view = ( function () {
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.shadowMap.cullFace = THREE.CullFaceBack;
 
-        var plane = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100, 8, 8 ), new THREE.MeshBasicMaterial({color:0X1C1C1C}) );
-        plane.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI*0.5));
-        plane.position.y = -0.01;
-                
-        scene.add( plane );
-        plane.castShadow = false;
-        plane.receiveShadow = true;
+        if(!terrains.length){
+            shadowGround = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100, 8, 8 ), new THREE.MeshBasicMaterial({ color:0X070707 }) );
+            shadowGround.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI*0.5));
+            shadowGround.position.y = -0.01;
+            shadowGround.castShadow = false;
+            shadowGround.receiveShadow = true;
+            scene.add( shadowGround );
+        }
+
+        
+
+        light = new THREE.DirectionalLight( 0xffffff, 1 );
+        light.position.set( -3, 50, 5 );
+        
 
 
-        var light = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 2, 10, 2 );
-        light.position.set(  0, 200, 0 );
+        //light = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 2, 10, 2 );
+        //light.position.set(  0, 100, 0 );
         light.target.position.set( 0, 0, 0 );
 
         light.castShadow = true;
-
-        light.shadowCameraNear = 50;
-        light.shadowCameraFar = 400;
-        light.shadowCameraFov = 50;
-        light.shadowDarkness = 0.6;
-        light.shadowMapWidth = 2048;
-        light.shadowMapHeight = 2048;
+        light.shadowMapWidth = 1024;
+        light.shadowMapHeight = 1024;
+        light.shadowCameraNear = 25;
+        light.shadowCameraFar = 70;
+        light.shadowDarkness = 1;
         light.shadowBias =  -0.005;
+
+        var c = 70;
+        light.shadowCameraRight = c;
+        light.shadowCameraLeft = -c;
+        light.shadowCameraTop    = c;
+        light.shadowCameraBottom = -c;
+
+        //light.shadowCameraFov = 80;
+        
         //light.shadowCameraFov = 70;
+
+        //scene.add( new THREE.CameraHelper( light.shadow.camera ) );
         scene.add( light );
 
-        //var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.8 );
-        //hemiLight.color.setHSL( 0.6, 1, 0.6 );
-        //hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
-        //hemiLight.position.set( 0, 10, 0 );
-        //scene.add( hemiLight );
+        ambient = new THREE.AmbientLight( 0x444444 );
+        scene.add( ambient );
+
+        /*ambient = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.8 );
+        ambient.color.setHSL( 0.6, 1, 0.6 );
+        ambient.groundColor.setHSL( 0.095, 1, 0.75 );
+        ambient.position.set( 0, 10, 0 );
+        scene.add( ambient );*/
 
 
     }
