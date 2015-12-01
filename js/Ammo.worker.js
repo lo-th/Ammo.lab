@@ -268,7 +268,15 @@ self.onmessage = function ( e ) {
 
             // wheels pos / rot
             //a[n+8] = b.getNumWheels();
-            j = b.getNumWheels();//a[n+8];//2, 4 or 6;
+            j = b.getNumWheels(); //2, 4 or 6;
+            if(j==4){
+                w = 8 * ( 4 + 1 );
+                a[n+w+0] = b.getWheelInfo(0).get_m_raycastInfo().get_m_suspensionLength();
+                a[n+w+1] = b.getWheelInfo(1).get_m_raycastInfo().get_m_suspensionLength();
+                a[n+w+2] = b.getWheelInfo(2).get_m_raycastInfo().get_m_suspensionLength();
+                a[n+w+3] = b.getWheelInfo(3).get_m_raycastInfo().get_m_suspensionLength();
+            }
+
             while(j--){
                 b.updateWheelTransform( j, true );
                 t = b.getWheelTransformWS( j );
@@ -1108,6 +1116,7 @@ function vehicle ( o ) {
     //console.log( car.getWheelInfo(0).get_m_suspensionRestLength1() );
     //console.log( car.getWheelInfo(0).get_m_maxSuspensionTravelCm() );
     //console.log( car.getWheelInfo(0).get_m_raycastInfo().get_m_contactPointWS().y() )
+
 
     body.activate();
 

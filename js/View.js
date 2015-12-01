@@ -544,6 +544,7 @@ var view = ( function () {
             carsSpeed.pop();
             scene.remove( c.body );
             scene.remove( c.axe );
+            c.helper.clear();
             i = c.w.length;
             while(i--){
                 scene.remove( c.w[i] );
@@ -748,6 +749,8 @@ var view = ( function () {
         var pos = o.pos || [0,0,0];
         var rot = o.rot || [0,0,0];
 
+        var wPos = o.wPos || [1, 0, 1.6];
+
         var massCenter = o.massCenter || [0,0.25,0];
 
         this.findRotation( rot );
@@ -785,8 +788,10 @@ var view = ( function () {
 
         // center of mass
 
-        var axe = new THREE.AxisHelper(1);
-        scene.add( axe );
+        var helper = new carHelper(1, wPos);
+
+        //var axe = //THREE.AxisHelper(1);
+        scene.add( helper.mesh );
 
         // wheels
 
@@ -816,7 +821,7 @@ var view = ( function () {
             scene.add( w[i] );
         }
 
-        var car = { body:mesh, w:w, axe:axe, nw:o.nw || 4 };
+        var car = { body:mesh, w:w, axe:helper.mesh, nw:o.nw || 4, helper:helper };
 
         cars.push( car );
         carsSpeed.push( 0 );
@@ -966,9 +971,16 @@ var view = ( function () {
             m.body.position.set( a[n+1], a[n+2], a[n+3] );
             m.body.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
 
+            m.axe.quaternion.copy( m.body.quaternion );
+
            
 
             j = m.nw;//a[n+8];
+
+            if(j==4){
+                w = 8 * ( 4 + 1 );
+                m.helper.updateSuspension(a[n+w+0], a[n+w+1], a[n+w+2], a[n+w+3]);
+            }
             while(j--){
 
                 w = 8 * ( j + 1 );
@@ -1099,6 +1111,68 @@ var view = ( function () {
 
 
     }
+
+
+    var carHelper = function(size, p){
+        size = size || 1;
+        var d = 0.5;
+
+        this.py = p[1];
+
+        var vertices = new Float32Array( [
+            0, 0, 0,  size, 0, 0,
+            0, 0, 0,  0, size, 0,
+            0, 0, 0,  0, 0, size,
+
+            p[0]*d, p[1], p[2],    p[0]*d, p[1]+1, p[2],
+            -p[0]*d, p[1], p[2],   -p[0]*d, p[1]+1, p[2],
+            -p[0]*d, p[1],-p[2],   -p[0]*d, p[1]+1, -p[2],
+            p[0]*d, p[1], -p[2],    p[0]*d, p[1]+1, -p[2],
+        ] );
+
+        var colors = new Float32Array( [
+            1, 0, 0,  1, 0.6, 0,
+            0, 1, 0,  0.6, 1, 0,
+            0, 0, 1,  0, 0.6, 1,
+
+            1,1,0,    1,1,0,
+            1,1,0,    1,1,0,
+            1,1,0,    1,1,0,
+            1,1,0,    1,1,0,
+        ] );
+
+        var geometry = new THREE.BufferGeometry();
+        geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+        geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
+
+        this.positions = geometry.attributes.position.array;
+
+        var material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors } );
+
+        //var mesh 
+        this.mesh = new THREE.LineSegments( geometry, material);
+
+        //return mesh;
+
+    }
+
+    carHelper.prototype = {
+
+        updateSuspension : function (s0,s1,s2,s3) {
+            this.positions[22] = this.py+s0;
+            this.positions[28] = this.py+s1;
+            this.positions[34] = this.py+s2;
+            this.positions[40] = this.py+s3;
+
+            this.mesh.geometry.attributes.position.needsUpdate = true;
+        },
+        clear : function(){
+            this.mesh.geometry.dispose();
+            this.mesh.material.dispose();
+            this.mesh = null;
+        }
+
+    };
 
     return view;
 
