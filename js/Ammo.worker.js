@@ -107,6 +107,9 @@ self.onmessage = function ( e ) {
 
     var m = e.data.m;
 
+    var center;
+    var centerPoint;
+
     
 
     if(m == 'init'){
@@ -245,6 +248,9 @@ self.onmessage = function ( e ) {
             // speed km/h
             a[n+0] = b.getCurrentSpeedKmHour();//getRigidBody().getLinearVelocity().length() * 9.8;
 
+            center = b.getRigidBody().getCenterOfMassTransform();
+            centerPoint = center.getOrigin();
+
             //b.getRigidBody().getMotionState().getWorldTransform( trans );
             trans = b.getRigidBody().getWorldTransform();
             p = trans.getOrigin();
@@ -261,8 +267,8 @@ self.onmessage = function ( e ) {
             a[n+7] = r.w();
 
             // wheels pos / rot
-            a[n+8] = b.getNumWheels();
-            j = a[n+8];//2, 4 or 6;
+            //a[n+8] = b.getNumWheels();
+            j = b.getNumWheels();//a[n+8];//2, 4 or 6;
             while(j--){
                 b.updateWheelTransform( j, true );
                 t = b.getWheelTransformWS( j );
@@ -271,7 +277,12 @@ self.onmessage = function ( e ) {
                
                 w = 8 * ( j + 1 );
 
-                if( j == 1 ) a[n+w] = b.getWheelInfo(0).get_m_steering();
+                if( j == 0 ) a[n+w] = b.getWheelInfo(0).get_m_steering();
+
+                if( j == 1 ) a[n+w] = centerPoint.x();
+                if( j == 2 ) a[n+w] = centerPoint.y();
+                if( j == 3 ) a[n+w] = centerPoint.z();
+
                 //else a[n+w] = i;
                 a[n+w+1] = p.x();
                 a[n+w+2] = p.y();
@@ -539,7 +550,7 @@ function add ( o, extra ) {
         var hdt = o.hdt || "PHY_FLOAT";
 
         // Set this to your needs (inverts the triangles)
-        var flipEdge = o.flipEdge || false;
+        var flipEdge = o.flipEdge || true;
 
         //var lng = div[0] * div[1];
         var localScaling = vec3( size[0]/div[0] ,1, size[2]/div[1] );
@@ -986,9 +997,11 @@ function vehicle ( o ) {
     // physics setting
 
     // mass of vehicle in kg
-    var mass = o.mass || 1000
+    var mass = o.mass || 600;
     var localInertia = vec3();
     compound.calculateLocalInertia( mass, localInertia );
+
+    //console.log(localInertia.y());
     var motionState = new Ammo.btDefaultMotionState( startTransform );
 
     var rb = new Ammo.btRigidBodyConstructionInfo( mass, motionState, compound, localInertia);
@@ -1001,7 +1014,15 @@ function vehicle ( o ) {
     // car body
 
     var body = new Ammo.btRigidBody( rb );
-    //body.setCenterOfMassTransform( localTransform );
+
+    /*var massTransform = new Ammo.btTransform();
+    massTransform.setIdentity();
+    massTransform.setOrigin( v3( massCenter ) );
+    body.setCenterOfMassTransform( massTransform );
+
+    body.getMotionState().setWorldTransform( startTransform );*/
+
+
     body.setAngularVelocity( vec3() );
     body.setLinearVelocity( vec3() );
     body.setActivationState( 4 );
@@ -1016,18 +1037,22 @@ function vehicle ( o ) {
     // to k * 2.0 * btSqrt(m_suspensionStiffness) so k is proportional to critical damping.
     // k = 0.0 undamped & bouncy, k = 1.0 critical damping
     // k = 0.1 to 0.3 are good values , default 0.84
-    tuning.set_m_suspensionCompression( o.s_compression || 4.4 );
+    tuning.set_m_suspensionCompression( o.s_compression || 0.84);//4.4 );
     // The damping coefficient for when the suspension is expanding.
     // m_suspensionDamping should be slightly larger than set_m_suspensionCompression, eg k = 0.2 to 0.5, default : 0.88
-    tuning.set_m_suspensionDamping( o.s_relaxation || 2.3 );
+    tuning.set_m_suspensionDamping( o.s_relaxation || 0.88);//2.3 );
 
      // The maximum distance the suspension can be compressed in Cm // default 500
-    tuning.set_m_maxSuspensionTravelCm( o.s_travel || 400 );
+    tuning.set_m_maxSuspensionTravelCm( o.s_travel || 100 );
     // Maximum suspension force
     tuning.set_m_maxSuspensionForce( o.s_force || 10000 );
     // suspension resistance Length
     // The maximum length of the suspension (metres)
-    var s_length = o.s_length || 0.6;
+    var s_length = o.s_length || 0.2;
+
+
+    //suspensionForce = stiffness * (restLength – currentLength) + damping * (previousLength – currentLength) / deltaTime
+    // http://www.digitalrune.com/Blog/Post/1697/Car-Physics-for-3D-Games
 
     //----------------------------
     // wheel setting
@@ -1081,7 +1106,8 @@ function vehicle ( o ) {
     //console.log( car.getWheelInfo(0).get_m_wheelsDampingRelaxation() );
     //console.log( car.getWheelInfo(0).get_m_wheelsDampingCompression() );
     //console.log( car.getWheelInfo(0).get_m_suspensionRestLength1() );
-    console.log( car.getWheelInfo(0).get_m_maxSuspensionTravelCm() );
+    //console.log( car.getWheelInfo(0).get_m_maxSuspensionTravelCm() );
+    console.log( car.getWheelInfo(0).get_m_raycastInfo().get_m_suspensionLength()  )
 
     body.activate();
 

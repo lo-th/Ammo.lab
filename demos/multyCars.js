@@ -9,16 +9,18 @@ function afterLoad () {
 
     // infinie plane
     add({type:'plane'});
+
+    //add({type:'box', size:[100,2,1], pos:[0,1.1,0], mass:0});
     // load cars map
     view.addMap('cars.png', 'cars');
     // make cars geometry
     preparGeometry();
     // create cars
-    for (var i = 0; i<CARS.length; i++){
-        addVehicle( i, [-25+(i*4), 5,0], 'convex');
+    for (var i = 0; i < CARS.length; i++){
+        addVehicle( i, [-25+(i*4), 2,0], 'convex');
     }
 
-    // ! \\ set the car we drive 0 to 13
+    // ! \\ set the car we drive 0 to 1
     // use keyboard to controle car 
     view.setDriveCar( 0 );
     view.activeFollow();
@@ -45,17 +47,20 @@ var CARS = [
 function preparGeometry () {
 
     var geo = view.getGeo();
-    var i = CARS.length, o, dy;
+    var i = CARS.length, o, dy, y;
     while(i--){
         o = CARS[i];
 
-        o.posY = -geo['shape'+o.n].boundingBox.size().y * 0.5;
-        dy = geo['mcar'+o.n].boundingBox.size().y-geo['shape'+o.n].boundingBox.size().y;
+        y = geo['shape'+o.n].boundingBox.size().y;
 
-        geo['mcar'+o.n].translate( 0, o.posY+dy, 0 );
+        o.posY = (y * 0.5);
+        dy = (geo['mcar'+o.n].boundingBox.size().y - y);
 
-        geo['down'+o.n].translate( 0, o.posY+dy, 0 );
-        if( geo['inside'+o.n] ) geo['inside'+o.n].translate( 0, o.posY+dy, 0 );
+        //geo['shape'+o.n].translate( 0, o.posY, 0 );
+        //geo['mcar'+o.n].translate( 0, o.posY+dy, 0 );
+
+        //geo['down'+o.n].translate( 0, o.posY+dy, 0 );
+        //if( geo['inside'+o.n] ) geo['inside'+o.n].translate( 0, o.posY+dy, 0 );
 
 
     }
@@ -79,6 +84,8 @@ function addVehicle (id, pos, type) {
     
     var mesh = new THREE.Group();
 
+    //mesh.add( new THREE.Mesh( shape, mat.cars ));
+
     mesh.add( new THREE.Mesh( chassis, mat.cars ));
     mesh.add( new THREE.Mesh( down, mat.cars ));
     if( inside ) mesh.add( new THREE.Mesh( inside, mat.move ));
@@ -86,20 +93,22 @@ function addVehicle (id, pos, type) {
     // The maximum length of the suspension (metres)
     o.s_length = o.radius * 0.25;
     //The maximum distance the suspension can be compressed in Cm 
-    o.s_travel = (o.radius )*100;
+    o.s_travel = (o.radius * 0.25)*100;
     // Maximum suspension force
     o.s_force = o.mass*6.6;
 
-    o.s_compression = 0.82;
-    o.s_relaxation = 0.85;
+    o.s_compression = 0.84;
+    o.s_relaxation = 0.88;
     o.s_stiffness = 40;
 
 
 
-    var dy = o.posY;//o.size[1]*0.5;
+    var dy = 0;//o.posY;//o.size[1]*0.5;
     o.massCenter = [0,dy,0];
 
-    //o.wPos[1] = dy; 
+    //console.log(dy)
+
+    o.wPos[1] = o.radius;//dy; 
 
     if ( o.type == 'mesh' ) {
         o.massCenter = [0,dy,0];

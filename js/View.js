@@ -543,6 +543,7 @@ var view = ( function () {
             c = cars.pop();
             carsSpeed.pop();
             scene.remove( c.body );
+            scene.remove( c.axe );
             i = c.w.length;
             while(i--){
                 scene.remove( c.w[i] );
@@ -757,6 +758,8 @@ var view = ( function () {
             mesh = o.mesh;
             var k = mesh.children.length;
                 while(k--){
+                    mesh.children[k].position.set( massCenter[0], massCenter[1], massCenter[2] );
+                    //mesh.children[k].geometry.translate( massCenter[0], massCenter[1], massCenter[2] );
                     mesh.children[k].castShadow = true;
                     mesh.children[k].receiveShadow = true;
                 }
@@ -779,6 +782,11 @@ var view = ( function () {
         mesh.receiveShadow = true;
 
         scene.add( mesh );
+
+        // center of mass
+
+        var axe = new THREE.AxisHelper(1);
+        scene.add( axe );
 
         // wheels
 
@@ -808,7 +816,7 @@ var view = ( function () {
             scene.add( w[i] );
         }
 
-        var car = { body:mesh, w:w };
+        var car = { body:mesh, w:w, axe:axe, nw:o.nw || 4 };
 
         cars.push( car );
         carsSpeed.push( 0 );
@@ -958,13 +966,19 @@ var view = ( function () {
             m.body.position.set( a[n+1], a[n+2], a[n+3] );
             m.body.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
 
-            j = a[n+8];
+           
+
+            j = m.nw;//a[n+8];
             while(j--){
 
-               w = 8 * ( j + 1 );
-               //if( j == 1 ) steering = a[n+w];// for drive wheel
-               m.w[j].position.set( a[n+w+1], a[n+w+2], a[n+w+3] );
-               m.w[j].quaternion.set( a[n+w+4], a[n+w+5], a[n+w+6], a[n+w+7] );
+                w = 8 * ( j + 1 );
+                //if( j == 1 ) steering = a[n+w];// for drive wheel
+                if( j == 1 ) m.axe.position.x = a[n+w];
+                if( j == 2 ) m.axe.position.y = a[n+w];
+                if( j == 3 ) m.axe.position.z = a[n+w];
+
+                m.w[j].position.set( a[n+w+1], a[n+w+2], a[n+w+3] );
+                m.w[j].quaternion.set( a[n+w+4], a[n+w+5], a[n+w+6], a[n+w+7] );
 
             }
 

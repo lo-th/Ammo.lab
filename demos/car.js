@@ -24,7 +24,7 @@ function afterLoad () {
         pos:[0,1,0], // start position of car 
         rot:[0,90,0], // start rotation of car
         size:[ 1.6, 0.4, 3.6 ], // chassis size
-        massCenter:[ 0, -0.2, 0 ], // local center of mass (best is on chassis bottom)
+        massCenter:[ 0, 0.6, 0 ], // local center of mass (best is on chassis bottom)
 
         friction: 0.6, 
         restitution: 0.0, 
@@ -33,11 +33,11 @@ function afterLoad () {
 
         radius:0.4,// wheels radius
         deep:0.3, // wheels deep only for three cylinder
-        wPos:[1, -0.2, 1.6], // wheels position on chassis
+        wPos:[1, 0.4, 1.6], // wheels position on chassis
 
         // car setting
 
-        mass:1000,// mass of vehicle in kg
+        mass:600,// mass of vehicle in kg
         engine:1000, // Maximum driving force of the vehicle
         acceleration:10, // engine increment 
 
@@ -48,9 +48,9 @@ function afterLoad () {
         s_relaxation: 2.8, // The damping coefficient for when the suspension is expanding. default : 0.88
 
         s_stiffness: 100,// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car 
-        s_travel: 10, // The maximum distance the suspension can be compressed in Cm
+        s_travel: 100, // The maximum distance the suspension can be compressed in Cm
         s_force: 10000, // Maximum suspension force
-        s_length: 0.1, // The maximum length of the suspension in meter
+        s_length: 0.2,//0.1, // The maximum length of the suspension in meter
 
         // wheel setting
 

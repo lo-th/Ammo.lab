@@ -28,8 +28,8 @@ function demo() {
         type:'box', 
         pos:[0,10,0], // start position of car 
         rot:[0,0,0], // start rotation of car
-        size:[2,0.5,4], // chassis size
-        massCenter:[0,0.25,0], // local center of mass (best is on chassis bottom)
+        size:[1.6, 0.4, 3.6], // chassis size
+        massCenter:[0,0.6,0], // local center of mass (best is on chassis bottom)
 
         friction: 0.6, 
         restitution: 0.0, 
@@ -38,8 +38,11 @@ function demo() {
 
         radius:0.4,// wheels radius
         deep:0.3, // wheels deep
-        wPos:[1, 0, 1.6], // wheels position on chassis
+        wPos:[1, 0.4, 1.6], // wheels position on chassis
 
     });
+
+    view.setDriveCar( 0 );
+    view.activeFollow();
 
 };
