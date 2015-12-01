@@ -1107,7 +1107,7 @@ function vehicle ( o ) {
     //console.log( car.getWheelInfo(0).get_m_wheelsDampingCompression() );
     //console.log( car.getWheelInfo(0).get_m_suspensionRestLength1() );
     //console.log( car.getWheelInfo(0).get_m_maxSuspensionTravelCm() );
-    console.log( car.getWheelInfo(0).get_m_raycastInfo().get_m_suspensionLength()  )
+    //console.log( car.getWheelInfo(0).get_m_raycastInfo().get_m_contactPointWS().y() )
 
     body.activate();
 
