@@ -788,7 +788,7 @@ var view = ( function () {
 
         // center of mass
 
-        var helper = new carHelper(1, wPos);
+        var helper = new carHelper( wPos );
 
         //var axe = //THREE.AxisHelper(1);
         scene.add( helper.mesh );
@@ -1104,17 +1104,17 @@ var view = ( function () {
     }
 
 
-    var carHelper = function ( size, p ) {
+    var carHelper = function ( p ) {
 
-        size = size || 1;
+        var s = 0.2;
         var d = 0.5;
 
         this.py = p[1];
 
         var vertices = new Float32Array( [
-            0, 0, 0,  size, 0, 0,
-            0, 0, 0,  0, size, 0,
-            0, 0, 0,  0, 0, size,
+            -s, 0, 0,  s, 0, 0,
+            0, 0, 0,  0, s*2, 0,
+            0, 0, -s,  0, 0, s,
 
             p[0]*d, p[1], p[2],    p[0]*d, p[1]+1, p[2],
             -p[0]*d, p[1], p[2],   -p[0]*d, p[1]+1, p[2],
@@ -1123,9 +1123,9 @@ var view = ( function () {
         ] );
 
         var colors = new Float32Array( [
-            1, 0, 0,  1, 0.6, 0,
-            0, 1, 0,  0.6, 1, 0,
-            0, 0, 1,  0, 0.6, 1,
+            1, 1, 0,  1, 1, 0,
+            1, 1, 0,  0, 1, 0,
+            1, 1, 0,  1, 1, 0,
 
             1,1,0,    1,1,0,
             1,1,0,    1,1,0,
