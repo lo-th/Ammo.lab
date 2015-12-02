@@ -1000,15 +1000,6 @@ var view = ( function () {
 
     view.setLeft = function ( x ) { vs.x = x; };
 
-    /*view.errorMsg = function ( msg ) {
-
-        var er = document.createElement('div');
-        er.style.textAlign = 'center';
-        er.innerHTML = msg;
-        document.body.appendChild(er);
-
-    };*/
-
     view.tell = function ( str ) { debug.innerHTML = str; };
 
     view.resize = function () {
@@ -1113,7 +1104,8 @@ var view = ( function () {
     }
 
 
-    var carHelper = function(size, p){
+    var carHelper = function ( size, p ) {
+
         size = size || 1;
         var d = 0.5;
 
@@ -1149,27 +1141,28 @@ var view = ( function () {
 
         var material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors } );
 
-        //var mesh 
         this.mesh = new THREE.LineSegments( geometry, material);
-
-        //return mesh;
 
     }
 
     carHelper.prototype = {
 
-        updateSuspension : function (s0,s1,s2,s3) {
-            this.positions[22] = this.py+s0;
-            this.positions[28] = this.py+s1;
-            this.positions[34] = this.py+s2;
-            this.positions[40] = this.py+s3;
+        updateSuspension : function ( s0, s1, s2, s3 ) {
+
+            this.positions[22] = this.py-s0;
+            this.positions[28] = this.py-s1;
+            this.positions[34] = this.py-s2;
+            this.positions[40] = this.py-s3;
 
             this.mesh.geometry.attributes.position.needsUpdate = true;
+
         },
         clear : function(){
+
             this.mesh.geometry.dispose();
             this.mesh.material.dispose();
             this.mesh = null;
+
         }
 
     };

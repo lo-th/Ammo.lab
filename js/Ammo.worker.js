@@ -972,8 +972,11 @@ function vehicle ( o ) {
         incSteering: o.incSteering || 0.04, 
         maxSteering: o.maxSterring || 0.3,//Math.PI/6,
         incEngine: o.acceleration || 5, 
-        maxEngine: o.engine || 1000 
+        maxEngine: o.engine || 1000,
+        maxBreaking : o.maxBreaking || 100
     };
+
+
 
     //----------------------------
     // car shape 
@@ -1102,6 +1105,8 @@ function vehicle ( o ) {
         }
 
         addWheel( car, p, radius, tuning, s_length, w_roll, fw );
+
+        car.setBrake( carInfo.maxBreaking, i );
     
     };
 
@@ -1133,6 +1138,8 @@ function addWheel ( car, p, radius, tuning, s_length, w_roll, isFrontWheel ) {
     var wheel = car.addWheel( p, wheelDir, wheelAxe, s_length, radius, tuning, isFrontWheel );
     wheel.set_m_rollInfluence( w_roll );
 
+
+
 };
 
 function drive ( id ) {
@@ -1158,7 +1165,7 @@ function drive ( id ) {
     if( key[0] == 0 && key[1] == 0 ){
         if( u.engine > 1 ) u.engine *= 0.9;
         else if ( u.engine < -1 ) u.engine *= 0.9;
-        else { u.engine = 0; u.breaking = 10; }
+        else { u.engine = 0; u.breaking = u.maxBreaking; }
     }
 
     var i = wn;
