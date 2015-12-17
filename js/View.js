@@ -45,6 +45,8 @@ var view = ( function () {
     var isWithShadow = false;
     var shadowGround, light, ambient;
 
+    var perlin = new Perlin();
+
     var environment, envcontext, nEnv = 0, isWirframe = true;
     var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
 
@@ -64,7 +66,7 @@ var view = ( function () {
         // RENDERER
 
         try {
-            renderer = new THREE.WebGLRenderer({canvas:canvas, precision:"mediump", antialias:true, alpha:false });
+            renderer = new THREE.WebGLRenderer({ canvas:canvas, precision:"mediump", antialias:true, alpha:false });
         } catch( error ) {
             intro.message('<p>Sorry, your browser does not support WebGL.</p>'
                         + '<p>This application uses WebGL to quickly draw'
@@ -149,8 +151,8 @@ var view = ( function () {
 
     };
 
-    view.addMap = function(name, matName) {
-        var map = imagesLoader.load( "textures/"+ name );
+    view.addMap = function( name, matName ) {
+        var map = imagesLoader.load( 'textures/'+name );
         //map.wrapS = THREE.RepeatWrapping;
         //map.wrapT = THREE.RepeatWrapping;
         map.flipY = false;
@@ -551,6 +553,8 @@ var view = ( function () {
             }
         }
 
+        meshs.length = 0;
+
     };
 
     view.findRotation = function ( r ) {
@@ -646,6 +650,7 @@ var view = ( function () {
         // push 
         if( statique ) statics.push( mesh );
         else meshs.push( mesh );
+        
 
         // send to worker
         ammo.send( 'add', o );
@@ -870,13 +875,17 @@ var view = ( function () {
         var lng = div[0] * div[1]
         var data = new Float32Array( lng );
         var hdata =  new Float32Array( lng );
-        var perlin = new Perlin();
+        //var perlin = new Perlin();
         var sc = 1 / complexity;
+        var r = 1 / div[0];
+        var rx = (div[0]- 1) / size[0];
+        var rz = (div[1]- 1) / size[2];
+
 
         i = lng;
         while(i--){
-            var x = i % div[0], y = ~~ ( i / div[0] );
-            data[ i ] = 0.5 + ( perlin.noise( x * sc, y * sc ) * 0.5); // 0,1
+            var x = i % div[0], y = ~~ ( i * r );
+            data[ i ] = 0.5 + ( perlin.noise( (x+(pos[0]*rx))*sc, (y+(pos[2]*rz))*sc ) * 0.5); // 0,1
         }
 
         var g = new THREE.PlaneBufferGeometry( size[0], size[2], div[0] - 1, div[1] - 1 );
@@ -896,6 +905,8 @@ var view = ( function () {
             colors[ n + 1 ] = data[ i ] * 0.5; // green color
         }
 
+        //g.computeBoundingBox();
+        //g.computeBoundingSphere();
         g.computeVertexNormals();
 
         var mesh = new THREE.Mesh( g, mat.terrain );
@@ -923,13 +934,27 @@ var view = ( function () {
 
         var i = meshs.length, a = ar, n, m, j, w;
 
-        while(i--){
+        meshs.forEach( function( m, id ) {
+            var n = id * 8;
+            if ( a[n] > 0 ) {
+                if( a[n] > 50 && m.material.name == 'move' ) m.material = mat.movehigh;
+                else if(a[n] < 50 && m.material.name !== 'move') m.material = mat.move;
+                
+                m.position.set( a[n+1], a[n+2], a[n+3] );
+                m.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
+
+                if ( m.material.name == 'sleep' ) m.material = mat.move;
+
+            } else {
+                if ( m.material.name == 'move' || m.material.name == 'movehigh' ) m.material = mat.sleep;
+            }
+        });
+
+        /*while(i--){
             m = meshs[i];
             n = i * 8;
 
             if ( a[n] > 0 ) {
-                //if(i == 2) tell(a[n]* 9.8)
-
                 if( a[n] > 50 && m.material.name == 'move' ) m.material = mat.movehigh;
                 else if(a[n] < 50 && m.material.name !== 'move') m.material = mat.move;
                 
@@ -944,7 +969,8 @@ var view = ( function () {
             
             }
 
-        }
+        }*/
+
         // updtae character
         i = heros.length;
         a = hr;

@@ -27,7 +27,7 @@ var substep = 4;//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
-var terrainData = null;
+
 
 var timer = 0;
 var isBuffer;
@@ -43,7 +43,10 @@ var jr = new Float32Array( 100*4 ); // joint buffer max 100
 var hr = new Float32Array( 10*8 ); // hero buffer max 10
 
 // for terrain
-var hdata = null;
+//var hdata = null;
+var tmpData = {};
+var terrainData = {};
+var terrainList = [];
 var terrainNeedUpdate = false;
 
 var fixedTime = 0.01667;
@@ -144,7 +147,11 @@ self.onmessage = function ( e ) {
 
     if(m == 'terrain'){
 
-        hdata = e.data.hdata;
+        var name = e.data.name;
+        terrainList.push(name);
+        tmpData[name] = e.data.hdata;
+
+        //hdata = e.data.hdata;
         terrainNeedUpdate = true;
         
     }
@@ -160,7 +167,13 @@ self.onmessage = function ( e ) {
 
         if(tmpset!==null) set();
 
-        if( terrainNeedUpdate ) terrain_data();
+        if( terrainNeedUpdate ){
+            while(terrainList.length){
+                terrain_data(terrainList.pop());
+            }
+
+            terrainNeedUpdate = false;
+        }
 
         // ------- buffer data
 
@@ -183,7 +196,30 @@ self.onmessage = function ( e ) {
         var i = bodys.length, a = ar, n, b, p, r;
         var j, w, t;
 
-        while(i--){
+        bodys.forEach( function( b, id ) {
+            var n = id * 8;
+            a[n] = b.getLinearVelocity().length() * 9.8;//b.isActive() ? 1 : 0;
+
+            if ( a[n] > 0 ) {
+                //b.getMotionState().getWorldTransform( trans );
+                trans = b.getWorldTransform();
+                p = trans.getOrigin();
+                r = trans.getRotation();
+
+                a[n+1] = p.x();
+                a[n+2] = p.y();
+                a[n+3] = p.z();
+
+                a[n+4] = r.x();
+                a[n+5] = r.y();
+                a[n+6] = r.z();
+                a[n+7] = r.w();
+
+            }
+
+        });
+
+        /*while(i--){
 
             n = i * 8;
             b = bodys[i];
@@ -208,7 +244,7 @@ self.onmessage = function ( e ) {
 
             }
 
-        }
+        }*/
 
         i = heros.length;
         a = hr;
@@ -479,6 +515,12 @@ function reset () {
         
     }
 
+    bodys.length = 0;
+    solids.length = 0;
+    joints.length = 0;
+    cars.length = 0;
+    heros.length = 0;
+
     // clear body name object
     rigids = {};
 
@@ -499,6 +541,11 @@ function dispose () {
 
 };
 
+function wipe (obj) {
+    for (var p in obj) {
+        if (obj.hasOwnProperty(p)) delete obj[p];
+    }
+};
 
 //--------------------------------------------------
 //
@@ -537,6 +584,8 @@ function add ( o, extra ) {
 
     }
 
+    var name = o.name || '';
+
     var shape = null;
 
     var mass = o.mass || 0;
@@ -549,6 +598,9 @@ function add ( o, extra ) {
     var margin = o.margin || 0.04; // 0.04 is default // 0.005
 
     if( type == 'terrain' ){
+
+        if(!name) name = 'terrain';
+
         var div = o.div || [64,64];
 
         // Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
@@ -561,15 +613,17 @@ function add ( o, extra ) {
         var flipEdge = o.flipEdge || true;
 
         //var lng = div[0] * div[1];
-        var localScaling = vec3( size[0]/div[0] ,1, size[2]/div[1] );
+        var localScaling = vec3( size[0]/div[0], 1, size[2]/div[1] );
 
         //var localScaling = v3(size);
 
         // Creates height data buffer in Ammo heap
         //terrainData = Ammo._malloc( 4 * lng );
-        hdata = o.hdata;
+        //hdata = o.hdata;
 
-        terrain_data();
+        tmpData[name] = o.hdata;
+
+        terrain_data(name);
 
     }
 
@@ -617,7 +671,7 @@ function add ( o, extra ) {
         break;
 
         case 'terrain': 
-            shape = new Ammo.btHeightfieldTerrainShape( div[0], div[1], terrainData, o.heightScale || 1, -size[1], size[1], upAxis, hdt, flipEdge ); 
+            shape = new Ammo.btHeightfieldTerrainShape( div[0], div[1], terrainData[name], o.heightScale || 1, -size[1], size[1], upAxis, hdt, flipEdge ); 
             shape.setLocalScaling( localScaling );
         break;
 
@@ -669,7 +723,7 @@ function add ( o, extra ) {
     body.activate();
 
     //body.name = o.name || '';
-    var name = o.name || '';
+    //var name = o.name || '';
     if(name) rigids[name] = body;
 
     //body.isKinematic = o.kinematic || false;
@@ -684,7 +738,9 @@ function add ( o, extra ) {
     body.setActivationState( o.state || 1 );
     //body.setCollisionFlags();
 
-    if ( mass !== 0 ) bodys.push( body ); // only dynamique
+    if ( mass !== 0 ){ // only dynamique
+        bodys.push( body ); 
+    }
     else solids.push( body ); // only static
 
 };
@@ -730,18 +786,18 @@ function apply ( o ) {
 //
 //--------------------------------------------------
 
-function terrain_data(){
+function terrain_data(name){
 
-    var i = hdata.length, n;
+    var d = tmpData[name];
+    var i = d.length, n;
     // Creates height data buffer in Ammo heap
-    if( terrainData == null ) terrainData = Ammo._malloc( 4 * i );
+    if( terrainData[name] == null ) terrainData[name] = Ammo._malloc( 4 * i );
     // Copy the javascript height data array to the Ammo one.
+    
     while(i--){
         n = i * 4;
-        Ammo.HEAPF32[ terrainData + n >> 2 ] = hdata[i];
+        Ammo.HEAPF32[ terrainData[name] + n >> 2 ] = d[i];
     }
-
-    terrainNeedUpdate = false;
 
 };
 
