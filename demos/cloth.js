@@ -3,6 +3,7 @@ function demo() {
     cam ( 90, 20, 100 );
 
     view.setShadowPosY(-10.1)
+    view.hideGrid();
 
     // infinie plane
     //add({type:'plane', name:'ground', pos:[0,-10,0]});

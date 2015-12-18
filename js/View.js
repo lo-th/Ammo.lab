@@ -419,6 +419,11 @@ var view = ( function () {
         else helper.visible = true;
     }
 
+    view.hideGrid = function(){
+
+        helper.visible = false;
+    }
+
     // LOAD
 
     view.load = function ( name, callback ) {
