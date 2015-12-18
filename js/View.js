@@ -115,7 +115,7 @@ var view = ( function () {
         // MATERIAL
 
         mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'terrain', wireframe:true });
-        mat['cloth'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'cloth', wireframe:true, transparent:true, opacity:0.6, side: THREE.DoubleSide });
+        mat['cloth'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'cloth', wireframe:true, transparent:true, opacity:0.9, side: THREE.DoubleSide });
         mat['statique'] = new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6 });
         mat['hero'] = new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
@@ -906,7 +906,7 @@ var view = ( function () {
         var numVerts = g.attributes.position.array.length / 3;
         //console.log(numVerts)
 
-        var colors = g.attributes.color.array;
+        /*var colors = g.attributes.color.array;
         i = lng;
         while(i--){
             n = i * 3;
@@ -915,7 +915,7 @@ var view = ( function () {
             colors[ n + 2 ] = 1;
         }
 
-        g.attributes.color.needsUpdate = true;
+        g.attributes.color.needsUpdate = true;*/
         //g.dynamic = true;
 
         //var p = g.attributes.position.array;
