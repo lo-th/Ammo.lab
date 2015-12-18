@@ -15,11 +15,11 @@ function demo() {
 
     add({ 
         type:'cloth', name:'cloth', 
-        mass:0.3, state:4, pos:[0,0,0], 
+        mass:20, state:4, pos:[0,0,0], 
         size:[100,0,100],
         div:[64,64],
         viterations:10,
-        piterations:10,
+        piterations:100,
         fixed: 1+2+4+8,
         gendiags:true,
     });

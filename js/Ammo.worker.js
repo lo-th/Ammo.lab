@@ -478,11 +478,11 @@ function init () {
 
     worldInfo = world.getWorldInfo();
 
-    worldInfo.set_air_density( 1.2 );
+    /*worldInfo.set_air_density( 1.2 );
     worldInfo.set_water_density( 0 );
     worldInfo.set_water_offset( 0 );
     worldInfo.set_water_normal( vec3() );
-    worldInfo.set_m_gravity( vec3(0, -10, 0) );
+    worldInfo.set_m_gravity( vec3(0, -10, 0) );*/
     //info.set_m_maxDisplacement();
 
 
