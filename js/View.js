@@ -29,6 +29,7 @@ var view = ( function () {
     var meshs = [];
     var statics = [];
     var terrains = [];
+    var cloths = [];
     var cars = [];
     var carsSpeed = [];
     var heros = [];
@@ -44,6 +45,7 @@ var view = ( function () {
     var isCamFollow = false;
     var isWithShadow = false;
     var shadowGround, light, ambient;
+    var spy = -0.01;
 
     var perlin = new Perlin();
 
@@ -81,7 +83,7 @@ var view = ( function () {
 
         renderer.setClearColor(0x2A2A2A, 1);
         renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.sortObjects = true;
+        //renderer.sortObjects = true;
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
 
@@ -94,7 +96,7 @@ var view = ( function () {
 
         // CAMERA / CONTROLER
 
-        camera = new THREE.PerspectiveCamera( 60 , 1 , 0.1, 1000 );
+        camera = new THREE.PerspectiveCamera( 60 , 1 , 1, 1000 );
         camera.position.set( 0, 0, 30 );
         controls = new THREE.OrbitControls( camera, canvas );
         controls.target.set( 0, 0, 0 );
@@ -112,7 +114,8 @@ var view = ( function () {
 
         // MATERIAL
 
-        mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: true, name:'terrain', wireframe:true });
+        mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'terrain', wireframe:true });
+        mat['cloth'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'cloth', wireframe:true, transparent:true, opacity:0.6, side: THREE.DoubleSide });
         mat['statique'] = new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6 });
         mat['hero'] = new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
@@ -239,7 +242,7 @@ var view = ( function () {
         for( var old in mat ) {
             m = mat[old];
             name = m.name;
-            mat[name] = new THREE[matType]({ map:m.map, vertexColors:m.vertexColors, color:m.color.getHex(), name:name, wireframe:isWirframe, transparent:m.transparent, opacity:m.opacity });
+            mat[name] = new THREE[matType]({ map:m.map, vertexColors:m.vertexColors, color:m.color.getHex(), name:name, wireframe:isWirframe, transparent:m.transparent, opacity:m.opacity, side:m.side });
             if(!isWirframe){
                 mat[name].envMap = envMap;
                 mat[name].metalness = 0.5;
@@ -285,6 +288,12 @@ var view = ( function () {
         while(i--){
             name = terrains[i].material.name;
             terrains[i].material = mat[name];
+        };
+
+        i = cloths.length;
+        while(i--){
+            name = cloths[i].material.name;
+            cloths[i].material = mat[name];
         };
 
     }
@@ -518,6 +527,7 @@ var view = ( function () {
     view.reset = function () {
 
         view.removeRay();
+        view.setShadowPosY(-0.01);
 
         var c, i;
 
@@ -531,6 +541,10 @@ var view = ( function () {
 
         while( terrains.length > 0 ){ 
             scene.remove( terrains.pop() );
+        }
+
+        while( cloths.length > 0 ){ 
+            scene.remove( cloths.pop() );
         }
 
         while( heros.length > 0 ){ 
@@ -599,6 +613,11 @@ var view = ( function () {
         if(type == 'plane'){
             helper.position.set( pos[0], pos[1], pos[2] )
             ammo.send( 'add', o ); 
+            return;
+        }
+
+        if(type == 'cloth'){
+            this.cloth( o ); 
             return;
         }
 
@@ -862,6 +881,63 @@ var view = ( function () {
 
     };*/
 
+    view.cloth = function ( o ) {
+
+        var i, x, y, n;
+
+        var div = o.div || [16,16];
+        var size = o.size || [100,0,100];
+        var pos = o.pos || [0,0,0];
+
+        var lng = div[0] * div[1];
+
+        var g = new THREE.PlaneBufferGeometry( size[0], size[2], div[0] - 1, div[1] - 1 );
+        g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array(lng*3), 3 ) );
+        g.rotateX( -Math.PI90 );
+       //g.rotateY( Math.PI90 );
+        //g.scale( 1, 1, -1 );
+        //g.translate( -size[0]*0.5, 0, -size[2]*0.5 );
+
+        var numVerts = g.attributes.position.array.length / 3;
+        //console.log(numVerts)
+
+        var colors = g.attributes.color.array;
+        i = lng;
+        while(i--){
+            n = i * 3;
+            colors[ n + 0 ] = 1;
+            colors[ n + 1 ] = 1;
+            colors[ n + 2 ] = 1;
+        }
+
+        g.attributes.color.needsUpdate = true;
+        //g.dynamic = true;
+
+        var p = g.attributes.position.array;
+        console.log(p[0], p[1], p[2])
+
+        //g.computeVertexNormals();
+
+        var mesh = new THREE.Mesh( g, mat.cloth );
+        mesh.material.needsUpdate = true;
+        mesh.position.set( pos[0], pos[1], pos[2] );
+
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;//true;
+        //mesh.frustumCulled = false;
+
+        scene.add( mesh );
+        cloths.push( mesh );
+
+        o.size = size;
+        o.div = div;
+        o.pos = pos;
+
+        // send to worker
+        ammo.send( 'add', o );
+
+    }
+
     view.terrain = function ( o ) {
 
         var i, x, y, n;
@@ -872,7 +948,7 @@ var view = ( function () {
 
         var complexity = o.complexity || 30;
 
-        var lng = div[0] * div[1]
+        var lng = div[0] * div[1];
         var data = new Float32Array( lng );
         var hdata =  new Float32Array( lng );
         //var perlin = new Perlin();
@@ -930,9 +1006,9 @@ var view = ( function () {
 
     };
 
-    view.update = function(ar, dr, hr, jr){
+    view.update = function(ar, dr, hr, jr, cr){
 
-        var i = meshs.length, a = ar, n, m, j, w;
+        var i = meshs.length, a = ar, n, m, j, w, l;
 
         meshs.forEach( function( m, id ) {
             var n = id * 8;
@@ -1022,6 +1098,36 @@ var view = ( function () {
 
         }
 
+        // update cloth
+        l = cloths.length;
+        a = cr;
+        w = 0;
+
+        //while(i--){
+
+        for( i = 0; i<l; i++ ){
+            m = cloths[i];
+            p = m.geometry.attributes.position.array;
+            j = p.length;
+            
+            while(j--){
+                p[j] = a[j+w];
+            }
+
+            
+            m.geometry.attributes.position.needsUpdate = true;
+            m.geometry.attributes.color.needsUpdate = true;
+            m.geometry.computeVertexNormals();
+            m.geometry.attributes.normal.needsUpdate = true;
+            
+             
+           // m.geometry.computeBoundingSphere();
+            //m.geometry.computeBoundingBox();
+
+            w += p.length;
+
+        }
+
     };
 
     view.setLeft = function ( x ) { vs.x = x; };
@@ -1066,6 +1172,13 @@ var view = ( function () {
 
     };
 
+    view.setShadowPosY = function( y ){
+
+        spy = y;
+        if(shadowGround) shadowGround.position.y = spy;
+
+    }
+
     view.addShadow = function(){
 
         if(isWithShadow) return;
@@ -1077,9 +1190,9 @@ var view = ( function () {
         renderer.shadowMap.cullFace = THREE.CullFaceBack;
 
         if(!terrains.length){
-            shadowGround = new THREE.Mesh( new THREE.PlaneBufferGeometry( 100, 100, 8, 8 ), new THREE.MeshBasicMaterial({ color:0X070707 }) );
+            shadowGround = new THREE.Mesh( new THREE.PlaneBufferGeometry( 200, 200, 1, 1 ), new THREE.MeshBasicMaterial({ color:0X070707 }) );
             shadowGround.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI*0.5));
-            shadowGround.position.y = -0.01;
+            shadowGround.position.y = spy;
             shadowGround.castShadow = false;
             shadowGround.receiveShadow = true;
             scene.add( shadowGround );

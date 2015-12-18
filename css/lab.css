@@ -13,13 +13,17 @@
 html, body {
 	font-family: monospace;
 	font-size: 11px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 400;
+    /*line-height: 23px;*/
     height:100%;
     background:#2A2A2A;
     color:#dedede;
     /*color:#d2cec8;text-shadow: 1px 1px 1px rgba(0,0,0,0.3);*/
     overflow:hidden;
-    /*font-smooth: never;
-    -webkit-font-smoothing : none;*/
+    font-smooth: never;
+    -webkit-font-smoothing : none;
     pointer-events:none;
     /*text-shadow: 0.5px 0.5px 2px #000000;*/
 }
@@ -58,11 +62,15 @@ body{
 .menu {
     position:absolute;
     top : 0px;
-    left:0px;
-    width:100%;
+    left: 0px;
+    width: 100%;
     padding-left: 10px;
-    padding-top: 10px;
-    font-size: 16px;
+    padding-top: 9px;
+    font-size: 17px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 500;
+    line-height: 23px;
     pointer-events:auto;
     cursor:pointer;
     height: 40px;
@@ -72,17 +80,21 @@ body{
 }
 
 .menuPins {
-    right:20px;
-    top:10px;
+    right: 20px;
+    top: 10px;
     width: 20px;
     height: 20px;
     position: absolute;
     font-size: 18px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 500;
+    line-height: 16px;
     -ms-transform: rotate(90deg);
     -webkit-transform: rotate(90deg);
     transform: rotate(90deg);
-    line-height:17px;
-    font-weight: bold;
+    /*line-height:17px;
+    font-weight: bold;*/
     border:1px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
     text-align: center;
@@ -93,10 +105,15 @@ body{
 .menuButton {
     position:absolute;
     padding-left: 20px;
-    padding-top: 10px;
+    padding-top: 8px;
+    font-size: 17px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 500;
+    line-height: 23px;
     height: 40px;
-    left:-10px;
-    right:0px;
+    left: -10px;
+    right: 0px;
     background: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     pointer-events:none;
@@ -105,7 +122,11 @@ body{
 
 .title {
     position:absolute;
-    font-size: 16px;
+    font-size: 17px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 500;
+    line-height: 23px;
     left:10px;
     bottom:30px;
 }
@@ -197,14 +218,19 @@ body{
    /*  overflow: scroll;*/
     height: 100%;
     font-family: monospace;
-    /*-webkit-font-smoothing: subpixel-antialiased;*/
+    font-smooth: never;
+    -webkit-font-smoothing : none;
     font-size: 11px;
     /*line-height: 123%;
     letter-spacing:-1px;
     padding-right: 20px;*/
     background-color: none;
     border:none;
-    /*margin-left:10px;*/
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 400;
+    /*line-height: 23px;
+    margin-left:10px;*/
     
     
    /*

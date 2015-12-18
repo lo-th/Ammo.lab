@@ -32,7 +32,7 @@ var ammo = ( function () {
     var substep = 7;
 
     // main transphere array
-    var ar, dr, hr, jr;
+    var ar, dr, hr, jr, cr;
 
     var timerate = timestep * 1000;
     var fps = 0;
@@ -77,6 +77,7 @@ var ammo = ( function () {
             dr = e.data.dr;
             hr = e.data.hr;
             jr = e.data.jr;
+            cr = e.data.cr;
 
             //view.update( ar, dr );
 
@@ -92,7 +93,7 @@ var ammo = ( function () {
             
 
             timer = setTimeout( sendData , delay );
-            view.update( ar, dr, hr, jr );
+            view.update( ar, dr, hr, jr, cr );
             //timer = setInterval( sendData, delay );
 
         }
@@ -105,7 +106,7 @@ var ammo = ( function () {
         //clearInterval( timer );
         sendTime = now();
 
-        if( isBuffer ) worker.postMessage( { m:'step', key:view.getKey(), ar:ar, dr:dr, hr:hr, jr:jr } , [ ar.buffer, dr.buffer, hr.buffer, jr.buffer ] );
+        if( isBuffer ) worker.postMessage( { m:'step', key:view.getKey(), ar:ar, dr:dr, hr:hr, jr:jr, cr:cr } , [ ar.buffer, dr.buffer, hr.buffer, jr.buffer, cr.buffer ] );
         else worker.postMessage( { m:'step', key:view.getKey() } );
 
         tell( delay +' ms<br>' + fps +' fps');

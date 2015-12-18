@@ -16,9 +16,10 @@
 var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
 var world = null;
-var solver, collision, dispatcher, broadphase, trans;
+var worldInfo = null;
+var solver, solverSoft, collision, dispatcher, broadphase, trans;
 // array
-var bodys, joints, cars, solids, heros, carsInfo;
+var bodys, softs, joints, cars, solids, heros, carsInfo;
 // object
 var rigids;
 
@@ -41,6 +42,7 @@ var ar = new Float32Array( 1000*8 ); // rigid buffer max 1000
 var dr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
 var jr = new Float32Array( 100*4 ); // joint buffer max 100
 var hr = new Float32Array( 10*8 ); // hero buffer max 10
+var cr = new Float32Array( 8192*3 ); //cloth buffer
 
 // for terrain
 //var hdata = null;
@@ -143,6 +145,8 @@ self.onmessage = function ( e ) {
 
     if(m == 'gravity') gravity( e.data.g );
 
+    if(m == 'anchor') anchor( e.data.o );
+
     if(m == 'apply') apply( e.data.o );
 
     if(m == 'terrain'){
@@ -183,6 +187,7 @@ self.onmessage = function ( e ) {
             dr = e.data.dr;
             hr = e.data.hr;
             jr = e.data.jr;
+            cr = e.data.cr;
             
         }
 
@@ -193,7 +198,7 @@ self.onmessage = function ( e ) {
 
         drive( currentCar );
 
-        var i = bodys.length, a = ar, n, b, p, r;
+        var i = bodys.length, a = ar, n, b, p, r, l, node;
         var j, w, t;
 
         bodys.forEach( function( b, id ) {
@@ -340,10 +345,39 @@ self.onmessage = function ( e ) {
 
         }
 
+
+        // softs update
+
+        l = softs.length;
+        a = cr;
+        w = 0;
+        
+
+        //while(i--){
+
+        for( i = 0; i<l; i++ ){
+
+            b = softs[i].get_m_nodes();
+            j = b.size();
+            
+            while(j--){
+                n = (j*3) + (w*3);
+                node = b.at( j );
+                p = node.get_m_x();
+                a[n] = p.x();
+                a[n+1] = p.y();
+                a[n+2] = p.z();
+            }
+
+            w += b.size();
+        }
+
         // ------- post step
 
-        if( isBuffer ) self.postMessage({ m:'step', ar:ar, dr:dr, hr:hr, jr:jr },[ ar.buffer, dr.buffer, hr.buffer, jr.buffer ]);
-        else self.postMessage( { m:'step', ar:ar, dr:dr, hr:hr, jr:jr } );
+        postStep();
+
+        //if( isBuffer ) self.postMessage({ m:'step', ar:ar, dr:dr, hr:hr, jr:jr, cr:cr },[ ar.buffer, dr.buffer, hr.buffer, jr.buffer, cr.buffer ]);
+        //else self.postMessage( { m:'step', ar:ar, dr:dr, hr:hr, jr:jr } );
         
     }
 
@@ -352,8 +386,8 @@ self.onmessage = function ( e ) {
 
 function postStep(){
 
-    if( isBuffer ) self.postMessage({ m:'step', ar:ar, dr:dr, hr:hr, jr:jr },[ ar.buffer, dr.buffer, hr.buffer, jr.buffer ]);
-    else self.postMessage( { m:'step', ar:ar, dr:dr } );
+    if( isBuffer ) self.postMessage({ m:'step', ar:ar, dr:dr, hr:hr, jr:jr, cr:cr },[ ar.buffer, dr.buffer, hr.buffer, jr.buffer, cr.buffer ]);
+    else self.postMessage( { m:'step', ar:ar, dr:dr, hr:hr, jr:jr, cr:cr } );
 
 };
 
@@ -418,7 +452,11 @@ function init () {
     if( world !== null ) return;
 
     solver = new Ammo.btSequentialImpulseConstraintSolver();
-    collision = new Ammo.btDefaultCollisionConfiguration();
+    solverSoft = new Ammo.btDefaultSoftBodySolver();
+
+    //collision = new Ammo.btDefaultCollisionConfiguration();
+    collision = new Ammo.btSoftBodyRigidBodyCollisionConfiguration();
+
     dispatcher = new Ammo.btCollisionDispatcher( collision );
     trans = new Ammo.btTransform();
 
@@ -433,13 +471,25 @@ function init () {
         
     }
 
-    world = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
+    //world = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
+    world = new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collision, solverSoft );
     world.setGravity( vec3(0, -9.8, 0) );
     //broadphase.getOverlappingPairCache().setInternalGhostPairCallback( new Ammo.btGhostPairCallback() );
 
-    //console.log(world);
+    worldInfo = world.getWorldInfo();
+
+    worldInfo.set_air_density( 1.2 );
+    worldInfo.set_water_density( 0 );
+    worldInfo.set_water_offset( 0 );
+    worldInfo.set_water_normal( vec3() );
+    worldInfo.set_m_gravity( vec3(0, -10, 0) );
+    //info.set_m_maxDisplacement();
+
+
+    console.log(world.getWorldInfo());
 
     bodys = [];
+    softs = [];
     joints = [];
     cars = [];
     carsInfo = [];
@@ -515,11 +565,20 @@ function reset () {
         
     }
 
+    while( softs.length > 0){
+
+        b = softs.pop();
+        world.removeSoftBody( b );
+        Ammo.destroy( b );
+
+    }
+
     bodys.length = 0;
     solids.length = 0;
     joints.length = 0;
     cars.length = 0;
     heros.length = 0;
+    softs.length = 0;
 
     // clear body name object
     rigids = {};
@@ -587,10 +646,13 @@ function add ( o, extra ) {
     var name = o.name || '';
 
     var shape = null;
+    var isSoft = false;
 
     var mass = o.mass || 0;
     var size = o.size || [1,1,1];
     var dir = o.dir || [0,1,0]; // for infinite plane
+
+    var div = o.div || [64,64];
     
     var pos = o.pos || [0,0,0];
     var quat = o.quat || [0,0,0,1];
@@ -601,7 +663,7 @@ function add ( o, extra ) {
 
         if(!name) name = 'terrain';
 
-        var div = o.div || [64,64];
+        //var div = o.div || [64,64];
 
         // Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
         var upAxis = 1;
@@ -675,9 +737,15 @@ function add ( o, extra ) {
             shape.setLocalScaling( localScaling );
         break;
 
+        case 'cloth': 
+            isSoft = true;
+            //shape = new Ammo.btHeightfieldTerrainShape( div[0], div[1], terrainData[name], o.heightScale || 1, -size[1], size[1], upAxis, hdt, flipEdge ); 
+            //shape.setLocalScaling( localScaling );
+        break;
+
     }
 
-    if(shape.setMargin !== undefined ){ shape.setMargin( margin ); }
+    if(shape && shape.setMargin !== undefined ){ shape.setMargin( margin ); }
 
     if( extra == 'isShape' ) return shape;
     if( extra == 'isGhost' ){ 
@@ -691,21 +759,62 @@ function add ( o, extra ) {
     startTransform.setOrigin( v3( pos ) );
     startTransform.setRotation( q4( quat ) );
 
-    var localInertia = vec3();
-    shape.calculateLocalInertia( mass, localInertia );
-    var motionState = new Ammo.btDefaultMotionState( startTransform );
-
-    var rb = new Ammo.btRigidBodyConstructionInfo( mass, motionState, shape, localInertia );
-    rb.set_m_friction( o.friction || 0.5 );
-    rb.set_m_restitution( o.restitution || 0 );
+    
 
 
 
-    var body = new Ammo.btRigidBody( rb );
+    var body;
+
+    if( isSoft ){
+
+        var gendiags = o.gendiags || true;
+        var fixed = o.fixed || 0;
+
+        var mw = size[0] * 0.5;
+        var mh = size[2] * 0.5;
+        /*var p0 = v3([pos[0]+mw, pos[1], pos[2]+mh]);
+        var p1 = v3([pos[0]-mw, pos[1], pos[2]+mh]);
+        var p2 = v3([pos[0]+mw, pos[1], pos[2]-mh]);
+        var p3 = v3([pos[0]-mw, pos[1], pos[2]-mh]);*/
+        var p0 = v3([ -mw, 0, -mh]);
+        var p1 = v3([ mw, 0, -mh]);
+        var p2 = v3([ -mw, 0, mh]);
+        var p3 = v3([ mw, 0, mh]);
+        var softBodyHelpers = new Ammo.btSoftBodyHelpers();
+        //console.log(softBodyHelpers);
+        body = softBodyHelpers.CreatePatch( worldInfo, p0, p1, p2, p3, div[0], div[1], fixed, gendiags  );
+        var sb = body.get_m_cfg();
+        sb.set_viterations( o.viterations || 10 );
+        sb.set_piterations( o.piterations || 10 );
+        body.setTotalMass( mass, false );
+
+        //body.setWorldTransform(startTransform);
+
+        console.log(body);
+
+    } else {
+
+        /*var startTransform = new Ammo.btTransform();
+        startTransform.setIdentity();
+        startTransform.setOrigin( v3( pos ) );
+        startTransform.setRotation( q4( quat ) );*/
+
+        var localInertia = vec3();
+        shape.calculateLocalInertia( mass, localInertia );
+        var motionState = new Ammo.btDefaultMotionState( startTransform );
+
+        var rb = new Ammo.btRigidBodyConstructionInfo( mass, motionState, shape, localInertia );
+        rb.set_m_friction( o.friction || 0.5 );
+        rb.set_m_restitution( o.restitution || 0 );
+        body = new Ammo.btRigidBody( rb );
+
+    }
+
     if ( mass !== 0 ){
         body.setCollisionFlags(o.flag || 0);
         //body.setCollisionFlags(1); 
-        world.addRigidBody( body, o.group || 1, o.mask || -1 );
+        if( isSoft ) world.addSoftBody( body, o.group || 1, o.mask || -1 );
+        else world.addRigidBody( body, o.group || 1, o.mask || -1 );
         
     } else {
         body.setCollisionFlags(o.flag || 1); 
@@ -739,11 +848,16 @@ function add ( o, extra ) {
     //body.setCollisionFlags();
 
     if ( mass !== 0 ){ // only dynamique
-        bodys.push( body ); 
+        if( isSoft ) softs.push( body );
+        else bodys.push( body ); 
     }
     else solids.push( body ); // only static
 
 };
+
+function anchor( o ){
+    getByName(o.soft).appendAnchor( o.pos, getByName(o.body), false, o.influence || 0.5 );
+}
 
 function getByName(name){
 
