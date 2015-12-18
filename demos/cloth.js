@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( 90, 30, 40 );
+    cam ( 90, 20, 100 );
 
     view.setShadowPosY(-10.1)
 
@@ -25,6 +25,10 @@ function demo() {
         fixed: 1+2+4+8,
         gendiags:true,
     });
+
+    add({ type:'sphere', size:[3], pos:[-20, 100, 0], mass:1})
+    add({ type:'sphere', size:[3], pos:[20, 200, 0], mass:1})
+    add({ type:'sphere', size:[3], pos:[0, 300, -20], mass:1})
 
     //anchor({soft:'cloth', body:'ground', pos:0});
     //anchor({soft:'cloth', body:'ground', pos:100});
