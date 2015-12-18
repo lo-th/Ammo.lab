@@ -486,7 +486,7 @@ function init () {
     //info.set_m_maxDisplacement();
 
 
-    console.log(world.getWorldInfo());
+    //console.log(world.getWorldInfo());
 
     bodys = [];
     softs = [];
@@ -786,11 +786,15 @@ function add ( o, extra ) {
         var sb = body.get_m_cfg();
         sb.set_viterations( o.viterations || 10 );
         sb.set_piterations( o.piterations || 10 );
+        sb.set_citerations( o.citerations || 4 );
+        sb.set_diterations( o.diterations || 0 );
         body.setTotalMass( mass, false );
+       // body.getCollisionShape().setMargin(margin);
+
 
         //body.setWorldTransform(startTransform);
 
-        console.log(body);
+        //console.log(body.get_m_cfg().get_viterations());
 
     } else {
 

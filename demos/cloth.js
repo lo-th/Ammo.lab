@@ -19,7 +19,9 @@ function demo() {
         size:[100,0,100],
         div:[64,64],
         viterations:10,
-        piterations:100,
+        piterations:60,
+        citerations:4,
+        diterations:0,
         fixed: 1+2+4+8,
         gendiags:true,
     });

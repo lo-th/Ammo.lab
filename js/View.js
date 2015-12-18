@@ -913,8 +913,8 @@ var view = ( function () {
         g.attributes.color.needsUpdate = true;
         //g.dynamic = true;
 
-        var p = g.attributes.position.array;
-        console.log(p[0], p[1], p[2])
+        //var p = g.attributes.position.array;
+        //console.log(p[0], p[1], p[2])
 
         //g.computeVertexNormals();
 
@@ -1008,7 +1008,7 @@ var view = ( function () {
 
     view.update = function(ar, dr, hr, jr, cr){
 
-        var i = meshs.length, a = ar, n, m, j, w, l;
+        var i = meshs.length, a = ar, n, m, j, w, l, c;
 
         meshs.forEach( function( m, id ) {
             var n = id * 8;
@@ -1108,17 +1108,28 @@ var view = ( function () {
         for( i = 0; i<l; i++ ){
             m = cloths[i];
             p = m.geometry.attributes.position.array;
+            c = m.geometry.attributes.color.array;
             j = p.length;
+
+            n = 2;
             
             while(j--){
                 p[j] = a[j+w];
+                
+                
+
+                if(n==1) c[j] = Math.abs(p[j]/10);
+                //n = j*3;
+
+                n--;
+                n = n<0 ? 2 : n;
+
             }
 
             
             m.geometry.attributes.position.needsUpdate = true;
             m.geometry.attributes.color.needsUpdate = true;
             m.geometry.computeVertexNormals();
-            m.geometry.attributes.normal.needsUpdate = true;
             
              
            // m.geometry.computeBoundingSphere();
