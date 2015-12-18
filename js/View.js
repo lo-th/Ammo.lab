@@ -1013,7 +1013,7 @@ var view = ( function () {
 
     view.update = function(ar, dr, hr, jr, cr){
 
-        var i = meshs.length, a = ar, n, m, j, w, l, c;
+        var i = meshs.length, a = ar, n, m, j, w, l, c, cc;
 
         meshs.forEach( function( m, id ) {
             var n = id * 8;
@@ -1123,7 +1123,12 @@ var view = ( function () {
                 
                 
 
-                if(n==1) c[j] = Math.abs(p[j]/10);
+                if(n==1){ 
+                    cc = Math.abs(p[j]/10);
+                    c[j-1] = cc;
+                    c[j] = cc;
+                    c[j+1] = cc;
+                }
                 //n = j*3;
 
                 n--;
