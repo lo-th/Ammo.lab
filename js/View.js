@@ -533,6 +533,7 @@ var view = ( function () {
 
         view.removeRay();
         view.setShadowPosY(-0.01);
+        helper.visible = true;
 
         var c, i;
 

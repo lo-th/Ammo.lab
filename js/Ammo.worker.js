@@ -460,7 +460,7 @@ function init () {
     dispatcher = new Ammo.btCollisionDispatcher( collision );
     trans = new Ammo.btTransform();
 
-    var type = 2;
+    var type = 3;
     var s = 1000;
 
     switch( type ){
