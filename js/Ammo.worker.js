@@ -357,27 +357,33 @@ self.onmessage = function ( e ) {
 
             t = softs[i].softType; // type of soft body
 
-            b = softs[i].get_m_nodes();
-            j = b.size();
-            
-            while(j--){
-                n = (j*3) + (w*3);
-                node = b.at( j );
-                p = node.get_m_x();
-                a[n] = p.x();
-                a[n+1] = p.y();
-                a[n+2] = p.z();
-            }
+            if(t==1){ // cloth
 
-            w += b.size();
+                b = softs[i].get_m_nodes();
+                j = b.size();
+                
+                while(j--){
+                    n = (j*3) + w;
+                    node = b.at( j );
+                    p = node.get_m_x();
+                    a[n] = p.x();
+                    a[n+1] = p.y();
+                    a[n+2] = p.z();
+                }
+
+                w += b.size()*3;
+
+            }
+            if(t==2){ // rope
+            }
+            if(t==3){ // ellipsoid
+            }
+            
         }
 
         // ------- post step
 
         postStep();
-
-        //if( isBuffer ) self.postMessage({ m:'step', ar:ar, dr:dr, hr:hr, jr:jr, cr:cr },[ ar.buffer, dr.buffer, hr.buffer, jr.buffer, cr.buffer ]);
-        //else self.postMessage( { m:'step', ar:ar, dr:dr, hr:hr, jr:jr } );
         
     }
 
@@ -768,6 +774,8 @@ function add ( o, extra ) {
         var gendiags = o.gendiags || true;
         var fixed = o.fixed || 0;
 
+        var softBodyHelpers = new Ammo.btSoftBodyHelpers();
+
         switch( type ){
             case 'cloth':
                 var mw = size[0] * 0.5;
@@ -776,28 +784,31 @@ function add ( o, extra ) {
                 var p1 = v3([ mw, 0, -mh]);
                 var p2 = v3([ -mw, 0, mh]);
                 var p3 = v3([ mw, 0, mh]);
-                var softBodyHelpers = new Ammo.btSoftBodyHelpers();
+                
                 body = softBodyHelpers.CreatePatch( worldInfo, p0, p1, p2, p3, div[0], div[1], fixed, gendiags  );
-                var sb = body.get_m_cfg();
-                sb.set_viterations( o.viterations || 10 );
-                sb.set_piterations( o.piterations || 10 );
-                sb.set_citerations( o.citerations || 4 );
-                sb.set_diterations( o.diterations || 0 );
-                body.setTotalMass( mass, false );
                 body.softType = 1;
             break;
             case 'rope':
+                var p0 = o.start || v3([ -10, 0, 0]); // start
+                var p1 = o.end || v3([ 10, 0, 0]); // end
 
-                body = softBodyHelpers.CreateRope( worldInfo, p0, p1, p2, p3, div[0], div[1], fixed, gendiags  );
+                body = softBodyHelpers.CreateRope( worldInfo, p0, p1, o.numSegment || 10, fixed );
                 body.softType = 2;
-
             break;
             case 'ellipsoid':
-
-                body = softBodyHelpers.CreateEllipsoid( worldInfo, p0, p1, p2, p3, div[0], div[1], fixed, gendiags  );
+                var p0 = o.center || v3([ 0, 0, 0]); // start
+                var p1 = o.radius || v3([ 3, 3, 3]); // end
+                body = softBodyHelpers.CreateEllipsoid( worldInfo, p0, p1, o.res || 512  );
                 body.softType = 3;
             break;
         }
+
+        var sb = body.get_m_cfg();
+        if( o.viterations !== undefined ) sb.set_viterations( o.viterations );//10
+        if( o.piterations !== undefined ) sb.set_piterations( o.piterations );//10
+        if( o.citerations !== undefined ) sb.set_citerations( o.citerations );//4
+        if( o.diterations !== undefined ) sb.set_diterations( o.diterations );//0
+        body.setTotalMass( mass, false );
 
         
 
@@ -806,7 +817,7 @@ function add ( o, extra ) {
 
 
         //body.setWorldTransform(startTransform);
-        console.log(softBodyHelpers)
+        //console.log(sb)
 
         //console.log(body.get_m_cfg().get_viterations());
 

@@ -1097,37 +1097,40 @@ var view = ( function () {
 
         for( i = 0; i<l; i++ ){
 
-            t = softs[i].softType; // type of softBody
-
             m = softs[i];
-            p = m.geometry.attributes.position.array;
-            c = m.geometry.attributes.color.array;
-            j = p.length;
+            t = m.softType; // type of softBody
 
-            n = 2;
-            
-            while(j--){
-                p[j] = a[j+w];
-                if(n==1){ 
-                    cc = Math.abs(p[j]/10);
-                    c[j-1] = cc;
-                    c[j] = cc;
-                    c[j+1] = cc;
+            if(t==1){ // cloth
+                p = m.geometry.attributes.position.array;
+                c = m.geometry.attributes.color.array;
+                j = p.length;
+
+                n = 2;
+                
+                while(j--){
+                    p[j] = a[j+w];
+                    if(n==1){ 
+                        cc = Math.abs(p[j]/10);
+                        c[j-1] = cc;
+                        c[j] = cc;
+                        c[j+1] = cc;
+                    }
+                    n--;
+                    n = n<0 ? 2 : n;
                 }
-                n--;
-                n = n<0 ? 2 : n;
+
+                m.geometry.attributes.position.needsUpdate = true;
+                m.geometry.attributes.color.needsUpdate = true;
+                m.geometry.computeVertexNormals();
+                //m.geometry.computeBoundingSphere();
+                //m.geometry.computeBoundingBox();
+
+                w += p.length;
+
             }
 
             
-            m.geometry.attributes.position.needsUpdate = true;
-            m.geometry.attributes.color.needsUpdate = true;
-            m.geometry.computeVertexNormals();
             
-             
-           // m.geometry.computeBoundingSphere();
-            //m.geometry.computeBoundingBox();
-
-            w += p.length;
 
         }
 
