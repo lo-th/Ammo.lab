@@ -29,7 +29,7 @@ var view = ( function () {
     var meshs = [];
     var statics = [];
     var terrains = [];
-    var cloths = [];
+    var softs = [];
     var cars = [];
     var carsSpeed = [];
     var heros = [];
@@ -290,10 +290,10 @@ var view = ( function () {
             terrains[i].material = mat[name];
         };
 
-        i = cloths.length;
+        i = softs.length;
         while(i--){
-            name = cloths[i].material.name;
-            cloths[i].material = mat[name];
+            name = softs[i].material.name;
+            softs[i].material = mat[name];
         };
 
     }
@@ -549,8 +549,8 @@ var view = ( function () {
             scene.remove( terrains.pop() );
         }
 
-        while( cloths.length > 0 ){ 
-            scene.remove( cloths.pop() );
+        while( softs.length > 0 ){ 
+            scene.remove( softs.pop() );
         }
 
         while( heros.length > 0 ){ 
@@ -905,24 +905,6 @@ var view = ( function () {
         //g.translate( -size[0]*0.5, 0, -size[2]*0.5 );
 
         var numVerts = g.attributes.position.array.length / 3;
-        //console.log(numVerts)
-
-        /*var colors = g.attributes.color.array;
-        i = lng;
-        while(i--){
-            n = i * 3;
-            colors[ n + 0 ] = 1;
-            colors[ n + 1 ] = 1;
-            colors[ n + 2 ] = 1;
-        }
-
-        g.attributes.color.needsUpdate = true;*/
-        //g.dynamic = true;
-
-        //var p = g.attributes.position.array;
-        //console.log(p[0], p[1], p[2])
-
-        //g.computeVertexNormals();
 
         var mesh = new THREE.Mesh( g, mat.cloth );
         mesh.material.needsUpdate = true;
@@ -932,8 +914,10 @@ var view = ( function () {
         mesh.receiveShadow = true;//true;
         //mesh.frustumCulled = false;
 
+        mesh.softType = 1;
+
         scene.add( mesh );
-        cloths.push( mesh );
+        softs.push( mesh );
 
         o.size = size;
         o.div = div;
@@ -1012,9 +996,9 @@ var view = ( function () {
 
     };
 
-    view.update = function(ar, dr, hr, jr, cr){
+    view.update = function(ar, dr, hr, jr, cr ){
 
-        var i = meshs.length, a = ar, n, m, j, w, l, c, cc;
+        var i = meshs.length, a = ar, n, m, j, w, l, c, cc, t;
 
         meshs.forEach( function( m, id ) {
             var n = id * 8;
@@ -1105,14 +1089,17 @@ var view = ( function () {
         }
 
         // update cloth
-        l = cloths.length;
+        l = softs.length;
         a = cr;
         w = 0;
 
         //while(i--){
 
         for( i = 0; i<l; i++ ){
-            m = cloths[i];
+
+            t = softs[i].softType; // type of softBody
+
+            m = softs[i];
             p = m.geometry.attributes.position.array;
             c = m.geometry.attributes.color.array;
             j = p.length;
@@ -1121,20 +1108,14 @@ var view = ( function () {
             
             while(j--){
                 p[j] = a[j+w];
-                
-                
-
                 if(n==1){ 
                     cc = Math.abs(p[j]/10);
                     c[j-1] = cc;
                     c[j] = cc;
                     c[j+1] = cc;
                 }
-                //n = j*3;
-
                 n--;
                 n = n<0 ? 2 : n;
-
             }
 
             

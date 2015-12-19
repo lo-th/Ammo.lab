@@ -43,7 +43,7 @@ var dr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
 var jr = new Float32Array( 100*4 ); // joint buffer max 100
 var hr = new Float32Array( 10*8 ); // hero buffer max 10
 var cr = new Float32Array( 8192*3 ); //cloth buffer
-
+var tr = new Float32Array( 20 ); //soft type buffer
 // for terrain
 //var hdata = null;
 var tmpData = {};
@@ -188,6 +188,7 @@ self.onmessage = function ( e ) {
             hr = e.data.hr;
             jr = e.data.jr;
             cr = e.data.cr;
+            tr = e.data.tr;
             
         }
 
@@ -351,11 +352,10 @@ self.onmessage = function ( e ) {
         l = softs.length;
         a = cr;
         w = 0;
-        
-
-        //while(i--){
 
         for( i = 0; i<l; i++ ){
+
+            t = softs[i].softType; // type of soft body
 
             b = softs[i].get_m_nodes();
             j = b.size();
@@ -737,10 +737,8 @@ function add ( o, extra ) {
             shape.setLocalScaling( localScaling );
         break;
 
-        case 'cloth': 
+        case 'cloth':case 'rope':case 'ellipsoid': 
             isSoft = true;
-            //shape = new Ammo.btHeightfieldTerrainShape( div[0], div[1], terrainData[name], o.heightScale || 1, -size[1], size[1], upAxis, hdt, flipEdge ); 
-            //shape.setLocalScaling( localScaling );
         break;
 
     }
@@ -770,29 +768,45 @@ function add ( o, extra ) {
         var gendiags = o.gendiags || true;
         var fixed = o.fixed || 0;
 
-        var mw = size[0] * 0.5;
-        var mh = size[2] * 0.5;
-        /*var p0 = v3([pos[0]+mw, pos[1], pos[2]+mh]);
-        var p1 = v3([pos[0]-mw, pos[1], pos[2]+mh]);
-        var p2 = v3([pos[0]+mw, pos[1], pos[2]-mh]);
-        var p3 = v3([pos[0]-mw, pos[1], pos[2]-mh]);*/
-        var p0 = v3([ -mw, 0, -mh]);
-        var p1 = v3([ mw, 0, -mh]);
-        var p2 = v3([ -mw, 0, mh]);
-        var p3 = v3([ mw, 0, mh]);
-        var softBodyHelpers = new Ammo.btSoftBodyHelpers();
-        //console.log(softBodyHelpers);
-        body = softBodyHelpers.CreatePatch( worldInfo, p0, p1, p2, p3, div[0], div[1], fixed, gendiags  );
-        var sb = body.get_m_cfg();
-        sb.set_viterations( o.viterations || 10 );
-        sb.set_piterations( o.piterations || 10 );
-        sb.set_citerations( o.citerations || 4 );
-        sb.set_diterations( o.diterations || 0 );
-        body.setTotalMass( mass, false );
+        switch( type ){
+            case 'cloth':
+                var mw = size[0] * 0.5;
+                var mh = size[2] * 0.5;
+                var p0 = v3([ -mw, 0, -mh]);
+                var p1 = v3([ mw, 0, -mh]);
+                var p2 = v3([ -mw, 0, mh]);
+                var p3 = v3([ mw, 0, mh]);
+                var softBodyHelpers = new Ammo.btSoftBodyHelpers();
+                body = softBodyHelpers.CreatePatch( worldInfo, p0, p1, p2, p3, div[0], div[1], fixed, gendiags  );
+                var sb = body.get_m_cfg();
+                sb.set_viterations( o.viterations || 10 );
+                sb.set_piterations( o.piterations || 10 );
+                sb.set_citerations( o.citerations || 4 );
+                sb.set_diterations( o.diterations || 0 );
+                body.setTotalMass( mass, false );
+                body.softType = 1;
+            break;
+            case 'rope':
+
+                body = softBodyHelpers.CreateRope( worldInfo, p0, p1, p2, p3, div[0], div[1], fixed, gendiags  );
+                body.softType = 2;
+
+            break;
+            case 'ellipsoid':
+
+                body = softBodyHelpers.CreateEllipsoid( worldInfo, p0, p1, p2, p3, div[0], div[1], fixed, gendiags  );
+                body.softType = 3;
+            break;
+        }
+
+        
+
+
        // body.getCollisionShape().setMargin(margin);
 
 
         //body.setWorldTransform(startTransform);
+        console.log(softBodyHelpers)
 
         //console.log(body.get_m_cfg().get_viterations());
 
