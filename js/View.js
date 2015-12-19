@@ -1128,6 +1128,11 @@ var view = ( function () {
                 w += p.length;
 
             }
+            if(t==2){ // rope
+            }
+            if(t==3){ // ellipsoid
+            }
+
 
             
             
