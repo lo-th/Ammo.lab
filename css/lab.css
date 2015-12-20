@@ -76,7 +76,8 @@ body{
     height: 40px;
     background: none;
     border-bottom:1px solid rgba(255, 255, 255, 0.2);
-    z-index: 2;
+    z-index: 7;
+    overflow-y:auto;
 }
 
 .menuPins {
@@ -99,19 +100,19 @@ body{
     border-radius: 10px;
     text-align: center;
     background:none;
-    z-index: 3;
+    z-index: 8;
 }
 
 .menuButton {
     position:absolute;
     padding-left: 20px;
-    padding-top: 8px;
+    padding-top: 2px;
     font-size: 17px;
     font-style: normal;
     font-variant: normal;
     font-weight: 500;
     line-height: 23px;
-    height: 40px;
+    height: 30px;
     left: -10px;
     right: 0px;
     background: none;

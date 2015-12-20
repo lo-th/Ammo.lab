@@ -106,7 +106,7 @@ var editor = ( function () {
 
         if( !isMenu ) return;
         nextDemo = null;
-        var y = ~~ (e.clientY*0.025);
+        var y = ~~ ((e.clientY-10)/30);
         var i = menu.childNodes.length, b;
         while(i--){
             if(i!==0){
@@ -133,7 +133,9 @@ var editor = ( function () {
         } else {
 
             var lng = demos.length, name, n=1;
-            menu.style.height = (lng * 40) + 'px';
+            var ly = 41+ (((lng-1) * 30));
+            if(ly>window.innerHeight) ly = window.innerHeight;
+            menu.style.height = ly + 'px';
 
             isMenu = true;
 
@@ -169,7 +171,8 @@ var editor = ( function () {
         menu.appendChild( b );
         b.innerHTML = '&bull; ' + name;
         b.style.color = '#d2cec8';
-        b.style.top = n*40 + 'px';
+        b.style.top = (40 + (n-1)*30 )+ 'px';
+        if(n==1) b.style.top = 40 + 'px';
         b.name = id;
         if(n==1) b.style.borderTop = '1px solid rgba(255, 255, 255, 0.2)';
 
