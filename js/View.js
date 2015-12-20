@@ -974,7 +974,7 @@ var view = ( function () {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         mesh.softType = 2;
-        //mesh.frustumCulled = false;
+        mesh.frustumCulled = false;
 
         scene.add( mesh );
         softs.push( mesh );
