@@ -798,7 +798,7 @@ function add ( o, extra ) {
             case 'ellipsoid':
                 var p0 = o.center || v3([ 0, 0, 0]); // start
                 var p1 = o.radius || v3([ 3, 3, 3]); // end
-                body = softBodyHelpers.CreateEllipsoid( worldInfo, p0, p1, o.res || 512  );
+                body = softBodyHelpers.CreateEllipsoid( worldInfo, p0, p1, o.res || 128  );
                 body.softType = 3;
             break;
         }
@@ -817,7 +817,7 @@ function add ( o, extra ) {
 
 
         //body.setWorldTransform(startTransform);
-        //console.log(sb)
+        console.log(softBodyHelpers)
 
         //console.log(body.get_m_cfg().get_viterations());
 
