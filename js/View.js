@@ -292,8 +292,11 @@ var view = ( function () {
 
         i = softs.length;
         while(i--){
-            name = softs[i].material.name;
-            softs[i].material = mat[name];
+            if(softs.softType==1){
+                name = softs[i].material.name;
+                softs[i].material = mat[name];
+            }
+            
         };
 
     }
@@ -968,10 +971,10 @@ var view = ( function () {
         var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ color: 0xFFFF00 }));
 
 
-        //mesh.castShadow = true;
-        //mesh.receiveShadow = true;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
         mesh.softType = 2;
-        mesh.frustumCulled = false;
+        //mesh.frustumCulled = false;
 
         scene.add( mesh );
         softs.push( mesh );
