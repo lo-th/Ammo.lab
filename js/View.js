@@ -627,6 +627,16 @@ var view = ( function () {
             return;
         }
 
+        if(type == 'rope'){
+            this.rope( o ); 
+            return;
+        }
+
+        if(type == 'ellipsoid'){
+            this.ellipsoid( o ); 
+            return;
+        }
+
         if(type == 'terrain'){
             this.terrain( o ); 
             return;
@@ -928,6 +938,56 @@ var view = ( function () {
 
     }
 
+    view.rope = function ( o ) {
+
+        var max = o.numSegment || 10;
+        var start = o.start || [0,0,0];
+        var end = o.end || [0,10,0];
+
+        max += 2;
+        var ropeIndices = [];
+
+        var n;
+        var pos = new Float32Array( max * 3 );
+        for(var i=0; i<max; i++){
+            n = i*3;
+            pos[n] = start[0]; 
+            pos[n+1] = start[1] + i * ((end[1]-start[1])/max); 
+            pos[n+2] = start[2]; 
+
+            if(i<max-1)ropeIndices.push( i, i + 1 );
+
+        }
+
+        var g = new THREE.BufferGeometry();
+        g.setIndex( new THREE.BufferAttribute( new Uint16Array( ropeIndices ), 1 ) );
+        g.addAttribute('position', new THREE.BufferAttribute( pos, 3 ));
+        g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
+
+        //var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ vertexColors: true }));
+        var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ color: 0xFFFF00 }));
+
+
+        //mesh.castShadow = true;
+        //mesh.receiveShadow = true;
+        mesh.softType = 2;
+        mesh.frustumCulled = false;
+
+        scene.add( mesh );
+        softs.push( mesh );
+
+        // send to worker
+        ammo.send( 'add', o );
+
+    }
+
+    view.ellipsoid = function ( o ) {
+
+        // send to worker
+        ammo.send( 'add', o );
+
+    }
+
     view.terrain = function ( o ) {
 
         var i, x, y, n;
@@ -1100,7 +1160,7 @@ var view = ( function () {
             m = softs[i];
             t = m.softType; // type of softBody
 
-            if(t==1){ // cloth
+            if(t==1 || t==2){ // cloth
                 p = m.geometry.attributes.position.array;
                 c = m.geometry.attributes.color.array;
                 j = p.length;
@@ -1128,8 +1188,8 @@ var view = ( function () {
                 w += p.length;
 
             }
-            if(t==2){ // rope
-            }
+            //if(t==2){ // rope
+            //}
             if(t==3){ // ellipsoid
             }
 

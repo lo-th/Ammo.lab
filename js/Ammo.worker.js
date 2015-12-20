@@ -357,7 +357,7 @@ self.onmessage = function ( e ) {
 
             t = softs[i].softType; // type of soft body
 
-            if(t==1){ // cloth
+            if(t==1 || t==2){ // cloth & rope
 
                 b = softs[i].get_m_nodes();
                 j = b.size();
@@ -374,8 +374,11 @@ self.onmessage = function ( e ) {
                 w += b.size()*3;
 
             }
-            if(t==2){ // rope
-            }
+            /*if(t==2){ // rope
+                b = softs[i].get_m_nodes();
+                j = b.size();
+
+            }*/
             if(t==3){ // ellipsoid
             }
             
@@ -789,16 +792,17 @@ function add ( o, extra ) {
                 body.softType = 1;
             break;
             case 'rope':
-                var p0 = o.start || v3([ -10, 0, 0]); // start
-                var p1 = o.end || v3([ 10, 0, 0]); // end
+                var p0 = o.start || [ -10, 0, 0]; // start
+                var p1 = o.end || [ 10, 0, 0]; // end
 
-                body = softBodyHelpers.CreateRope( worldInfo, p0, p1, o.numSegment || 10, fixed );
+                body = softBodyHelpers.CreateRope( worldInfo, v3(p0), v3(p1), o.numSegment || 10, fixed );
+                Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin * 3 );
                 body.softType = 2;
             break;
             case 'ellipsoid':
-                var p0 = o.center || v3([ 0, 0, 0]); // start
-                var p1 = o.radius || v3([ 3, 3, 3]); // end
-                body = softBodyHelpers.CreateEllipsoid( worldInfo, p0, p1, o.res || 128  );
+                var p0 = o.center || [ 0, 0, 0]; // start
+                var p1 = o.radius || [ 3, 3, 3]; // end
+                body = softBodyHelpers.CreateEllipsoid( worldInfo, v3(p0), v3(p1), o.res || 128  );
                 body.softType = 3;
             break;
         }
