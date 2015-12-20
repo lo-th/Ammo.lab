@@ -2,7 +2,7 @@ function demo() {
 
     cam ( 90, 20, 60 );
 
-    //add({type:'plane', friction:0.6, restitution:0.1 }); // infinie plane
+    add({type:'plane', friction:0.6, restitution:0.1 }); // infinie plane
 
     var z = 0;
     for(var i=0; i< 20; i++){
@@ -21,6 +21,7 @@ function demo() {
             citerations:4,
             diterations:0,
             fixed: 1+2,
+            margin:0.1,
         });
     }
 
