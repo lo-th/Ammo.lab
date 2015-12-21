@@ -804,6 +804,20 @@ function add ( o, extra ) {
                 var p1 = o.radius || [ 3, 3, 3]; // end
                 body = softBodyHelpers.CreateEllipsoid( worldInfo, v3(p0), v3(p1), o.res || 128  );
                 body.softType = 3;
+
+                var a = [];
+                var b = body.get_m_nodes();
+                var j = b.size(), n, node, p;
+                while(j--){
+                    n = (j*3);
+                    node = b.at( j );
+                    p = node.get_m_x();
+                    a[n] = p.x();
+                    a[n+1] = p.y();
+                    a[n+2] = p.z();
+                }
+
+                self.postMessage({ m:'ellipsoid', a:a, o:o });
             break;
         }
 
@@ -820,7 +834,7 @@ function add ( o, extra ) {
         if(o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin );
 
         //body.setWorldTransform(startTransform);
-        console.log(sb);
+        //console.log(sb);
         //console.log(body.get_m_cfg().get_viterations());
 
     } else {

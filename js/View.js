@@ -35,6 +35,8 @@ var view = ( function () {
     var heros = [];
     var extraGeo = [];
 
+    var softsPoints = [];
+
     var geo = {};
     var mat = {};
 
@@ -292,7 +294,7 @@ var view = ( function () {
 
         i = softs.length;
         while(i--){
-            if(softs.softType==1){
+            if(softs.softType!==2){
                 name = softs[i].material.name;
                 softs[i].material = mat[name];
             }
@@ -577,6 +579,7 @@ var view = ( function () {
         }
 
         meshs.length = 0;
+        softsPoints = [];
 
     };
 
@@ -997,7 +1000,7 @@ var view = ( function () {
 
     view.ellipsoid = function ( o ) {
 
-        var max = o.res || 128;
+        /*var max = o.res || 128;
 
         var g = new THREE.BufferGeometry();
         g.addAttribute('position', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
@@ -1006,10 +1009,42 @@ var view = ( function () {
         var mesh = new THREE.Points( g, new THREE.PointsMaterial({ size:0.1, color: 0x00FF00 }));
 
         scene.add( mesh );
-        softs.push( mesh );
+        softs.push( mesh );*/
+
+       
 
         // send to worker
         ammo.send( 'add', o );
+
+    }
+
+    view.ellipsoidMesh = function ( o, a ) {
+
+        var l = ~~ a.length/3;
+        var n = 0;
+        var points = [];
+
+
+
+        for(var i = 0; i<l; i++){
+            n = i*3;
+            points.push(new THREE.Vector3(a[n], a[n+1], a[n+2]));
+        }
+
+        var g = new THREE.ConvexGeometry( points );
+        var mesh = new THREE.Mesh( g, mat.move );
+
+        mesh.softType = 3;
+        mesh.idx = softs.length;
+
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+
+        scene.add( mesh );
+        softs.push( mesh );
+
+        softsPoints[mesh.idx] =  points ;
+
 
     }
 
@@ -1196,7 +1231,9 @@ var view = ( function () {
             m = softs[i];
             t = m.softType; // type of softBody
 
-            //if(t==1 || t==2){ // cloth
+
+
+            if(t==1 || t==2){ // cloth
                 p = m.geometry.attributes.position.array;
                 c = m.geometry.attributes.color.array;
                 j = p.length;
@@ -1221,9 +1258,33 @@ var view = ( function () {
                 m.geometry.computeBoundingSphere();
                 //m.geometry.computeBoundingBox();
 
+                //if(t==3 && !m.created) view.ellipsoidMesh(m, p);
+
                 w += p.length;
 
-            //}
+            }
+            if(t==3){
+                n = 0;
+                var k = softsPoints[m.idx];
+                //var ll = m.geometry.vertices.length;
+                var ll = k.length;
+                for(j = 0; j<ll; j++){
+                    n = (j*3) + w;
+                    k[j].x = a[n];
+                    k[j].y = a[n+1];
+                    k[j].z = a[n+2];
+
+                }
+
+                w += k.length*3;
+
+                m.geometry.verticesNeedUpdate = true;
+                //m.geometry.computeFaceNormals();
+                m.geometry.computeVertexNormals();
+                m.geometry.computeBoundingSphere();
+
+                //console.log(j)
+            }
             //if(t==2){ // rope
             //}
             //if(t==3){ // ellipsoid

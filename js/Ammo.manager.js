@@ -69,6 +69,10 @@ var ammo = ( function () {
 
         }
 
+        if(m == 'ellipsoid'){
+            view.ellipsoidMesh(e.data.o, e.data.a);
+        }
+
         if(m == 'step'){
 
             time = now();
