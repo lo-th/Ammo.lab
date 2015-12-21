@@ -10,6 +10,7 @@ function demo() {
         type:'ellipsoid',
         center:[0, 20, 0],
         radius:[3, 3, 3],
+        vertices:128,
         mass:20, state:4,
         viterations:10,
         piterations:10,
@@ -18,7 +19,7 @@ function demo() {
         kdf:1,
         kdp:0.001,
         kpr:2500,
-        res:128,
+        
         margin:0.1,
     });
 
@@ -26,6 +27,7 @@ function demo() {
         type:'ellipsoid',
         center:[10, 20, 0],
         radius:[3, 5, 3],
+        vertices:512,
         mass:20, state:4,
         viterations:10,
         piterations:10,
@@ -34,7 +36,7 @@ function demo() {
         kdf:1,
         kdp:0.001,
         kpr:2500,
-        res:512,
+        
         margin:0.1,
     });
 
@@ -42,6 +44,7 @@ function demo() {
         type:'ellipsoid',
         center:[-10, 20, 0],
         radius:[2, 2, 2],
+        vertices:128,
         mass:20, state:4,
         viterations:10,
         piterations:10,
@@ -50,7 +53,7 @@ function demo() {
         kdf:1,
         kdp:0.001,
         kpr:2500,
-        res:128,
+        
         margin:0.1,
     });
 

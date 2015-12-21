@@ -802,7 +802,7 @@ function add ( o, extra ) {
             case 'ellipsoid':
                 var p0 = o.center || [ 0, 0, 0]; // start
                 var p1 = o.radius || [ 3, 3, 3]; // end
-                body = softBodyHelpers.CreateEllipsoid( worldInfo, v3(p0), v3(p1), o.res || 128  );
+                body = softBodyHelpers.CreateEllipsoid( worldInfo, v3(p0), v3(p1), o.vertices || 128  );
                 body.softType = 3;
 
                 var a = [];
