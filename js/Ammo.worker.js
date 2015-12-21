@@ -832,16 +832,19 @@ function add ( o, extra ) {
         if( o.kdf !== undefined ) sb.set_kDF(o.kdf);
         if( o.kdp !== undefined ) sb.set_kDP(o.kdp);
         if( o.kpr !== undefined ) sb.set_kPR(o.kpr);
-        body.setTotalMass( mass, false );
+        
 
         if(o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin );
 
-        //body.setWorldTransform(startTransform);
-        console.log(body.get_m_materials().at(0));
+        //
+        //console.log(body);
 
         if( o.klst !== undefined )  body.get_m_materials().at(0).set_m_kLST(o.klst);
         if( o.kast !== undefined )  body.get_m_materials().at(0).set_m_kAST(o.kast);
         if( o.kvst !== undefined )  body.get_m_materials().at(0).set_m_kVST(o.kvst);
+
+        body.setTotalMass( mass, false );
+        body.setWorldTransform(startTransform);
 
         //console.log(body.get_m_cfg().get_viterations());
 
