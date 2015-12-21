@@ -6,22 +6,7 @@ function demo() {
     add({ type:'box', size:[40,10,1], pos:[0,4.6,0], rot:[45,0,0], mass:0 });
     add({ type:'box', size:[40,2,40], pos:[0,1,-10], rot:[0,0,0], mass:0 });
 
-    add({ 
-        type:'ellipsoid',
-        center:[0, 20, 0],
-        radius:[3, 3, 3],
-        vertices:128,
-        mass:20, state:4,
-        viterations:10,
-        piterations:10,
-        citerations:4,
-        diterations:0,
-        kdf:1,
-        kdp:0.001,
-        kpr:2500,
-        
-        margin:0.1,
-    });
+    
 
     add({ 
         type:'ellipsoid',
@@ -33,10 +18,34 @@ function demo() {
         piterations:10,
         citerations:4,
         diterations:0,
+        
         kdf:1,
         kdp:0.001,
         kpr:2500,
+
+        // material setting ?
+        klst : 0.1,
+        kast : 0.1,
+        kvst : 0.1,
         
+        margin:0.1,
+    });
+
+    add({ 
+        type:'ellipsoid',
+        center:[0, 20, 0],
+        radius:[3, 3, 3],
+        vertices:128,
+        mass:20, state:4,
+        viterations:10,
+        piterations:10,
+        citerations:4,
+        diterations:0,
+
+        kdf:1,
+        kdp:0.001,
+        kpr:2500,
+
         margin:0.1,
     });
 
@@ -50,6 +59,7 @@ function demo() {
         piterations:10,
         citerations:4,
         diterations:0,
+
         kdf:1,
         kdp:0.001,
         kpr:2500,

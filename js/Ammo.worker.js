@@ -837,7 +837,12 @@ function add ( o, extra ) {
         if(o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin );
 
         //body.setWorldTransform(startTransform);
-        //console.log(sb);
+        console.log(body.get_m_materials().at(0));
+
+        if( o.klst !== undefined )  body.get_m_materials().at(0).set_m_kLST(o.klst);
+        if( o.kast !== undefined )  body.get_m_materials().at(0).set_m_kAST(o.kast);
+        if( o.kvst !== undefined )  body.get_m_materials().at(0).set_m_kVST(o.kvst);
+
         //console.log(body.get_m_cfg().get_viterations());
 
     } else {
