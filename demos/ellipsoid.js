@@ -43,8 +43,8 @@ function demo() {
     add({ 
         type:'ellipsoid',
         center:[-10, 20, 0],
-        radius:[2, 2, 2],
-        vertices:128,
+        radius:[2, 1, 2],
+        vertices:64,
         mass:20, state:4,
         viterations:10,
         piterations:10,
