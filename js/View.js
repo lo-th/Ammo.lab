@@ -118,6 +118,7 @@ var view = ( function () {
 
         mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'terrain', wireframe:true });
         mat['cloth'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'cloth', wireframe:true, transparent:true, opacity:0.9, side: THREE.DoubleSide });
+        mat['ball'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'ball', wireframe:true });
         mat['statique'] = new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6 });
         mat['hero'] = new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
@@ -1082,7 +1083,7 @@ var view = ( function () {
 
 
         //g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
-        var mesh = new THREE.Mesh( g, mat.move );
+        var mesh = new THREE.Mesh( g, mat.ball );
 
         //console.log(g.attributes.position.array.length/3)
 
@@ -1300,6 +1301,13 @@ var view = ( function () {
                     p[k] = a[n];
                     p[k+1] = a[n+1];
                     p[k+2] = a[n+2];
+
+                    cc = Math.abs(a[n+1]/10);
+                    c[k] = cc;
+                    c[k+1] = cc;
+                    c[k+2] = cc;
+
+
                 }
 
             } else {
