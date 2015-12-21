@@ -817,7 +817,10 @@ function add ( o, extra ) {
                     a[n+2] = p.z();
                 }
 
-                self.postMessage({ m:'ellipsoid', a:a, o:o });
+                o.lng = b.size();
+                o.a = a;
+
+                self.postMessage({ m:'ellipsoid', o:o });
             break;
         }
 

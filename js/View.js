@@ -35,7 +35,7 @@ var view = ( function () {
     var heros = [];
     var extraGeo = [];
 
-    var softsPoints = [];
+    //var softsPoints = [];
 
     var geo = {};
     var mat = {};
@@ -579,7 +579,7 @@ var view = ( function () {
         }
 
         meshs.length = 0;
-        softsPoints = [];
+        //softsPoints = [];
 
     };
 
@@ -1000,42 +1000,94 @@ var view = ( function () {
 
     view.ellipsoid = function ( o ) {
 
-        /*var max = o.res || 128;
-
-        var g = new THREE.BufferGeometry();
-        g.addAttribute('position', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
-        g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
-
-        var mesh = new THREE.Points( g, new THREE.PointsMaterial({ size:0.1, color: 0x00FF00 }));
-
-        scene.add( mesh );
-        softs.push( mesh );*/
-
-       
-
         // send to worker
         ammo.send( 'add', o );
 
     }
 
-    view.ellipsoidMesh = function ( o, a ) {
+    view.ellipsoidMesh = function ( o ) {
 
-        var l = ~~ a.length/3;
-        var n = 0;
+        var max = o.lng;
         var points = [];
-
-
-
-        for(var i = 0; i<l; i++){
+        var ar = o.a;
+        var i, j, k, v, n;
+        
+        // create temp convex geometry and convert to buffergeometry
+        for( i = 0; i<max; i++ ){
             n = i*3;
-            points.push(new THREE.Vector3(a[n], a[n+1], a[n+2]));
+            points.push(new THREE.Vector3(ar[n], ar[n+1], ar[n+2]));
+        }
+        var gt = new THREE.ConvexGeometry( points );
+
+        
+        var indices = new Uint32Array( gt.faces.length * 3 );
+        var vertices = new Float32Array( max * 3 );
+        var order = new Float32Array( max );
+        //var normals = new Float32Array( max * 3 );
+        //var uvs  = new Float32Array( max * 2 );
+
+        
+
+         // get new order of vertices
+        var v = gt.vertices;
+        var i = max, j, k;
+        while(i--){
+            j = max;
+            while(j--){
+                n = j*3;
+                if(ar[n]==v[i].x && ar[n+1]==v[i].y && ar[n+2]==v[i].z) order[j] = i;
+            }
         }
 
-        var g = new THREE.ConvexGeometry( points );
+       
+        i = max
+        while(i--){
+            n = i*3;
+            k = order[i]*3;
+
+            /*vertices[n] = v[i].x;
+            vertices[n+1] = v[i].y;
+            vertices[n+2] = v[i].z;*/
+
+            vertices[k] = ar[n];
+            vertices[k+1] = ar[n+1];
+            vertices[k+2] = ar[n+2];
+
+        }
+
+        // get indices of faces
+        var i = gt.faces.length;
+        while(i--){
+            n = i*3;
+            var face = gt.faces[i];
+            indices[n] = face.a;
+            indices[n+1] = face.b;
+            indices[n+2] = face.c;
+        }
+
+        //console.log(gtt.vertices.length)
+        var g = new THREE.BufferGeometry();
+        g.setIndex( new THREE.BufferAttribute( indices, 1 ) );
+        g.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+        g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
+        g.addAttribute('order', new THREE.BufferAttribute( order, 1 ));
+        
+        //g.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
+        //g.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+
+        g.computeVertexNormals();
+
+
+        gt.dispose();
+
+
+        //g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
         var mesh = new THREE.Mesh( g, mat.move );
 
+        //console.log(g.attributes.position.array.length/3)
+
         mesh.softType = 3;
-        mesh.idx = softs.length;
+        //mesh.idx = softs.length;
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -1043,7 +1095,7 @@ var view = ( function () {
         scene.add( mesh );
         softs.push( mesh );
 
-        softsPoints[mesh.idx] =  points ;
+        //softsPoints[mesh.idx] =  points ;
 
 
     }
@@ -1129,7 +1181,7 @@ var view = ( function () {
 
     view.update = function(ar, dr, hr, jr, cr ){
 
-        var i = meshs.length, a = ar, n, m, j, w, l, c, cc, t;
+        var i = meshs.length, a = ar, n, m, j, w,k, l, c, cc, t, order;
 
         meshs.forEach( function( m, id ) {
             var n = id * 8;
@@ -1223,6 +1275,7 @@ var view = ( function () {
         l = softs.length;
         a = cr;
         w = 0;
+        k = 0;
 
         //while(i--){
 
@@ -1230,17 +1283,28 @@ var view = ( function () {
 
             m = softs[i];
             t = m.softType; // type of softBody
+            order = null;
 
+            p = m.geometry.attributes.position.array;
+            c = m.geometry.attributes.color.array;
+            if( m.geometry.attributes.order ) order = m.geometry.attributes.order.array;
+            j = p.length;
 
+            n = 2;
 
-            if(t==1 || t==2){ // cloth
-                p = m.geometry.attributes.position.array;
-                c = m.geometry.attributes.color.array;
-                j = p.length;
-
-                n = 2;
-                
+            if(order!==null) {
+                j = order.length;
                 while(j--){
+                    k = order[j] * 3;
+                    n = j*3 + w;
+                    p[k] = a[n];
+                    p[k+1] = a[n+1];
+                    p[k+2] = a[n+2];
+                }
+
+            } else {
+                 while(j--){
+                     
                     p[j] = a[j+w];
                     if(n==1){ 
                         cc = Math.abs(p[j]/10);
@@ -1252,47 +1316,16 @@ var view = ( function () {
                     n = n<0 ? 2 : n;
                 }
 
-                m.geometry.attributes.position.needsUpdate = true;
-                m.geometry.attributes.color.needsUpdate = true;
-                if(t==1) m.geometry.computeVertexNormals();
-                m.geometry.computeBoundingSphere();
-                //m.geometry.computeBoundingBox();
-
-                //if(t==3 && !m.created) view.ellipsoidMesh(m, p);
-
-                w += p.length;
-
             }
-            if(t==3){
-                n = 0;
-                var k = softsPoints[m.idx];
-                //var ll = m.geometry.vertices.length;
-                var ll = k.length;
-                for(j = 0; j<ll; j++){
-                    n = (j*3) + w;
-                    k[j].x = a[n];
-                    k[j].y = a[n+1];
-                    k[j].z = a[n+2];
-
-                }
-
-                w += k.length*3;
-
-                m.geometry.verticesNeedUpdate = true;
-                //m.geometry.computeFaceNormals();
-                m.geometry.computeVertexNormals();
-                m.geometry.computeBoundingSphere();
-
-                //console.log(j)
-            }
-            //if(t==2){ // rope
-            //}
-            //if(t==3){ // ellipsoid
-            //}
-
-
             
-            
+           
+
+            m.geometry.attributes.position.needsUpdate = true;
+            m.geometry.attributes.color.needsUpdate = true;
+            if(t==1 || t==3) m.geometry.computeVertexNormals();
+            m.geometry.computeBoundingSphere();
+
+            w += p.length;
 
         }
 
