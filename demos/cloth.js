@@ -27,21 +27,7 @@ function demo() {
     add({ type:'sphere', size:[3], pos:[0, 300, -20], mass:1});
     add({ type:'sphere', size:[3], pos:[0, 400, 20], mass:1});
 
-    /*add({ 
-        type:'ellipsoid',
-        center:[-10, 2, 0],
-        radius:[3, 3, 3],
-        mass:200, state:4,
-        viterations:10,
-        piterations:60,
-        res:256,
-    });*/
-
-    
-
     //anchor({soft:'cloth', body:'ground', pos:0});
     //anchor({soft:'cloth', body:'ground', pos:100});
-
-
 
 }

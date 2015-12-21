@@ -357,7 +357,7 @@ self.onmessage = function ( e ) {
 
             t = softs[i].softType; // type of soft body
 
-            if(t==1 || t==2){ // cloth & rope
+            //if(t==1 || t==2){ // cloth & rope
 
                 b = softs[i].get_m_nodes();
                 j = b.size();
@@ -373,14 +373,14 @@ self.onmessage = function ( e ) {
 
                 w += b.size()*3;
 
-            }
+            //}
             /*if(t==2){ // rope
                 b = softs[i].get_m_nodes();
                 j = b.size();
 
             }*/
-            if(t==3){ // ellipsoid
-            }
+          //  if(t==3){ // ellipsoid
+           // }
             
         }
 
@@ -490,8 +490,8 @@ function init () {
     /*worldInfo.set_air_density( 1.2 );
     worldInfo.set_water_density( 0 );
     worldInfo.set_water_offset( 0 );
-    worldInfo.set_water_normal( vec3() );
-    worldInfo.set_m_gravity( vec3(0, -10, 0) );*/
+    worldInfo.set_water_normal( vec3() );*/
+    worldInfo.set_m_gravity( vec3(0, -9.8, 0) );
     //info.set_m_maxDisplacement();
 
 
@@ -796,7 +796,7 @@ function add ( o, extra ) {
                 var p1 = o.end || [ 10, 0, 0]; // end
 
                 body = softBodyHelpers.CreateRope( worldInfo, v3(p0), v3(p1), o.numSegment || 10, fixed );
-                Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin * 3 );
+                
                 body.softType = 2;
             break;
             case 'ellipsoid':
@@ -812,17 +812,15 @@ function add ( o, extra ) {
         if( o.piterations !== undefined ) sb.set_piterations( o.piterations );//10
         if( o.citerations !== undefined ) sb.set_citerations( o.citerations );//4
         if( o.diterations !== undefined ) sb.set_diterations( o.diterations );//0
+        if( o.kdf !== undefined ) sb.set_kDF(o.kdf);
+        if( o.kdp !== undefined ) sb.set_kDP(o.kdp);
+        if( o.kpr !== undefined ) sb.set_kPR(o.kpr);
         body.setTotalMass( mass, false );
 
-        
-
-
-       // body.getCollisionShape().setMargin(margin);
-
+        if(o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin );
 
         //body.setWorldTransform(startTransform);
-        console.log(softBodyHelpers)
-
+        console.log(sb);
         //console.log(body.get_m_cfg().get_viterations());
 
     } else {

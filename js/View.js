@@ -900,6 +900,10 @@ var view = ( function () {
 
     };*/
 
+    //--------------------------------------
+    //   CLOTH
+    //--------------------------------------
+
     view.cloth = function ( o ) {
 
         var i, x, y, n;
@@ -908,13 +912,11 @@ var view = ( function () {
         var size = o.size || [100,0,100];
         var pos = o.pos || [0,0,0];
 
-        var lng = div[0] * div[1];
+        var max = div[0] * div[1];
 
         var g = new THREE.PlaneBufferGeometry( size[0], size[2], div[0] - 1, div[1] - 1 );
-        g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array(lng*3), 3 ) );
+        g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max*3 ), 3 ) );
         g.rotateX( -Math.PI90 );
-       //g.rotateY( Math.PI90 );
-        //g.scale( 1, 1, -1 );
         //g.translate( -size[0]*0.5, 0, -size[2]*0.5 );
 
         var numVerts = g.attributes.position.array.length / 3;
@@ -941,6 +943,10 @@ var view = ( function () {
 
     }
 
+    //--------------------------------------
+    //   ROPE
+    //--------------------------------------
+
     view.rope = function ( o ) {
 
         var max = o.numSegment || 10;
@@ -950,21 +956,22 @@ var view = ( function () {
         max += 2;
         var ropeIndices = [];
 
-        var n;
-        var pos = new Float32Array( max * 3 );
-        for(var i=0; i<max; i++){
-            n = i*3;
-            pos[n] = start[0]; 
-            pos[n+1] = start[1] + i * ((end[1]-start[1])/max); 
-            pos[n+2] = start[2]; 
+        //var n;
+        //var pos = new Float32Array( max * 3 );
+        for(var i=0; i<max-1; i++){
+            //n = i*3;
+            //pos[n] = start[0]; 
+            //pos[n+1] = start[1] + i * ((end[1]-start[1])/max); 
+            //pos[n+2] = start[2]; 
 
-            if(i<max-1)ropeIndices.push( i, i + 1 );
+            //if(i<max-1)
+            ropeIndices.push( i, i + 1 );
 
         }
 
         var g = new THREE.BufferGeometry();
         g.setIndex( new THREE.BufferAttribute( new Uint16Array( ropeIndices ), 1 ) );
-        g.addAttribute('position', new THREE.BufferAttribute( pos, 3 ));
+        g.addAttribute('position', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
         g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
 
         //var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ vertexColors: true }));
@@ -984,12 +991,31 @@ var view = ( function () {
 
     }
 
+    //--------------------------------------
+    //   ELLIPSOID ?
+    //--------------------------------------
+
     view.ellipsoid = function ( o ) {
+
+        var max = o.res || 128;
+
+        var g = new THREE.BufferGeometry();
+        g.addAttribute('position', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
+        g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
+
+        var mesh = new THREE.Points( g, new THREE.PointsMaterial({ size:0.1, color: 0x00FF00 }));
+
+        scene.add( mesh );
+        softs.push( mesh );
 
         // send to worker
         ammo.send( 'add', o );
 
     }
+
+    //--------------------------------------
+    //   TERRAIN
+    //--------------------------------------
 
     view.terrain = function ( o ) {
 
@@ -1058,6 +1084,13 @@ var view = ( function () {
         if(shadowGround) scene.remove(shadowGround);
 
     };
+
+
+    //--------------------------------------
+    //
+    //   UPDATE OBJECT
+    //
+    //--------------------------------------
 
     view.update = function(ar, dr, hr, jr, cr ){
 
@@ -1163,7 +1196,7 @@ var view = ( function () {
             m = softs[i];
             t = m.softType; // type of softBody
 
-            if(t==1 || t==2){ // cloth
+            //if(t==1 || t==2){ // cloth
                 p = m.geometry.attributes.position.array;
                 c = m.geometry.attributes.color.array;
                 j = p.length;
@@ -1184,17 +1217,17 @@ var view = ( function () {
 
                 m.geometry.attributes.position.needsUpdate = true;
                 m.geometry.attributes.color.needsUpdate = true;
-                m.geometry.computeVertexNormals();
-                //m.geometry.computeBoundingSphere();
+                if(t==1) m.geometry.computeVertexNormals();
+                m.geometry.computeBoundingSphere();
                 //m.geometry.computeBoundingBox();
 
                 w += p.length;
 
-            }
+            //}
             //if(t==2){ // rope
             //}
-            if(t==3){ // ellipsoid
-            }
+            //if(t==3){ // ellipsoid
+            //}
 
 
             
