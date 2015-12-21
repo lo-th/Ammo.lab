@@ -1422,7 +1422,7 @@ var view = ( function () {
         light.shadowMapWidth = 1024;
         light.shadowMapHeight = 1024;
         light.shadowCameraNear = 25;
-        light.shadowCameraFar = 70;
+        light.shadowCameraFar = 170;
         light.shadowDarkness = 1;
         light.shadowBias =  -0.005;
 

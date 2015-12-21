@@ -2,7 +2,7 @@ function demo() {
 
     cam ( 90, 20, 100 );
 
-    view.setShadowPosY(-10.1)
+    view.setShadowPosY(-20.1)
     view.hideGrid();
 
     // static box
@@ -14,9 +14,9 @@ function demo() {
         size:[100,0,100],
         div:[64,64],
         viterations:10,
-        piterations:60,
-        citerations:4,
-        diterations:0,
+        piterations:10,
+        citerations:10,
+        diterations:10,
         fixed: 1+2+4+8,
         gendiags:true,
     });
