@@ -21,6 +21,7 @@ function demo() {
         type:'terrain',
         name:'ground2',
         pos : [0,-5,100], // terrain position
+        dpos : [0,0,100],
         size : [100,10,100], // terrain size in meter
         div : [64,64], // number of subdivision
         complexity : 30, // complexity of noise

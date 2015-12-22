@@ -21,7 +21,7 @@ var solver, solverSoft, collision, dispatcher, broadphase, trans;
 // array
 var bodys, softs, joints, cars, solids, heros, carsInfo;
 // object
-var rigids;
+var byName;
 
 var timestep = 0.01667;//6;//7;
 var substep = 4;//3;// default is 1. 2 or more make simulation more accurate.
@@ -506,7 +506,7 @@ function init () {
     solids = [];
 
     // use for get object by name
-    rigids = {};
+    byName = {};
 
 
     //self.postMessage({ m:'init' });
@@ -590,7 +590,7 @@ function reset () {
     softs.length = 0;
 
     // clear body name object
-    rigids = {};
+    byName = {};
 
     //world.getBroadphase().resetPool( world.getDispatcher() );
     //world.getConstraintSolver().reset();
@@ -835,15 +835,28 @@ function add ( o, extra ) {
         
 
         if(o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin );
+        //body.setCollisionShape(Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape())
+
 
         //
         //console.log(body);
 
-        if( o.klst !== undefined )  body.get_m_materials().at(0).set_m_kLST(o.klst);
-        if( o.kast !== undefined )  body.get_m_materials().at(0).set_m_kAST(o.kast);
-        if( o.kvst !== undefined )  body.get_m_materials().at(0).set_m_kVST(o.kvst);
+        if( o.klst !== undefined ) body.get_m_materials().at(0).set_m_kLST(o.klst);
+        if( o.kast !== undefined ) body.get_m_materials().at(0).set_m_kAST(o.kast);
+        if( o.kvst !== undefined ) body.get_m_materials().at(0).set_m_kVST(o.kvst);
 
-        body.setTotalMass( mass, false );
+        if( o.friction !== undefined ) body.setFriction(o.friction);
+        if( o.rollingFriction !== undefined ) body.setRollingFriction(o.rollingFriction);
+        if( o.anisotropicFriction !== undefined ) body.setAnisotropicFriction(o.anisotropicFriction);
+        if( o.restitution !== undefined ) body.setRestitution(o.restitution);
+
+        // generateClusters with k=0 will create a convex cluster for each tetrahedron or triangle otherwise an approximation will be used (better performance)
+        // generateClusters (   int     k, int     maxiterations = 8192  )   
+        //body.generateClusters(0);
+
+        var fromfaces = o.fromfaces || false;
+        body.setTotalMass( mass, fromfaces );
+
         body.setWorldTransform(startTransform);
 
         //console.log(body.get_m_cfg().get_viterations());
@@ -889,7 +902,7 @@ function add ( o, extra ) {
 
     //body.name = o.name || '';
     //var name = o.name || '';
-    if(name) rigids[name] = body;
+    if(name) byName[name] = body;
 
     //body.isKinematic = o.kinematic || false;
 
@@ -912,18 +925,14 @@ function add ( o, extra ) {
 };
 
 function anchor( o ){
+
     getByName(o.soft).appendAnchor( o.pos, getByName(o.body), false, o.influence || 0.5 );
-}
+
+};
 
 function getByName(name){
 
-    return rigids[name];
-
-    /*var i = bodys.length, b;
-    while(i--){
-        b = bodys[i];
-        if(name == b.name) return b;
-    }*/
+    return byName[name];
 
 };
 

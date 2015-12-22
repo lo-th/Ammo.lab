@@ -20,7 +20,7 @@ Math.int = function(x) { return ~~x; };
 
 var view = ( function () {
 
-    var canvas, renderer, scene, camera, controls, clock, debug;
+    var canvas, renderer, scene, camera, controls, debug;
     var ray, mouse, content, targetMouse, rayCallBack, moveplane, isWithRay = false;;
     var vs = { w:1, h:1, l:400 };
 
@@ -34,6 +34,8 @@ var view = ( function () {
     var carsSpeed = [];
     var heros = [];
     var extraGeo = [];
+
+    var byName = {};
 
     //var softsPoints = [];
 
@@ -49,7 +51,7 @@ var view = ( function () {
     var shadowGround, light, ambient;
     var spy = -0.01;
 
-    var perlin = new Perlin();
+    var perlin = null;//new Perlin();
 
     var environment, envcontext, nEnv = 0, isWirframe = true;
     var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
@@ -58,8 +60,6 @@ var view = ( function () {
     view = function () {};
 
     view.init = function ( callback ) {
-
-        clock = new THREE.Clock();
 
         debug = document.getElementById('debug');
 
@@ -580,7 +580,8 @@ var view = ( function () {
         }
 
         meshs.length = 0;
-        //softsPoints = [];
+        perlin = null;
+        byName = {};
 
     };
 
@@ -687,6 +688,8 @@ var view = ( function () {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
+        this.setName( o, mesh );
+
         scene.add(mesh);
 
         // push 
@@ -782,7 +785,6 @@ var view = ( function () {
 
         scene.add(mesh);
         heros.push(mesh);
-
 
         // send to worker
         ammo.send( 'character', o );
@@ -881,29 +883,6 @@ var view = ( function () {
 
     };
 
-    /*view.meshColor = function( m, r,g,b ){
-
-        var g = m.geometry;
-        if(!g.attributes.color){ 
-            //console.log('no color')
-            var l = g.attributes.position.array.length;
-            g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( l ), 3 ));
-        }
-        var colors = g.attributes.color.array;
-
-        var i = colors.length/3, n;
-        while(i--){
-            n = i * 3;
-            colors[ n  ] = r;
-            colors[ n + 1 ] = g;
-            colors[ n + 2 ] = b;
-        }
-
-        g.attributes.color.needsUpdate = true;
-
-
-    };*/
-
     //--------------------------------------
     //   CLOTH
     //--------------------------------------
@@ -926,7 +905,10 @@ var view = ( function () {
         var numVerts = g.attributes.position.array.length / 3;
 
         var mesh = new THREE.Mesh( g, mat.cloth );
-        mesh.material.needsUpdate = true;
+
+        this.setName( o, mesh );
+
+       // mesh.material.needsUpdate = true;
         mesh.position.set( pos[0], pos[1], pos[2] );
 
         mesh.castShadow = true;
@@ -981,6 +963,8 @@ var view = ( function () {
         //var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ vertexColors: true }));
         var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ color: 0xFFFF00 }));
 
+        this.setName( o, mesh );
+
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -996,7 +980,7 @@ var view = ( function () {
     }
 
     //--------------------------------------
-    //   ELLIPSOID ?
+    //   ELLIPSOID 
     //--------------------------------------
 
     view.ellipsoid = function ( o ) {
@@ -1078,6 +1062,8 @@ var view = ( function () {
 
         g.computeVertexNormals();
 
+        extraGeo.push( g );
+
 
         gt.dispose();
 
@@ -1085,10 +1071,9 @@ var view = ( function () {
         //g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
         var mesh = new THREE.Mesh( g, mat.ball );
 
-        //console.log(g.attributes.position.array.length/3)
+        this.setName( o, mesh );
 
         mesh.softType = 3;
-        //mesh.idx = softs.length;
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -1096,80 +1081,100 @@ var view = ( function () {
         scene.add( mesh );
         softs.push( mesh );
 
-        //softsPoints[mesh.idx] =  points ;
-
-
     }
 
     //--------------------------------------
+    //
     //   TERRAIN
+    //
     //--------------------------------------
 
     view.terrain = function ( o ) {
 
-        var i, x, y, n;
+        var i, x, y, n, c;
 
-        var div = o.div || [64,64];
-        var size = o.size || [100,10,100];
-        var pos = o.pos || [0,0,0];
+        o.div = o.div == undefined ? [64,64] : o.div;
+        o.size = o.size == undefined ? [100,10,100] : o.size;
+        o.pos = o.pos == undefined ? [0,0,0] : o.pos;
+        o.dpos = o.dpos == undefined ? [0,0,0] : o.dpos;
+        o.complexity = o.complexity == undefined ? 30 : o.complexity;
+        o.lng = o.div[0] * o.div[1];
+        o.hdata =  new Float32Array( o.lng );
+        
+        if( !perlin ) perlin = new Perlin();
 
-        var complexity = o.complexity || 30;
+        var sc = 1 / o.complexity;
+        var r = 1 / o.div[0];
+        var rx = (o.div[0] - 1) / o.size[0];
+        var rz = (o.div[1] - 1) / o.size[2];
 
-        var lng = div[0] * div[1];
-        var data = new Float32Array( lng );
-        var hdata =  new Float32Array( lng );
-        //var perlin = new Perlin();
-        var sc = 1 / complexity;
-        var r = 1 / div[0];
-        var rx = (div[0]- 1) / size[0];
-        var rz = (div[1]- 1) / size[2];
-
-
-        i = lng;
-        while(i--){
-            var x = i % div[0], y = ~~ ( i * r );
-            data[ i ] = 0.5 + ( perlin.noise( (x+(pos[0]*rx))*sc, (y+(pos[2]*rz))*sc ) * 0.5); // 0,1
-        }
-
-        var g = new THREE.PlaneBufferGeometry( size[0], size[2], div[0] - 1, div[1] - 1 );
-        g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array(lng*3), 3 ) );
+        var colors = new Float32Array( o.lng * 3 );
+        var g = new THREE.PlaneBufferGeometry( o.size[0], o.size[2], o.div[0] - 1, o.div[1] - 1 );
         g.rotateX( -Math.PI90 );
-
-        extraGeo.push( g );
-
         var vertices = g.attributes.position.array;
-        var colors = g.attributes.color.array;
 
-        i = lng;
+
+        i = o.lng;
         while(i--){
             n = i * 3;
-            hdata[i] = data[ i ] * size[1]; // final size
-            vertices[ n + 1 ] = hdata[i];   // pos y
-            colors[ n + 1 ] = data[ i ] * 0.5; // green color
+            x = i % o.div[0];
+            y = ~~ ( i * r );
+            c = 0.5 + ( perlin.noise( (x+(o.dpos[0]*rx))*sc, (y+(o.dpos[2]*rz))*sc ) * 0.5); // from 0 to 1
+            o.hdata[ i ] = c * o.size[ 1 ]; // final h size
+            vertices[ n + 1 ] = o.hdata[i];
+            colors[ n ] = c;
+            colors[ n + 1 ] = c;
+            colors[ n + 2 ] = c;
         }
-
-        //g.computeBoundingBox();
-        //g.computeBoundingSphere();
+        
+        g.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
+        g.computeBoundingSphere();
         g.computeVertexNormals();
 
+        extraGeo.push( g );
+        
         var mesh = new THREE.Mesh( g, mat.terrain );
-        mesh.position.set( pos[0], pos[1], pos[2] );
+        mesh.position.set( o.pos[0], o.pos[1], o.pos[2] );
 
         mesh.castShadow = false;
         mesh.receiveShadow = true;
 
+        this.setName( o, mesh );
+
         scene.add( mesh );
         terrains.push( mesh );
 
-        o.hdata = hdata;
-        o.size = size;
-        o.div = div;
-        o.pos = pos;
-
         // send to worker
-        ammo.send( 'add', o ); 
+        ammo.send( 'add', o );
 
-        if(shadowGround) scene.remove(shadowGround);
+        if(shadowGround) scene.remove( shadowGround );
+
+    };
+
+    view.moveTerrain = function ( o ) {
+
+
+
+    };
+
+    //--------------------------------------
+    //
+    //   OBJECT NAME
+    //
+    //--------------------------------------
+
+    view.setName = function ( o, mesh ) {
+
+        if( o.name !== undefined ){ 
+            byName[name] = mesh;
+            mesh.name = name;
+        }
+
+    };
+
+    view.getByName = function (name){
+
+        return byName[name];
 
     };
 
@@ -1358,7 +1363,6 @@ var view = ( function () {
 
     view.render = function () {
 
-        var delta = clock.getDelta();
         if( isCamFollow ) this.follow();
         renderer.render( scene, camera );
 
@@ -1451,6 +1455,11 @@ var view = ( function () {
 
     }
 
+    //--------------------------------------
+    //
+    //   CAR HELPER
+    //
+    //--------------------------------------
 
     var carHelper = function ( p ) {
 
