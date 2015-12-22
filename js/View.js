@@ -515,25 +515,23 @@ var view = ( function () {
 
     };
 
-    view.capsuleGeo = function( radius, height, SRadius, SHeight ) {
+    view.findRotation = function ( r ) {
 
-        var sRadius = SRadius || 12;
-        var sHeight = SHeight || 6;
-        var o0 = Math.PI * 2;
-        var o1 = Math.PI * 0.5;
-        var g = new THREE.Geometry();
-        var m0 = new THREE.CylinderGeometry(radius, radius, height, sRadius, 1, true);
-        var m1 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1);
-        var m2 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1);
-        var mtx0 = new THREE.Matrix4().makeTranslation(0,0,0);
-        var mtx1 = new THREE.Matrix4().makeTranslation(0, height*0.5,0);
-        var mtx2 = new THREE.Matrix4().makeTranslation(0, -height*0.5,0);
-        g.merge( m0, mtx0);
-        g.merge( m1, mtx1);
-        g.merge( m2, mtx2);
-        return new THREE.BufferGeometry().fromGeometry( g );
-    
+        if( Math.abs(r[0]) > Math.TwoPI || Math.abs(r[1]) > Math.TwoPI || Math.abs(r[2]) > Math.TwoPI ){
+            // is in degree
+            r[0] *= Math.degtorad;
+            r[1] *= Math.degtorad;
+            r[2] *= Math.degtorad;
+        }
+        return r;
+
     };
+
+    //--------------------------------------
+    //
+    //   RESET
+    //
+    //--------------------------------------
 
     view.reset = function () {
 
@@ -585,19 +583,11 @@ var view = ( function () {
 
     };
 
-    view.findRotation = function ( r ) {
-
-        if( Math.abs(r[0]) > Math.TwoPI || Math.abs(r[1]) > Math.TwoPI || Math.abs(r[2]) > Math.TwoPI ){
-            // is in degree
-            r[0] *= Math.degtorad;
-            r[1] *= Math.degtorad;
-            r[2] *= Math.degtorad;
-
-        }
-
-        return r;
-
-    };
+    //--------------------------------------
+    //
+    //   ADD
+    //
+    //--------------------------------------
 
     view.add = function ( o ) {
 
@@ -659,7 +649,7 @@ var view = ( function () {
         
         
         if( type == 'capsule' ){
-            var g = this.capsuleGeo( size[0] , size[1]*0.5 );
+            var g = new THREE.CapsuleBufferGeometry( size[0] , size[1]*0.5 );
             extraGeo.push(g);
             mesh = new THREE.Mesh( g, material );
         }
