@@ -857,7 +857,7 @@ function add ( o, extra ) {
                 body = softBodyHelpers.CreateFromTriMesh( world.getWorldInfo(), o.v, o.i, o.ntri, o.randomize || true );
                 body.softType = 5;
 
-                console.log('result:' + body.get_m_nodes().size())
+                //console.log('result:' + body.get_m_nodes().size())
 
             break;
         }
@@ -1173,7 +1173,7 @@ function character ( o ) {
     var body = new Ammo.btPairCachingGhostObject();
     body.setCollisionShape(shape);
     body.setCollisionFlags( o.flag || 16 );
-    console.log(body);
+    //console.log(body);
     ///body.setWorldTransform( startTransform );
     
     //
@@ -1190,7 +1190,7 @@ function character ( o ) {
     var hero = new Ammo.btKinematicCharacterController( body, shape, stepHeight);
     //hero.setUseGhostSweepTest(true);
 
-    console.log(hero);
+    //console.log(hero);
     //hero.setGravity( vec3(0, -9.8, 0) );
     hero.setFallSpeed(0.1);
     hero.warp(v3(o.pos));
