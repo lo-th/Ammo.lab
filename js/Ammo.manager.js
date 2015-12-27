@@ -29,7 +29,7 @@ var ammo = ( function () {
 
     var isBuffer = true;
     var timestep = 1/60;
-    var substep = 7;
+    var substep = 10;//7;
 
     // main transphere array
     var ar, dr, hr, jr, cr;

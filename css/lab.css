@@ -27,6 +27,14 @@ html, body {
     pointer-events:none;
     /*text-shadow: 0.5px 0.5px 2px #000000;*/
 }
+.ribbon {
+    position: absolute; top:-50px; right:48px;
+    width:30px; height:200px; background:none; 
+    pointer-events:auto; cursor:pointer;
+    -ms-transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
 
 /*body{
     background-image: url(../textures/bg.png);
@@ -158,14 +166,7 @@ body{
     text-align:right;
 }
 
-#ribbon {
-    position: absolute; top:-50px; right:48px;
-    width:30px; height:200px; background:none; 
-    pointer-events:auto; cursor:pointer;
-    -ms-transform: rotate(-45deg);
-    -webkit-transform: rotate(-45deg);
-    transform: rotate(-45deg);
-}
+
 
 .separator {
     position:absolute; background-color:none; pointer-events:auto; display:block; 

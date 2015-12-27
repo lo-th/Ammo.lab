@@ -79,12 +79,13 @@ function addVehicle (id, pos, type) {
 
     o.wPos[1] = o.radius*2;
 
-    if ( o.type == 'mesh' ) {
-        o.v = view.getFaces( shape );
+    /*if ( o.type == 'mesh' ) {
+        o.v = view.prepaGeometry( shape, false, true );
     } else if ( o.type == 'convex' ) {
-        o.v = view.getVertex( shape );
-    }
+        o.v = view.prepaGeometry( shape, true );
+    }*/
     
+    o.shape = shape;
     o.mesh = mesh;
     o.wheel = geo['w00' + o.w ];
 

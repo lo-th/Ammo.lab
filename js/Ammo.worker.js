@@ -24,7 +24,7 @@ var bodys, softs, joints, cars, solids, heros, carsInfo;
 var byName;
 
 var timestep = 0.01667;//6;//7;
-var substep = 4;//3;// default is 1. 2 or more make simulation more accurate.
+var substep = 10;//4//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
@@ -746,7 +746,7 @@ function add ( o, extra ) {
             shape.setLocalScaling( localScaling );
         break;
 
-        case 'cloth':case 'rope':case 'ellipsoid': 
+        case 'cloth':case 'rope':case 'ellipsoid':case 'softConvex': case 'softTriMesh':
             isSoft = true;
         break;
 
@@ -822,42 +822,102 @@ function add ( o, extra ) {
 
                 self.postMessage({ m:'ellipsoid', o:o });
             break;
+            case 'softConvex':
+
+                body = softBodyHelpers.CreateFromConvexHull( worldInfo, o.v, o.v.length/3, o.randomize || false );
+                body.softType = 4;
+
+                // force nodes
+                var i = o.v.length/3;
+                while(i--){
+                    var n = i*3;
+                    body.get_m_nodes().at( i ).set_m_x(new Ammo.btVector3(o.v[n], o.v[n+1], o.v[n+2]));
+                }
+
+                //var b = body.get_m_nodes();
+                var a = [];
+                var b = body.get_m_nodes();
+                var j = b.size(), n, node, p;
+                while(j--){
+                    n = (j*3);
+                    node = b.at( j );
+                    p = node.get_m_x();
+                    a[n] = p.x();
+                    a[n+1] = p.y();
+                    a[n+2] = p.z();
+                }
+
+                console.log('start result: ' + a)
+
+                console.log('result:' + body.get_m_nodes().size())
+
+            break;
+            case 'softTriMesh':
+
+                body = softBodyHelpers.CreateFromTriMesh( world.getWorldInfo(), o.v, o.i, o.ntri, o.randomize || true );
+                body.softType = 5;
+
+                console.log('result:' + body.get_m_nodes().size())
+
+            break;
         }
 
         var sb = body.get_m_cfg();
+        
+        // Soft-soft and soft-rigid collisions
+        
+
         if( o.viterations !== undefined ) sb.set_viterations( o.viterations );//10
         if( o.piterations !== undefined ) sb.set_piterations( o.piterations );//10
         if( o.citerations !== undefined ) sb.set_citerations( o.citerations );//4
         if( o.diterations !== undefined ) sb.set_diterations( o.diterations );//0
+
+        sb.set_collisions( 0x11 );
+
+        // Friction
         if( o.kdf !== undefined ) sb.set_kDF(o.kdf);
+        // Damping
         if( o.kdp !== undefined ) sb.set_kDP(o.kdp);
+        // Pressure
         if( o.kpr !== undefined ) sb.set_kPR(o.kpr);
         
 
-        if(o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin );
+        
         //body.setCollisionShape(Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape())
 
 
         //
         //console.log(body);
+        //console.log(softBodyHelpers);
 
+        // Stiffness
         if( o.klst !== undefined ) body.get_m_materials().at(0).set_m_kLST(o.klst);
         if( o.kast !== undefined ) body.get_m_materials().at(0).set_m_kAST(o.kast);
         if( o.kvst !== undefined ) body.get_m_materials().at(0).set_m_kVST(o.kvst);
 
-        if( o.friction !== undefined ) body.setFriction(o.friction);
+        var fromfaces = o.fromfaces || false;
+        body.setTotalMass( mass, fromfaces );
+
+        var sh = Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape();
+
+        if(o.margin !== undefined ) sh.setMargin( margin );
+
+        //var localInertia = vec3();
+        //sh.calculateLocalInertia( mass, localInertia );
+
+        /*if( o.friction !== undefined ) body.setFriction(o.friction);
         if( o.rollingFriction !== undefined ) body.setRollingFriction(o.rollingFriction);
         if( o.anisotropicFriction !== undefined ) body.setAnisotropicFriction(o.anisotropicFriction);
         if( o.restitution !== undefined ) body.setRestitution(o.restitution);
+        */
 
         // generateClusters with k=0 will create a convex cluster for each tetrahedron or triangle otherwise an approximation will be used (better performance)
         // generateClusters (   int     k, int     maxiterations = 8192  )   
         //body.generateClusters(0);
 
-        var fromfaces = o.fromfaces || false;
-        body.setTotalMass( mass, fromfaces );
+        
 
-        body.setWorldTransform(startTransform);
+        //body.setWorldTransform(startTransform);
 
         //console.log(body.get_m_cfg().get_viterations());
 
@@ -880,15 +940,23 @@ function add ( o, extra ) {
     }
 
     if ( mass !== 0 ){
-        body.setCollisionFlags(o.flag || 0);
+        
         //body.setCollisionFlags(1); 
         if( isSoft ) world.addSoftBody( body, o.group || 1, o.mask || -1 );
-        else world.addRigidBody( body, o.group || 1, o.mask || -1 );
+        else{ 
+            body.setCollisionFlags(o.flag || 0);
+            world.addRigidBody( body, o.group || 1, o.mask || -1 );
+
+            body.activate();
+            body.setActivationState( o.state || 1 );
+        }
         
     } else {
         body.setCollisionFlags(o.flag || 1); 
         //body.setCollisionFlags( FLAGS.STATIC_OBJECT | FLAGS.KINEMATIC_OBJECT ) ;
-        world.addCollisionObject( body, o.group || 2, o.mask || -1 );
+        //world.addCollisionObject( body, o.group || 2, o.mask || -1 );
+        //world.addCollisionObject( body, o.group || 1, o.mask || -1 );
+        world.addRigidBody( body, o.group || 2, o.mask || -1 );
     }
 
     //console.log(body.getMotionState())
@@ -898,7 +966,7 @@ function add ( o, extra ) {
 
     //body.setContactProcessingThreshold ??
 
-    body.activate();
+    
 
     //body.name = o.name || '';
     //var name = o.name || '';
@@ -913,7 +981,7 @@ function add ( o, extra ) {
     AMMO.DISABLE_DEACTIVATION = 4;
     AMMO.DISABLE_SIMULATION = 5;
     */
-    body.setActivationState( o.state || 1 );
+    
     //body.setCollisionFlags();
 
     if ( mass !== 0 ){ // only dynamique
@@ -1048,13 +1116,13 @@ function addJoint ( o ) {
 }
  
 enum    CollisionObjectTypes { 
-  CO_COLLISION_OBJECT =1, 
-  CO_RIGID_BODY =2, 
-  CO_GHOST_OBJECT =4, 
-  CO_SOFT_BODY =8, 
-  CO_HF_FLUID =16, 
-  CO_USER_TYPE =32, 
-  CO_FEATHERSTONE_LINK =64 
+  CO_COLLISION_OBJECT = 1, 
+  CO_RIGID_BODY = 2, 
+  CO_GHOST_OBJECT = 4, 
+  CO_SOFT_BODY = 8, 
+  CO_HF_FLUID = 16, 
+  CO_USER_TYPE = 32, 
+  CO_FEATHERSTONE_LINK = 64 
 }
  
 enum    AnisotropicFrictionFlags { 

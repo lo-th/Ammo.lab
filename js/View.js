@@ -434,14 +434,13 @@ var view = ( function () {
 
     view.load = function ( name, callback ) {
 
-        var loader = new THREE.SEA3D();
+        var loader = new THREE.SEA3D({});
 
         loader.onComplete = function( e ) {
 
             var i = loader.geometries.length, g;
             while(i--){
                 g = loader.geometries[i];
-                //console.log(g.name);
                 geo[g.name] = g;
             };
 
@@ -620,6 +619,16 @@ var view = ( function () {
             return;
         }
 
+        if(type == 'softTriMesh'){
+            this.softTriMesh( o ); 
+            return;
+        }
+
+        if(type == 'softConvex'){
+            this.softConvex( o ); 
+            return;
+        }
+
         if(type == 'cloth'){
             this.cloth( o ); 
             return;
@@ -666,8 +675,12 @@ var view = ( function () {
         if( o.shape ) o.type = o.shape;
 
 
-        if(o.type == 'mesh') o.v = view.getFaces( geo[type] );
-        if(o.type == 'convex') o.v = view.getVertex( geo[type] );
+        //if(o.type == 'mesh') o.v = view.getFaces( geo[type] );
+        //if(o.type == 'convex') o.v = view.getVertex( geo[type] );
+
+        if ( o.type == 'mesh' ) o.v = view.prepaGeometry( shape, false, true );
+        if ( o.type == 'convex' ) o.v = view.prepaGeometry( shape, true );
+        
 
         // color
         //this.meshColor( mesh, 1, 0.5, 0 );
@@ -692,7 +705,94 @@ var view = ( function () {
 
     };
 
-    view.getVertex = function ( Geometry, Name ) {
+    view.prepaGeometry = function ( g , verticesOnly, facesOnly ) {
+
+        var i, j, n, p, n2;
+
+        var tmpGeo = new THREE.Geometry().fromBufferGeometry( g );
+        tmpGeo.mergeVertices();
+
+        var totalVertices = g.attributes.position.array.length/3;
+        var numVertices = tmpGeo.vertices.length;
+        var numFaces = tmpGeo.faces.length;
+
+        g.realVertices = new Float32Array( numVertices * 3 );
+        g.realIndices = new ( numFaces * 3 > 65535 ? Uint32Array : Uint16Array )( numFaces * 3 );
+
+        i = numVertices;
+        while(i--){
+            p = tmpGeo.vertices[ i ];
+            n = i * 3;
+            g.realVertices[ n ] = p.x;
+            g.realVertices[ n + 1 ] = p.y;
+            g.realVertices[ n + 2 ] = p.z;
+        }
+
+        if(verticesOnly){ 
+            tmpGeo.dispose();
+            return g.realVertices;
+        }
+
+        i = numFaces;
+        while(i--){
+            p = tmpGeo.faces[ i ];
+            n = i * 3;
+            g.realIndices[ n ] = p.a;
+            g.realIndices[ n + 1 ] = p.b;
+            g.realIndices[ n + 2 ] = p.c;
+        }
+
+        tmpGeo.dispose();
+
+        if(facesOnly){ 
+            var faces = [];
+            i = g.realIndices.length;
+            while(i--){
+                n = i * 3;
+                p = g.realIndices[i]*3;
+                faces[n] = g.realVertices[ p ];
+                faces[n+1] = g.realVertices[ p+1 ];
+                faces[n+2] = g.realVertices[ p+2 ];
+            }
+            return faces;
+        }
+
+        // find same point
+        var ar = [];
+        var br = g.attributes.position.array;
+        i = numVertices;
+        while(i--){
+            n = i*3;
+            ar[i] = [];
+            j = totalVertices;
+            while(j--){
+                n2 = j*3;
+                if(br[n2] == g.realVertices[n] && br[n2+1] == g.realVertices[n+1] && br[n2+2] == g.realVertices[n+2]) ar[i].push(j);
+            }
+        }
+
+        // generate same point index
+        var pPoint = new ( numVertices > 65535 ? Uint32Array : Uint16Array )( numVertices );
+        var lPoint = new ( totalVertices > 65535 ? Uint32Array : Uint16Array )( totalVertices );
+
+        var p = 0;
+        for(i=0; i<numVertices; i++){
+            n = ar[i].length;
+            pPoint[i] = p;
+            j = n;
+            while(j--){ lPoint[p+j] = ar[i][j]; }
+            p += n;
+        }
+
+        g.numFaces = numFaces;
+        g.numVertices = numVertices;
+        g.maxi = totalVertices;
+        g.pPoint = pPoint;
+        g.lPoint = lPoint;
+
+    };
+
+    /*view.getVertex = function ( Geometry, Name ) {
 
         var v = [];
         var pp, i, n;
@@ -740,7 +840,7 @@ var view = ( function () {
         
         return v;
 
-    };
+    };*/
 
     view.getGeoByName = function ( name, Buffer ) {
 
@@ -783,7 +883,7 @@ var view = ( function () {
 
     view.vehicle = function ( o ) {
 
-        var type = o.type || 'box';
+        //var type = o.type || 'box';
         var size = o.size || [2,0.5,4];
         var pos = o.pos || [0,0,0];
         var rot = o.rot || [0,0,0];
@@ -868,10 +968,95 @@ var view = ( function () {
         if( o.mesh ) o.mesh = null;
         if( o.wheel ) o.wheel = null;
 
+        if ( o.type == 'mesh' ) o.v = view.prepaGeometry( o.shape, false, true );
+        if ( o.type == 'convex' ) o.v = view.prepaGeometry( o.shape, true );
+
         // send to worker
         ammo.send( 'vehicle', o );
 
     };
+
+    //--------------------------------------
+    //   SOFT TRI MESH
+    //--------------------------------------
+
+    view.softTriMesh = function ( o ) {
+
+        var g = o.shape.clone();
+        var pos = o.pos || [0,0,0];
+        var size = o.size || [1,1,1];
+        var rot = o.rot || [0,0,0];
+
+        g.rotateX( rot[0] *= Math.degtorad );
+        g.rotateY( rot[1] *= Math.degtorad );
+        g.rotateZ( rot[2] *= Math.degtorad );
+
+        g.translate( pos[0], pos[1], pos[2] );
+        g.scale( size[0], size[1], size[2] );
+
+        
+
+        view.prepaGeometry(g);
+
+        extraGeo.push( g );
+
+        // extra color
+        var color = new Float32Array( g.maxi*3 );
+        var i = g.maxi*3;
+        while(i--){
+            color[i] = 1;
+        }
+        g.addAttribute( 'color', new THREE.BufferAttribute( color, 3 ) );
+
+        o.v = g.realVertices;
+        o.i = g.realIndices;
+        o.ntri = g.numFaces;
+
+
+        var mesh = new THREE.Mesh( g, mat.cloth );
+
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        
+        mesh.softType = 5;
+
+        scene.add( mesh );
+        softs.push( mesh );
+
+        // send to worker
+        ammo.send( 'add', o );
+        
+    }
+
+    //--------------------------------------
+    //   SOFT CONVEX
+    //--------------------------------------
+
+    view.softConvex = function ( o ) {
+
+        var g = o.shape;
+        var pos = o.pos || [0,0,0];
+
+        g.translate( pos[0], pos[1], pos[2] );
+
+        view.prepaGeometry(g);
+
+        o.v = g.realVertices;
+
+        var mesh = new THREE.Mesh( g, mat.cloth );
+        
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        
+        mesh.softType = 4;
+
+        scene.add( mesh );
+        softs.push( mesh );
+
+        // send to worker
+        ammo.send( 'add', o );
+
+    }
 
     //--------------------------------------
     //   CLOTH
@@ -935,12 +1120,7 @@ var view = ( function () {
         //var n;
         //var pos = new Float32Array( max * 3 );
         for(var i=0; i<max-1; i++){
-            //n = i*3;
-            //pos[n] = start[0]; 
-            //pos[n+1] = start[1] + i * ((end[1]-start[1])/max); 
-            //pos[n+2] = start[2]; 
 
-            //if(i<max-1)
             ropeIndices.push( i, i + 1 );
 
         }
@@ -959,7 +1139,7 @@ var view = ( function () {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         mesh.softType = 2;
-        mesh.frustumCulled = false;
+        //mesh.frustumCulled = false;
 
         scene.add( mesh );
         softs.push( mesh );
@@ -1174,10 +1354,11 @@ var view = ( function () {
     //   UPDATE OBJECT
     //
     //--------------------------------------
+    var ff=false;
 
     view.update = function(ar, dr, hr, jr, cr ){
 
-        var i = meshs.length, a = ar, n, m, j, w,k, l, c, cc, t, order;
+        var i = meshs.length, a = ar, n, m, j, w,k, l, c, cc, t, order, isWithColor;
 
         meshs.forEach( function( m, id ) {
             var n = id * 8;
@@ -1273,6 +1454,8 @@ var view = ( function () {
         w = 0;
         k = 0;
 
+        //console.log(a[1+3])
+
         //while(i--){
 
         for( i = 0; i<l; i++ ){
@@ -1280,55 +1463,139 @@ var view = ( function () {
             m = softs[i];
             t = m.softType; // type of softBody
             order = null;
+            same = null;
+            isWithColor = m.geometry.attributes.color ? true : false;
 
             p = m.geometry.attributes.position.array;
-            c = m.geometry.attributes.color.array;
-            if( m.geometry.attributes.order ) order = m.geometry.attributes.order.array;
-            j = p.length;
+            if(isWithColor) c = m.geometry.attributes.color.array;
 
-            n = 2;
+            if( t == 5 || t == 4){ // softTriMesh // softConvex
 
-            if(order!==null) {
-                j = order.length;
+                var max = m.geometry.numVertices;
+                var maxi = m.geometry.maxi;
+                var pPoint = m.geometry.pPoint;
+                var lPoint = m.geometry.lPoint;
+               
+
+                j = max;
                 while(j--){
-                    k = order[j] * 3;
-                    n = j*3 + w;
-                    p[k] = a[n];
-                    p[k+1] = a[n+1];
-                    p[k+2] = a[n+2];
-
-                    cc = Math.abs(a[n+1]/10);
-                    c[k] = cc;
-                    c[k+1] = cc;
-                    c[k+2] = cc;
-
-
-                }
-
-            } else {
-                 while(j--){
-                     
-                    p[j] = a[j+w];
-                    if(n==1){ 
-                        cc = Math.abs(p[j]/10);
-                        c[j-1] = cc;
-                        c[j] = cc;
-                        c[j+1] = cc;
+                    n = (j*3) + w;
+                    if( j == max-1 ) k = maxi - pPoint[j];
+                    else k = pPoint[j+1] - pPoint[j];
+                    var d = pPoint[j];
+                    while(k--){
+                        var id = lPoint[d+k]*3;
+                        p[id] = a[n];
+                        p[id+1] = a[n+1]; 
+                        p[id+2] = a[n+2];
                     }
-                    n--;
-                    n = n<0 ? 2 : n;
                 }
+                // update normal
+                m.geometry.computeVertexNormals();
+                var norm = m.geometry.attributes.normal.array;
+
+                j = max;
+                while(j--){
+                    if( j == max-1 ) k = maxi - pPoint[j];
+                    else k = pPoint[j+1] - pPoint[j];
+                    var d = pPoint[j];
+                    var ref = lPoint[d]*3;
+                    while(k--){
+                        var id = lPoint[d+k]*3;
+                        norm[id] = norm[ref];
+                        norm[id+1] = norm[ref+1]; 
+                        norm[id+2] = norm[ref+2];
+                    }
+                }
+
+
+
+
+            }else{
+
+
+                if( m.geometry.attributes.order ) order = m.geometry.attributes.order.array;
+                //if( m.geometry.attributes.same ) same = m.geometry.attributes.same.array;
+                j = p.length;
+
+                n = 2;
+
+                /*if(same!==null) {
+                    //a = poooo
+                    //a[6]+=0.02
+                    var j = same.length/4;
+                    while(j--){
+                        var n4 = j*4;
+                        n = j*3;// + w;
+                        var x = a[n] || 0;
+                        var y = a[n+1] || 0; 
+                        var z = a[n+2] || 0;  
+                        var i0 = same[n4]*3;
+                        var i1 = same[n4+1]*3;
+                        var i2 = same[n4+2]*3;
+                        var i3 = same[n4+3]*3;
+
+                        if(!ff){
+                            ff=true;
+                            console.log(a[0], poooo[0])
+                        }
+                        
+                        p[i0] = p[i1] = p[i2] = p[i3] = x;
+                        p[i0+1] = p[i1+1] = p[i2+1] = p[i3+1] = y;
+                        p[i0+2] = p[i1+2] = p[i2+2] = p[i3+2] = z;
+                    }
+
+                } else {*/
+
+                    if(order!==null) {
+                        j = order.length;
+                        while(j--){
+                            k = order[j] * 3;
+                            n = j*3 + w;
+                            p[k] = a[n];
+                            p[k+1] = a[n+1];
+                            p[k+2] = a[n+2];
+
+                            cc = Math.abs(a[n+1]/10);
+                            c[k] = cc;
+                            c[k+1] = cc;
+                            c[k+2] = cc;
+
+
+                        }
+
+                    } else {
+                         while(j--){
+                             
+                            p[j] = a[j+w];
+                            if(n==1){ 
+                                cc = Math.abs(p[j]/10);
+                                c[j-1] = cc;
+                                c[j] = cc;
+                                c[j+1] = cc;
+                            }
+                            n--;
+                            n = n<0 ? 2 : n;
+                        }
+
+                    }
+
+                //}
 
             }
-            
-           
-
-            m.geometry.attributes.position.needsUpdate = true;
-            m.geometry.attributes.color.needsUpdate = true;
             if(t==1 || t==3) m.geometry.computeVertexNormals();
+            m.geometry.attributes.position.needsUpdate = true;
+            m.geometry.attributes.normal.needsUpdate = true;
+            if(isWithColor) m.geometry.attributes.color.needsUpdate = true;
+
+           // if(t==1 || t==3)
+             
+           // else m.geometry.computeFaceNormals();
+            
             m.geometry.computeBoundingSphere();
 
-            w += p.length;
+            if(t==5) w += m.geometry.numVertices * 3;
+            else w += p.length;
 
         }
 
