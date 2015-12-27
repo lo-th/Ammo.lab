@@ -705,7 +705,7 @@ var view = ( function () {
 
     };
 
-    view.prepaGeometry = function ( g , verticesOnly, facesOnly ) {
+    view.prepaGeometry = function ( g, verticesOnly, facesOnly ) {
 
         var i, j, n, p, n2;
 
@@ -744,6 +744,9 @@ var view = ( function () {
 
         tmpGeo.dispose();
 
+        //g.realIndices = g.getIndex();
+        //g.setIndex(g.realIndices);
+
         if(facesOnly){ 
             var faces = [];
             i = g.realIndices.length;
@@ -759,7 +762,7 @@ var view = ( function () {
 
         // find same point
         var ar = [];
-        var br = g.attributes.position.array;
+        var pos = g.attributes.position.array;
         i = numVertices;
         while(i--){
             n = i*3;
@@ -767,7 +770,7 @@ var view = ( function () {
             j = totalVertices;
             while(j--){
                 n2 = j*3;
-                if(br[n2] == g.realVertices[n] && br[n2+1] == g.realVertices[n+1] && br[n2+2] == g.realVertices[n+2]) ar[i].push(j);
+                if( pos[n2] == g.realVertices[n] && pos[n2+1] == g.realVertices[n+1] && pos[n2+2] == g.realVertices[n+2] ) ar[i].push(j);
             }
         }
 
@@ -994,11 +997,13 @@ var view = ( function () {
         g.translate( pos[0], pos[1], pos[2] );
         g.scale( size[0], size[1], size[2] );
 
-        
+        //console.log('start', g.getIndex().count);
 
         view.prepaGeometry(g);
 
         extraGeo.push( g );
+
+        //console.log('mid', g.realIndices.length);
 
         // extra color
         var color = new Float32Array( g.maxi*3 );

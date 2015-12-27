@@ -9,7 +9,7 @@ function afterLoad () {
 
     add({type:'plane' }); // infinie plane
 
-    add({ type:'box', size:[40,10,40], pos:[0,2.5,0], rot:[0,0,0], mass:0, group:1 });
+    add({ type:'box', size:[40,2,40], pos:[0,2.5,0], rot:[0,0,0], mass:0, group:1 });
     
     //add({ type:'box', size:[40,10,1], pos:[0,4.6,0], rot:[45,0,0], mass:0 });
     //add({ type:'box', size:[40,2,40], pos:[0,1,-10], rot:[0,0,0], mass:0 });
@@ -42,7 +42,7 @@ function afterLoad () {
             //citerations:4,
             //diterations:0,
 
-            kdf: 0.1,// friction
+            kdf: 0.3,// friction
             kdp: 0.01,// Damping
             kpr: 100,// Pressure
 
@@ -51,6 +51,7 @@ function afterLoad () {
             kast: 0.6,
 
             margin:0.05,
+            fromfaces:true,
         });
 
     }
