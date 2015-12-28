@@ -88,6 +88,27 @@ body{
     overflow-y:auto;
 }
 
+.menu::-webkit-scrollbar-thumb {
+    background-color: #105AE2;/*#333;*/
+    border:5px solid rgba(0,0,0,0);
+    /*border-radius: 25px;*/
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    box-shadow: 1px 1px 0px 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.menu::-webkit-scrollbar-thumb:hover {
+    background-color: #105AE2;/*#555;*/
+
+}
+
+.menu::-webkit-scrollbar {
+    width:25px;
+    height:20px;
+    background-color: #0d0d0d;
+    border-left:1px solid rgba(255, 255, 255, 0.2);
+}
+
 .menuPins {
     right: 20px;
     top: 10px;

@@ -45,6 +45,7 @@ function afterLoad () {
             kdf: 0.6,// friction
             kdp: 0.01,// Damping
             kpr: 260,// Pressure
+            //kvc: 20,
 
             // Stiffness
             klst: 0.6,

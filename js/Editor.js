@@ -21,6 +21,7 @@ var editor = ( function () {
     var isMenu = false;
     var nextDemo = null;
     var selectColor = '#105AE2';
+    var scrollOn = false;
 
     editor = function () {};
 
@@ -106,7 +107,10 @@ var editor = ( function () {
 
         if( !isMenu ) return;
         nextDemo = null;
-        var y = ~~ ((e.clientY-10)/30);
+
+        if(scrollOn) if(e.clientX>(left-35)) return;
+
+        var y = ~~ ((e.clientY-10+menu.scrollTop)/30);
         var i = menu.childNodes.length, b;
         while(i--){
             if(i!==0){
@@ -144,6 +148,11 @@ var editor = ( function () {
                 if( name !== fileName ) editor.addButton( demos[i], i, n++ );
             }
 
+            if(menu.scrollHeight > menu.clientHeight) scrollOn = true;
+            else scrollOn = false;
+
+            if(scrollOn) menuPins.style.display = 'none';
+
             menu.addEventListener('mousemove', editor.menu_move, false );
         }
         
@@ -160,6 +169,7 @@ var editor = ( function () {
                 menu.removeChild( b );
             }
         }
+        menuPins.style.display = 'block';
         menu.removeEventListener('mousemove', editor.menu_move, false );
 
     };

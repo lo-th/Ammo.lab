@@ -487,10 +487,10 @@ function init () {
 
     worldInfo = world.getWorldInfo();
 
-    /*worldInfo.set_air_density( 1.2 );
+    worldInfo.set_air_density( 1.2 );
     worldInfo.set_water_density( 0 );
     worldInfo.set_water_offset( 0 );
-    worldInfo.set_water_normal( vec3() );*/
+    worldInfo.set_water_normal( vec3() );/**/
     worldInfo.set_m_gravity( vec3(0, -9.8, 0) );
     //info.set_m_maxDisplacement();
 
@@ -880,6 +880,9 @@ function add ( o, extra ) {
         if( o.kdp !== undefined ) sb.set_kDP(o.kdp);
         // Pressure
         if( o.kpr !== undefined ) sb.set_kPR(o.kpr);
+
+        if( o.kvc !== undefined ) sb.set_kVC(o.kvc);
+
         
 
         
@@ -887,7 +890,7 @@ function add ( o, extra ) {
 
 
         //
-        //console.log(body);
+        //console.log(sb);
         //console.log(softBodyHelpers);
 
         // Stiffness
