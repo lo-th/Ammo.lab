@@ -1363,7 +1363,7 @@ var view = ( function () {
 
     view.update = function(ar, dr, hr, jr, cr ){
 
-        var i = meshs.length, a = ar, n, m, j, w,k, l, c, cc, t, order, isWithColor;
+        var i = meshs.length, a = ar, n, m, j, w,k, l, c, cc, t, order, isWithColor, isWithNormal;
 
         meshs.forEach( function( m, id ) {
             var n = id * 8;
@@ -1470,6 +1470,7 @@ var view = ( function () {
             order = null;
             same = null;
             isWithColor = m.geometry.attributes.color ? true : false;
+            isWithNormal = m.geometry.attributes.normal ? true : false;
 
             p = m.geometry.attributes.position.array;
             if(isWithColor) c = m.geometry.attributes.color.array;
@@ -1590,7 +1591,7 @@ var view = ( function () {
             }
             if(t==1 || t==3) m.geometry.computeVertexNormals();
             m.geometry.attributes.position.needsUpdate = true;
-            m.geometry.attributes.normal.needsUpdate = true;
+            if(isWithNormal) m.geometry.attributes.normal.needsUpdate = true;
             if(isWithColor) m.geometry.attributes.color.needsUpdate = true;
 
            // if(t==1 || t==3)
