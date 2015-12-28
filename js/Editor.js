@@ -34,20 +34,7 @@ var editor = ( function () {
 
     editor = function () {};
 
-    editor.Gover = function(){
-        octo.setAttribute('fill', '#105AE2'); 
-        octoArm.style.webkitAnimationName = 'octocat-wave'; 
-        octoArm.style.webkitAnimationDuration = '560ms';
-    }
-
-    editor.Gout = function(){
-        octo.setAttribute('fill','rgba(255,255,255,0.2)');  
-        octoArm.style.webkitAnimationName = 'none';
-    }
-
-    editor.Gdown = function(){
-        window.location.assign('https://github.com/lo-th/Ammo.lab');
-    }
+    
 
     editor.init = function ( Callback ) {
 
@@ -116,6 +103,25 @@ var editor = ( function () {
         this.resize();
 
     };
+
+    //
+
+    editor.Gover = function(){
+        octo.setAttribute('fill', '#105AE2'); 
+        octoArm.style.webkitAnimationName = 'octocat-wave'; 
+        octoArm.style.webkitAnimationDuration = '560ms';
+    }
+
+    editor.Gout = function(){
+        octo.setAttribute('fill','rgba(255,255,255,0.2)');  
+        octoArm.style.webkitAnimationName = 'none';
+    }
+
+    editor.Gdown = function(){
+        window.location.assign('https://github.com/lo-th/Ammo.lab');
+    }
+
+    //
 
     editor.menu_over = function () { 
 

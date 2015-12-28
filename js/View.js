@@ -590,18 +590,34 @@ var view = ( function () {
 
     view.add = function ( o ) {
 
-        var statique = o.mass == 0 ? true : false;
-        var material = statique ? mat.statique : mat.move;
+        o.mass = o.mass == undefined ? 0 : o.mass;
+        o.type = o.type == undefined ? 'box' : o.type;
 
-        var type = o.type || 'box';
+        o.pos = o.pos == undefined ? [0,0,0] : o.pos;
+        o.size = o.size == undefined ? [1,1,1] : o.size;
+        o.rot = o.rot == undefined ? [0,0,0] : o.rot;
+
+        if(o.size.length == 1){ o.size[1] = o.size[0]; }
+        if(o.size.length == 2){ o.size[2] = o.size[0]; }
+
+
+
+        
+
+        /*var type = o.type || 'box';
         var size = o.size || [1,1,1];
         var pos = o.pos || [0,0,0];
-        var rot = o.rot || [0,0,0];
+        
+        
+
+        var rot = o.rot || [0,0,0];*/
+        this.findRotation( o.rot );
+
         var mesh = null;
 
-        if(type.substring(0,5) == 'joint') {
+        if(o.type.substring(0,5) == 'joint') {
 
-            if( ( Math.abs(o.min) > Math.TwoPI || Math.abs(o.max) > Math.TwoPI ) && type !== 'jointDistance' ){
+            if( ( Math.abs(o.min) > Math.TwoPI || Math.abs(o.max) > Math.TwoPI ) && o.type !== 'jointDistance' ){
                 // is in degree
                 o.min *= Math.degtorad;
                 o.max *= Math.degtorad;
@@ -613,91 +629,88 @@ var view = ( function () {
 
         }
 
-        if(type == 'plane'){
-            helper.position.set( pos[0], pos[1], pos[2] )
+        if(o.type == 'plane'){
+            helper.position.set( o.pos[0], o.pos[1], o.pos[2] )
             ammo.send( 'add', o ); 
             return;
         }
 
-        if(type == 'softTriMesh'){
+        if(o.type == 'softTriMesh'){
             this.softTriMesh( o ); 
             return;
         }
 
-        if(type == 'softConvex'){
+        if(o.type == 'softConvex'){
             this.softConvex( o ); 
             return;
         }
 
-        if(type == 'cloth'){
+        if(o.type == 'cloth'){
             this.cloth( o ); 
             return;
         }
 
-        if(type == 'rope'){
+        if(o.type == 'rope'){
             this.rope( o ); 
             return;
         }
 
-        if(type == 'ellipsoid'){
+        if(o.type == 'ellipsoid'){
             this.ellipsoid( o ); 
             return;
         }
 
-        if(type == 'terrain'){
+        if(o.type == 'terrain'){
             this.terrain( o ); 
             return;
         }
 
         
-        if(size.length == 1){ size[1] = size[0]; }
-        if(size.length == 2){ size[2] = size[0]; }
-
-        this.findRotation( rot );
-
         
+
+        var material =  o.mass ? mat.move : mat.statique;
         
-        if( type == 'capsule' ){
-            var g = new THREE.CapsuleBufferGeometry( size[0] , size[1]*0.5 );
-            extraGeo.push(g);
+        if( o.type == 'capsule' ){
+            var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
             mesh = new THREE.Mesh( g, material );
+            extraGeo.push(mesh.geometry);
+        } else if( o.type == 'mesh' ){ 
+            o.v = view.prepaGeometry( o.shape, false, true );
+            mesh = new THREE.Mesh( o.shape, material );
+            extraGeo.push(mesh.geometry);
+        } else if( o.type == 'convex' ){ 
+            o.v = view.prepaGeometry( o.shape, true );
+            mesh = new THREE.Mesh( o.shape, material );
+            extraGeo.push(mesh.geometry);
+        } else {
+            mesh = new THREE.Mesh( geo[o.type], material );
         }
-        else{ 
-            mesh = new THREE.Mesh( geo[type], material );
-            mesh.scale.set( size[0], size[1], size[2] );
+
+
+        if(mesh){
+
+
+
+            if( o.type != 'capsule' )mesh.scale.set( o.size[0], o.size[1], o.size[2] );
+            mesh.position.set( o.pos[0], o.pos[1], o.pos[2] );
+            mesh.rotation.set( o.rot[0], o.rot[1], o.rot[2] );
+
+            mesh.receiveShadow = true;
+            mesh.castShadow = true;
+
+            // copy rotation quaternion
+            o.quat = mesh.quaternion.toArray();
+
+            
+
+            this.setName( o, mesh );
+
+            scene.add(mesh);
+
+            // push 
+            if( o.mass ) meshs.push( mesh );
+            else statics.push( mesh );
         }
-
-        
-        mesh.position.set( pos[0], pos[1], pos[2] );
-        mesh.rotation.set( rot[0], rot[1], rot[2] );
-
-        // force physics type of shape
-        if( o.shape ) o.type = o.shape;
-
-
-        //if(o.type == 'mesh') o.v = view.getFaces( geo[type] );
-        //if(o.type == 'convex') o.v = view.getVertex( geo[type] );
-
-        if ( o.type == 'mesh' ) o.v = view.prepaGeometry( shape, false, true );
-        if ( o.type == 'convex' ) o.v = view.prepaGeometry( shape, true );
-        
-
-        // color
-        //this.meshColor( mesh, 1, 0.5, 0 );
-
-        // copy rotation quaternion
-        o.quat = mesh.quaternion.toArray();
-
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-
-        this.setName( o, mesh );
-
-        scene.add(mesh);
-
-        // push 
-        if( statique ) statics.push( mesh );
-        else meshs.push( mesh );
         
 
         // send to worker
@@ -1666,7 +1679,7 @@ var view = ( function () {
         renderer.shadowMap.cullFace = THREE.CullFaceBack;
 
         if(!terrains.length){
-            shadowGround = new THREE.Mesh( new THREE.PlaneBufferGeometry( 200, 200, 1, 1 ), new THREE.MeshBasicMaterial({ color:0X070707 }) );
+            shadowGround = new THREE.Mesh( new THREE.PlaneBufferGeometry( 200, 200, 1, 1 ), TransparentShadow() );
             shadowGround.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI*0.5));
             shadowGround.position.y = spy;
             shadowGround.castShadow = false;

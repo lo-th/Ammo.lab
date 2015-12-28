@@ -755,6 +755,7 @@ function add ( o, extra ) {
     if(shape && shape.setMargin !== undefined ){ shape.setMargin( margin ); }
 
     if( extra == 'isShape' ) return shape;
+    
     if( extra == 'isGhost' ){ 
         var ghost = new Ammo.btGhostObject();
         ghost.setCollisionShape( shape );
