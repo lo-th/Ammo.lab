@@ -662,6 +662,9 @@ var view = ( function () {
         
 
         var material =  o.mass ? mat.move : mat.statique;
+        if(o.material != undefined){ 
+            material = view.getMat()[o.material];
+        }
         
         if( o.type == 'capsule' ){
             var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
