@@ -10,7 +10,7 @@ function afterLoad () {
     add({
         type:'mesh',
         shape:view.getGeo()['bol'],
-        friction:0.2,
+        friction:0.4,
         mass:0,
         pos:[0, 1, -36]
     });
