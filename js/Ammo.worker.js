@@ -937,6 +937,8 @@ function add ( o, extra ) {
         var motionState = new Ammo.btDefaultMotionState( startTransform );
 
         var rb = new Ammo.btRigidBodyConstructionInfo( mass, motionState, shape, localInertia );
+        o.friction = o.friction == undefined ? 0.5 : o.friction;
+        o.restitution = o.restitution == undefined ? 0 : o.restitution;
         rb.set_m_friction( o.friction || 0.5 );
         rb.set_m_restitution( o.restitution || 0 );
         body = new Ammo.btRigidBody( rb );

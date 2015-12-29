@@ -516,7 +516,7 @@ var view = ( function () {
 
     view.findRotation = function ( r ) {
 
-        if( Math.abs(r[0]) > Math.TwoPI || Math.abs(r[1]) > Math.TwoPI || Math.abs(r[2]) > Math.TwoPI ){
+        if( Math.abs(r[0]) > Math.PI || Math.abs(r[1]) > Math.PI || Math.abs(r[2]) > Math.PI ){
             // is in degree
             r[0] *= Math.degtorad;
             r[1] *= Math.degtorad;
@@ -593,31 +593,24 @@ var view = ( function () {
         o.mass = o.mass == undefined ? 0 : o.mass;
         o.type = o.type == undefined ? 'box' : o.type;
 
+        // position
         o.pos = o.pos == undefined ? [0,0,0] : o.pos;
-        o.size = o.size == undefined ? [1,1,1] : o.size;
-        o.rot = o.rot == undefined ? [0,0,0] : o.rot;
 
+        // size
+        o.size = o.size == undefined ? [1,1,1] : o.size;
         if(o.size.length == 1){ o.size[1] = o.size[0]; }
         if(o.size.length == 2){ o.size[2] = o.size[0]; }
 
-
-
-        
-
-        /*var type = o.type || 'box';
-        var size = o.size || [1,1,1];
-        var pos = o.pos || [0,0,0];
-        
-        
-
-        var rot = o.rot || [0,0,0];*/
+        // rotation if > PI is in degree
+        o.rot = o.rot == undefined ? [0,0,0] : o.rot;
         this.findRotation( o.rot );
+        o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
 
         var mesh = null;
 
         if(o.type.substring(0,5) == 'joint') {
 
-            if( ( Math.abs(o.min) > Math.TwoPI || Math.abs(o.max) > Math.TwoPI ) && o.type !== 'jointDistance' ){
+            if( ( Math.abs(o.min) > Math.PI || Math.abs(o.max) > Math.PI ) && o.type !== 'jointDistance' ){
                 // is in degree
                 o.min *= Math.degtorad;
                 o.max *= Math.degtorad;
@@ -689,20 +682,14 @@ var view = ( function () {
 
         if(mesh){
 
+            if( o.type != 'capsule' ) mesh.scale.fromArray( o.size );//.set( o.size[0], o.size[1], o.size[2] );
 
-
-            if( o.type != 'capsule' )mesh.scale.set( o.size[0], o.size[1], o.size[2] );
-            mesh.position.set( o.pos[0], o.pos[1], o.pos[2] );
-            mesh.rotation.set( o.rot[0], o.rot[1], o.rot[2] );
+            mesh.position.fromArray( o.pos );
+            mesh.quaternion.fromArray( o.quat );
 
             mesh.receiveShadow = true;
             mesh.castShadow = true;
-
-            // copy rotation quaternion
-            o.quat = mesh.quaternion.toArray();
-
             
-
             this.setName( o, mesh );
 
             scene.add(mesh);
