@@ -1679,7 +1679,7 @@ var view = ( function () {
         renderer.shadowMap.cullFace = THREE.CullFaceBack;
 
         if(!terrains.length){
-            shadowGround = new THREE.Mesh( new THREE.PlaneBufferGeometry( 200, 200, 1, 1 ), TransparentShadow() );
+            shadowGround = new THREE.Mesh( new THREE.PlaneBufferGeometry( 200, 200, 1, 1 ), TransparentShadow(0x040205, 0.5) );
             shadowGround.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI*0.5));
             shadowGround.position.y = spy;
             shadowGround.castShadow = false;

@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( 90, 20, 40 );
+    cam ( 90, 20, 180 );
     load ( 'bol', afterLoad );
 
 }
@@ -10,13 +10,14 @@ function afterLoad () {
     add({
         type:'mesh',
         shape:view.getGeo()['bol'],
-        mass:0
+        mass:0,
+        pos:[0, 10, 0]
     });
 
-    add({ type:'sphere', size:[3], pos:[-20, 40, 0], mass:1});
-    add({ type:'sphere', size:[3], pos:[-10, 50, 0], mass:1});
-    add({ type:'sphere', size:[3], pos:[0, 60, 0], mass:1});
-    add({ type:'sphere', size:[3], pos:[10, 70, 0], mass:1});
-    add({ type:'sphere', size:[3], pos:[20, 80, 0], mass:1});
+    var i = 60;
+    while(i--){
+        add({ type:'sphere', size:[3], pos:[0, 40+(i*7), 0], mass:1});
+    }
+
 
 }
