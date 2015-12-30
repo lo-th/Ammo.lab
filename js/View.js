@@ -465,11 +465,13 @@ var view = ( function () {
 
         var g = new THREE.Geometry();
 
-        i = tmp.length;
-        while(i--){
-            g.merge(tmp[i]);
-            tmp[i].dispose();
+        while( tmp.length > 0 ){
+            i = tmp.pop();
+            g.merge(i);
+            i.dispose();
         }
+
+        g.mergeVertices();
 
         var geometry = new THREE.BufferGeometry().fromGeometry( g );
         g.dispose();
