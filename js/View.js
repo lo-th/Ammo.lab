@@ -685,10 +685,9 @@ var view = ( function () {
         
         
 
-        var material =  o.mass ? mat.move : mat.statique;
-        if(o.material != undefined){ 
-            material = view.getMat()[o.material];
-        }
+        var material;
+        if(o.material !== undefined) material = mat[o.material];
+        else material = o.mass ? mat.move : mat.statique;
         
         if( o.type == 'capsule' ){
             var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
@@ -1395,13 +1394,13 @@ var view = ( function () {
         meshs.forEach( function( m, id ) {
             var n = id * 8;
             if ( a[n] > 0 ) {
+
+                if ( m.material.name == 'sleep' ) m.material = mat.move;
                 if( a[n] > 50 && m.material.name == 'move' ) m.material = mat.movehigh;
-                else if(a[n] < 50 && m.material.name !== 'move') m.material = mat.move;
+                else if(a[n] < 50 && m.material.name == 'movehigh') m.material = mat.move;
                 
                 m.position.set( a[n+1], a[n+2], a[n+3] );
                 m.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
-
-                if ( m.material.name == 'sleep' ) m.material = mat.move;
 
             } else {
                 if ( m.material.name == 'move' || m.material.name == 'movehigh' ) m.material = mat.sleep;

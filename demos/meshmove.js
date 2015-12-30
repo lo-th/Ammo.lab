@@ -2,9 +2,8 @@ function demo() {
 
     cam ( -90, 20, 30 );
     load ( 'cars', afterLoad );
-    view.addMap('cars.png', 'cars');
-
-}
+    
+};
 
 function afterLoad () {
 
@@ -12,12 +11,10 @@ function afterLoad () {
     add({type:'plane'});
 
     // load cars map
-    
+    view.addMap('cars.png', 'cars');
 
     for (var i = 0; i < 14; i++){
-
-
-
+        
         var n = (i+1).toString();
         if(n.length == 1) n = '0'+n;
         if(n.length == 2) n = '0'+n;
@@ -29,7 +26,7 @@ function afterLoad () {
         add({
 
             type:'mesh',
-            shape:g,//view.getGeo()['mcar'+n],
+            shape:g,
             friction:0.4,
             mass:2,
             pos:[0, 40+(i*7), 0],
@@ -38,10 +35,4 @@ function afterLoad () {
         });
     }
 
-    /*var i = 60;
-    while(i--){
-        add({ type:'sphere', size:[2], pos:[0, 40+(i*7), -40], mass:1});
-    }*/
-
-
-}
+};
