@@ -78,12 +78,6 @@ function addVehicle (id, pos, type) {
     o.massCenter = [0,0,0];
 
     o.wPos[1] = o.radius*2;
-
-    /*if ( o.type == 'mesh' ) {
-        o.v = view.prepaGeometry( shape, false, true );
-    } else if ( o.type == 'convex' ) {
-        o.v = view.prepaGeometry( shape, true );
-    }*/
     
     o.shape = shape;
     o.mesh = mesh;

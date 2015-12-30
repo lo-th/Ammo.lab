@@ -454,6 +454,30 @@ var view = ( function () {
 
     };
 
+    view.mergeMesh = function(m){
+
+        var tmp = [];
+        var i = m.length;
+        while(i--){
+            tmp[i] = new THREE.Geometry().fromBufferGeometry( m[i] );
+            tmp[i].mergeVertices();
+        }
+
+        var g = new THREE.Geometry();
+
+        i = tmp.length;
+        while(i--){
+            g.merge(tmp[i]);
+            tmp[i].dispose();
+        }
+
+        var geometry = new THREE.BufferGeometry().fromGeometry( g );
+        g.dispose();
+
+        return geometry;
+
+    }
+
     // CAMERA
 
     view.activeFollow = function () {

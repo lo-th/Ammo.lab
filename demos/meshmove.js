@@ -16,18 +16,20 @@ function afterLoad () {
 
     for (var i = 0; i < 14; i++){
 
+
+
         var n = (i+1).toString();
         if(n.length == 1) n = '0'+n;
         if(n.length == 2) n = '0'+n;
 
-        var r = Math.randInt(0,360);
+        var g = view.mergeMesh([view.getGeo()['mcar'+n], view.getGeo()['down'+n]])
 
-        console.log(n)
+        var r = Math.randInt(0,360);
 
         add({
 
             type:'mesh',
-            shape:view.getGeo()['mcar'+n],
+            shape:g,//view.getGeo()['mcar'+n],
             friction:0.4,
             mass:2,
             pos:[0, 40+(i*7), 0],
