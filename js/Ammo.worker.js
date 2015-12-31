@@ -1028,6 +1028,10 @@ function apply ( o ) {
         case 'centralLocalForce' : b.applyCentralLocalForce( v3(o.v1) ); break;
         case 'impulse' : b.applyImpulse( v3(o.v1), v3(o.v2) ); break;
         case 'centralImpulse' : b.applyCentralImpulse( v3(o.v1) ); break;
+
+        // joint
+
+
     }
 
 };
@@ -1095,15 +1099,19 @@ function addJoint ( o ) {
         case "joint_hinge": case "joint":
             joint = new Ammo.btHingeConstraint( body1, body2, point1, point2, axe1, axe2, useReferenceFrameA );
             if( min!==0 || max!==0 ) joint.setLimit( min, max, softness, bias, relaxation);
+            if(o.motor) joint.enableAngularMotor( o.motor[0],o.motor[1],o.motor[2] )
         break;
         case "joint_slider": joint = new Ammo.btSliderConstraint( body1, body2, point1, point2); break;
         case "joint_conetwist": joint = new Ammo.btConeTwistConstraint( body1, body2, point1, point2 ); break;
-        case "joint_gear": joint = new Ammo.btGearConstraint( body1, body2, point1, point2, ratio); break;
+        //case "joint_gear": joint = new Ammo.btGearConstraint( body1, body2, point1, point2, o.ratio || 1); break;
         case "joint_dof": joint = new Ammo.btGeneric6DofConstraint( body1, body2, point1, point2); break;
     }
 
     world.addConstraint( joint, noAllowCollision );
-    joints.name = o.name || '';
+
+    console.log(joint)
+    //joints.name = o.name || '';
+    if(o.name) byName[o.name] = joint;
     joints.push( joint );
 
 };

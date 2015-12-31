@@ -123,6 +123,8 @@ var view = ( function () {
         mat['hero'] = new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
         mat['cars'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'cars', wireframe:true, transparent:true });
+        mat['tmp1'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp1', wireframe:true, transparent:true });
+        mat['tmp2'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp2', wireframe:true, transparent:true });
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
 
@@ -697,8 +699,14 @@ var view = ( function () {
             extraGeo.push(mesh.geometry);
         } else if( o.type == 'mesh' ){ 
             o.v = view.prepaGeometry( o.shape, false, true );
-            mesh = new THREE.Mesh( o.shape, material );
-            extraGeo.push(mesh.geometry);
+            if(o.geometry){
+                mesh = new THREE.Mesh( o.geometry, material );
+                extraGeo.push(o.geometry);
+                extraGeo.push(o.shape);
+            } else {
+                mesh = new THREE.Mesh( o.shape, material );
+                extraGeo.push(mesh.geometry);
+            }
         } else if( o.type == 'convex' ){ 
             o.v = view.prepaGeometry( o.shape, true );
             mesh = new THREE.Mesh( o.shape, material );
