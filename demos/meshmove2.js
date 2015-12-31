@@ -35,25 +35,41 @@ function afterLoad () {
 
     for (var i = 0; i < 4; i++){
 
+        var type='';
         var z = 0;
         var x = 0;
+        var speed = 5;//5;
         var s = 0;
         var name;
         var name2;
-        if(i==0 || i==1){ 
-            z = position[1]+(position[3]*0.5);
+        if(i==0) type = 'L';
+        if(i==1) type = 'R';
+        if(i==2) type = 'R';
+        if(i==3) type = 'L';
+
+        if(type=='L'){ 
             name = 'bot_wheel_L';
             name2 = 'bot_wheel_SL';
-            s = 0.9;
         } else {
-            z = -position[1]-(position[3]*0.5);
             name = 'bot_wheel_R';
             name2 = 'bot_wheel_SR';
-            s = -0.9
         }
 
-        if(i==0 || i==2) x = position[0];
-        else x = -position[0];
+        if( i<2 ){ 
+            z = position[1]+(position[3]*0.5); 
+            s = speed;
+        } else {
+            z = -position[1]-(position[3]*0.5);
+            s = -speed;
+        }
+
+        if(i==0 || i==2){ 
+            x = position[0];
+            //s = speed;
+        } else{ 
+            x = -position[0];
+            //s = -speed;
+        }
 
         add({
             name:'w'+i,
