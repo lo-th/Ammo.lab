@@ -37,16 +37,19 @@ function afterLoad () {
 
         var z = 0;
         var x = 0;
+        var s = 0;
         var name;
         var name2;
         if(i==0 || i==1){ 
             z = position[1]+(position[3]*0.5);
             name = 'bot_wheel_L';
             name2 = 'bot_wheel_SL';
+            s = 0.9;
         } else {
             z = -position[1]-(position[3]*0.5);
             name = 'bot_wheel_R';
             name2 = 'bot_wheel_SR';
+            s = -0.9
         }
 
         if(i==0 || i==2) x = position[0];
@@ -74,7 +77,7 @@ function afterLoad () {
             pos2:[ 0, 0, 0],
             axe1:[0,0,1],
             axe2:[0,0,1],
-            motor:[true, 0.9, 1],
+            motor:[true, s, 1],
         })
     }
 

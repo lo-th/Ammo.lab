@@ -1109,7 +1109,7 @@ function addJoint ( o ) {
 
     world.addConstraint( joint, noAllowCollision );
 
-    console.log(joint)
+    //console.log(joint)
     //joints.name = o.name || '';
     if(o.name) byName[o.name] = joint;
     joints.push( joint );
