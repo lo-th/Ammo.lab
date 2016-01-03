@@ -712,7 +712,7 @@ var view = ( function () {
             mesh = new THREE.Mesh( o.shape, material );
             extraGeo.push(mesh.geometry);
         } else {
-            mesh = new THREE.Mesh( geo[o.type], material );
+            mesh = new THREE.Mesh( o.geometry || geo[o.type], material );
         }
 
 

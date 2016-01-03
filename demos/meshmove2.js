@@ -38,7 +38,7 @@ function afterLoad () {
         var type='';
         var z = 0;
         var x = 0;
-        var speed = 5;//5;
+        var speed = 0;//5;
         var s = 0;
         var name;
         var name2;
@@ -57,10 +57,10 @@ function afterLoad () {
 
         if( i<2 ){ 
             z = position[1]+(position[3]*0.5); 
-            s = speed;
+            //s = speed;
         } else {
             z = -position[1]-(position[3]*0.5);
-            s = -speed;
+            //s = -speed;
         }
 
         if(i==0 || i==2){ 
@@ -69,6 +69,12 @@ function afterLoad () {
         } else{ 
             x = -position[0];
             //s = -speed;
+        }
+
+        if(i==0 || i==3){
+            s = speed;
+        }else{
+            s = -speed;
         }
 
         add({
@@ -81,7 +87,8 @@ function afterLoad () {
             mass:2,
             size:[size],
             pos:[ x, position[2]*0.5, z],
-            rot:[0,0,0]
+            rot:[0,0,0],
+            margin:0.01,
         });
 
         add({

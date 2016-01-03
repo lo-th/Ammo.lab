@@ -143,7 +143,7 @@ self.onmessage = function ( e ) {
 
     if(m == 'character') character( e.data.o );
 
-    if(m == 'gravity') gravity( e.data.g );
+    if(m == 'gravity') gravity( e.data.o );
 
     if(m == 'anchor') anchor( e.data.o );
 
@@ -518,9 +518,9 @@ function init () {
 
 };
 
-function gravity ( g ) {
+function gravity ( o ) {
 
-    world.setGravity( v3( g ) );
+    world.setGravity( v3( o.g ) );
 
 };
 
