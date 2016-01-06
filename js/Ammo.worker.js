@@ -449,6 +449,45 @@ var barycentricCoordinates = function( pos, p1, p2, p3 ) {
 
 };
 
+var multiplyTransforms = function (tr1, tr2) {
+
+    var tr = new Ammo.btTransform();
+    tr.setIdentity();
+
+    var q1 = tr1.getRotation();
+    var q2 = tr2.getRotation();
+
+    /*var q1 = new Ammo.btQuaternion();
+    tr1.getBasis().getRotation(q1);
+    var q2 = new Ammo.btQuaternion();
+    tr2.getBasis().getRotation(q2);*/
+
+    var qax = q1.x(), qay = q1.y(), qaz = q1.z(), qaw = q1.w();
+    var qbx = q2.x(), qby = q2.y(), qbz = q2.z(), qbw = q2.w();
+
+    var q = q4([ 
+        qax * qbw + qaw * qbx + qay * qbz - qaz * qby,
+        qay * qbw + qaw * qby + qaz * qbx - qax * qbz,
+        qaz * qbw + qaw * qbz + qax * qby - qay * qbx,
+        qaw * qbw - qax * qbx - qay * qby - qaz * qbz
+    ]);
+
+    var o1 = tr1.getOrigin();
+    var o2 = tr2.getOrigin();
+
+    var p = v3([
+        o1.x()+o2.x(),
+        o1.y()+o2.y(),
+        o1.z()+o2.z()
+    ])
+
+    tr.setOrigin( p );
+    tr.setRotation( q );
+
+    return tr;
+
+};
+
 
 //--------------------------------------------------
 //
@@ -1074,6 +1113,7 @@ function addJoint ( o ) {
     var body1 = getByName(o.body1);
     var body2 = getByName(o.body2);
 
+
     var point1 = v3( o.pos1 || [0,0,0] );
     var point2 = v3( o.pos2 || [0,0,0] );
     var axe1 = v3( o.axe1 || [1,0,0] );
@@ -1086,26 +1126,102 @@ function addJoint ( o ) {
     var softness = spring[0];
     var bias =  spring[1];
     var relaxation =  spring[2];
-    var useReferenceFrameA = false;
+    //var useReferenceFrameA = false;
+    
+    if(o.type !== "joint_p2p" && o.type !== "joint_hinge" && o.type !== "joint" ){
+
+        
+        /*var tmpA = new Ammo.btTransform();
+        tmpA.setIdentity();
+        tmpA.setOrigin( point1 );
+        if(o.quatA) tmpA.setRotation( q4( o.quatA ) )
+
+        var frameInA = multiplyTransforms( body1.getWorldTransform(), tmpA );
+
+        var tmpB = new Ammo.btTransform();
+        tmpB.setIdentity();
+        tmpB.setOrigin( point2 );
+        if(o.quatB) tmpB.setRotation( q4( o.quatB ) )
+
+        var frameInB = multiplyTransforms( body2.getWorldTransform(), tmpB );
+    */
+        
+
+        var frameInA = new Ammo.btTransform();
+        frameInA.setIdentity();
+        frameInA.setOrigin( point1 );
+        if(o.quatA) frameInA.setRotation( q4( o.quatA ) );
+        
+        var frameInB = new Ammo.btTransform();
+        frameInB.setIdentity();
+        frameInB.setOrigin( point2 );
+        if(o.quatB) frameInB.setRotation( q4( o.quatB ) );
+        
+
+    }
+    
+
+    var useA =  o.useA !== undefined ? o.useA : true;// use fixed frame A for linear llimits
 
     var joint = null;
 
     switch(o.type){
         case "joint_p2p": 
             joint = new Ammo.btPoint2PointConstraint( body1, body2, point1, point2);
-            joint.get_m_setting().set_m_tau( o.strength || 0.1 );
-            joint.get_m_setting().set_m_damping( o.damping || 1 ); 
+            if(o.strength) joint.get_m_setting().set_m_tau( o.strength );
+            if(o.damping) joint.get_m_setting().set_m_damping( o.damping ); 
+            if(o.impulse) joint.get_m_setting().set_m_impulseClamp( o.impulse );
         break;
         case "joint_hinge": case "joint":
-            joint = new Ammo.btHingeConstraint( body1, body2, point1, point2, axe1, axe2, useReferenceFrameA );
+            joint = new Ammo.btHingeConstraint( body1, body2, point1, point2, axe1, axe2, useA );
             if( min!==0 || max!==0 ) joint.setLimit( min, max, softness, bias, relaxation);
-            if(o.motor) joint.enableAngularMotor( o.motor[0],o.motor[1],o.motor[2] )
+            if(o.motor) joint.enableAngularMotor( o.motor[0],o.motor[1],o.motor[2] );
         break;
-        case "joint_slider": joint = new Ammo.btSliderConstraint( body1, body2, point1, point2); break;
-        case "joint_conetwist": joint = new Ammo.btConeTwistConstraint( body1, body2, point1, point2 ); break;
+        case "joint_slider":
+            joint = new Ammo.btSliderConstraint( body1, body2, frameInA, frameInB, useA );
+        break;
+        case "joint_conetwist": 
+            joint = new Ammo.btConeTwistConstraint( body1, body2, frameInA, frameInB );
+        break;
         //case "joint_gear": joint = new Ammo.btGearConstraint( body1, body2, point1, point2, o.ratio || 1); break;
-        case "joint_dof": joint = new Ammo.btGeneric6DofConstraint( body1, body2, point1, point2); break;
+        case "joint_dof": 
+            joint = new Ammo.btGeneric6DofConstraint( body1, body2, frameInA, frameInB, useA ); 
+        break;
+        case "joint_spring_dof": 
+            joint = new Ammo.btGeneric6DofSpringConstraint( body1, body2, frameInA, frameInB, useA );
+            console.log(joint)
+            
+            
+
+            
+        break;
     }
+
+    // EXTRA SETTING
+
+    if(o.breaking) joint.setBreakingImpulseThreshold(o.breaking);
+
+
+    // slider & dof
+    var p;
+    
+    if(o.linLower){ p = v3(o.linLower); joint.setLinearLowerLimit( p ); Ammo.destroy(p); }
+    if(o.linUpper){ p = v3(o.linUpper); joint.setLinearUpperLimit( p ); Ammo.destroy(p); }
+    
+    if(o.angLower){ p = v3(o.angLower); joint.setAngularLowerLimit( p ); Ammo.destroy(p); }
+    if(o.angUpper){ p = v3(o.angUpper); joint.setAngularUpperLimit( p ); Ammo.destroy(p); }
+
+    // spring dof
+    if(o.feedback) joint.enableFeedback(o.feedback);
+    if(o.enableSpring) joint.enableSpring( o.enableSpring[0], o.enableSpring[1] );
+    if(o.damping) joint.setDamping( o.damping[0], o.damping[1] );
+    if(o.stiffness) joint.setStiffness( o.stiffness[0], o.stiffness[1] );
+
+
+  //  console.log(joint);
+
+
+
 
     world.addConstraint( joint, noAllowCollision );
 

@@ -542,17 +542,25 @@ var view = ( function () {
 
     };
 
-    view.findRotation = function ( r ) {
+    view.toRad = function ( r ) {
 
-        if( Math.abs(r[0]) > Math.PI || Math.abs(r[1]) > Math.PI || Math.abs(r[2]) > Math.PI ){
+        var i = r.length;
+        while(i--) r[i] *= Math.degtorad;
+        return r;
+
+    };
+
+    /*view.findRotation = function ( r ) {
+
+        //if( Math.abs(r[0]) > Math.PI || Math.abs(r[1]) > Math.PI || Math.abs(r[2]) > Math.PI ){
             // is in degree
             r[0] *= Math.degtorad;
             r[1] *= Math.degtorad;
             r[2] *= Math.degtorad;
-        }
+        //}
         return r;
 
-    };
+    };*/
 
     //--------------------------------------
     //
@@ -629,21 +637,26 @@ var view = ( function () {
         if(o.size.length == 1){ o.size[1] = o.size[0]; }
         if(o.size.length == 2){ o.size[2] = o.size[0]; }
 
-        // rotation if > PI is in degree
-        o.rot = o.rot == undefined ? [0,0,0] : o.rot;
-        this.findRotation( o.rot );
+        // rotation is in degree
+        o.rot = o.rot == undefined ? [0,0,0] : this.toRad(o.rot);
         o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
+
+        if(o.rotA) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.toRad( o.rotA ) ) ).toArray();
+        if(o.rotB) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.toRad( o.rotB ) ) ).toArray();
+
+        if(o.angUpper) o.angUpper = this.toRad( o.angUpper );
+        if(o.angLower) o.angLower = this.toRad( o.angLower );
 
         var mesh = null;
 
         if(o.type.substring(0,5) == 'joint') {
 
-            if( ( Math.abs(o.min) > Math.PI || Math.abs(o.max) > Math.PI ) && o.type !== 'jointDistance' ){
+            //if( ( Math.abs(o.min) > Math.PI || Math.abs(o.max) > Math.PI ) && o.type !== 'jointDistance' ){
                 // is in degree
-                o.min *= Math.degtorad;
-                o.max *= Math.degtorad;
+            if(o.min) o.min *= Math.degtorad;
+            if(o.max) o.max *= Math.degtorad;
 
-            } 
+            //} 
 
             ammo.send( 'add', o );
             return;
@@ -931,7 +944,7 @@ var view = ( function () {
 
         var massCenter = o.massCenter || [0,0.25,0];
 
-        this.findRotation( rot );
+        this.toRad( rot );
 
         // chassis
         var mesh;
