@@ -13,10 +13,19 @@ function afterLoad () {
     // infinie plane
     add({type:'plane'});
 
+    // load cars map
+    view.addMap('meca_chassis.jpg', 'cars');
+
     // mecanum car
     meca();
 
 }
+
+// set car speed
+
+var speed = 0;
+var lateral = false;
+var rotation = false;
 
 // -----------------------
 //    MECANUM BUGGY 
@@ -27,10 +36,9 @@ function afterLoad () {
 //
 // -----------------------
 
+var size = 0.05;
 var geo = view.getGeo();
 var mat = view.getMat();
-var speed = 0;
-var size = 0.05;
 var wheelRadius = 50*size;
 var useSteering = false;
 
@@ -53,6 +61,7 @@ function meca () {
         state:4, //4,
         group:buggyGroup, 
         mask:buggyMask, 
+        material:'cars',
     })
 
      add({type:'box', name:'boyA', mass:10, pos:[0,40,0], size:[3], group:buggyGroup, 
@@ -351,7 +360,7 @@ function wheel ( n ) {
     var massRoller = 2; // *8
 
     var ext;
-    var wSpeed = 0;
+    var wSpeed = speed;
     var pz;// = -15*size;
 
     //if(n==0 || n==2) pz*=-1;
@@ -368,8 +377,12 @@ function wheel ( n ) {
     if(n==2) position = [-wpos[0],wpos[1],wpos[2]]
     if(n==3) position = [-wpos[0],wpos[1],-wpos[2]]
 
-    if(n==0 || n==3){ ext='L'; wSpeed*=-1; }
+    if(n==0 || n==3) ext='L';
     else ext='R';
+
+    if(lateral){ if(n==0 || n==3) wSpeed*=-1; }
+    if(rotation){ if(n==2 || n==3) wSpeed*=-1; }
+
 
     add({ 
         name:'axe'+n,
