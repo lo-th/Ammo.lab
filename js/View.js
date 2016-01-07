@@ -72,7 +72,7 @@ var view = ( function () {
         try {
             renderer = new THREE.WebGLRenderer({ canvas:canvas, precision:"mediump", antialias:true, alpha:false });
         } catch( error ) {
-            intro.message('<p>Sorry, your browser does not support WebGL.</p>'
+            if(intro !== null ) intro.message('<p>Sorry, your browser does not support WebGL.</p>'
                         + '<p>This application uses WebGL to quickly draw'
                         + ' AMMO Physics.</p>'
                         + '<p>AMMO Physics can be used without WebGL, but unfortunately'
@@ -81,7 +81,7 @@ var view = ( function () {
             return;
         }
 
-        intro.clear();
+        if(intro !== null ) intro.clear();
 
         renderer.setClearColor(0x2A2A2A, 1);
         renderer.setPixelRatio( window.devicePixelRatio );
@@ -626,6 +626,8 @@ var view = ( function () {
 
     view.add = function ( o ) {
 
+        var isCustomGeometry = false;
+
         o.mass = o.mass == undefined ? 0 : o.mass;
         o.type = o.type == undefined ? 'box' : o.type;
 
@@ -636,6 +638,11 @@ var view = ( function () {
         o.size = o.size == undefined ? [1,1,1] : o.size;
         if(o.size.length == 1){ o.size[1] = o.size[0]; }
         if(o.size.length == 2){ o.size[2] = o.size[0]; }
+
+        if(o.geoSize){
+            if(o.geoSize.length == 1){ o.geoSize[1] = o.geoSize[0]; }
+            if(o.geoSize.length == 2){ o.geoSize[2] = o.geoSize[0]; }
+        }
 
         // rotation is in degree
         o.rot = o.rot == undefined ? [0,0,0] : this.toRad(o.rot);
@@ -710,9 +717,12 @@ var view = ( function () {
             var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
             mesh = new THREE.Mesh( g, material );
             extraGeo.push(mesh.geometry);
+            isCustomGeometry = true;
+
         } else if( o.type == 'mesh' ){ 
             o.v = view.prepaGeometry( o.shape, false, true );
             if(o.geometry){
+                console.log(o.geometry.name)
                 mesh = new THREE.Mesh( o.geometry, material );
                 extraGeo.push(o.geometry);
                 extraGeo.push(o.shape);
@@ -725,13 +735,21 @@ var view = ( function () {
             mesh = new THREE.Mesh( o.shape, material );
             extraGeo.push(mesh.geometry);
         } else {
+
             mesh = new THREE.Mesh( o.geometry || geo[o.type], material );
+
+            if( o.geometry ){
+                extraGeo.push(o.geometry);
+                mesh.scale.fromArray( o.geoSize );
+                isCustomGeometry = true;
+            }
+
         }
 
 
         if(mesh){
 
-            if( o.type != 'capsule' ) mesh.scale.fromArray( o.size );//.set( o.size[0], o.size[1], o.size[2] );
+            if( !isCustomGeometry ) mesh.scale.fromArray( o.size );//.set( o.size[0], o.size[1], o.size[2] );
 
             mesh.position.fromArray( o.pos );
             mesh.quaternion.fromArray( o.quat );

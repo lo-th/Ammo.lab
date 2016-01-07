@@ -2,7 +2,7 @@
 <!-- saved from url=(0014)about:internet -->
 <html lang="en">
 <head>
-<title>Ammo Lab</title>
+<title>Ammo Lab dev</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=11" />
@@ -11,9 +11,21 @@
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" href="css/lab.css">
 
+<script src="libs/three.js"></script>
+<script src="libs/controls/OrbitControls.js"></script>
+<script src="libs/geometries/CapsuleBufferGeometry.js"></script>
+<script src="libs/geometries/ConvexGeometry.js"></script>
+<script src="libs/loaders/MorphAnimMesh.js"></script>
+<script src="libs/loaders/collada/Animation.js"></script>
+<script src="libs/loaders/collada/AnimationHandler.js"></script>
+<script src="libs/loaders/collada/KeyFrameAnimation.js"></script>
+<script src="libs/loaders/sea3d/SEA3D.js"></script>
+<script src="libs/loaders/sea3d/SEA3DLoader.js"></script>
+<script src="libs/loaders/sea3d/SEA3DLegacy.js"></script>
+<script src="libs/loaders/sea3d/SEA3DLZMA.js"></script>
+<script src="libs/shaders/TransparentShadow.js"></script>
+<script src="libs/codemirror.min.js"></script>
 
-<script src="js/Intro.js"></script>
-<script src="js/ext.js"></script>
 <script src="js/Editor.js"></script>
 <script src="js/Perlin.js"></script>
 <script src="js/View.js"></script>
@@ -25,24 +37,19 @@
 <canvas id="canvas3d"></canvas>
 <div id="debug"></div>
 <script>
-
+var extract, intro = null;
 var demo;
 var demoName = 'basic';
 var demos = [ 'basic', 'terrain', 'supermaket', 'car', 'collision', 'ragdoll', 'kinematics', 'multyCars', 'snowboard', 'cloth', 'rope', 'ellipsoid', 'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove', 'meshmove2', 'meca', 'joints' ];
 
-intro.init();
-extract.init(['z/code.z', 'z/three.z', 'z/threeAdd.z', 'z/ammo.z'], init, [0,0,0,1], intro.message );
+
+window.onload = init;
 
 function init(){
 
-    view.init( afterLoad );
-
-};
-
-function afterLoad () {
-
+    view.init( );
     editor.init( launch );
-    ammo.init( ready );
+    ammo.init( ready, true );
     loop();
 
 };

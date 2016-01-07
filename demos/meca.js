@@ -63,30 +63,10 @@ function meca () {
 
     var i = 4;
     while(i--){
-        wheelAxis(i);
+        wheelAxis( i );
+        // add wheels
+        wheel( i );
     }
-
-    /*add({ 
-        name:'body',
-        type:'box', 
-        //material:'tmp1',
-        //geometry:view.getGeo()['base_frame'],
-        //shape:view.getGeo()['base_frame_S'],
-        mass:20,
-        size:[16, 2, 7],
-        pos:[0, wheelRadius, 0],
-        state:4,
-    })*/
-
-    // wheels
-
-    /*var wpos = [7, wheelRadius, 5];
-
-    wheel( 0 [wpos[0],wpos[1],wpos[2]], -speed);
-    wheel( 1 [wpos[0],wpos[1],-wpos[2]], speed);
-    wheel( 2 [-wpos[0],wpos[1],wpos[2]], speed);
-    wheel( 3 [-wpos[0],wpos[1],-wpos[2]], -speed);
-    */
     
 
 };
@@ -95,40 +75,21 @@ function meca () {
 
 function wheelAxis ( n ) {
 
+    // mass 
+    var massPaddel = 20;
+    var massPadtop = 2;
+    var massAxis = 2;
+
     var rot = [0, 0, 0];
     var ext, ext2;
-    var front = 1;// 1:front -1:back
-    var side = 1; // 1:left -1:right
+    var front = 1;
+    var side = 1; 
 
     switch(n){
-        case 0 :
-        ext = '_av';
-        ext2 = '_avl';
-        rot = [10, 0, 0];
-        front = 1;
-        side = 1;
-        break;
-        case 1 :
-        ext = '_av';
-        ext2 = '_avr';
-        rot = [170, 0, 0];
-        front = 1;
-        side = -1;
-        break;
-        case 2 :
-        ext = '_ar';
-        ext2 = '_arl';
-        rot = [10, 0, 0];
-        front = -1;
-        side = 1;
-        break;
-        case 3 :
-        ext = '_ar';
-        ext2 = '_arr';
-        rot = [170, 0, 0];
-        front = -1;
-        side = -1;
-        break;
+        case 0 : ext = '_av'; ext2 = '_avl'; rot = [10, 0, 0 ]; front = 1;  side = 1;  break;
+        case 1 : ext = '_av'; ext2 = '_avr'; rot = [170, 0, 0]; front = 1;  side = -1; break;
+        case 2 : ext = '_ar'; ext2 = '_arl'; rot = [10, 0, 0 ]; front = -1; side = 1;  break;
+        case 3 : ext = '_ar'; ext2 = '_arr'; rot = [170, 0, 0]; front = -1; side = -1; break;
     }
 
     var pos0 = [120*front, 50, 60*side ].map(function(x) { return x * size; });
@@ -141,20 +102,18 @@ function wheelAxis ( n ) {
 
     var decal3 = [136.5*front, 102, 24*side].map(function(x) { return x * size; });
     var decal4 = [16.5*front, 0, 15].map(function(x) { return x * size; });
-    
 
-    //var decal3 = [120*front, 50, 60*side ].map(function(x) { return x * size; });
-    //var decal4 = [0,0,0];
-    //var decal4 = [0, 0, 15*side].map(function(x) { return x * size; });
 
     add({ 
         name:'paddel'+n,
-        type:'mesh', 
-        //material:'tmp1',
+        type:'box', 
+
+        mass:massPaddel,
+        size:[50*size, 7*size, 70*size],
+
         geometry:geo['meca_paddel'+ext],
-        shape:geo['meca_paddel_shape'+ext],
-        mass:2,
-        size:[size],
+        geoSize:[size],
+        
         pos:pos0,
         rot:rot,
         state:4,
@@ -162,7 +121,7 @@ function wheelAxis ( n ) {
         mask:buggyMask, 
     });
 
-    add({
+    joint({
         name:'ax_1_'+n,
         type:'joint_hinge',
         body1:'chassis',
@@ -172,16 +131,18 @@ function wheelAxis ( n ) {
         axe1:[1,0,0],
         axe2:[1,0,0],
         //motor:[true, 3, 100],
-    })
+    });
 
     add({ 
         name:'padtop'+n,
-        type:'mesh', 
-        //material:'tmp1',
+        type:'box',
+
+        mass:massPadtop,
+        size:[3*size, 5*size, 63*size],
+
         geometry:geo['meca_padtop'],
-        shape:geo['meca_padtop_shape'],
-        mass:2,
-        size:[size],
+        geoSize:[size],
+        
         pos:pos1,
         rot:rot,
         state:4,
@@ -189,7 +150,7 @@ function wheelAxis ( n ) {
         mask:buggyMask, 
     })
 
-    add({
+    joint({
         name:'ax_2_'+n,
         type:'joint_hinge',
         body1:'chassis',
@@ -206,25 +167,26 @@ function wheelAxis ( n ) {
         if(ext2 == '_avl') ext2 = '_arl';
     }
 
-    var mx;
-    if(ext2 == '_avr' || ext2 == '_avl') mx = 1;
-    else mx = 2;
+    
+    if(ext2 == '_avr' || ext2 == '_avl') massAxis *= 0.5;
 
     add({ 
         name:'axis'+n,
-        type:'mesh', 
-        //material:'tmp1',
+        type:'box',
+
+        mass:massAxis,
+        size:[16*size, 23*size, 23*size],
+
         geometry:geo['meca_axis'+ext2],
-        shape:geo['meca_axis_shape'],
-        mass:mx,
-        size:[size],
+        geoSize:[size],
+        
         pos:pos2,
         state:4,
         group:buggyGroup, 
         mask:buggyMask, 
     });
 
-    add({
+    joint({
         name:'ax_1e_'+n,
         type:'joint_hinge',
         body1:'axis'+n,
@@ -235,7 +197,7 @@ function wheelAxis ( n ) {
         axe2:[1,0,0],
     })
 
-    add({
+    joint({
         name:'ax_2e_'+n,
         type:'joint_hinge',
         body1:'axis'+n,
@@ -250,19 +212,21 @@ function wheelAxis ( n ) {
         if(useSteering){
             add({ 
                 name:'axis_s_'+n,
-                type:'mesh', 
-                //material:'tmp1',
+                type:'box', 
+
+                mass:massAxis,
+                size:[16*size, 23*size, 23*size],
+
                 geometry:geo['meca_axis'+ext2+'2'],
-                shape:geo['meca_axis_shape2'],
-                mass:1,
-                size:[size],
+                geoSize:[size],
+
                 pos:pos2,
                 state:4,
                 group:buggyGroup, 
                 mask:buggyMask, 
             });
 
-            add({
+            joint({
                 name:'ax_3s_'+n,
                 type:'joint_hinge',
                 body1:'axis'+n,
@@ -278,25 +242,28 @@ function wheelAxis ( n ) {
     // add suspensions
     spring ( n, decal3, decal4, side );
 
-    // add wheels
-    wheel( n );
+    
 
 
 };
 
 function spring ( n, p1, p2, side ) {
 
+    // mass 
+    var massTop = 2;
+    var massLow = 2;
+
     add({ 
         name:'bA'+n,
-        type:'mesh',
+        type:'box',
+
+        mass:massTop,
+        size:[17*size, 17*size, 17*size],
+
         geometry:geo['meca_stop'],
-        shape:geo['meca_stop_shape'],
-        mass:2,
-        size:[size],
-        //pos:pos0,
-        //rot:rot,
+        geoSize:[size],
+
         state:4,
-        //pos:[p1[0],p1[1],p1[2]],
         pos:p1,
         group:buggyGroup, 
         mask:buggyMask, 
@@ -304,29 +271,21 @@ function spring ( n, p1, p2, side ) {
 
     add({ 
         name:'bB'+n,
-        type:'mesh',
+        type:'box',
+
+        mass:massLow,
+        size:[10*size, 10*size, 10*size],
+
         geometry:geo['meca_slow'],
-        shape:geo['meca_slow_shape'],
-        mass:2,
-        size:[size],
-        //pos:pos0,
-        //rot:rot,
+        geoSize:[size],
+
         state:4,
-        //pos:[0,80*size,0],
-        //pos:[p1[0],p1[1],p1[2]-(80*size)],
-      //  pos:p2,//[p1[0],p1[1]+80*size,p1[2]],
-         //pos:p2,
         pos:[p1[0]+p2[0], p1[1]+p2[1],  p1[2]+p2[2]],
         group:buggyGroup, 
         mask:buggyMask, 
     });
 
-    //add({type:'box', name:'bA'+n, mass:1, pos:[0,0,0], size:[0.2]});
-    //add({type:'box', name:'bB'+n, mass:1, pos:[0,80*size,0], size:[0.1]});
-
-
-
-    add({
+    joint({
         name:'jj_1e_'+n,
         type:'joint_hinge',
         body1:'chassis',
@@ -337,7 +296,7 @@ function spring ( n, p1, p2, side ) {
         axe2:[1,0,0],
     });
 
-    add({
+    joint({
         name:'jj_2e_'+n,
         type:'joint_hinge',
         body1:'paddel'+n,
@@ -351,7 +310,7 @@ function spring ( n, p1, p2, side ) {
     var springRestLen = -80*size;
     var springRange = 10*size;
 
-    add({
+    joint({
         type:'joint_spring_dof',
         name:'jj'+n,
         body1:'bA'+n,
@@ -387,20 +346,20 @@ function spring ( n, p1, p2, side ) {
 
 function wheel ( n ) {
 
+    // mass 
+    var massWheel = 10;
+    var massRoller = 2; // *8
+
     var ext;
     var wSpeed = 0;
     var pz;// = -15*size;
 
     //if(n==0 || n==2) pz*=-1;
 
-    if(n==1 || n==3) pz=-15*size;
-    else pz = 15*size;
+    if(n==1 || n==3) pz=-19*size;
+    else pz = 19*size;
 
-    //wheel( 0 [wpos[0],wpos[1],wpos[2]], -speed);
-    //wheel( 1 [wpos[0],wpos[1],-wpos[2]], speed);
-    //wheel( 2 [-wpos[0],wpos[1],wpos[2]], speed);
-    //wheel( 3 [-wpos[0],wpos[1],-wpos[2]], -speed);
-    var wpos = [120*size, 100*size, 112*size];
+    var wpos = [120*size, 100*size, 110*size];
 
     var position = [0,0,0];
 
@@ -414,12 +373,19 @@ function wheel ( n ) {
 
     add({ 
         name:'axe'+n,
-        type:'mesh', 
+        type:'box',
+        //type:'cylinder', 
+
+        mass:massWheel,
+        size:[56*size, 56*size, 14*size],
+        //rot:[0,0,90],
         //material:'tmp1',
         geometry:geo['meca_wheel_'+ext],
-        shape:geo['meca_wheel_shape'],
-        mass:10,
-        size:[size],
+        geoSize:[size],
+
+        //shape:geo['meca_wheel_shape'],
+        
+        //size:[size],
         pos:position,
         state:4,
         group:buggyGroup, 
@@ -463,7 +429,7 @@ function wheel ( n ) {
             type:'mesh',
             geometry:geo['meca_roller'],
             shape:geo['meca_roller_shape'],
-            mass:2,
+            mass:massRoller,
             //friction:0.9,
             size:[size],
             rot:axe,
@@ -474,8 +440,8 @@ function wheel ( n ) {
             mask:buggyMask, 
         })
 
-        add({
-            name:'j'+i,
+        joint({
+            name:'jr'+i,
             type:'joint_hinge',
             body1:'axe'+n,
             body2:n+'_rr_'+i,
@@ -495,13 +461,12 @@ function wheel ( n ) {
     if( (n==0 || n==1) && useSteering ) {link = 'axis_s_'+n;  }
     else link = 'axis'+n;
 
-    add({
+    joint({
         name:'jh'+n,
         type:'joint_hinge',
-        //body1:'chassis',
         body1:link,
         body2:'axe'+n,
-        pos1:[ 0, 0, pz],//position,//[position[0], position[1], position[2]],
+        pos1:[ 0, 0, pz],
         pos2:[ 0, 0, 0],
         axe1:[0,0,1],
         axe2:[0,0,1],

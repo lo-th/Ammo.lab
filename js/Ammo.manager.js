@@ -42,10 +42,11 @@ var ammo = ( function () {
     var temp = 0;
     var count = 0;
     var timer = 0;
+    var needDelete = true;
 
     ammo = function () {};
 
-    ammo.init = function ( Callback ) {
+    ammo.init = function ( Callback, direct ) {
 
         callback = Callback;
 
@@ -53,8 +54,14 @@ var ammo = ( function () {
 
         worker.onmessage = this.message;
         worker.postMessage = worker.webkitPostMessage || worker.postMessage;
-        worker.postMessage( { m: 'init', blob: extract.get('ammo'), isBuffer: isBuffer, timestep:timestep, substep:substep });
-
+        if(direct){
+            var blob = document.location.href.replace(/\/[^/]*$/,"/") + "libs/ammo.js";
+            needDelete = false;
+            worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
+        }else{
+            worker.postMessage( { m: 'init', blob: extract.get('ammo'), isBuffer: isBuffer, timestep:timestep, substep:substep });
+        }
+        
     };
 
     ammo.message = function( e ) {
@@ -64,7 +71,7 @@ var ammo = ( function () {
 
         if(m == 'init'){
 
-            extract.clearBlob('ammo');
+            if(needDelete) extract.clearBlob('ammo');
             if(callback) callback();
 
         }
