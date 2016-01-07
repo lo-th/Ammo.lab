@@ -128,6 +128,9 @@ var view = ( function () {
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
 
+        mat['both'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'both', wireframe:true, side:THREE.DoubleSide  });
+        mat['back'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'back', wireframe:true, side:THREE.BackSide  });
+
         // GROUND
 
         helper = new THREE.GridHelper( 50, 2 );
@@ -648,6 +651,8 @@ var view = ( function () {
         o.rot = o.rot == undefined ? [0,0,0] : this.toRad(o.rot);
         o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
 
+        
+
         if(o.rotA) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.toRad( o.rotA ) ) ).toArray();
         if(o.rotB) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.toRad( o.rotB ) ) ).toArray();
 
@@ -722,7 +727,7 @@ var view = ( function () {
         } else if( o.type == 'mesh' ){ 
             o.v = view.prepaGeometry( o.shape, false, true );
             if(o.geometry){
-                console.log(o.geometry.name)
+                //console.log(o.geometry.name)
                 mesh = new THREE.Mesh( o.geometry, material );
                 extraGeo.push(o.geometry);
                 extraGeo.push(o.shape);
@@ -735,6 +740,18 @@ var view = ( function () {
             mesh = new THREE.Mesh( o.shape, material );
             extraGeo.push(mesh.geometry);
         } else {
+
+            if(o.geoRot || o.geoScale) o.geometry = o.geometry.clone();
+            // rotation only geometry
+            if(o.geoRot){ o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler().fromArray(this.toRad(o.geoRot))));}
+            
+            // scale only geometry
+            if(o.geoScale){ 
+                o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[0], o.geoScale[1], o.geoScale[2] ) );
+                //material = mat['back'];//material.clone();
+                //material.side = THREE.BackSide;
+            }
+            
 
             mesh = new THREE.Mesh( o.geometry || geo[o.type], material );
 

@@ -1189,7 +1189,7 @@ function addJoint ( o ) {
         break;
         case "joint_spring_dof": 
             joint = new Ammo.btGeneric6DofSpringConstraint( body1, body2, frameInA, frameInB, useA );
-            console.log(joint)
+            //console.log(joint)
             
             
 

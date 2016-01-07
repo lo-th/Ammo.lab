@@ -23,9 +23,9 @@ function afterLoad () {
 
 // set car speed
 
-var speed = 0;
+var speed = 5;
 var lateral = false;
-var rotation = false;
+var rotation = true;
 
 // -----------------------
 //    MECANUM BUGGY 
@@ -64,8 +64,9 @@ function meca () {
         material:'cars',
     })
 
-     add({type:'box', name:'boyA', mass:10, pos:[0,40,0], size:[3], group:buggyGroup, 
-        mask:buggyMask
+     add({type:'box', name:'boyA', mass:10, pos:[0,5,0], size:[3], group:buggyGroup, 
+        mask:buggyMask,
+        size:[5,1,8]
     });
 
     // wheelAxis
@@ -73,6 +74,8 @@ function meca () {
     var i = 4;
     while(i--){
         wheelAxis( i );
+        // add suspensions
+        spring ( i );
         // add wheels
         wheel( i );
     }
@@ -89,28 +92,35 @@ function wheelAxis ( n ) {
     var massPadtop = 2;
     var massAxis = 2;
 
-    var rot = [0, 0, 0];
+    var rot = [10, 0, 0];
     var ext, ext2;
     var front = 1;
+    
+    var gr = [0,0,0];
+
     var side = 1; 
+    if(n==1 || n==3) side = -1;
+
+    var front = 1; 
+    if(n==2 || n==3) front = -1;
 
     switch(n){
-        case 0 : ext = '_av'; ext2 = '_avl'; rot = [10, 0, 0 ]; front = 1;  side = 1;  break;
-        case 1 : ext = '_av'; ext2 = '_avr'; rot = [170, 0, 0]; front = 1;  side = -1; break;
-        case 2 : ext = '_ar'; ext2 = '_arl'; rot = [10, 0, 0 ]; front = -1; side = 1;  break;
-        case 3 : ext = '_ar'; ext2 = '_arr'; rot = [170, 0, 0]; front = -1; side = -1; break;
+        case 0 : ext = '_av'; ext2 = '_avl'; rot = [10, 0, 0 ];  gr=[0,0,180]; break;
+        case 1 : ext = '_av'; ext2 = '_avr'; rot = [10, 0, 0];  gr=[180,0,180]; break;
+        case 2 : ext = '_ar'; ext2 = '_arl'; rot = [10, 0, 0 ];   break;
+        case 3 : ext = '_ar'; ext2 = '_arr'; rot = [10, 0, 0];  gr=[180,0,0]; break;
     }
 
     var pos0 = [120*front, 50, 60*side ].map(function(x) { return x * size; });
     var pos1 = [120*front, 84, 54.5*side ].map(function(x) { return x * size; });
     var pos2 = [120*front, 50, 91*side ].map(function(x) { return x * size; });
 
-    var decal0 = [-40*side, -40].map(function(x) { return x * size; });
+    var decal0 = [-40*side, -40*side].map(function(x) { return x * size; });
     var decal1 = [-31.5*side, -31.5*side].map(function(x) { return x * size; });
     var decal2 = [8*side, -5.957*side].map(function(x) { return x * size; });
 
-    var decal3 = [136.5*front, 102, 24*side].map(function(x) { return x * size; });
-    var decal4 = [16.5*front, 0, 15].map(function(x) { return x * size; });
+    //var decal3 = [136.5*front, 102, 24*side].map(function(x) { return x * size; });
+    //var decal4 = [16.5*front, 0, 15*side].map(function(x) { return x * size; });
 
 
     add({ 
@@ -120,7 +130,8 @@ function wheelAxis ( n ) {
         mass:massPaddel,
         size:[50*size, 7*size, 70*size],
 
-        geometry:geo['meca_paddel'+ext],
+        geometry:geo['meca_paddel_ar'],//+ext],
+        geoRot:gr,
         geoSize:[size],
         
         pos:pos0,
@@ -248,15 +259,30 @@ function wheelAxis ( n ) {
         }
     }
 
-    // add suspensions
-    spring ( n, decal3, decal4, side );
+    
 
     
 
 
 };
 
-function spring ( n, p1, p2, side ) {
+function spring ( n ) {
+
+    var side = 1; 
+    if(n==1 || n==3) side = -1;
+
+    var front = 1; 
+    if(n==2 || n==3) front = -1;
+
+    var p1 = [136.5*front, 102, 24*side].map(function(x) { return x * size; });
+    //var p2 = [(136.5+16.5)*front, 102,(24+15)*side].map(function(x) { return x * size; });
+    var p2 = [16.5*front, 0, 15*side].map(function(x) { return x * size; });
+
+    var gr = [0,0,0];
+    if(side==-1) gr = [0,180,0];
+
+    var gr2 = [0,0,0];
+    if(side==-1) gr2 = [0,180,0];
 
     // mass 
     var massTop = 2;
@@ -271,6 +297,7 @@ function spring ( n, p1, p2, side ) {
 
         geometry:geo['meca_stop'],
         geoSize:[size],
+        geoRot:gr,
 
         state:4,
         pos:p1,
@@ -287,9 +314,10 @@ function spring ( n, p1, p2, side ) {
 
         geometry:geo['meca_slow'],
         geoSize:[size],
+        geoRot:gr2,
 
         state:4,
-        pos:[p1[0]+p2[0], p1[1]+p2[1],  p1[2]+p2[2]],
+        pos:[p1[0]+p2[0], 50*size,  p1[2]+p2[2]],
         group:buggyGroup, 
         mask:buggyMask, 
     });
@@ -316,8 +344,11 @@ function spring ( n, p1, p2, side ) {
         axe2:[1,0,0],
     });
 
-    var springRestLen = -80*size;
+
+
     var springRange = 10*size;
+    var springRestLen = -80*size;
+    
 
     joint({
         type:'joint_spring_dof',
@@ -325,17 +356,12 @@ function spring ( n, p1, p2, side ) {
         body1:'bA'+n,
         body2:'bB'+n,
         pos1:[0, 0, 0],
-        pos2:[0, 0, springRestLen],
-        //rotA:[-40*side, 0, 0],
-        //rotB:[-40*side, 0, 0],
+        pos2:[0, 0, (springRestLen-springRange)*side],
 
         angLower: [0, 0, 0],
         angUpper: [0, 0, 0],
-
-        //linLower: [ 0, 0, 0 ],
-        //linUpper: [ 0, 0, 0 ],
         
-        linLower: [ 0, 0, 0 ],
+        linLower: [ 0, 0, -springRange ],
         linUpper: [ 0, 0, springRange ],
 
         useA:true,
@@ -377,11 +403,12 @@ function wheel ( n ) {
     if(n==2) position = [-wpos[0],wpos[1],wpos[2]]
     if(n==3) position = [-wpos[0],wpos[1],-wpos[2]]
 
-    if(n==0 || n==3) ext='L';
-    else ext='R';
+    var GR;
+    if(n==0 || n==3){ ext='L'; GR=undefined }
+    else{ ext='R'; GR = [1,-1, 1]; }
 
     if(lateral){ if(n==0 || n==3) wSpeed*=-1; }
-    if(rotation){ if(n==2 || n==3) wSpeed*=-1; }
+    if(rotation){ if(n==1 || n==3) wSpeed*=-1; }
 
 
     add({ 
@@ -395,6 +422,8 @@ function wheel ( n ) {
         //material:'tmp1',
         geometry:geo['meca_wheel_'+ext],
         geoSize:[size],
+        //geoRot:[0,R,0],
+        //geoScale:GR,
 
         //shape:geo['meca_wheel_shape'],
         
