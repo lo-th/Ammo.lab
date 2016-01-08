@@ -130,6 +130,7 @@ var view = ( function () {
 
         mat['meca1'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca1', wireframe:true });
         mat['meca2'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca2', wireframe:true });
+        mat['meca3'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca3', wireframe:true });
 
         mat['both'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'both', wireframe:true, side:THREE.DoubleSide  });
         mat['back'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'back', wireframe:true, side:THREE.BackSide  });

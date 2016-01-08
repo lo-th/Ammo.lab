@@ -16,6 +16,7 @@ function afterLoad () {
     // load cars map
     view.addMap('meca_chassis.jpg', 'meca1');
     view.addMap('meca_wheel.jpg', 'meca2');
+    view.addMap('meca_tools.jpg', 'meca3');
 
     // mecanum car
     meca();
@@ -24,7 +25,7 @@ function afterLoad () {
 
 // set car speed
 
-var speed = 5;
+var speed = 0;
 var lateral = false;
 var rotation = true;
 
@@ -65,10 +66,7 @@ function meca () {
         material:'meca1',
     })
 
-     add({type:'box', name:'boyA', mass:10, pos:[0,5,0], size:[3], group:buggyGroup, 
-        mask:buggyMask,
-        size:[5,1,8]
-    });
+    //add({type:'box', name:'boyA', mass:10, pos:[0,5,0], size:[5,1,5] });
 
     // wheelAxis
 
@@ -90,14 +88,15 @@ function wheelAxis ( n ) {
 
     // mass 
     var massPaddel = 20;
-    var massPadtop = 2;
-    var massAxis = 2;
+    var massPadtop = 20;//2;
+    var massAxis = 20;//2;
 
     var rot = [10, 0, 0];
     var ext2;
     var front = 1;
     
-    var gr = [0,0,0];
+    var gr = undefined;
+    var gr2 = undefined;
 
     var side = 1; 
     if(n==1 || n==3) side = -1;
@@ -106,10 +105,10 @@ function wheelAxis ( n ) {
     if(n==2 || n==3) front = -1;
 
     switch(n){
-        case 0 : ext2 = '_avl'; gr = [0,0,180]; break;
-        case 1 : ext2 = '_avr'; gr = [180,0,180]; break;
-        case 2 : ext2 = '_arl'; break;
-        case 3 : ext2 = '_arr'; gr = [180,0,0]; break;
+        case 0 : ext2 = '_av'; gr = [0,0,180]; break;
+        case 1 : ext2 = '_av'; gr = [180,0,180]; gr2 = [0,180,0]; break;
+        case 2 : ext2 = '_ar'; break;
+        case 3 : ext2 = '_ar'; gr = [180,0,0]; gr2 = [0,180,0]; break;
     }
 
     var pos0 = [120*front, 50, 60*side ].map(function(x) { return x * size; });
@@ -120,26 +119,23 @@ function wheelAxis ( n ) {
     var decal1 = [-31.5*side, -31.5*side].map(function(x) { return x * size; });
     var decal2 = [8*side, -5.957*side].map(function(x) { return x * size; });
 
-    //var decal3 = [136.5*front, 102, 24*side].map(function(x) { return x * size; });
-    //var decal4 = [16.5*front, 0, 15*side].map(function(x) { return x * size; });
-
-
     add({ 
         name:'paddel'+n,
         type:'box', 
 
         mass:massPaddel,
-        size:[50*size, 7*size, 70*size],
+        size:[28*size, 7*size, 80*size],
 
         geometry:geo['meca_paddel'],//+ext],
         geoRot:gr,
         geoSize:[size],
         
         pos:pos0,
-        rot:rot,
+        //rot:rot,
         state:4,
         group:buggyGroup, 
-        mask:buggyMask, 
+        mask:buggyMask,
+        material:'meca3',
     });
 
     joint({
@@ -165,10 +161,11 @@ function wheelAxis ( n ) {
         geoSize:[size],
         
         pos:pos1,
-        rot:rot,
+        //rot:rot,
         state:4,
         group:buggyGroup, 
-        mask:buggyMask, 
+        mask:buggyMask,
+        material:'meca3', 
     })
 
     joint({
@@ -184,12 +181,12 @@ function wheelAxis ( n ) {
     });
 
     if(!useSteering){
-        if(ext2 == '_avr') ext2 = '_arr';
-        if(ext2 == '_avl') ext2 = '_arl';
+        if(ext2 == '_av') ext2 = '_ar';
+        if(ext2 == '_av') ext2 = '_ar';
     }
 
     
-    if(ext2 == '_avr' || ext2 == '_avl') massAxis *= 0.5;
+    //if(ext2 == '_avr' || ext2 == '_avl') massAxis *= 0.5;
 
     add({ 
         name:'axis'+n,
@@ -199,12 +196,15 @@ function wheelAxis ( n ) {
         size:[16*size, 23*size, 23*size],
 
         geometry:geo['meca_axis'+ext2],
+        //geometry:geo['meca_axis_arl'],
+        geoRot:gr2,
         geoSize:[size],
         
         pos:pos2,
         state:4,
         group:buggyGroup, 
-        mask:buggyMask, 
+        mask:buggyMask,
+        material:'meca3', 
     });
 
     joint({
@@ -223,7 +223,7 @@ function wheelAxis ( n ) {
         type:'joint_hinge',
         body1:'axis'+n,
         body2:'padtop'+n,
-        pos1:[0, 23.06*size, decal2[1] ],
+        pos1:[0, 23*size, decal2[1] ],
         pos2:[ 0, 0, -decal1[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
@@ -236,15 +236,16 @@ function wheelAxis ( n ) {
                 type:'box', 
 
                 mass:massAxis,
-                size:[16*size, 23*size, 23*size],
+                size:[10*size, 10*size, 10*size],
 
                 geometry:geo['meca_axis'+ext2+'2'],
+                geoRot:gr2,
                 geoSize:[size],
 
                 pos:pos2,
                 state:4,
                 group:buggyGroup, 
-                mask:buggyMask, 
+                mask:1|2,//buggyMask, 
             });
 
             joint({
@@ -276,7 +277,6 @@ function spring ( n ) {
     if(n==2 || n==3) front = -1;
 
     var p1 = [136.5*front, 102, 24*side].map(function(x) { return x * size; });
-    //var p2 = [(136.5+16.5)*front, 102,(24+15)*side].map(function(x) { return x * size; });
     var p2 = [16.5*front, 0, 15*side].map(function(x) { return x * size; });
 
     var gr = [0,0,0];
@@ -303,7 +303,8 @@ function spring ( n ) {
         state:4,
         pos:p1,
         group:buggyGroup, 
-        mask:buggyMask, 
+        mask:buggyMask,
+        material:'meca3',
     });
 
     add({ 
@@ -320,7 +321,8 @@ function spring ( n ) {
         state:4,
         pos:[p1[0]+p2[0], 50*size,  p1[2]+p2[2]],
         group:buggyGroup, 
-        mask:buggyMask, 
+        mask:buggyMask,
+        material:'meca3',
     });
 
     joint({
@@ -367,9 +369,11 @@ function spring ( n ) {
 
         useA:true,
 
-        enableSpring:[0,true],
-        damping:[0,39],// period 1 sec for !kG body
-        stiffness:[0,0.01],
+        // index means 0:translationX, 1:translationY, 2:translationZ
+
+        enableSpring:[2,true],
+        damping:[2,39],// period 1 sec for !kG body
+        stiffness:[2,0.01],
         //feedback:true,
     });
 
@@ -384,7 +388,7 @@ function wheel ( n ) {
 
     // mass 
     var massWheel = 10;
-    var massRoller = 2; // *8
+    var massRoller = 10/8;
 
     var ext;
     var wSpeed = speed;
@@ -414,19 +418,24 @@ function wheel ( n ) {
 
     add({ 
         name:'axe'+n,
-        type:'box',
-        //type:'cylinder', 
+        
+        //type:'box',
+        //size:[56*size, 56*size, 14*size],
+
+        type:'mesh',
+        shape:geo['meca_wheel_shape'],
+        size:[size],
 
         mass:massWheel,
-        size:[56*size, 56*size, 14*size],
+        
         //rot:[0,0,90],
         //material:'tmp1',
         geometry:geo['meca_wheel_'+ext],
-        geoSize:[size],
+        //geoSize:[size],
         //geoRot:[0,R,0],
         //geoScale:GR,
 
-        //shape:geo['meca_wheel_shape'],
+        //,
         
         //size:[size],
         pos:position,
