@@ -728,10 +728,9 @@ var view = ( function () {
             extraGeo.push(mesh.geometry);
             isCustomGeometry = true;
 
-        } else if( o.type == 'mesh' ){ 
-            o.v = view.prepaGeometry( o.shape, false, true );
+        } else if( o.type == 'mesh' || o.type == 'convex' ){ 
+            o.v = view.prepaGeometry( o.shape, o.type );
             if(o.geometry){
-                //console.log(o.geometry.name)
                 mesh = new THREE.Mesh( o.geometry, material );
                 extraGeo.push(o.geometry);
                 extraGeo.push(o.shape);
@@ -739,10 +738,18 @@ var view = ( function () {
                 mesh = new THREE.Mesh( o.shape, material );
                 extraGeo.push(mesh.geometry);
             }
-        } else if( o.type == 'convex' ){ 
-            o.v = view.prepaGeometry( o.shape, true );
-            mesh = new THREE.Mesh( o.shape, material );
-            extraGeo.push(mesh.geometry);
+        /*} else if( o.type == 'convex' ){ 
+            o.v = view.prepaGeometry( o.shape, true, false );
+            if(o.geometry){
+                mesh = new THREE.Mesh( o.geometry, material );
+                extraGeo.push(o.geometry);
+                extraGeo.push(o.shape);
+            } else {
+                mesh = new THREE.Mesh( o.shape, material );
+                extraGeo.push(mesh.geometry);
+            }
+            //mesh = new THREE.Mesh( o.shape, material );
+            //extraGeo.push(mesh.geometry);*/
         } else {
 
             if(o.geoRot || o.geoScale) o.geometry = o.geometry.clone();
@@ -793,7 +800,13 @@ var view = ( function () {
 
     };
 
-    view.prepaGeometry = function ( g, verticesOnly, facesOnly ) {
+    view.prepaGeometry = function ( g, type ) {
+
+        var verticesOnly = false;
+        var facesOnly = false;
+
+        if(type == 'mesh') facesOnly = true;
+        if(type == 'convex') verticesOnly = true;
 
         var i, j, n, p, n2;
 
@@ -1059,8 +1072,10 @@ var view = ( function () {
         if( o.mesh ) o.mesh = null;
         if( o.wheel ) o.wheel = null;
 
-        if ( o.type == 'mesh' ) o.v = view.prepaGeometry( o.shape, false, true );
-        if ( o.type == 'convex' ) o.v = view.prepaGeometry( o.shape, true );
+        o.v = view.prepaGeometry( o.shape, o.type );
+
+        //if ( o.type == 'mesh' ) o.v = view.prepaGeometry( o.shape, false, true );
+        //if ( o.type == 'convex' ) o.v = view.prepaGeometry( o.shape, true );
 
         // send to worker
         ammo.send( 'vehicle', o );

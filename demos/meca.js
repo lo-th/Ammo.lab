@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( -90, 20, 30 );
+    cam ( 0, 20, 30 );
     load ( 'meca', afterLoadGeometry );
 
 };
@@ -43,6 +43,9 @@ var geo = view.getGeo();
 var mat = view.getMat();
 var useSteering = false;
 
+// center of mass position y
+var decalY = 62.5 * size; 
+
 var buggyGroup = 4;
 var buggyMask = -1;//1|2;
 
@@ -52,13 +55,13 @@ function meca () {
 
     add({ 
         name:'chassis',
-        type:'mesh', 
+        type:'convex', 
         //material:'tmp1',
         geometry:geo['meca_chassis'],
         shape:geo['meca_chassis_shape'],
         mass:100,
         size:[size],
-        pos:[0, 0, 0],
+        pos:[0, decalY, 0],
         state:4, //4,
         group:buggyGroup, 
         mask:buggyMask, 
@@ -142,7 +145,7 @@ function wheelAxis ( n ) {
         type:'joint_hinge',
         body1:'chassis',
         body2:'paddel'+n,
-        pos1:[pos0[0], pos0[1], pos0[2]+decal0[0] ],
+        pos1:[pos0[0], pos0[1]-decalY, pos0[2]+decal0[0] ],
         pos2:[ 0, 0, decal0[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
@@ -171,7 +174,7 @@ function wheelAxis ( n ) {
         type:'joint_hinge',
         body1:'chassis',
         body2:'padtop'+n,
-        pos1:[pos1[0], pos1[1], pos1[2]+decal1[0] ],
+        pos1:[pos1[0], pos1[1]-decalY, pos1[2]+decal1[0] ],
         pos2:[ 0, 0, decal1[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
@@ -326,7 +329,7 @@ function spring ( n ) {
         type:'joint_hinge',
         body1:'chassis',
         body2:'bA'+n,
-        pos1:p1,
+        pos1:[p1[0], p1[1]-decalY,  p1[2]],
         pos2:[0,0,0],
         axe1:[1,0,0],
         axe2:[1,0,0],
@@ -345,8 +348,8 @@ function spring ( n ) {
 
 
 
-    var springRange = 10*size;
-    var springRestLen = -80*size;
+    var springRange = 5*size;
+    var springRestLen = -85*size;
     
 
     joint({
@@ -368,7 +371,7 @@ function spring ( n ) {
         // index means 0:translationX, 1:translationY, 2:translationZ
 
         enableSpring:[2,true],
-        damping:[2,39],// period 1 sec for !kG body
+        damping:[2,4000],// period 1 sec for !kG body
         stiffness:[2,0.01],
         //feedback:true,
     });
@@ -416,7 +419,7 @@ function wheel ( n ) {
         //type:'box',
         //size:[56*size, 56*size, 14*size],
 
-        type:'mesh',
+        type:'convex',
         shape:geo['meca_wheel_shape'],
         size:[size],
 
@@ -473,7 +476,7 @@ function wheel ( n ) {
 
         add({ 
             name:n+'_rr_'+i,
-            type:'mesh',
+            type:'convex',
             geometry:geo['meca_roller'],
             shape:geo['meca_roller_shape'],
             mass:massRoller,
