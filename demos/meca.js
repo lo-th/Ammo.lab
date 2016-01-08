@@ -1,32 +1,31 @@
 function demo() {
 
     cam ( -90, 20, 30 );
-    load ( 'meca', afterLoad );
+    load ( 'meca', afterLoadGeometry );
 
-   
-    
 };
-function afterLoad () {
+
+function afterLoadGeometry () {
 
     //ammo.send('gravity', {g:[0,0,0]});
 
     // infinie plane
     add({type:'plane'});
 
-    // load cars map
+    // load buggy map
     view.addMap('meca_chassis.jpg', 'meca1');
     view.addMap('meca_wheel.jpg', 'meca2');
     view.addMap('meca_tools.jpg', 'meca3');
 
-    // mecanum car
+    // mecanum buggy
     meca();
 
 }
 
-// set car speed
+// ! \\ set car speed and direction
 
 var speed = 5;
-var lateral = false;
+var translation = false;
 var rotation = true;
 
 // -----------------------
@@ -39,9 +38,9 @@ var rotation = true;
 // -----------------------
 
 var size = 0.05;
+
 var geo = view.getGeo();
 var mat = view.getMat();
-var wheelRadius = 50*size;
 var useSteering = false;
 
 var buggyGroup = 4;
@@ -147,7 +146,6 @@ function wheelAxis ( n ) {
         pos2:[ 0, 0, decal0[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
-        //motor:[true, 3, 100],
     });
 
     add({ 
@@ -177,7 +175,6 @@ function wheelAxis ( n ) {
         pos2:[ 0, 0, decal1[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
-        //motor:[true, 3, 100],
     });
 
     if(!useSteering){
@@ -196,7 +193,6 @@ function wheelAxis ( n ) {
         size:[16*size, 23*size, 23*size],
 
         geometry:geo['meca_axis'+ext2],
-        //geometry:geo['meca_axis_arl'],
         geoRot:gr2,
         geoSize:[size],
         
@@ -392,9 +388,7 @@ function wheel ( n ) {
 
     var ext;
     var wSpeed = speed;
-    var pz;// = -15*size;
-
-    //if(n==0 || n==2) pz*=-1;
+    var pz;
 
     if(n==1 || n==3) pz=-19*size;
     else pz = 19*size;
@@ -412,7 +406,7 @@ function wheel ( n ) {
     if(n==0 || n==3){ ext='L'; GR=undefined }
     else{ ext='R'; GR = [1,-1, 1]; }
 
-    if(lateral){ if(n==0 || n==3) wSpeed*=-1; }
+    if(translation){ if(n==0 || n==3) wSpeed*=-1; }
     if(rotation){ if(n==1 || n==3) wSpeed*=-1; }
 
 
