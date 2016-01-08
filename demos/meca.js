@@ -25,7 +25,7 @@ function afterLoad () {
 
 // set car speed
 
-var speed = 0;
+var speed = 5;
 var lateral = false;
 var rotation = true;
 
