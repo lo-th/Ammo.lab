@@ -128,6 +128,9 @@ var view = ( function () {
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
         mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
 
+        mat['meca1'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca1', wireframe:true });
+        mat['meca2'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca2', wireframe:true });
+
         mat['both'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'both', wireframe:true, side:THREE.DoubleSide  });
         mat['back'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'back', wireframe:true, side:THREE.BackSide  });
 

@@ -14,7 +14,8 @@ function afterLoad () {
     add({type:'plane'});
 
     // load cars map
-    view.addMap('meca_chassis.jpg', 'cars');
+    view.addMap('meca_chassis.jpg', 'meca1');
+    view.addMap('meca_wheel.jpg', 'meca2');
 
     // mecanum car
     meca();
@@ -61,7 +62,7 @@ function meca () {
         state:4, //4,
         group:buggyGroup, 
         mask:buggyMask, 
-        material:'cars',
+        material:'meca1',
     })
 
      add({type:'box', name:'boyA', mass:10, pos:[0,5,0], size:[3], group:buggyGroup, 
@@ -93,7 +94,7 @@ function wheelAxis ( n ) {
     var massAxis = 2;
 
     var rot = [10, 0, 0];
-    var ext, ext2;
+    var ext2;
     var front = 1;
     
     var gr = [0,0,0];
@@ -105,10 +106,10 @@ function wheelAxis ( n ) {
     if(n==2 || n==3) front = -1;
 
     switch(n){
-        case 0 : ext = '_av'; ext2 = '_avl'; rot = [10, 0, 0 ];  gr=[0,0,180]; break;
-        case 1 : ext = '_av'; ext2 = '_avr'; rot = [10, 0, 0];  gr=[180,0,180]; break;
-        case 2 : ext = '_ar'; ext2 = '_arl'; rot = [10, 0, 0 ];   break;
-        case 3 : ext = '_ar'; ext2 = '_arr'; rot = [10, 0, 0];  gr=[180,0,0]; break;
+        case 0 : ext2 = '_avl'; gr = [0,0,180]; break;
+        case 1 : ext2 = '_avr'; gr = [180,0,180]; break;
+        case 2 : ext2 = '_arl'; break;
+        case 3 : ext2 = '_arr'; gr = [180,0,0]; break;
     }
 
     var pos0 = [120*front, 50, 60*side ].map(function(x) { return x * size; });
@@ -130,7 +131,7 @@ function wheelAxis ( n ) {
         mass:massPaddel,
         size:[50*size, 7*size, 70*size],
 
-        geometry:geo['meca_paddel_ar'],//+ext],
+        geometry:geo['meca_paddel'],//+ext],
         geoRot:gr,
         geoSize:[size],
         
@@ -394,7 +395,7 @@ function wheel ( n ) {
     if(n==1 || n==3) pz=-19*size;
     else pz = 19*size;
 
-    var wpos = [120*size, 100*size, 110*size];
+    var wpos = [120*size, 50*size, 110*size];
 
     var position = [0,0,0];
 
@@ -432,6 +433,7 @@ function wheel ( n ) {
         state:4,
         group:buggyGroup, 
         mask:buggyMask, 
+        material:'meca2',
     });
 
 
@@ -479,7 +481,8 @@ function wheel ( n ) {
             pos:[x+ position[0], y+ position[1], z],
             margin:0.01,
             group:buggyGroup, 
-            mask:buggyMask, 
+            mask:buggyMask,
+            material:'meca2',
         })
 
         joint({
