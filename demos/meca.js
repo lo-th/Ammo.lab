@@ -47,8 +47,9 @@ var useSteering = false;
 // center of mass position y
 var decalY = 62.5 * size; 
 
-var buggyGroup = 4;
+var buggyGroup = 8;
 var buggyMask = -1;//1|2;
+var noCollision = 32;
 
 function meca () {
 
@@ -73,7 +74,7 @@ function meca () {
         mask:buggyMask, 
     });
 
-    //add({type:'box', name:'boyA', mass:10, pos:[0,5,0], size:[5,1,5] });
+    add({type:'box', name:'boyA', mass:10, pos:[0,15,0], size:[2] });
 
     // wheelAxis
 
@@ -312,7 +313,7 @@ function spring ( n ) {
         state:4,
         pos:p1,
         group:buggyGroup, 
-        mask:1|2,//buggyMask,
+        mask:noCollision,
     });
 
     add({ 
@@ -330,7 +331,7 @@ function spring ( n ) {
         state:4,
         pos:[p1[0]+p2[0], 50*size,  p1[2]+p2[2]],
         group:buggyGroup, 
-        mask:1|2,//buggyMask,
+        mask:noCollision,
     });
 
     // joint

@@ -1270,6 +1270,21 @@ enum    CollisionFilterGroups {
   CharacterFilter = 32, 
   AllFilter = -1 
 }
+
+    CFG_DEFAULT       = 1,
+    CFG_STATIC          = 2,
+    CFG_KINEMATIC       = 4,
+    CFG_DEBRIS          = 8,
+    CFG_SENSORTRIGGER    = 16,
+    CFG_NOCOLLISION    = 32,
+    CFG_GROUP0          = 64,
+    CFG_GROUP1          = 128,
+    CFG_GROUP2          = 256,
+    CFG_GROUP3          = 512,
+    CFG_GROUP4          = 1024,
+    CFG_GROUP5          = 2048,
+    CFG_GROUP6          = 4096,
+    CFG_GROUP7          = 8192,
 */
 
 //--------------------------------------------------
