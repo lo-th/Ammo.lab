@@ -669,13 +669,6 @@ var view = ( function () {
 
         if(o.type.substring(0,5) == 'joint') {
 
-            //if( ( Math.abs(o.min) > Math.PI || Math.abs(o.max) > Math.PI ) && o.type !== 'jointDistance' ){
-                // is in degree
-            if(o.min) o.min *= Math.degtorad;
-            if(o.max) o.max *= Math.degtorad;
-
-            //} 
-
             ammo.send( 'add', o );
             return;
 

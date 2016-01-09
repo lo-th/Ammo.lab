@@ -28,7 +28,7 @@ var substep = 10;//4//3;// default is 1. 2 or more make simulation more accurate
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
-
+var degtorad = 0.0174532925199432957;
 
 var timer = 0;
 var isBuffer;
@@ -660,9 +660,9 @@ function wipe (obj) {
 //
 //--------------------------------------------------
 
-function set ( o ) {
+function set ( ) {
 
-    o = tmpset;
+    var o = tmpset;
 
     //console.log('yyy')
 
@@ -670,15 +670,29 @@ function set ( o ) {
 
     var t = new Ammo.btTransform();
     t.setIdentity();
-    t.setOrigin( v3( o.pos ) );
-    t.setRotation( q4( o.quat ) );
+    if(o.pos) t.setOrigin( v3( o.pos ) );
+    if(o.quat) t.setRotation( q4( o.quat ) );
 
     //b.setWorldTransform(t);
-    b.getMotionState().setWorldTransform(t);
+    if(b !== null) b.getMotionState().setWorldTransform(t);
+
+    Ammo.destroy( t );
 
     tmpset = null;
 
 };
+
+function getByName(name){
+
+    return byName[name] || null;
+
+};
+
+//--------------------------------------------------
+//
+//  ADD
+//
+//--------------------------------------------------
 
 function add ( o, extra ) {
 
@@ -875,7 +889,7 @@ function add ( o, extra ) {
                 }
 
                 //var b = body.get_m_nodes();
-                var a = [];
+                /*var a = [];
                 var b = body.get_m_nodes();
                 var j = b.size(), n, node, p;
                 while(j--){
@@ -885,11 +899,11 @@ function add ( o, extra ) {
                     a[n] = p.x();
                     a[n+1] = p.y();
                     a[n+2] = p.z();
-                }
+                }*/
 
-                console.log('start result: ' + a)
+                //console.log('start result: ' + a)
 
-                console.log('result:' + body.get_m_nodes().size())
+                //console.log('result:' + body.get_m_nodes().size())
 
             break;
             case 'softTriMesh':
@@ -1035,6 +1049,9 @@ function add ( o, extra ) {
     }
     else solids.push( body ); // only static
 
+
+    Ammo.destroy( startTransform );
+
 };
 
 function anchor( o ){
@@ -1043,11 +1060,7 @@ function anchor( o ){
 
 };
 
-function getByName(name){
 
-    return byName[name];
-
-};
 
 
 //--------------------------------------------------
@@ -1059,18 +1072,23 @@ function getByName(name){
 function apply ( o ) {
 
     var b = getByName(o.name);
-    switch(o.type){
-        case 'force' : b.applyForce( v3(o.v1), v3(o.v2) ); break;
-        case 'torque' : b.applyTorque( v3(o.v1) ); break;
-        case 'localTorque' : b.applyLocalTorque( v3(o.v1) ); break;
-        case 'centralForce' : b.applyCentralForce( v3(o.v1) ); break;
-        case 'centralLocalForce' : b.applyCentralLocalForce( v3(o.v1) ); break;
-        case 'impulse' : b.applyImpulse( v3(o.v1), v3(o.v2) ); break;
-        case 'centralImpulse' : b.applyCentralImpulse( v3(o.v1) ); break;
+    if(b!==null){
 
-        // joint
+        switch(o.type){
+            case 'force' : b.applyForce( v3(o.v1), v3(o.v2) ); break;
+            case 'torque' : b.applyTorque( v3(o.v1) ); break;
+            case 'localTorque' : b.applyLocalTorque( v3(o.v1) ); break;
+            case 'centralForce' : b.applyCentralForce( v3(o.v1) ); break;
+            case 'centralLocalForce' : b.applyCentralLocalForce( v3(o.v1) ); break;
+            case 'impulse' : b.applyImpulse( v3(o.v1), v3(o.v2) ); break;
+            case 'centralImpulse' : b.applyCentralImpulse( v3(o.v1) ); break;
+
+            // joint
+
+            case 'motor' : b.enableAngularMotor( o.motor[0],o.motor[1],o.motor[2] ); break;
 
 
+        }
     }
 
 };
@@ -1113,25 +1131,20 @@ function addJoint ( o ) {
     var body1 = getByName(o.body1);
     var body2 = getByName(o.body2);
 
-
     var point1 = v3( o.pos1 || [0,0,0] );
     var point2 = v3( o.pos2 || [0,0,0] );
     var axe1 = v3( o.axe1 || [1,0,0] );
     var axe2 = v3( o.axe2 || [1,0,0] );
 
-    var min = o.min || 0;
-    var max = o.max || 0;
+    var frameInA;
+    var frameInB;
 
-    var spring = o.spring || [0.9, 0.3, 0.1];
-    var softness = spring[0];
-    var bias =  spring[1];
-    var relaxation =  spring[2];
-    //var useReferenceFrameA = false;
     
     if(o.type !== "joint_p2p" && o.type !== "joint_hinge" && o.type !== "joint" ){
 
         
-        /*var tmpA = new Ammo.btTransform();
+        /*
+        var tmpA = new Ammo.btTransform();
         tmpA.setIdentity();
         tmpA.setOrigin( point1 );
         if(o.quatA) tmpA.setRotation( q4( o.quatA ) )
@@ -1144,19 +1157,17 @@ function addJoint ( o ) {
         if(o.quatB) tmpB.setRotation( q4( o.quatB ) )
 
         var frameInB = multiplyTransforms( body2.getWorldTransform(), tmpB );
-    */
-        
+        */
 
-        var frameInA = new Ammo.btTransform();
+        frameInA = new Ammo.btTransform();
         frameInA.setIdentity();
         frameInA.setOrigin( point1 );
         if(o.quatA) frameInA.setRotation( q4( o.quatA ) );
         
-        var frameInB = new Ammo.btTransform();
+        frameInB = new Ammo.btTransform();
         frameInB.setIdentity();
         frameInB.setOrigin( point2 );
         if(o.quatB) frameInB.setRotation( q4( o.quatB ) );
-        
 
     }
     
@@ -1172,34 +1183,26 @@ function addJoint ( o ) {
             if(o.damping) joint.get_m_setting().set_m_damping( o.damping ); 
             if(o.impulse) joint.get_m_setting().set_m_impulseClamp( o.impulse );
         break;
-        case "joint_hinge": case "joint":
-            joint = new Ammo.btHingeConstraint( body1, body2, point1, point2, axe1, axe2, useA );
-            if( min!==0 || max!==0 ) joint.setLimit( min, max, softness, bias, relaxation);
-            if(o.motor) joint.enableAngularMotor( o.motor[0],o.motor[1],o.motor[2] );
-        break;
-        case "joint_slider":
-            joint = new Ammo.btSliderConstraint( body1, body2, frameInA, frameInB, useA );
-        break;
-        case "joint_conetwist": 
-            joint = new Ammo.btConeTwistConstraint( body1, body2, frameInA, frameInB );
-        break;
+        case "joint_hinge": case "joint": joint = new Ammo.btHingeConstraint( body1, body2, point1, point2, axe1, axe2, useA ); break;
+        case "joint_slider": joint = new Ammo.btSliderConstraint( body1, body2, frameInA, frameInB, useA ); break;
+        case "joint_conetwist": joint = new Ammo.btConeTwistConstraint( body1, body2, frameInA, frameInB ); break;
+        case "joint_dof": joint = new Ammo.btGeneric6DofConstraint( body1, body2, frameInA, frameInB, useA );  break;
+        case "joint_spring_dof": joint = new Ammo.btGeneric6DofSpringConstraint( body1, body2, frameInA, frameInB, useA ); break;
         //case "joint_gear": joint = new Ammo.btGearConstraint( body1, body2, point1, point2, o.ratio || 1); break;
-        case "joint_dof": 
-            joint = new Ammo.btGeneric6DofConstraint( body1, body2, frameInA, frameInB, useA ); 
-        break;
-        case "joint_spring_dof": 
-            joint = new Ammo.btGeneric6DofSpringConstraint( body1, body2, frameInA, frameInB, useA );
-            //console.log(joint)
-            
-            
-
-            
-        break;
     }
+
+    if( frameInA ) Ammo.destroy(frameInA);
+    if( frameInB ) Ammo.destroy(frameInB);
 
     // EXTRA SETTING
 
     if(o.breaking) joint.setBreakingImpulseThreshold(o.breaking);
+
+    // hinge
+
+    // limite min, limite max, softness, bias, relaxation
+    if(o.limit) joint.setLimit( o.limit[0]*degtorad, o.limit[1]*degtorad, o.limit[2] || 0.9, o.limit[3] || 0.3, o.limit[4] || 0.1);
+    if(o.motor) joint.enableAngularMotor( o.motor[0], o.motor[1], o.motor[2] );
 
 
     // slider & dof
