@@ -10,7 +10,7 @@ function afterLoad () {
 
     add({type:'plane'}); // infinie plane
 
-    add({ type:'track', shape:'mesh', size:[1,1,1], pos:[0,0,0], mass:0 });
+    add({ type:'mesh', shape:view.getGeo()['track'], mass:0, friction:0.6, restitution:0.1 });
 
     // ammo car shape
 

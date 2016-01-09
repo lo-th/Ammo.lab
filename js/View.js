@@ -958,13 +958,16 @@ var view = ( function () {
 
     view.character = function ( o ) {
 
-        var size = o.size || [0.5,1,1];
+        o.size = o.size == undefined ? [0.5,1,1] : o.size;
+        if(o.size.length == 1){ o.size[1] = o.size[0]; }
+        if(o.size.length == 2){ o.size[2] = o.size[0]; }
+
         var pos = o.pos || [0,3,0];
         var rot = o.rot || [0,0,0];
 
-        var g = this.capsuleGeo( size[0] , size[1]*0.5 );
-        extraGeo.push(g);
+        var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
         var mesh = new THREE.Mesh( g, mat.hero );
+        extraGeo.push(mesh.geometry);
 
         mesh.position.set( pos[0], pos[1], pos[2] );
         mesh.rotation.set( rot[0], rot[1], rot[2] );
@@ -972,7 +975,6 @@ var view = ( function () {
         // copy rotation quaternion
         o.quat = mesh.quaternion.toArray();
         o.pos = pos;
-        o.size = size;
 
         scene.add(mesh);
         heros.push(mesh);

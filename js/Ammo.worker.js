@@ -519,10 +519,13 @@ function init () {
         
     }
 
+    //console.log(dispatcher)
+    //broadphase.getOverlappingPairCache().setInternalGhostPairCallback( new Ammo.btGhostPairCallback() );
+
     //world = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
     world = new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collision, solverSoft );
     world.setGravity( vec3(0, -9.8, 0) );
-    //broadphase.getOverlappingPairCache().setInternalGhostPairCallback( new Ammo.btGhostPairCallback() );
+    
 
     worldInfo = world.getWorldInfo();
 
@@ -1298,65 +1301,49 @@ enum    CollisionFilterGroups {
 
 function character ( o ) {
 
-    var stepHeight = 0.3;
+    var shape = new Ammo.btCapsuleShape(o.size[0], o.size[1]*0.5);
 
-    var startTransform = new Ammo.btTransform();
-    startTransform.setIdentity();
-    startTransform.setOrigin( v3( o.pos ) );
-    startTransform.setRotation( q4( o.quat ) );
-
-    var size = o.size || [1,1,1];
-    var shape = new Ammo.btCapsuleShape(size[0], size[1]*0.5);
-    //var shape = new Ammo.btBoxShape( vec3( size[0]*0.5, size[1]*0.5, size[2]*0.5 ) );
-    //var localInertia = vec3();
-    //shape.calculateLocalInertia( 10, localInertia );
-    //var body = new Ammo.btGhostObject();
-    var localInertia = vec3(0, 0, 0);
-    shape.calculateLocalInertia( 1, localInertia );
-    //shape.calculateLocalInertia( mass, localInertia );
-    //var motionState = new Ammo.btDefaultMotionState( startTransform );
-
-    //var rb = new Ammo.btRigidBodyConstructionInfo( 1, motionState, shape, localInertia);
-    //var body = new Ammo.btRigidBody( rb );
     var body = new Ammo.btPairCachingGhostObject();
     body.setCollisionShape(shape);
-    body.setCollisionFlags( o.flag || 16 );
-    //console.log(body);
-    ///body.setWorldTransform( startTransform );
-    
-    //
-   /* 
-    
+
     body.setCollisionFlags( FLAGS.CHARACTER_OBJECT );
+    
     body.setFriction( o.friction || 0.1 );
     body.setRestitution( o.restitution || 0 );
-   
-    ///ghostObject.collisionFlags = AWPCollisionFlags.CF_CHARACTER_OBJECT;*/
+
     body.setActivationState( 4 );
     body.activate();
 
-    var hero = new Ammo.btKinematicCharacterController( body, shape, stepHeight);
-    //hero.setUseGhostSweepTest(true);
+    var hero = new Ammo.btKinematicCharacterController( body, shape, o.stepH || 0.3, o.upAxis || 1 );
+    hero.setUseGhostSweepTest(shape);
 
-    //console.log(hero);
+
     //hero.setGravity( vec3(0, -9.8, 0) );
-    hero.setFallSpeed(0.1);
+    hero.setFallSpeed(10);
+    /*hero.setJumpSpeed();
+    hero.setMaxJumpHeight();
+    hero.canJump(); 
+    hero.jump();
+    */
+
+    // The max slope determines the maximum angle that the controller can walk u
+    if( o.slopeRadians ) hero.setMaxSlope ( o.slopeRadians )
+
     hero.warp(v3(o.pos));
     hero.setVelocityForTimeInterval(vec3(), 1);
 
     //world.addCollisionObject( ghostObject, o.group || 1, o.mask || -1 );
     //world.addAction( hero ); 
-    /*world.addCollisionObject( body, GROUP.CHARACTER_FILTER, GROUP.STATIC_FILTER | GROUP.DEFAULT_FILTER );
+    //world.addCollisionObject( body, GROUP.CHARACTER_FILTER, GROUP.STATIC_FILTER | GROUP.DEFAULT_FILTER );
     //world.addCollisionObject( body );
-    //world.addRigidBody( body );*/
+    //world.addRigidBody( body );
     
 
     
-    world.addCollisionObject( body, o.group || 32, o.mask || -1 );
-    //world.addRigidBody( body)//, o.group || 32, o.mask || 1|2 );
+    world.addCollisionObject( body, o.group || 1, o.mask || -1 );
     world.addAction( hero ); 
 
-    //console.log( body, hero, body.getCollisionFlags() );
+    console.log( hero );
 
     heros.push( hero );
 
