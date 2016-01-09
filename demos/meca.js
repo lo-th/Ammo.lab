@@ -38,6 +38,7 @@ var rotation = true;
 // -----------------------
 
 var size = 0.05;
+var debug = false;
 
 var geo = view.getGeo();
 var mat = view.getMat();
@@ -53,20 +54,24 @@ function meca () {
 
     // body
 
+    var bodyMass = 100;
+
     add({ 
         name:'chassis',
-        type:'convex', 
-        //material:'tmp1',
-        geometry:geo['meca_chassis'],
+        type:'convex',
         shape:geo['meca_chassis_shape'],
-        mass:100,
+
+        mass:bodyMass,
         size:[size],
         pos:[0, decalY, 0],
-        state:4, //4,
+
+        geometry:debug ? undefined : geo['meca_chassis'],
+        material:debug ? undefined : 'meca1',
+        
+        state:4,
         group:buggyGroup, 
         mask:buggyMask, 
-        material:'meca1',
-    })
+    });
 
     //add({type:'box', name:'boyA', mass:10, pos:[0,5,0], size:[5,1,5] });
 
@@ -128,16 +133,15 @@ function wheelAxis ( n ) {
         mass:massPaddel,
         size:[28*size, 7*size, 80*size],
 
-        geometry:geo['meca_paddel'],//+ext],
+        geometry:debug ? undefined : geo['meca_paddel'],
+        material:debug ? undefined : 'meca3',
         geoRot:gr,
         geoSize:[size],
         
         pos:pos0,
-        //rot:rot,
         state:4,
         group:buggyGroup, 
         mask:buggyMask,
-        material:'meca3',
     });
 
     joint({
@@ -158,16 +162,16 @@ function wheelAxis ( n ) {
         mass:massPadtop,
         size:[3*size, 5*size, 63*size],
 
-        geometry:geo['meca_padtop'],
+        geometry:debug ? undefined : geo['meca_padtop'],
+        material:debug ? undefined : 'meca3',
         geoSize:[size],
         
         pos:pos1,
         //rot:rot,
         state:4,
         group:buggyGroup, 
-        mask:buggyMask,
-        material:'meca3', 
-    })
+        mask:buggyMask,  
+    });
 
     joint({
         name:'ax_2_'+n,
@@ -193,9 +197,11 @@ function wheelAxis ( n ) {
         type:'box',
 
         mass:massAxis,
-        size:[16*size, 23*size, 23*size],
+        friction:0.1,
+        size:[23*size, 23*size, 23*size],
 
-        geometry:geo['meca_axis'+ext2],
+        geometry:debug ? undefined : geo['meca_axis'+ext2],
+        material:debug ? undefined : 'meca3', 
         geoRot:gr2,
         geoSize:[size],
         
@@ -203,7 +209,6 @@ function wheelAxis ( n ) {
         state:4,
         group:buggyGroup, 
         mask:buggyMask,
-        material:'meca3', 
     });
 
     joint({
@@ -215,7 +220,7 @@ function wheelAxis ( n ) {
         pos2:[ 0, 0, -decal0[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
-    })
+    });
 
     joint({
         name:'ax_2e_'+n,
@@ -228,8 +233,10 @@ function wheelAxis ( n ) {
         axe2:[1,0,0],
     });
 
-    if(ext2 == '_avr' || ext2 == '_avl'){
-        if(useSteering){
+    if(useSteering){
+
+        if(ext2 == '_avr' || ext2 == '_avl'){
+        
             add({ 
                 name:'axis_s_'+n,
                 type:'box', 
@@ -288,6 +295,8 @@ function spring ( n ) {
     var massTop = 2;
     var massLow = 2;
 
+    // object
+
     add({ 
         name:'bA'+n,
         type:'box',
@@ -295,15 +304,15 @@ function spring ( n ) {
         mass:massTop,
         size:[17*size, 17*size, 17*size],
 
-        geometry:geo['meca_stop'],
+        geometry:debug ? undefined : geo['meca_stop'],
+        material:debug ? undefined : 'meca3',
         geoSize:[size],
         geoRot:gr,
 
         state:4,
         pos:p1,
         group:buggyGroup, 
-        mask:buggyMask,
-        material:'meca3',
+        mask:1|2,//buggyMask,
     });
 
     add({ 
@@ -313,16 +322,18 @@ function spring ( n ) {
         mass:massLow,
         size:[10*size, 10*size, 10*size],
 
-        geometry:geo['meca_slow'],
+        geometry:debug ? undefined : geo['meca_slow'],
+        material:debug ? undefined : 'meca3',
         geoSize:[size],
         geoRot:gr2,
 
         state:4,
         pos:[p1[0]+p2[0], 50*size,  p1[2]+p2[2]],
         group:buggyGroup, 
-        mask:buggyMask,
-        material:'meca3',
+        mask:1|2,//buggyMask,
     });
+
+    // joint
 
     joint({
         name:'jj_1e_'+n,
@@ -346,11 +357,10 @@ function spring ( n ) {
         axe2:[1,0,0],
     });
 
-
+    // spring joint
 
     var springRange = 5*size;
-    var springRestLen = -85*size;
-    
+    var springRestLen = -85*size;  
 
     joint({
         type:'joint_spring_dof',
@@ -405,9 +415,8 @@ function wheel ( n ) {
     if(n==2) position = [-wpos[0],wpos[1],wpos[2]]
     if(n==3) position = [-wpos[0],wpos[1],-wpos[2]]
 
-    var GR;
-    if(n==0 || n==3){ ext='L'; GR=undefined }
-    else{ ext='R'; GR = [1,-1, 1]; }
+    if(n==0 || n==3){ ext='L'; }
+    else{ ext='R'; }
 
     if(translation){ if(n==0 || n==3) wSpeed*=-1; }
     if(rotation){ if(n==1 || n==3) wSpeed*=-1; }
@@ -424,10 +433,12 @@ function wheel ( n ) {
         size:[size],
 
         mass:massWheel,
+        friction:0.1,
         
         //rot:[0,0,90],
         //material:'tmp1',
-        geometry:geo['meca_wheel_'+ext],
+        geometry:debug ? undefined : geo['meca_wheel_'+ext],
+        material:debug ? undefined : 'meca2',
         //geoSize:[size],
         //geoRot:[0,R,0],
         //geoScale:GR,
@@ -439,9 +450,10 @@ function wheel ( n ) {
         state:4,
         group:buggyGroup, 
         mask:buggyMask, 
-        material:'meca2',
+        
     });
 
+    // roller *8
 
     var radius = 39*size;
     var i = 8, angle, y, x, z;
@@ -477,18 +489,23 @@ function wheel ( n ) {
         add({ 
             name:n+'_rr_'+i,
             type:'convex',
-            geometry:geo['meca_roller'],
             shape:geo['meca_roller_shape'],
+
             mass:massRoller,
-            //friction:0.9,
+            friction:0.7,
             size:[size],
             rot:axe,
-            state:4,
             pos:[x+ position[0], y+ position[1], z],
-            margin:0.01,
+
+            geometry:debug ? undefined : geo['meca_roller'],
+            material:debug ? undefined : 'meca2',
+            
+            state:4,
+            
+            //margin:0.01,
             group:buggyGroup, 
             mask:buggyMask,
-            material:'meca2',
+            
         })
 
         joint({
@@ -506,7 +523,7 @@ function wheel ( n ) {
 
     }
 
-
+    // joint wheels
 
     var link;
     if( (n==0 || n==1) && useSteering ) {link = 'axis_s_'+n;  }
@@ -522,6 +539,7 @@ function wheel ( n ) {
         axe1:[0,0,1],
         axe2:[0,0,1],
         motor:[true, wSpeed, 100],
+        collision:true,
     })
 
 

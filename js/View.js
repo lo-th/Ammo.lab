@@ -751,16 +751,18 @@ var view = ( function () {
             //mesh = new THREE.Mesh( o.shape, material );
             //extraGeo.push(mesh.geometry);*/
         } else {
+            if(o.geometry){
+                if(o.geoRot || o.geoScale) o.geometry = o.geometry.clone();
+                // rotation only geometry
+                if(o.geoRot){ o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler().fromArray(this.toRad(o.geoRot))));}
 
-            if(o.geoRot || o.geoScale) o.geometry = o.geometry.clone();
-            // rotation only geometry
-            if(o.geoRot){ o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler().fromArray(this.toRad(o.geoRot))));}
             
-            // scale only geometry
-            if(o.geoScale){ 
-                o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[0], o.geoScale[1], o.geoScale[2] ) );
-                //material = mat['back'];//material.clone();
-                //material.side = THREE.BackSide;
+                // scale only geometry
+                if(o.geoScale){ 
+                    o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[0], o.geoScale[1], o.geoScale[2] ) );
+                    //material = mat['back'];//material.clone();
+                    //material.side = THREE.BackSide;
+                }
             }
             
 
