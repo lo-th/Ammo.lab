@@ -15,11 +15,6 @@ function afterLoad () {
     // ! \\ click on view and use key to controle character
 
 
-    character ({ 
-        flag:16,
-        group:32,
-        mask:1|2
-        
-    });
+    character ({ });
 
 };
