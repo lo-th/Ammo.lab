@@ -1318,7 +1318,7 @@ function character ( o ) {
     hero.setUseGhostSweepTest(shape);
 
 
-    //hero.setGravity( vec3(0, -9.8, 0) );
+    hero.setGravity( vec3(0, -9.8, 0) );
     hero.setFallSpeed(10);
     /*hero.setJumpSpeed();
     hero.setMaxJumpHeight();
@@ -1332,14 +1332,6 @@ function character ( o ) {
     hero.warp(v3(o.pos));
     hero.setVelocityForTimeInterval(vec3(), 1);
 
-    //world.addCollisionObject( ghostObject, o.group || 1, o.mask || -1 );
-    //world.addAction( hero ); 
-    //world.addCollisionObject( body, GROUP.CHARACTER_FILTER, GROUP.STATIC_FILTER | GROUP.DEFAULT_FILTER );
-    //world.addCollisionObject( body );
-    //world.addRigidBody( body );
-    
-
-    
     world.addCollisionObject( body, o.group || 1, o.mask || -1 );
     world.addAction( hero ); 
 
