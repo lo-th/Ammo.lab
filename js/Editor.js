@@ -5,7 +5,7 @@
 *    @author lo.th / http://lo-th.github.io/labs/
 *    CODEMIRROR ultimate editor
 */
-
+'use strict';
 var editor = ( function () {
 
     var content, codeContent, code, separator, menu; 
@@ -22,6 +22,7 @@ var editor = ( function () {
     var nextDemo = null;
     var selectColor = '#105AE2';
     var scrollOn = false;
+    var menuPins;
 
     var octo, octoArm;
 
@@ -201,7 +202,7 @@ var editor = ( function () {
 
         isMenu = false;
         menu.style.height =  40 + 'px';
-        var i = menu.childNodes.length;
+        var i = menu.childNodes.length, b;
         while(i--){
             if(i!==0){
                 b = menu.childNodes[i];

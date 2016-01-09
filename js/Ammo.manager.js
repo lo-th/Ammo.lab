@@ -5,7 +5,7 @@
 *    @author lo.th / http://lo-th.github.io/labs/
 *    AMMO worker ultimate manager
 */
-
+'use strict';
 var now;
 
 (function(w){

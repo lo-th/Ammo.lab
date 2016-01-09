@@ -6,10 +6,11 @@
 *    THREE ultimate manager
 */
 
+'use strict';
 // MATH ADD
 Math.degtorad = 0.0174532925199432957;
 Math.radtodeg = 57.295779513082320876;
-Math.PI = 3.141592653589793;
+Math.Pi = 3.141592653589793;
 Math.TwoPI = 6.283185307179586;
 Math.PI90 = 1.570796326794896;
 Math.PI270 = 4.712388980384689;
@@ -55,6 +56,7 @@ var view = ( function () {
 
     var environment, envcontext, nEnv = 0, isWirframe = true;
     var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
+    var envMap;
 
 
     view = function () {};
@@ -1012,6 +1014,7 @@ var view = ( function () {
                     mesh.children[k].receiveShadow = true;
                 }
         } else {
+            console.log('ddad')
             var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
             g.translate( massCenter[0], massCenter[1], massCenter[2] );
             extraGeo.push( g );
@@ -1050,7 +1053,7 @@ var view = ( function () {
 
         var gw = o.wheel || geo['wheel'];
         var gwr = gw.clone();
-        gwr.rotateY( Math.PI );
+        gwr.rotateY( Math.Pi );
         extraGeo.push( gwr );
 
         var i = o.nw || 4;
@@ -1074,10 +1077,7 @@ var view = ( function () {
         if( o.mesh ) o.mesh = null;
         if( o.wheel ) o.wheel = null;
 
-        o.v = view.prepaGeometry( o.shape, o.type );
-
-        //if ( o.type == 'mesh' ) o.v = view.prepaGeometry( o.shape, false, true );
-        //if ( o.type == 'convex' ) o.v = view.prepaGeometry( o.shape, true );
+        if ( o.type == 'mesh' || o.type == 'convex' ) o.v = view.prepaGeometry( o.shape, o.type );
 
         // send to worker
         ammo.send( 'vehicle', o );
@@ -1468,7 +1468,7 @@ var view = ( function () {
 
     view.update = function(ar, dr, hr, jr, cr ){
 
-        var i = meshs.length, a = ar, n, m, j, w,k, l, c, cc, t, order, isWithColor, isWithNormal;
+        var i = meshs.length, a = ar, n, m, j, w,k, l, c, cc, t, order, isWithColor, isWithNormal, same, p;
 
         meshs.forEach( function( m, id ) {
             var n = id * 8;
