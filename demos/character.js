@@ -12,11 +12,7 @@ function afterLoad () {
 
     add({ type:'mesh', shape:view.getGeo()['track'], mass:0, friction:0.6, restitution:0.1 });
 
-    // ammo car shape
-
     // ! \\ click on view and use key to controle character
-
-    // ? \\ character don't work now
 
 
     character ({ 
