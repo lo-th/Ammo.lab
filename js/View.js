@@ -1009,7 +1009,6 @@ var view = ( function () {
                     mesh.children[k].receiveShadow = true;
                 }
         } else {
-            console.log('ddad')
             var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
             g.translate( massCenter[0], massCenter[1], massCenter[2] );
             extraGeo.push( g );
@@ -1502,7 +1501,7 @@ var view = ( function () {
 
         }*/
 
-        // updtae character
+        // update character
         i = heros.length;
         a = hr;
 

@@ -231,7 +231,6 @@ function postStep(){
 
 
 
-
 //--------------------------------------------------
 //
 //  INTERN PROCESS
@@ -599,6 +598,8 @@ function reset () {
         Ammo.destroy( b );
 
     }
+
+    //console.log(solids.length)
 
     bodys.length = 0;
     solids.length = 0;
