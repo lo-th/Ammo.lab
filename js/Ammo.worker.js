@@ -38,12 +38,14 @@ var tmpset = null;
 var currentCar = 0;
 
 // main transphere array
-var ar = new Float32Array( 1000*8 ); // rigid buffer max 1000
-var dr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
-var jr = new Float32Array( 100*4 ); // joint buffer max 100
-var hr = new Float32Array( 10*8 ); // hero buffer max 10
-var cr = new Float32Array( 8192*3 ); //cloth buffer
-var tr = new Float32Array( 20 ); //soft type buffer
+/*var Br, Cr, Jr, Hr, Sr;*/
+
+var Br = new Float32Array( 1000*8 ); // rigid buffer max 1000
+var Cr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
+var Jr = new Float32Array( 100*4 ); // joint buffer max 100
+var Hr = new Float32Array( 10*8 ); // hero buffer max 10
+var Sr = new Float32Array( 8192*3 ); // soft buffer nVertices x,y,z
+
 // for terrain
 //var hdata = null;
 var tmpData = {};
@@ -123,6 +125,17 @@ self.onmessage = function ( e ) {
         timestep = e.data.timestep;
         substep = e.data.substep || 1;
         importScripts( e.data.blob );
+        
+
+        //if( isBuffer ){
+
+        /*Br = e.data.Br;
+        Cr = e.data.Cr;
+        Hr = e.data.Hr;
+        Jr = e.data.Jr;
+        Sr = e.data.Sr;*/
+            
+        //}
         self.postMessage({ m:'init' });
         init();
 
@@ -183,12 +196,11 @@ self.onmessage = function ( e ) {
 
         if( isBuffer ){
 
-            ar = e.data.ar;
-            dr = e.data.dr;
-            hr = e.data.hr;
-            jr = e.data.jr;
-            cr = e.data.cr;
-            tr = e.data.tr;
+            Br = e.data.Br;
+            Cr = e.data.Cr;
+            Hr = e.data.Hr;
+            Jr = e.data.Jr;
+            Sr = e.data.Sr;
             
         }
 
@@ -199,18 +211,13 @@ self.onmessage = function ( e ) {
 
         drive( currentCar );
 
-        // ------- bodys update
-        bodys.forEach( bodyProcess );
+        bodyStep();
+        heroStep();
+        carsStep();
+        softStep();
 
-        // ------- heros update
-        heros.forEach( heroProcess );
-
-        // ------- cars update
-        cars.forEach( carProcess );
-
-        // ------- softs update
-        softPoints = 0;
-        softs.forEach( softProcess );
+        //softPoints = 0;
+        //softs.forEach( softUp )
 
         // ------- post step
 
@@ -223,8 +230,8 @@ self.onmessage = function ( e ) {
 
 function postStep(){
 
-    if( isBuffer ) self.postMessage({ m:'step', ar:ar, dr:dr, hr:hr, jr:jr, cr:cr },[ ar.buffer, dr.buffer, hr.buffer, jr.buffer, cr.buffer ]);
-    else self.postMessage( { m:'step', ar:ar, dr:dr, hr:hr, jr:jr, cr:cr } );
+    if( isBuffer ) self.postMessage({ m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
+    else self.postMessage( { m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } );
 
 };
 
@@ -237,127 +244,165 @@ function postStep(){
 //
 //--------------------------------------------------
 
-var bodyProcess = function ( b, id ) {
+var bodyStep = function () {
 
-    var n = id * 8;
-    ar[n] = b.getLinearVelocity().length() * 9.8;//b.isActive() ? 1 : 0;
+    bodys.forEach( function ( b, id ) {
 
-    if ( ar[n] > 0 ) {
+        var n = id * 8;
+        Br[n] = b.getLinearVelocity().length() * 9.8;//b.isActive() ? 1 : 0;
 
-        b.getMotionState().getWorldTransform( trans );
+        if ( Br[n] > 0 ) {
+
+            b.getMotionState().getWorldTransform( trans );
+            pos = trans.getOrigin();
+            quat = trans.getRotation();
+
+            Br[n+1] = pos.x();
+            Br[n+2] = pos.y();
+            Br[n+3] = pos.z();
+
+            Br[n+4] = quat.x();
+            Br[n+5] = quat.y();
+            Br[n+6] = quat.z();
+            Br[n+7] = quat.w();
+
+        }
+
+    });
+
+};
+
+var heroStep = function () {
+
+    heros.forEach( function ( b, id ) {
+
+        var n = id * 8;
+        Hr[n] = b.onGround ? 1 : 0;
+
+        var t = b.getGhostObject().getWorldTransform();
+        pos = t.getOrigin();
+        quat = t.getRotation();
+
+        Hr[n+1] = pos.x();
+        Hr[n+2] = pos.y();
+        Hr[n+3] = pos.z();
+
+        Hr[n+4] = quat.x();
+        Hr[n+5] = quat.y();
+        Hr[n+6] = quat.z();
+        Hr[n+7] = quat.w();
+
+    });
+
+};
+
+var carsStep = function () {
+
+    cars.forEach( function ( b, id ) {
+
+        var n = id * 56, j, w, t;
+
+        // speed km/h
+        Cr[n+0] = b.getCurrentSpeedKmHour();
+
+        var centerPoint = b.getRigidBody().getCenterOfMassTransform().getOrigin();
+
+        b.getRigidBody().getMotionState().getWorldTransform( trans );
         pos = trans.getOrigin();
         quat = trans.getRotation();
 
-        ar[n+1] = pos.x();
-        ar[n+2] = pos.y();
-        ar[n+3] = pos.z();
+        // chassis pos / rot
+        Cr[n+1] = pos.x();
+        Cr[n+2] = pos.y();
+        Cr[n+3] = pos.z();
 
-        ar[n+4] = quat.x();
-        ar[n+5] = quat.y();
-        ar[n+6] = quat.z();
-        ar[n+7] = quat.w();
+        Cr[n+4] = quat.x();
+        Cr[n+5] = quat.y();
+        Cr[n+6] = quat.z();
+        Cr[n+7] = quat.w();
 
-    }
+        // wheels pos / rot
+        j = b.getNumWheels(); //2, 4 or 6;
+        if(j==4){
+            w = 8 * ( 4 + 1 );
+            Cr[n+w+0] = b.getWheelInfo(0).get_m_raycastInfo().get_m_suspensionLength();
+            Cr[n+w+1] = b.getWheelInfo(1).get_m_raycastInfo().get_m_suspensionLength();
+            Cr[n+w+2] = b.getWheelInfo(2).get_m_raycastInfo().get_m_suspensionLength();
+            Cr[n+w+3] = b.getWheelInfo(3).get_m_raycastInfo().get_m_suspensionLength();
+        }
 
-};
+        while(j--){
+            b.updateWheelTransform( j, true );
+            t = b.getWheelTransformWS( j );
+            pos = t.getOrigin();
+            quat = t.getRotation();
+           
+            w = 8 * ( j + 1 );
 
-var heroProcess = function ( b, id ) {
+            if( j == 0 ) Cr[n+w] = b.getWheelInfo(0).get_m_steering();
+            if( j == 1 ) Cr[n+w] = centerPoint.x();
+            if( j == 2 ) Cr[n+w] = centerPoint.y();
+            if( j == 3 ) Cr[n+w] = centerPoint.z();
 
-    var n = id * 8;
-    hr[n] = b.onGround ? 1 : 0;
+            //else a[n+w] = i;
+            Cr[n+w+1] = pos.x();
+            Cr[n+w+2] = pos.y();
+            Cr[n+w+3] = pos.z();
 
-    var t = b.getGhostObject().getWorldTransform();
-    pos = t.getOrigin();
-    quat = t.getRotation();
+            Cr[n+w+4] = quat.x();
+            Cr[n+w+5] = quat.y();
+            Cr[n+w+6] = quat.z();
+            Cr[n+w+7] = quat.w();
+        }
 
-    hr[n+1] = pos.x();
-    hr[n+2] = pos.y();
-    hr[n+3] = pos.z();
-
-    hr[n+4] = quat.x();
-    hr[n+5] = quat.y();
-    hr[n+6] = quat.z();
-    hr[n+7] = quat.w();
-
-};
-
-var carProcess = function ( b, id ) {
-
-    var n = id * 56, j, w, t;
-
-    // speed km/h
-    dr[n+0] = b.getCurrentSpeedKmHour();
-
-    var centerPoint = b.getRigidBody().getCenterOfMassTransform().getOrigin();
-
-    b.getRigidBody().getMotionState().getWorldTransform( trans );
-    pos = trans.getOrigin();
-    quat = trans.getRotation();
-
-    // chassis pos / rot
-    dr[n+1] = pos.x();
-    dr[n+2] = pos.y();
-    dr[n+3] = pos.z();
-
-    dr[n+4] = quat.x();
-    dr[n+5] = quat.y();
-    dr[n+6] = quat.z();
-    dr[n+7] = quat.w();
-
-    // wheels pos / rot
-    j = b.getNumWheels(); //2, 4 or 6;
-    if(j==4){
-        w = 8 * ( 4 + 1 );
-        dr[n+w+0] = b.getWheelInfo(0).get_m_raycastInfo().get_m_suspensionLength();
-        dr[n+w+1] = b.getWheelInfo(1).get_m_raycastInfo().get_m_suspensionLength();
-        dr[n+w+2] = b.getWheelInfo(2).get_m_raycastInfo().get_m_suspensionLength();
-        dr[n+w+3] = b.getWheelInfo(3).get_m_raycastInfo().get_m_suspensionLength();
-    }
-
-    while(j--){
-        b.updateWheelTransform( j, true );
-        t = b.getWheelTransformWS( j );
-        pos = t.getOrigin();
-        quat = t.getRotation();
-       
-        w = 8 * ( j + 1 );
-
-        if( j == 0 ) dr[n+w] = b.getWheelInfo(0).get_m_steering();
-        if( j == 1 ) dr[n+w] = centerPoint.x();
-        if( j == 2 ) dr[n+w] = centerPoint.y();
-        if( j == 3 ) dr[n+w] = centerPoint.z();
-
-        //else a[n+w] = i;
-        dr[n+w+1] = pos.x();
-        dr[n+w+2] = pos.y();
-        dr[n+w+3] = pos.z();
-
-        dr[n+w+4] = quat.x();
-        dr[n+w+5] = quat.y();
-        dr[n+w+6] = quat.z();
-        dr[n+w+7] = quat.w();
-    }
+    });
 
 };
 
-var softProcess = function ( b, id ) {
+var softStep = function () {
 
-    var t = b.softType; // type of soft body
-    var s = b.get_m_nodes(); // get vertrices
+    softPoints = 0;
+
+    softs.forEach( function ( b ) {
+
+        //var t = b.softType; // type of soft body
+        var s = b.get_m_nodes(); // get vertrices list
+        var j = s.size();
+        var n;
+                
+        while(j--){
+            n = (j*3) + softPoints;
+            pos = s.at( j ).get_m_x();
+            Sr[n] = pos.x();
+            Sr[n+1] = pos.y();
+            Sr[n+2] = pos.z();
+        }
+
+        softPoints += s.size()*3;
+
+    });
+
+};
+
+
+/*var softUp =  function ( b, id ) {
+
+    //var t = b.softType; // type of soft body
+    var s = b.get_m_nodes(); // get vertrices list
     var j = s.size();
     var n;
             
     while(j--){
         n = (j*3) + softPoints;
         pos = s.at( j ).get_m_x();
-        cr[n] = pos.x();
-        cr[n+1] = pos.y();
-        cr[n+2] = pos.z();
+        Sr[n] = pos.x();
+        Sr[n+1] = pos.y();
+        Sr[n+2] = pos.z();
     }
 
     softPoints += s.size()*3;
 
-};
+};*/
 
 
 
@@ -541,7 +586,24 @@ function gravity ( o ) {
 
 };
 
+function resetARRAY(){
+
+    var i = Br.length;
+    while(i--) Br[i] = 0;
+    i = Cr.length;
+    while(i--) Cr[i] = 0;
+    i = Jr.length;
+    while(i--) Jr[i] = 0;
+    i = Hr.length;
+    while(i--) Hr[i] = 0;
+    i = Sr.length;
+    while(i--) Sr[i] = 0;
+
+};
+
 function reset () {
+
+    resetARRAY();
 
     var b;
     while( bodys.length > 0 ){
@@ -969,6 +1031,8 @@ function add ( o, extra ) {
         shape.calculateLocalInertia( mass, localInertia );
         var motionState = new Ammo.btDefaultMotionState( startTransform );
 
+        //console.log(name, localInertia.x(), localInertia.y(), localInertia.z())
+
         var rb = new Ammo.btRigidBodyConstructionInfo( mass, motionState, shape, localInertia );
         o.friction = o.friction == undefined ? 0.5 : o.friction;
         o.restitution = o.restitution == undefined ? 0 : o.restitution;
@@ -1171,8 +1235,8 @@ function addJoint ( o ) {
         //case "joint_gear": joint = new Ammo.btGearConstraint( body1, body2, point1, point2, o.ratio || 1); break;
     }
 
-    if( frameInA ) Ammo.destroy(frameInA);
-    if( frameInB ) Ammo.destroy(frameInB);
+    if( frameInA ) Ammo.destroy( frameInA );
+    if( frameInB ) Ammo.destroy( frameInB );
 
     // EXTRA SETTING
 
@@ -1201,15 +1265,10 @@ function addJoint ( o ) {
     if(o.stiffness) joint.setStiffness( o.stiffness[0], o.stiffness[1] );
 
 
-  //  console.log(joint);
-
-
-
+    // console.log(joint);
 
     world.addConstraint( joint, noAllowCollision );
 
-    //console.log(joint)
-    //joints.name = o.name || '';
     if(o.name) byName[o.name] = joint;
     joints.push( joint );
 

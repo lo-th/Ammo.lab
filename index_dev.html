@@ -26,10 +26,12 @@
 <script src="libs/shaders/TransparentShadow.js"></script>
 <script src="libs/codemirror.min.js"></script>
 
+<script src="js/Tools.js"></script>
 <script src="js/Editor.js"></script>
 <script src="js/Perlin.js"></script>
 <script src="js/View.js"></script>
 <script src="js/Ammo.manager.js"></script>
+<script src="js/Main.js"></script>
 
 </head>
 
@@ -37,12 +39,8 @@
 <canvas id="canvas3d"></canvas>
 <div id="debug"></div>
 <script>
+
 var extract, intro = null;
-var demo;
-var demoName = 'basic';
-var demos = [ 'basic', 'terrain', 'supermaket', 'car', 'collision', 'ragdoll', 'kinematics', 'multyCars', 'snowboard', 'cloth', 'rope', 'ellipsoid', 'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove', 'character', 'meca', 'joints' ];
-
-
 window.onload = init;
 
 function init(){
@@ -51,89 +49,6 @@ function init(){
     editor.init( launch );
     ammo.init( ready, true );
     loop();
-
-};
-
-function ready () {
-
-    var hash = location.hash.substr( 1 );
-
-    if(hash !=='') demoName = hash;
-    editor.load('demos/' + demoName + '.js');
-
-};
-
-function loop () {
-
-    view.render();
-    requestAnimationFrame(loop);
-
-};
-
-function launch (name) {
-
-    location.hash = name;
-
-    ammo.reset();
-    view.reset();
-
-    demo = new window['demo'];
-
-};
-
-function add ( o ) {
-
-    view.add( o );
-
-};
-
-function joint ( o ) {
-
-    if(!o.type) o.type = 'joint';
-    view.add( o );
-
-};
-
-function substep ( substep ) {
-
-    ammo.send( 'substep', {substep:substep} ) ;
-
-};
-
-function car ( o ) {
-
-    view.vehicle( o );
-
-};
-
-function character ( o ) {
-
-    view.character( o );
-
-};
-
-function cam ( h,v,d,t ){
-
-    t = { x:0, y:0, z:0 }
-    view.moveCamera( h, v, d, 0, t );
-
-};
-
-function tell ( str ) {
-
-    view.tell( str );
-
-};
-
-function load ( name, callback ) {
-
-    view.load( name, callback );
-
-};
-
-function anchor ( o ) {
-
-    ammo.send( 'anchor', o );
 
 };
 

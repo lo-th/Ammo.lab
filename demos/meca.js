@@ -42,7 +42,10 @@ var debug = false;
 
 var geo = view.getGeo();
 var mat = view.getMat();
-var useSteering = false;
+//var useSteering = false;
+
+//var steeringAxis = [1,1,1,1];
+var steeringAxis = [0,0,0,0];
 
 // center of mass position y
 var decalY = 62.5 * size; 
@@ -122,6 +125,7 @@ function wheelAxis ( n ) {
     var pos0 = [120*front, 50, 60*side ].map(function(x) { return x * size; });
     var pos1 = [120*front, 84, 54.5*side ].map(function(x) { return x * size; });
     var pos2 = [120*front, 50, 91*side ].map(function(x) { return x * size; });
+    var pos3 = [120*front, 50, 91*side ].map(function(x) { return x * size; });
 
     var decal0 = [-40*side, -40*side].map(function(x) { return x * size; });
     var decal1 = [-31.5*side, -31.5*side].map(function(x) { return x * size; });
@@ -142,18 +146,7 @@ function wheelAxis ( n ) {
         pos:pos0,
         state:4,
         group:buggyGroup, 
-        mask:buggyMask,
-    });
-
-    joint({
-        name:'ax_1_'+n,
-        type:'joint_hinge',
-        body1:'chassis',
-        body2:'paddel'+n,
-        pos1:[pos0[0], pos0[1]-decalY, pos0[2]+decal0[0] ],
-        pos2:[ 0, 0, decal0[1]],
-        axe1:[1,0,0],
-        axe2:[1,0,0],
+        mask:noCollision,
     });
 
     add({ 
@@ -171,7 +164,18 @@ function wheelAxis ( n ) {
         //rot:rot,
         state:4,
         group:buggyGroup, 
-        mask:buggyMask,  
+        mask:noCollision,  
+    });
+
+    joint({
+        name:'ax_1_'+n,
+        type:'joint_hinge',
+        body1:'chassis',
+        body2:'paddel'+n,
+        pos1:[pos0[0], pos0[1]-decalY, pos0[2]+decal0[0] ],
+        pos2:[ 0, 0, decal0[1]],
+        axe1:[1,0,0],
+        axe2:[1,0,0],
     });
 
     joint({
@@ -185,32 +189,83 @@ function wheelAxis ( n ) {
         axe2:[1,0,0],
     });
 
-    if(!useSteering){
-        if(ext2 == '_av') ext2 = '_ar';
-        if(ext2 == '_av') ext2 = '_ar';
+
+
+    if(steeringAxis[n]){
+
+        add({ 
+            name:'axis'+n,
+            type:'box',
+
+            mass:massAxis*0.5,
+            size:[23*size, 23*size, 23*size],
+
+            geometry:debug ? undefined : geo['meca_axis_av'],
+            material:debug ? undefined : 'meca3', 
+            geoRot:gr2,
+            geoSize:[size],
+            
+            pos:pos2,
+            state:4,
+            group:buggyGroup, 
+            mask:noCollision,
+        });
+
+        add({ 
+            name:'axis_s_'+n,
+            type:'box', 
+
+            mass:massAxis*0.5,
+            friction:0.1,
+            size:[23*size, 23*size, 23*size],
+
+            geometry:debug ? undefined : geo['meca_axis_av2'],
+            material:debug ? undefined : 'meca3',
+            geoRot:gr2,
+            geoSize:[size],
+
+            pos:pos3,
+            state:4,
+            group:buggyGroup, 
+            mask:buggyMask, 
+        });
+
+        joint({
+            name:'j_steering_'+n,
+            type:'joint_hinge',
+            body1:'axis'+n,
+            body2:'axis_s_'+n,
+            pos1:[0,0,0],
+            pos2:[0,0,0],
+            axe1:[0,1,0],
+            axe2:[0,1,0],
+            //limit:[0, 0],
+            //motor:[true, 3, 10],
+        });
+
+    } else {
+
+        add({ 
+            name:'axis'+n,
+            type:'box',
+
+            mass:massAxis,
+            friction:0.1,
+            size:[23*size, 23*size, 23*size],
+
+            geometry:debug ? undefined : geo['meca_axis_ar'],
+            material:debug ? undefined : 'meca3', 
+            geoRot:gr2,
+            geoSize:[size],
+            
+            pos:pos2,
+            state:4,
+            group:buggyGroup, 
+            mask:buggyMask,
+        });
+
     }
 
-    
-    //if(ext2 == '_avr' || ext2 == '_avl') massAxis *= 0.5;
-
-    add({ 
-        name:'axis'+n,
-        type:'box',
-
-        mass:massAxis,
-        friction:0.1,
-        size:[23*size, 23*size, 23*size],
-
-        geometry:debug ? undefined : geo['meca_axis'+ext2],
-        material:debug ? undefined : 'meca3', 
-        geoRot:gr2,
-        geoSize:[size],
-        
-        pos:pos2,
-        state:4,
-        group:buggyGroup, 
-        mask:buggyMask,
-    });
 
     joint({
         name:'ax_1e_'+n,
@@ -233,40 +288,6 @@ function wheelAxis ( n ) {
         axe1:[1,0,0],
         axe2:[1,0,0],
     });
-
-    if(useSteering){
-
-        if(ext2 == '_avr' || ext2 == '_avl'){
-        
-            add({ 
-                name:'axis_s_'+n,
-                type:'box', 
-
-                mass:massAxis,
-                size:[10*size, 10*size, 10*size],
-
-                geometry:geo['meca_axis'+ext2+'2'],
-                geoRot:gr2,
-                geoSize:[size],
-
-                pos:pos2,
-                state:4,
-                group:buggyGroup, 
-                mask:1|2,//buggyMask, 
-            });
-
-            joint({
-                name:'ax_3s_'+n,
-                type:'joint_hinge',
-                body1:'axis'+n,
-                body2:'axis_s_'+n,
-                pos1:[0,0,0],
-                pos2:[0,0,0],
-                axe1:[0,1,0],
-                axe2:[0,1,0],
-            });
-        }
-    }
 
     
 
@@ -407,7 +428,7 @@ function wheel ( n ) {
     if(n==1 || n==3) pz=-19*size;
     else pz = 19*size;
 
-    var wpos = [120*size, 50*size, 110*size];
+    var wpos = [120*size, 50*size, 109.5*size];
 
     var position = [0,0,0];
 
@@ -526,9 +547,8 @@ function wheel ( n ) {
 
     // joint wheels
 
-    var link;
-    if( (n==0 || n==1) && useSteering ) {link = 'axis_s_'+n;  }
-    else link = 'axis'+n;
+    var link = 'axis'+n;
+    if(steeringAxis[n]) link = 'axis_s_'+n;
 
     joint({
         name:'jh'+n,

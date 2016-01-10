@@ -21,6 +21,11 @@ Math.int = function(x) { return ~~x; };
 
 var view = ( function () {
 
+    var time = 0;
+    var temp = 0;
+    var count = 0;
+    var fps = 0;
+
     var canvas, renderer, scene, camera, controls, debug;
     var ray, mouse, content, targetMouse, rayCallBack, moveplane, isWithRay = false;;
     var vs = { w:1, h:1, l:400 };
@@ -893,56 +898,6 @@ var view = ( function () {
 
     };
 
-    /*view.getVertex = function ( Geometry, Name ) {
-
-        var v = [];
-        var pp, i, n;
-        var geometry = Geometry ? Geometry : this.getGeoByName( Name );
-        pp = geometry.vertices;
-
-        if( pp == undefined ) { // is BufferGeometry
-            v = geometry.attributes.position.array;
-        } else {
-            i = pp.length;
-            while(i--){
-                n = i * 3;
-                v[n+0] = pp[i].x;
-                v[n+1] = pp[i].y;
-                v[n+2] = pp[i].z;
-            }
-        }
-
-        //console.log(v)
-        return v;
-
-    };
-
-    view.getFaces = function ( Geometry, Name ) {
-
-        var v = [];
-        var n, face, va, vb, vc;
-        var geometry = Geometry ? Geometry : this.getGeoByName( Name );
-
-        var pp = geometry.faces;
-        if( pp == undefined ) { // is BufferGeometry
-            v = geometry.attributes.position.array;
-        } else {
-            var pv = geometry.vertices;
-            var i = pp.length;
-            while(i--){
-                n = i * 9;
-                face = pp[i];
-                va = pv[face.a]; vb = pv[face.b]; vc = pv[face.c];
-                v[n+0] = va.x; v[n+1]=va.y; v[n+2]=va.z;
-                v[n+3] = vb.x; v[n+4]=vb.y; v[n+5]=vb.z;
-                v[n+6] = vc.x; v[n+7]=vc.y; v[n+8]=vc.z;
-            }
-        }
-        
-        return v;
-
-    };*/
-
     view.getGeoByName = function ( name, Buffer ) {
 
         var g;
@@ -1458,146 +1413,165 @@ var view = ( function () {
     //   UPDATE OBJECT
     //
     //--------------------------------------
-    var ff=false;
 
-    view.update = function(ar, dr, hr, jr, cr ){
+    view.update = function(){
 
-        var i = meshs.length, a = ar, n, m, j, w,k, l, c, cc, t, order, isWithColor, isWithNormal, same, p;
+        this.bodyStep();
+        this.heroStep();
+        this.carsStep();
+        this.softStep();
 
-        meshs.forEach( function( m, id ) {
+    }
+
+    view.bodyStep = function(){
+
+        meshs.forEach( function( b, id ) {
             var n = id * 8;
-            if ( a[n] > 0 ) {
+            var s = Br[n];
+            if ( s > 0 ) {
 
-                if ( m.material.name == 'sleep' ) m.material = mat.move;
-                if( a[n] > 50 && m.material.name == 'move' ) m.material = mat.movehigh;
-                else if(a[n] < 50 && m.material.name == 'movehigh') m.material = mat.move;
+                if ( b.material.name == 'sleep' ) b.material = mat.move;
+                if( s > 50 && b.material.name == 'move' ) b.material = mat.movehigh;
+                else if( s < 50 && b.material.name == 'movehigh') b.material = mat.move;
                 
-                m.position.set( a[n+1], a[n+2], a[n+3] );
-                m.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
+                b.position.set( Br[n+1], Br[n+2], Br[n+3] );
+                b.quaternion.set( Br[n+4], Br[n+5], Br[n+6], Br[n+7] );
 
             } else {
-                if ( m.material.name == 'move' || m.material.name == 'movehigh' ) m.material = mat.sleep;
+                if ( b.material.name == 'move' || b.material.name == 'movehigh' ) b.material = mat.sleep;
             }
         });
 
-        /*while(i--){
-            m = meshs[i];
-            n = i * 8;
+    };
 
-            if ( a[n] > 0 ) {
-                if( a[n] > 50 && m.material.name == 'move' ) m.material = mat.movehigh;
-                else if(a[n] < 50 && m.material.name !== 'move') m.material = mat.move;
-                
-                m.position.set( a[n+1], a[n+2], a[n+3] );
-                m.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
+    view.heroStep = function(){
 
-                if ( m.material.name == 'sleep' ) m.material = mat.move;
+        heros.forEach( function( b, id ) {
+            var n = id * 8;
+            b.position.set( Hr[n+1], Hr[n+2], Hr[n+3] );
+            b.quaternion.set( Hr[n+4], Hr[n+5], Hr[n+6], Hr[n+7] );
+        });
 
-            } else {
+    };
 
-                if ( m.material.name == 'move' || m.material.name == 'movehigh' ) m.material = mat.sleep;
-            
-            }
+    view.carsStep = function(){
 
-        }*/
+        cars.forEach( function( b, id ) {
+            var n = id * 56;
+            carsSpeed[id] = Cr[n];
 
-        // update character
-        i = heros.length;
-        a = hr;
+            b.body.position.set( Cr[n+1], Cr[n+2], Cr[n+3] );
+            b.body.quaternion.set( Cr[n+4], Cr[n+5], Cr[n+6], Cr[n+7] );
 
-        while(i--){
-            m = heros[i];
-            n = i * 8;
+            b.axe.quaternion.copy( b.body.quaternion );
 
-            m.position.set( a[n+1], a[n+2], a[n+3] );
-            m.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
+            var j = b.nw, w;
 
-        }
-
-        // update car
-        i = cars.length;
-        a = dr;
-
-        while(i--){
-            m = cars[i];
-            n = i * 56;
-
-            carsSpeed[i] = a[n];
-
-            m.body.position.set( a[n+1], a[n+2], a[n+3] );
-            m.body.quaternion.set( a[n+4], a[n+5], a[n+6], a[n+7] );
-
-            m.axe.quaternion.copy( m.body.quaternion );
-
-           
-
-            j = m.nw;//a[n+8];
-
-            if(j==4){
+            if( j == 4 ){
                 w = 8 * ( 4 + 1 );
-                m.helper.updateSuspension(a[n+w+0], a[n+w+1], a[n+w+2], a[n+w+3]);
+                b.helper.updateSuspension(Cr[n+w+0], Cr[n+w+1], Cr[n+w+2], Cr[n+w+3]);
             }
             while(j--){
 
                 w = 8 * ( j + 1 );
                 //if( j == 1 ) steering = a[n+w];// for drive wheel
-                if( j == 1 ) m.axe.position.x = a[n+w];
-                if( j == 2 ) m.axe.position.y = a[n+w];
-                if( j == 3 ) m.axe.position.z = a[n+w];
+                if( j == 1 ) b.axe.position.x = Cr[n+w];
+                if( j == 2 ) b.axe.position.y = Cr[n+w];
+                if( j == 3 ) b.axe.position.z = Cr[n+w];
 
-                m.w[j].position.set( a[n+w+1], a[n+w+2], a[n+w+3] );
-                m.w[j].quaternion.set( a[n+w+4], a[n+w+5], a[n+w+6], a[n+w+7] );
-
+                b.w[j].position.set( Cr[n+w+1], Cr[n+w+2], Cr[n+w+3] );
+                b.w[j].quaternion.set( Cr[n+w+4], Cr[n+w+5], Cr[n+w+6], Cr[n+w+7] );
             }
+        });
 
-        }
+    };
 
-        // update cloth
-        l = softs.length;
-        a = cr;
-        w = 0;
-        k = 0;
+    view.softStep = function(){
 
-        //console.log(a[1+3])
+        var softPoints = 0;
 
-        //while(i--){
+        softs.forEach( function( b, id ) {
 
-        for( i = 0; i<l; i++ ){
+            var n, c, cc, p, j, k;
 
-            m = softs[i];
-            t = m.softType; // type of softBody
-            order = null;
-            same = null;
-            isWithColor = m.geometry.attributes.color ? true : false;
-            isWithNormal = m.geometry.attributes.normal ? true : false;
+            var t = b.softType; // type of softBody
+            var order = null;
+            var isWithColor = b.geometry.attributes.color ? true : false;
+            var isWithNormal = b.geometry.attributes.normal ? true : false;
 
-            p = m.geometry.attributes.position.array;
-            if(isWithColor) c = m.geometry.attributes.color.array;
+            p = b.geometry.attributes.position.array;
+            if(isWithColor) c = b.geometry.attributes.color.array;
 
-            if( t == 5 || t == 4){ // softTriMesh // softConvex
+            if( t == 5 || t == 4 ){ // softTriMesh // softConvex
 
-                var max = m.geometry.numVertices;
-                var maxi = m.geometry.maxi;
-                var pPoint = m.geometry.pPoint;
-                var lPoint = m.geometry.lPoint;
-               
+                var max = b.geometry.numVertices;
+                var maxi = b.geometry.maxi;
+                var pPoint = b.geometry.pPoint;
+                var lPoint = b.geometry.lPoint;
 
                 j = max;
                 while(j--){
-                    n = (j*3) + w;
+                    n = (j*3) + softPoints;
                     if( j == max-1 ) k = maxi - pPoint[j];
                     else k = pPoint[j+1] - pPoint[j];
                     var d = pPoint[j];
                     while(k--){
                         var id = lPoint[d+k]*3;
-                        p[id] = a[n];
-                        p[id+1] = a[n+1]; 
-                        p[id+2] = a[n+2];
+                        p[id] = Sr[n];
+                        p[id+1] = Sr[n+1]; 
+                        p[id+2] = Sr[n+2];
                     }
                 }
-                // update normal
-                m.geometry.computeVertexNormals();
-                var norm = m.geometry.attributes.normal.array;
+
+            }else{
+
+
+                if( b.geometry.attributes.order ) order = b.geometry.attributes.order.array;
+                //if( m.geometry.attributes.same ) same = m.geometry.attributes.same.array;
+                j = p.length;
+
+                n = 2;
+
+                if(order!==null) {
+                    j = order.length;
+                    while(j--){
+                        k = order[j] * 3;
+                        n = j*3 + softPoints;
+                        p[k] = Sr[n];
+                        p[k+1] = Sr[n+1];
+                        p[k+2] = Sr[n+2];
+
+                        cc = Math.abs(Sr[n+1]/10);
+                        c[k] = cc;
+                        c[k+1] = cc;
+                        c[k+2] = cc;
+                    }
+
+                } else {
+                     while(j--){
+                         
+                        p[j] = Sr[j+softPoints];
+                        if(n==1){ 
+                            cc = Math.abs(p[j]/10);
+                            c[j-1] = cc;
+                            c[j] = cc;
+                            c[j+1] = cc;
+                        }
+                        n--;
+                        n = n<0 ? 2 : n;
+                    }
+
+                }
+
+            }
+
+            if(t!==2) b.geometry.computeVertexNormals();
+
+            b.geometry.attributes.position.needsUpdate = true;
+
+            if(isWithNormal){
+
+                var norm = b.geometry.attributes.normal.array;
 
                 j = max;
                 while(j--){
@@ -1613,98 +1587,27 @@ var view = ( function () {
                     }
                 }
 
-
-
-
-            }else{
-
-
-                if( m.geometry.attributes.order ) order = m.geometry.attributes.order.array;
-                //if( m.geometry.attributes.same ) same = m.geometry.attributes.same.array;
-                j = p.length;
-
-                n = 2;
-
-                /*if(same!==null) {
-                    //a = poooo
-                    //a[6]+=0.02
-                    var j = same.length/4;
-                    while(j--){
-                        var n4 = j*4;
-                        n = j*3;// + w;
-                        var x = a[n] || 0;
-                        var y = a[n+1] || 0; 
-                        var z = a[n+2] || 0;  
-                        var i0 = same[n4]*3;
-                        var i1 = same[n4+1]*3;
-                        var i2 = same[n4+2]*3;
-                        var i3 = same[n4+3]*3;
-
-                        if(!ff){
-                            ff=true;
-                            console.log(a[0], poooo[0])
-                        }
-                        
-                        p[i0] = p[i1] = p[i2] = p[i3] = x;
-                        p[i0+1] = p[i1+1] = p[i2+1] = p[i3+1] = y;
-                        p[i0+2] = p[i1+2] = p[i2+2] = p[i3+2] = z;
-                    }
-
-                } else {*/
-
-                    if(order!==null) {
-                        j = order.length;
-                        while(j--){
-                            k = order[j] * 3;
-                            n = j*3 + w;
-                            p[k] = a[n];
-                            p[k+1] = a[n+1];
-                            p[k+2] = a[n+2];
-
-                            cc = Math.abs(a[n+1]/10);
-                            c[k] = cc;
-                            c[k+1] = cc;
-                            c[k+2] = cc;
-
-
-                        }
-
-                    } else {
-                         while(j--){
-                             
-                            p[j] = a[j+w];
-                            if(n==1){ 
-                                cc = Math.abs(p[j]/10);
-                                c[j-1] = cc;
-                                c[j] = cc;
-                                c[j+1] = cc;
-                            }
-                            n--;
-                            n = n<0 ? 2 : n;
-                        }
-
-                    }
-
-                //}
-
+                b.geometry.attributes.normal.needsUpdate = true;
             }
-            if(t==1 || t==3) m.geometry.computeVertexNormals();
-            m.geometry.attributes.position.needsUpdate = true;
-            if(isWithNormal) m.geometry.attributes.normal.needsUpdate = true;
-            if(isWithColor) m.geometry.attributes.color.needsUpdate = true;
 
-           // if(t==1 || t==3)
-             
-           // else m.geometry.computeFaceNormals();
+            if(isWithColor) b.geometry.attributes.color.needsUpdate = true;
             
-            m.geometry.computeBoundingSphere();
+            b.geometry.computeBoundingSphere();
 
-            if(t==5) w += m.geometry.numVertices * 3;
-            else w += p.length;
-
-        }
+            if( t == 5 ) softPoints += b.geometry.numVertices * 3;
+            else softPoints += p.length;
+        });
 
     };
+    
+
+
+
+
+
+
+
+
 
     view.setLeft = function ( x ) { vs.x = x; };
 
@@ -1723,7 +1626,16 @@ var view = ( function () {
 
     };
 
+    view.getFps = function () {
+
+        return fps;
+
+    };
+
     view.render = function () {
+
+        time = now();
+        if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
 
         if( isCamFollow ) this.follow();
         renderer.render( scene, camera );
