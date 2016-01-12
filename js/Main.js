@@ -8,23 +8,14 @@
 
 'use strict';
 
-// main transphere array
+// main transphere array for worker
 var Br, Cr, Jr, Hr, Sr;
-
-/*
-var Br = new Float32Array( 1000*8 ); // rigid buffer max 1000
-var Cr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
-var Jr = new Float32Array( 100*4 ); // joint buffer max 100
-var Hr = new Float32Array( 10*8 ); // hero buffer max 10
-var Sr = new Float32Array( 8192*3 ); // soft buffer nVertices x,y,z
-*/
-
 
 var demos = [ 
     'basic', 'terrain', 'supermaket', 'car', 'collision', 'ragdoll',
     'kinematics', 'multyCars', 'snowboard', 'cloth', 'rope', 'ellipsoid',
     'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove',
-    'character', 'meca', 'joints'
+    'character', 'meca', 'joints', 'empty'
 ];
 
 var demo;
@@ -33,12 +24,27 @@ var demoName = 'basic';
 //////////////////////////////
 
 
+var direct = false;
+
+function init(){
+
+    view.init( afterLoad );
+
+};
+
+function afterLoad () {
+
+    editor.init( launch );
+    ammo.init( ready, direct );
+    loop();
+
+};
 
 
 function loop () {
 
-    view.render();
     requestAnimationFrame(loop);
+    view.render();
 
 };
 
@@ -64,23 +70,23 @@ function launch (name) {
 
 function add ( o ) { view.add( o ); };
 
-function joint ( o ) { if(!o.type) o.type = 'joint'; view.add( o ); };
-
-function substep ( substep ) { ammo.send( 'substep', {substep:substep} ) ; };
-
-function car ( o ) { view.vehicle( o ); };
+function joint ( o ) { o.type = o.type == undefined ? 'joint' : o.type; view.add( o ); };
 
 function character ( o ) { view.character( o ); };
 
-function cam ( h,v,d,t ){
+function car ( o ) { view.vehicle( o ); };
 
-    t = { x:0, y:0, z:0 }
-    view.moveCamera( h, v, d, 0, t );
+function drive ( name ) { view.setDriveCar( name ); };
 
-};
+function follow ( name ) { view.setFollow( name ); };
 
-function tell ( str ) { view.tell( str ); };
+function substep ( substep ) { ammo.send( 'substep', {substep:substep} ) ; };
+
+function cam ( h,v,d,t ){ view.moveCamera( h, v, d, 0, t || { x:0, y:0, z:0 } ); };
+
+function tell ( str ) { editor.tell( str ); };
 
 function load ( name, callback ) { view.load( name, callback ); };
 
 function anchor ( o ) { ammo.send( 'anchor', o ); };
+

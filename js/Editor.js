@@ -8,7 +8,7 @@
 'use strict';
 var editor = ( function () {
 
-    var content, codeContent, code, separator, menu; 
+    var content, codeContent, code, separator, menu, debug, title; 
     var callback = function(){};
     var isSelfDrag = false;
     var isFocus = false;
@@ -43,6 +43,8 @@ var editor = ( function () {
 
         left = ~~ (window.innerWidth*0.4);
 
+        // github logo
+
         var github = document.createElement( 'div' );
         github.style.cssText = "position:absolute; right:0; top:0; width:1px; height:1px; pointer-events:none;";
         github.innerHTML = icon_Github; 
@@ -51,6 +53,18 @@ var editor = ( function () {
         octo = document.getElementById('octo');
         octoArm = document.getElementById('octo-arm');
 
+        // debug
+        debug = document.createElement( 'div' );
+        debug.className = 'debug';
+        document.body.appendChild( debug );
+
+        // title
+
+        title = document.createElement( 'div' );
+        title.className = 'title';
+        document.body.appendChild( title );
+
+        // editor
 
         content = document.createElement('div');
         content.className = 'editor';
@@ -104,6 +118,25 @@ var editor = ( function () {
         this.resize();
 
     };
+
+    editor.resize = function ( e ) {
+
+        if( e ) left = e.clientX + 10;
+
+        if(view){
+            view.setLeft( left );
+            view.resize();
+        }
+
+        title.style.left = left +'px';
+        debug.style.left = left +'px';
+        separator.style.left = (left-10) + 'px';
+        content.style.width = (left-10) + 'px';
+        code.refresh();
+
+    };
+
+    editor.tell = function ( str ) { debug.innerHTML = str; };
 
     //
 
@@ -260,20 +293,7 @@ var editor = ( function () {
 
     };
 
-    editor.resize = function ( e ) {
 
-        if( e ) left = e.clientX + 10;
-
-        if(view){
-            view.setLeft( left );
-            view.resize();
-        }
-
-        separator.style.left = (left-10) + 'px';
-        content.style.width = (left-10) + 'px';
-        code.refresh();
-
-    };
 
     editor.load = function ( url ) {
 
@@ -360,6 +380,7 @@ var editor = ( function () {
         document.getElementsByTagName('BODY').item(0).appendChild(oScript);
 
         menu.innerHTML = '&bull; ' + fileName;
+        title.innerHTML = fileName.charAt(0).toUpperCase() + fileName.substring(1).toLowerCase();//fileName;
 
         callback( fileName );
 

@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( 0, 10, 40 );
+    cam ( 0, 10, 10 );
 
     load ( 'track', afterLoad );
 
@@ -14,7 +14,18 @@ function afterLoad () {
 
     // ! \\ click on view and use key to controle character
 
+    character ({ name:'bob', rot:[0,90,0] });
 
-    character ({ });
+    follow ('bob');
+
+
+
+    var s, x, y;
+    for(var i = 0; i<40; i++){
+        x = Math.rand(-50, 50);
+        z = Math.rand(-50, 50);
+        s = Math.rand(0.5, 5);
+        add({ type:'box', size:[s,s,s], pos:[x,s*0.5,z], mass:s});
+    }
 
 };

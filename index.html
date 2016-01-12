@@ -23,26 +23,10 @@
 </head>
 
 <body>
-<canvas id="canvas3d"></canvas>
-<div id="debug"></div>
 <script>
 
 intro.init();
 extract.init(['z/code.z', 'z/three.z', 'z/threeAdd.z', 'z/ammo.z'], init, [0,0,0,1], intro.message );
-
-function init(){
-
-    view.init( afterLoad );
-
-};
-
-function afterLoad () {
-
-    editor.init( launch );
-    ammo.init( ready );
-    loop();
-
-};
 
 </script>
 </body>

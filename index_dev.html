@@ -36,21 +36,14 @@
 </head>
 
 <body>
-<canvas id="canvas3d"></canvas>
-<div id="debug"></div>
 <script>
 
-var extract, intro = null;
+var extract = null;
+var intro = null;
+direct = true;
+demoName = 'empty';
+
 window.onload = init;
-
-function init(){
-
-    view.init( );
-    editor.init( launch );
-    ammo.init( ready, true );
-    loop();
-
-};
 
 </script>
 </body>

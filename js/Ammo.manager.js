@@ -13,7 +13,7 @@ var ammo = ( function () {
     var worker, callback;
 
     var isBuffer = true;
-    var timestep = 1/60;
+    var timestep = 0.017;//1/60;
     var substep = 6;//7;
 
     // main transphere array
@@ -64,21 +64,20 @@ var ammo = ( function () {
         var m = e.data.m;
        
 
-        if(m == 'init'){
+        if(m === 'init'){
 
             if(needDelete) extract.clearBlob('ammo');
             if(callback) callback();
 
         }
 
-        if(m == 'ellipsoid'){
+        if(m === 'ellipsoid'){
             view.ellipsoidMesh(e.data.o);
         }
 
-        if(m == 'step'){
+        if(m === 'step'){
 
             time = now();
-            // fps
             if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
             
             Br = e.data.Br;
@@ -88,8 +87,11 @@ var ammo = ( function () {
             Sr = e.data.Sr;
 
             // delay
-            delay = ( timerate - ( time - sendTime ) ).toFixed(2);
-            if(delay < 0) delay = 0;
+            //delay = ( timerate - ( time - sendTime ) ).toFixed(2);
+            //if(delay < 0) delay = 0;
+
+            delay = ~~ ( timerate - ( time - sendTime ));
+            delay = delay < 0 ? 0 : delay;
 
             
 
@@ -122,9 +124,8 @@ var ammo = ( function () {
         if( isBuffer ) worker.postMessage( { m:'step', key:view.getKey(), Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } , [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ] );
         else worker.postMessage( { m:'step', key:view.getKey() } );
 
-        tell( delay +' ms<br>ammo ' + fps +' | three '+view.getFps() );
+        tell( 'THREE '+view.getFps() + ' | AMMO ' + fps +' | '+ delay +'ms' );
         
-
     };
 
     ammo.send = function ( m, o ) {

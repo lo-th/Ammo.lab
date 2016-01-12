@@ -13,22 +13,24 @@
 */
 
 'use strict';
+
 var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
-var world = null;
-var worldInfo = null;
-var solver, solverSoft, collision, dispatcher, broadphase, trans, pos, quat, softPoints;
+var trans, pos, quat, posW;
+var tmpTrans, tmpPos, tmpQuat;
+var tmpPos1, tmpPos2, tmpPos3, tmpPos4;
+var tmpTrans1, tmpTrans2;
 // array
 var bodys, softs, joints, cars, solids, heros, carsInfo;
 // object
 var byName;
 
-var timestep = 0.01667;//6;//7;
+var timestep = 0.017;//6;//7;
 var substep = 10;//4//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
-var degtorad = 0.0174532925199432957;
+var pause = false;
 
 var timer = 0;
 var isBuffer;
@@ -57,6 +59,14 @@ var fixedTime = 0.01667;
 var last_step = Date.now();
 var timePassed = 0;
 
+var STATE = {
+    ACTIVE : 1,
+    ISLAND_SLEEPING : 2,
+    WANTS_DEACTIVATION : 3,
+    DISABLE_DEACTIVATION : 4,
+    DISABLE_SIMULATION : 5
+}
+
 var FLAGS = {
     STATIC_OBJECT : 1,
     KINEMATIC_OBJECT : 2,
@@ -68,13 +78,21 @@ var FLAGS = {
 };
 
 var GROUP = { 
-  DEFAULT_FILTER : 1, 
-  STATIC_FILTER : 2, 
-  KINEMATIC_FILTER : 4, 
-  DEBRIS_FILTER : 8, 
-  SENSOR_TRIGGER : 16, 
-  CHARACTER_FILTER : 32, 
-  ALL_FILTER : -1 
+    DEFAULT : 1, 
+    STATIC : 2, 
+    KINEMATIC : 4, 
+    DEBRIS : 8, 
+    SENSORTRIGGER : 16, 
+    NOCOLLISION : 32,
+    GROUP0 : 64,
+    GROUP1 : 128,
+    GROUP2 : 256,
+    GROUP3 : 512,
+    GROUP4 : 1024,
+    GROUP5 : 2048,
+    GROUP6 : 4096,
+    GROUP7 : 8192,
+    ALL : -1 
 }
 
 function stepAdvanced () {
@@ -117,52 +135,49 @@ self.onmessage = function ( e ) {
     var center;
     var centerPoint;
 
-    
-
-    if(m == 'init'){
+    if(m === 'init'){
 
         isBuffer = e.data.isBuffer;
         timestep = e.data.timestep;
         substep = e.data.substep || 1;
         importScripts( e.data.blob );
+
+        importScripts( 'ammo/math.js' );
+        importScripts( 'ammo/world.js' );
+        importScripts( 'ammo/character.js' );
+        importScripts( 'ammo/constraint.js' );
+        importScripts( 'ammo/rigidBody.js' );
+        importScripts( 'ammo/softBody.js' );
+        importScripts( 'ammo/terrain.js' );
+        importScripts( 'ammo/vehicle.js' );
         
-
-        //if( isBuffer ){
-
-        /*Br = e.data.Br;
-        Cr = e.data.Cr;
-        Hr = e.data.Hr;
-        Jr = e.data.Jr;
-        Sr = e.data.Sr;*/
-            
-        //}
         self.postMessage({ m:'init' });
         init();
 
     }
 
-    if(m == 'reset') reset();
+    if(m === 'reset') reset();
 
-    if(m == 'key') key = e.data.o;
+    if(m === 'key') key = e.data.o;
 
-    if(m == 'setDriveCar') currentCar = e.data.o.n;
-    if(m == 'substep') substep = e.data.o.substep;
+    if(m === 'setDriveCar') currentCar = e.data.o.n;
+    if(m === 'substep') substep = e.data.o.substep;
 
-    if(m == 'add') add( e.data.o );
+    if(m === 'add') add( e.data.o );
 
-    if(m == 'set') tmpset = e.data.o;
+    if(m === 'set') tmpset = e.data.o;
 
-    if(m == 'vehicle') vehicle( e.data.o );
+    if(m === 'vehicle') addVehicle( e.data.o );
 
-    if(m == 'character') character( e.data.o );
+    if(m === 'character') addCharacter( e.data.o );
 
-    if(m == 'gravity') gravity( e.data.o );
+    if(m === 'gravity') gravity( e.data.o );
 
-    if(m == 'anchor') anchor( e.data.o );
+    if(m === 'anchor') anchor( e.data.o );
 
-    if(m == 'apply') apply( e.data.o );
+    if(m === 'apply') apply( e.data.o );
 
-    if(m == 'terrain'){
+    if(m === 'terrain'){
 
         var name = e.data.name;
         terrainList.push(name);
@@ -173,7 +188,9 @@ self.onmessage = function ( e ) {
         
     }
 
-    if(m == 'step'){
+    if(m === 'step'){
+
+        if(pause) return;
 
         // ------- pre step
 
@@ -211,10 +228,10 @@ self.onmessage = function ( e ) {
 
         drive( currentCar );
 
-        bodyStep();
-        heroStep();
-        carsStep();
-        softStep();
+        stepRigidBody();
+        stepCharacter();
+        stepVehicle();
+        stepSoftBody();
 
         //softPoints = 0;
         //softs.forEach( softUp )
@@ -236,179 +253,6 @@ function postStep(){
 };
 
 
-
-
-//--------------------------------------------------
-//
-//  INTERN PROCESS
-//
-//--------------------------------------------------
-
-var bodyStep = function () {
-
-    bodys.forEach( function ( b, id ) {
-
-        var n = id * 8;
-        Br[n] = b.getLinearVelocity().length() * 9.8;//b.isActive() ? 1 : 0;
-
-        if ( Br[n] > 0 ) {
-
-            b.getMotionState().getWorldTransform( trans );
-            pos = trans.getOrigin();
-            quat = trans.getRotation();
-
-            Br[n+1] = pos.x();
-            Br[n+2] = pos.y();
-            Br[n+3] = pos.z();
-
-            Br[n+4] = quat.x();
-            Br[n+5] = quat.y();
-            Br[n+6] = quat.z();
-            Br[n+7] = quat.w();
-
-        }
-
-    });
-
-};
-
-var heroStep = function () {
-
-    heros.forEach( function ( b, id ) {
-
-        var n = id * 8;
-        Hr[n] = b.onGround ? 1 : 0;
-
-        var t = b.getGhostObject().getWorldTransform();
-        pos = t.getOrigin();
-        quat = t.getRotation();
-
-        Hr[n+1] = pos.x();
-        Hr[n+2] = pos.y();
-        Hr[n+3] = pos.z();
-
-        Hr[n+4] = quat.x();
-        Hr[n+5] = quat.y();
-        Hr[n+6] = quat.z();
-        Hr[n+7] = quat.w();
-
-    });
-
-};
-
-var carsStep = function () {
-
-    cars.forEach( function ( b, id ) {
-
-        var n = id * 56, j, w, t;
-
-        // speed km/h
-        Cr[n+0] = b.getCurrentSpeedKmHour();
-
-        var centerPoint = b.getRigidBody().getCenterOfMassTransform().getOrigin();
-
-        b.getRigidBody().getMotionState().getWorldTransform( trans );
-        pos = trans.getOrigin();
-        quat = trans.getRotation();
-
-        // chassis pos / rot
-        Cr[n+1] = pos.x();
-        Cr[n+2] = pos.y();
-        Cr[n+3] = pos.z();
-
-        Cr[n+4] = quat.x();
-        Cr[n+5] = quat.y();
-        Cr[n+6] = quat.z();
-        Cr[n+7] = quat.w();
-
-        // wheels pos / rot
-        j = b.getNumWheels(); //2, 4 or 6;
-        if(j==4){
-            w = 8 * ( 4 + 1 );
-            Cr[n+w+0] = b.getWheelInfo(0).get_m_raycastInfo().get_m_suspensionLength();
-            Cr[n+w+1] = b.getWheelInfo(1).get_m_raycastInfo().get_m_suspensionLength();
-            Cr[n+w+2] = b.getWheelInfo(2).get_m_raycastInfo().get_m_suspensionLength();
-            Cr[n+w+3] = b.getWheelInfo(3).get_m_raycastInfo().get_m_suspensionLength();
-        }
-
-        while(j--){
-            b.updateWheelTransform( j, true );
-            t = b.getWheelTransformWS( j );
-            pos = t.getOrigin();
-            quat = t.getRotation();
-           
-            w = 8 * ( j + 1 );
-
-            if( j == 0 ) Cr[n+w] = b.getWheelInfo(0).get_m_steering();
-            if( j == 1 ) Cr[n+w] = centerPoint.x();
-            if( j == 2 ) Cr[n+w] = centerPoint.y();
-            if( j == 3 ) Cr[n+w] = centerPoint.z();
-
-            //else a[n+w] = i;
-            Cr[n+w+1] = pos.x();
-            Cr[n+w+2] = pos.y();
-            Cr[n+w+3] = pos.z();
-
-            Cr[n+w+4] = quat.x();
-            Cr[n+w+5] = quat.y();
-            Cr[n+w+6] = quat.z();
-            Cr[n+w+7] = quat.w();
-        }
-
-    });
-
-};
-
-var softStep = function () {
-
-    softPoints = 0;
-
-    softs.forEach( function ( b ) {
-
-        //var t = b.softType; // type of soft body
-        var s = b.get_m_nodes(); // get vertrices list
-        var j = s.size();
-        var n;
-                
-        while(j--){
-            n = (j*3) + softPoints;
-            pos = s.at( j ).get_m_x();
-            Sr[n] = pos.x();
-            Sr[n+1] = pos.y();
-            Sr[n+2] = pos.z();
-        }
-
-        softPoints += s.size()*3;
-
-    });
-
-};
-
-
-/*var softUp =  function ( b, id ) {
-
-    //var t = b.softType; // type of soft body
-    var s = b.get_m_nodes(); // get vertrices list
-    var j = s.size();
-    var n;
-            
-    while(j--){
-        n = (j*3) + softPoints;
-        pos = s.at( j ).get_m_x();
-        Sr[n] = pos.x();
-        Sr[n+1] = pos.y();
-        Sr[n+2] = pos.z();
-    }
-
-    softPoints += s.size()*3;
-
-};*/
-
-
-
-
-
-
 //--------------------------------------------------
 //
 //  INTERN CONTROL
@@ -425,85 +269,6 @@ function control( o ){
 };
 
 
-//--------------------------------------------------
-//
-//  AMMO MATH
-//
-//--------------------------------------------------
-
-var vec3 = function(x, y, z){
-    return new Ammo.btVector3(x || 0, y || 0, z || 0);
-};
-
-var v3 = function( a ){
-    return new Ammo.btVector3( a[0], a[1], a[2] );
-};
-
-var q4 = function( a ){
-    return new Ammo.btQuaternion( a[0], a[1], a[2], a[3] );
-};
-
-var copyV3 = function (a,b) { b.setX(a[0]); b.setY(a[1]); b.setZ(a[2]); };
-
-var barycentricCoordinates = function( pos, p1, p2, p3 ) {
-
-    var edge1 = v3( [ p2.x-p1.x, p2.y-p1.y, p2.z-p1.z ]);
-    var edge2 = v3( [ p3.x-p1.x, p3.y-p1.y, p3.z-p1.z ]);
-
-    // Area of triangle ABC              
-    var p1p2p3 = edge1.cross(edge2).length2();              
-    // Area of BCP              
-    var p2p3p = (p3 - p2).cross(pos - p2).length2();              
-    // Area of CAP              
-    var p3p1p = edge2.cross(pos - p3).length2(); 
-
-    var s = Math.sqrt(p2p3p / p1p2p3);              
-    var t = Math.sqrt(p3p1p / p1p2p3);              
-    var w = 1 - s - t;
-
-    return v3([s,t,w])
-
-};
-
-var multiplyTransforms = function (tr1, tr2) {
-
-    var tr = new Ammo.btTransform();
-    tr.setIdentity();
-
-    var q1 = tr1.getRotation();
-    var q2 = tr2.getRotation();
-
-    /*var q1 = new Ammo.btQuaternion();
-    tr1.getBasis().getRotation(q1);
-    var q2 = new Ammo.btQuaternion();
-    tr2.getBasis().getRotation(q2);*/
-
-    var qax = q1.x(), qay = q1.y(), qaz = q1.z(), qaw = q1.w();
-    var qbx = q2.x(), qby = q2.y(), qbz = q2.z(), qbw = q2.w();
-
-    var q = q4([ 
-        qax * qbw + qaw * qbx + qay * qbz - qaz * qby,
-        qay * qbw + qaw * qby + qaz * qbx - qax * qbz,
-        qaz * qbw + qaw * qbz + qax * qby - qay * qbx,
-        qaw * qbw - qax * qbx - qay * qby - qaz * qbz
-    ]);
-
-    var o1 = tr1.getOrigin();
-    var o2 = tr2.getOrigin();
-
-    var p = v3([
-        o1.x()+o2.x(),
-        o1.y()+o2.y(),
-        o1.z()+o2.z()
-    ])
-
-    tr.setOrigin( p );
-    tr.setRotation( q );
-
-    return tr;
-
-};
-
 
 //--------------------------------------------------
 //
@@ -513,51 +278,35 @@ var multiplyTransforms = function (tr1, tr2) {
 
 function init () {
 
-    if( world !== null ) return;
+    // active transform
 
-    solver = new Ammo.btSequentialImpulseConstraintSolver();
-    solverSoft = new Ammo.btDefaultSoftBodySolver();
-
-    //collision = new Ammo.btDefaultCollisionConfiguration();
-    collision = new Ammo.btSoftBodyRigidBodyCollisionConfiguration();
-
-    dispatcher = new Ammo.btCollisionDispatcher( collision );
-
-    // global transform
     trans = new Ammo.btTransform();
-    pos = new Ammo.btVector3();
-    quat = new Ammo.btQuaternion();
-
-    var type = 3;
-    var s = 1000;
-
-    switch( type ){
-
-        //case 1: broadphase = new Ammo.btSimpleBroadphase(); break;
-        case 2: broadphase = new Ammo.btAxisSweep3( vec3(-s,-s,-s), vec3(s,s,s), 4096 ); break;//16384;
-        case 3: broadphase = new Ammo.btDbvtBroadphase(); break;
-        
-    }
-
-    //console.log(dispatcher)
-    //broadphase.getOverlappingPairCache().setInternalGhostPairCallback( new Ammo.btGhostPairCallback() );
-
-    //world = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
-    world = new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collision, solverSoft );
-    world.setGravity( vec3(0, -9.8, 0) );
     
+    quat = new Ammo.btQuaternion();
+    pos = new Ammo.btVector3();
+    posW = new Ammo.btVector3(); // walk direction
 
-    worldInfo = world.getWorldInfo();
+    // tmp Transform
 
-    worldInfo.set_air_density( 1.2 );
-    worldInfo.set_water_density( 0 );
-    worldInfo.set_water_offset( 0 );
-    worldInfo.set_water_normal( vec3() );
-    worldInfo.set_m_gravity( vec3(0, -9.8, 0) );
-    //info.set_m_maxDisplacement();
+    tmpTrans = new Ammo.btTransform()
+    tmpPos = new Ammo.btVector3();
+    tmpQuat = new Ammo.btQuaternion();
+
+    // extra vector
+
+    tmpPos1 = new Ammo.btVector3();
+    tmpPos2 = new Ammo.btVector3();
+    tmpPos3 = new Ammo.btVector3();
+    tmpPos4 = new Ammo.btVector3();
+
+    // extra transform
+
+    tmpTrans1 = new Ammo.btTransform();
+    tmpTrans2 = new Ammo.btTransform();
 
 
-    //console.log(world.getWorldInfo());
+
+    addWorld();
 
     bodys = [];
     softs = [];
@@ -577,14 +326,9 @@ function init () {
 
     postStep();
     
-
 };
 
-function gravity ( o ) {
 
-    world.setGravity( v3( o.g ) );
-
-};
 
 function resetARRAY(){
 
@@ -603,78 +347,23 @@ function resetARRAY(){
 
 function reset () {
 
+    pause = true;
+
     resetARRAY();
 
-    var b;
-    while( bodys.length > 0 ){
-
-        b = bodys.pop();
-        world.removeRigidBody( b );
-        Ammo.destroy( b );
-
-    }
-
-    while( solids.length > 0 ){
-
-        b = solids.pop();
-        world.removeRigidBody( b );
-        Ammo.destroy( b );
-
-    }
-
-    var j;
-    while( joints.length > 0 ){
-
-        j = joints.pop();
-        world.removeConstraint( j );
-        Ammo.destroy( j );
-
-    }
-
-    while( cars.length > 0){
-
-        b = cars.pop();
-        carsInfo.pop();
-        //Ammo.destroy( b );
-        world.removeRigidBody( b.getRigidBody() );
-        Ammo.destroy( b.getRigidBody() );
-        world.removeAction(b);
-        
-    }
-
-    while( heros.length > 0){
-
-        b = heros.pop();
-        //carsInfo.pop();
-        //Ammo.destroy( b );
-        world.removeRigidBody( b.getGhostObject() );
-        Ammo.destroy( b.getGhostObject() );
-        world.removeAction(b);
-        
-    }
-
-    while( softs.length > 0){
-
-        b = softs.pop();
-        world.removeSoftBody( b );
-        Ammo.destroy( b );
-
-    }
-
-    //console.log(solids.length)
-
-    bodys.length = 0;
-    solids.length = 0;
-    joints.length = 0;
-    cars.length = 0;
-    heros.length = 0;
-    softs.length = 0;
+    clearJoint();
+    clearRigidBody();
+    clearVehicle();
+    clearCharacter();
+    clearSoftBody();
 
     // clear body name object
     byName = {};
 
     //world.getBroadphase().resetPool( world.getDispatcher() );
     //world.getConstraintSolver().reset();
+
+    pause = false;
 
 };
 
@@ -706,19 +395,16 @@ function set ( ) {
 
     var o = tmpset;
 
-    //console.log('yyy')
-
     var b = getByName( o.name );
+    if(b == null) return;
 
-    var t = new Ammo.btTransform();
-    t.setIdentity();
-    if(o.pos) t.setOrigin( v3( o.pos ) );
-    if(o.quat) t.setRotation( q4( o.quat ) );
+    tmpPos.fromArray( o.pos );
+    tmpQuat.fromArray( o.quat );
+    tmpTrans.setIdentity();
+    if(o.pos) tmpTrans.setOrigin( tmpPos );
+    if(o.quat) tmpTrans.setRotation( tmpQuat );
 
-    //b.setWorldTransform(t);
-    if(b !== null) b.getMotionState().setWorldTransform(t);
-
-    Ammo.destroy( t );
+    b.getMotionState().setWorldTransform(tmpTrans);
 
     tmpset = null;
 
@@ -738,365 +424,41 @@ function getByName(name){
 
 function add ( o, extra ) {
 
-    var type = o.type || 'box';
+    o.type = o.type == undefined ? 'box' : o.type;
 
-    if(type.substring(0,5) == 'joint') {
+    // CONSTRAINT
+    if(o.type.substring(0,5) == 'joint') {
 
         addJoint( o );
         return;
 
     }
 
-    var name = o.name || '';
+    // SOFTBODY
+    if(o.type.substring(0,4) == 'soft' || o.type == 'ellipsoid'  || o.type == 'rope'  || o.type == 'cloth' ) {
 
-    var shape = null;
-    var isSoft = false;
-
-    var mass = o.mass || 0;
-    var size = o.size || [1,1,1];
-    var dir = o.dir || [0,1,0]; // for infinite plane
-
-    var div = o.div || [64,64];
-    
-    var pos = o.pos || [0,0,0];
-    var quat = o.quat || [0,0,0,1];
-    //var rot = o.rot || [0,0,0];
-    var margin = o.margin || 0.04; // 0.04 is default // 0.005
-
-    if( type == 'terrain' ){
-
-        if(!name) name = 'terrain';
-
-        //var div = o.div || [64,64];
-
-        // Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
-        var upAxis = 1;
-
-        // hdt, height data type. "PHY_FLOAT" is used. Possible values are "PHY_FLOAT", "PHY_UCHAR", "PHY_SHORT"
-        var hdt = o.hdt || "PHY_FLOAT";
-
-        // Set this to your needs (inverts the triangles)
-        var flipEdge = o.flipEdge || true;
-
-        //var lng = div[0] * div[1];
-        var localScaling = vec3( size[0]/div[0], 1, size[2]/div[1] );
-
-        //var localScaling = v3(size);
-
-        // Creates height data buffer in Ammo heap
-        //terrainData = Ammo._malloc( 4 * lng );
-        //hdata = o.hdata;
-
-        tmpData[name] = o.hdata;
-
-        terrain_data(name);
+        addSoftBody( o );
+        return;
 
     }
 
-    switch( type ){
-        case 'plane': shape = new Ammo.btStaticPlaneShape( v3(dir), 0 );break;
-        case 'box': shape = new Ammo.btBoxShape( vec3( size[0]*0.5, size[1]*0.5, size[2]*0.5 ) ); break;
-        case 'sphere': shape = new Ammo.btSphereShape(size[0]); break;  
-        case 'cylinder': shape = new Ammo.btCylinderShape(vec3(size[0], size[1]*0.5, size[1]*0.5)); break;
-        case 'cone': shape = new Ammo.btConeShape( size[0], size[1]*0.5 ); break;
-        case 'capsule': shape = new Ammo.btCapsuleShape(size[0], size[1]*0.5); break;
-        
-        case 'compound': shape = new Ammo.btCompoundShape(); break;
+    // TERRAIN
+    if(o.type == 'terrain') {
 
-        case 'mesh':
-            var mTriMesh = new Ammo.btTriangleMesh();
-            var removeDuplicateVertices = true;
-            var v0 = vec3();
-            var v1 = vec3(); 
-            var v2 = vec3();
-            var vx = o.v;
-            for (var i = 0, fMax = vx.length; i < fMax; i+=9){
-                v0.setValue( vx[i+0]*size[0], vx[i+1]*size[1], vx[i+2]*size[2] );
-                v1.setValue( vx[i+3]*size[0], vx[i+4]*size[1], vx[i+5]*size[2] );
-                v2.setValue( vx[i+6]*size[0], vx[i+7]*size[1], vx[i+8]*size[2] );
-                mTriMesh.addTriangle(v0,v1,v2, removeDuplicateVertices);
-            }
-            if(mass == 0){ 
-                // btScaledBvhTriangleMeshShape -- if scaled instances
-                shape = new Ammo.btBvhTriangleMeshShape( mTriMesh, true, true );
-            }else{ 
-                // btGimpactTriangleMeshShape -- complex?
-                // btConvexHullShape -- possibly better?
-                shape = new Ammo.btConvexTriangleMeshShape( mTriMesh, true );
-            }
-        break;
-
-        case 'convex':
-            shape = new Ammo.btConvexHullShape();
-            var v = vec3(0,0,0);
-            var vx = o.v;
-            for (var i = 0, fMax = vx.length; i < fMax; i+=3){
-                copyV3([ vx[i]*size[0], vx[i+1]*size[1], vx[i+2]*size[2] ], v);
-                shape.addPoint(v);
-            };
-        break;
-
-        case 'terrain': 
-            shape = new Ammo.btHeightfieldTerrainShape( div[0], div[1], terrainData[name], o.heightScale || 1, -size[1], size[1], upAxis, hdt, flipEdge ); 
-            shape.setLocalScaling( localScaling );
-        break;
-
-        case 'cloth':case 'rope':case 'ellipsoid':case 'softConvex': case 'softTriMesh':
-            isSoft = true;
-        break;
+        addTerrain( o );
+        return;
 
     }
 
-    if(shape && shape.setMargin !== undefined ){ shape.setMargin( margin ); }
-
-    if( extra == 'isShape' ) return shape;
-    
-    if( extra == 'isGhost' ){ 
-        var ghost = new Ammo.btGhostObject();
-        ghost.setCollisionShape( shape );
-        return ghost;
-    }
-
-    var startTransform = new Ammo.btTransform();
-    startTransform.setIdentity();
-    startTransform.setOrigin( v3( pos ) );
-    startTransform.setRotation( q4( quat ) );
-
-    
-
-
-
-    var body;
-
-    if( isSoft ){
-
-        var gendiags = o.gendiags || true;
-        var fixed = o.fixed || 0;
-
-        var softBodyHelpers = new Ammo.btSoftBodyHelpers();
-
-        switch( type ){
-            case 'cloth':
-                var mw = size[0] * 0.5;
-                var mh = size[2] * 0.5;
-                var p0 = v3([ -mw, 0, -mh]);
-                var p1 = v3([ mw, 0, -mh]);
-                var p2 = v3([ -mw, 0, mh]);
-                var p3 = v3([ mw, 0, mh]);
-                
-                body = softBodyHelpers.CreatePatch( worldInfo, p0, p1, p2, p3, div[0], div[1], fixed, gendiags  );
-                body.softType = 1;
-            break;
-            case 'rope':
-                var p0 = o.start || [ -10, 0, 0]; // start
-                var p1 = o.end || [ 10, 0, 0]; // end
-
-                body = softBodyHelpers.CreateRope( worldInfo, v3(p0), v3(p1), o.numSegment || 10, fixed );
-                
-                body.softType = 2;
-            break;
-            case 'ellipsoid':
-                var p0 = o.center || [ 0, 0, 0]; // start
-                var p1 = o.radius || [ 3, 3, 3]; // end
-                body = softBodyHelpers.CreateEllipsoid( worldInfo, v3(p0), v3(p1), o.vertices || 128  );
-                body.softType = 3;
-
-                var a = [];
-                var b = body.get_m_nodes();
-                var j = b.size(), n, node, p;
-                while(j--){
-                    n = (j*3);
-                    node = b.at( j );
-                    p = node.get_m_x();
-                    a[n] = p.x();
-                    a[n+1] = p.y();
-                    a[n+2] = p.z();
-                }
-
-                o.lng = b.size();
-                o.a = a;
-
-                self.postMessage({ m:'ellipsoid', o:o });
-            break;
-            case 'softConvex':
-
-                body = softBodyHelpers.CreateFromConvexHull( worldInfo, o.v, o.v.length/3, o.randomize || false );
-                body.softType = 4;
-
-                // force nodes
-                var i = o.v.length/3;
-                while(i--){
-                    var n = i*3;
-                    body.get_m_nodes().at( i ).set_m_x(new Ammo.btVector3(o.v[n], o.v[n+1], o.v[n+2]));
-                }
-
-                //var b = body.get_m_nodes();
-                /*var a = [];
-                var b = body.get_m_nodes();
-                var j = b.size(), n, node, p;
-                while(j--){
-                    n = (j*3);
-                    node = b.at( j );
-                    p = node.get_m_x();
-                    a[n] = p.x();
-                    a[n+1] = p.y();
-                    a[n+2] = p.z();
-                }*/
-
-                //console.log('start result: ' + a)
-
-                //console.log('result:' + body.get_m_nodes().size())
-
-            break;
-            case 'softTriMesh':
-
-                body = softBodyHelpers.CreateFromTriMesh( world.getWorldInfo(), o.v, o.i, o.ntri, o.randomize || true );
-                body.softType = 5;
-
-                //console.log('result:' + body.get_m_nodes().size())
-
-            break;
-        }
-
-        var sb = body.get_m_cfg();
-        
-        // Soft-soft and soft-rigid collisions
-        
-
-        if( o.viterations !== undefined ) sb.set_viterations( o.viterations );//10
-        if( o.piterations !== undefined ) sb.set_piterations( o.piterations );//10
-        if( o.citerations !== undefined ) sb.set_citerations( o.citerations );//4
-        if( o.diterations !== undefined ) sb.set_diterations( o.diterations );//0
-
-        sb.set_collisions( 0x11 );
-
-        // Friction
-        if( o.kdf !== undefined ) sb.set_kDF(o.kdf);
-        // Damping
-        if( o.kdp !== undefined ) sb.set_kDP(o.kdp);
-        // Pressure
-        if( o.kpr !== undefined ) sb.set_kPR(o.kpr);
-
-        if( o.kvc !== undefined ) sb.set_kVC(o.kvc);
-
-        
-
-        
-        //body.setCollisionShape(Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape())
-
-
-        //
-        //console.log(sb);
-        //console.log(softBodyHelpers);
-
-        // Stiffness
-        if( o.klst !== undefined ) body.get_m_materials().at(0).set_m_kLST(o.klst);
-        if( o.kast !== undefined ) body.get_m_materials().at(0).set_m_kAST(o.kast);
-        if( o.kvst !== undefined ) body.get_m_materials().at(0).set_m_kVST(o.kvst);
-
-        var fromfaces = o.fromfaces || false;
-        body.setTotalMass( mass, fromfaces );
-
-        var sh = Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape();
-
-        if(o.margin !== undefined ) sh.setMargin( margin );
-
-        //var localInertia = vec3();
-        //sh.calculateLocalInertia( mass, localInertia );
-
-        /*if( o.friction !== undefined ) body.setFriction(o.friction);
-        if( o.rollingFriction !== undefined ) body.setRollingFriction(o.rollingFriction);
-        if( o.anisotropicFriction !== undefined ) body.setAnisotropicFriction(o.anisotropicFriction);
-        if( o.restitution !== undefined ) body.setRestitution(o.restitution);
-        */
-
-        // generateClusters with k=0 will create a convex cluster for each tetrahedron or triangle otherwise an approximation will be used (better performance)
-        // generateClusters (   int     k, int     maxiterations = 8192  )   
-        //body.generateClusters(0);
-
-        
-
-        //body.setWorldTransform(startTransform);
-
-        //console.log(body.get_m_cfg().get_viterations());
-
-    } else {
-
-        /*var startTransform = new Ammo.btTransform();
-        startTransform.setIdentity();
-        startTransform.setOrigin( v3( pos ) );
-        startTransform.setRotation( q4( quat ) );*/
-
-        var localInertia = vec3();
-        shape.calculateLocalInertia( mass, localInertia );
-        var motionState = new Ammo.btDefaultMotionState( startTransform );
-
-        //console.log(name, localInertia.x(), localInertia.y(), localInertia.z())
-
-        var rb = new Ammo.btRigidBodyConstructionInfo( mass, motionState, shape, localInertia );
-        o.friction = o.friction == undefined ? 0.5 : o.friction;
-        o.restitution = o.restitution == undefined ? 0 : o.restitution;
-        rb.set_m_friction( o.friction || 0.5 );
-        rb.set_m_restitution( o.restitution || 0 );
-        body = new Ammo.btRigidBody( rb );
-
-    }
-
-    if ( mass !== 0 ){
-        
-        //body.setCollisionFlags(1); 
-        if( isSoft ) world.addSoftBody( body, o.group || 1, o.mask || -1 );
-        else{ 
-            body.setCollisionFlags(o.flag || 0);
-            world.addRigidBody( body, o.group || 1, o.mask || -1 );
-
-            body.activate();
-            body.setActivationState( o.state || 1 );
-        }
-        
-    } else {
-        body.setCollisionFlags(o.flag || 1); 
-        //body.setCollisionFlags( FLAGS.STATIC_OBJECT | FLAGS.KINEMATIC_OBJECT ) ;
-        //world.addCollisionObject( body, o.group || 2, o.mask || -1 );
-        //world.addCollisionObject( body, o.group || 1, o.mask || -1 );
-        world.addRigidBody( body, o.group || 2, o.mask || -1 );
-    }
-
-    //console.log(body.getMotionState())
-
-
-    
-
-    //body.setContactProcessingThreshold ??
-
-    
-
-    //body.name = o.name || '';
-    //var name = o.name || '';
-    if(name) byName[name] = body;
-
-    //body.isKinematic = o.kinematic || false;
-
-    /*
-    AMMO.ACTIVE = 1;
-    AMMO.ISLAND_SLEEPING = 2;
-    AMMO.WANTS_DEACTIVATION = 3;
-    AMMO.DISABLE_DEACTIVATION = 4;
-    AMMO.DISABLE_SIMULATION = 5;
-    */
-    
-    //body.setCollisionFlags();
-
-    if ( mass !== 0 ){ // only dynamique
-        if( isSoft ) softs.push( body );
-        else bodys.push( body ); 
-    }
-    else solids.push( body ); // only static
-
-
-    Ammo.destroy( startTransform );
+    // RIGIDBODY
+    addRigidBody( o, extra );
 
 };
+
+
+
+
+
 
 function anchor( o ){
 
@@ -1104,8 +466,25 @@ function anchor( o ){
 
 };
 
+//--------------------------------------------------
+//
+//  RAY
+//
+//--------------------------------------------------
 
+function addRay ( o ) {
 
+    var p1 = v3(o.p1);
+    var p2 = v3(o.p2);
+
+    var rayCallback = new Ammo.ClosestRayResultCallback(p1,p2);
+    world.rayTest( p1, p2, rayCallback );
+
+    //if(rayCallback.hasHit()){
+       // printf("Collision at: <%.2f, %.2f, %.2f>\n", rayCallback.m_hitPointWorld.getX(), rayCallback.m_hitPointWorld.getY(), rayCallback.m_hitPointWorld.getZ());
+   // }
+
+};
 
 //--------------------------------------------------
 //
@@ -1133,513 +512,6 @@ function apply ( o ) {
 
 
         }
-    }
-
-};
-
-
-//--------------------------------------------------
-//
-//  TERRAIN
-//
-//--------------------------------------------------
-
-function terrain_data(name){
-
-    var d = tmpData[name];
-    var i = d.length, n;
-    // Creates height data buffer in Ammo heap
-    if( terrainData[name] == null ) terrainData[name] = Ammo._malloc( 4 * i );
-    // Copy the javascript height data array to the Ammo one.
-    
-    while(i--){
-        n = i * 4;
-        Ammo.HEAPF32[ terrainData[name] + n >> 2 ] = d[i];
-    }
-
-};
-
-
-//--------------------------------------------------
-//
-//  CONSTRAINT JOINT
-//
-//--------------------------------------------------
-
-function addJoint ( o ) {
-
-    var noAllowCollision = true;
-    var collision = o.collision || false;
-    if(collision) noAllowCollision = false;
-
-    var body1 = getByName(o.body1);
-    var body2 = getByName(o.body2);
-
-    var point1 = v3( o.pos1 || [0,0,0] );
-    var point2 = v3( o.pos2 || [0,0,0] );
-    var axe1 = v3( o.axe1 || [1,0,0] );
-    var axe2 = v3( o.axe2 || [1,0,0] );
-
-    var frameInA;
-    var frameInB;
-
-    
-    if(o.type !== "joint_p2p" && o.type !== "joint_hinge" && o.type !== "joint" ){
-
-        
-        /*
-        var tmpA = new Ammo.btTransform();
-        tmpA.setIdentity();
-        tmpA.setOrigin( point1 );
-        if(o.quatA) tmpA.setRotation( q4( o.quatA ) )
-
-        var frameInA = multiplyTransforms( body1.getWorldTransform(), tmpA );
-
-        var tmpB = new Ammo.btTransform();
-        tmpB.setIdentity();
-        tmpB.setOrigin( point2 );
-        if(o.quatB) tmpB.setRotation( q4( o.quatB ) )
-
-        var frameInB = multiplyTransforms( body2.getWorldTransform(), tmpB );
-        */
-
-        frameInA = new Ammo.btTransform();
-        frameInA.setIdentity();
-        frameInA.setOrigin( point1 );
-        if(o.quatA) frameInA.setRotation( q4( o.quatA ) );
-        
-        frameInB = new Ammo.btTransform();
-        frameInB.setIdentity();
-        frameInB.setOrigin( point2 );
-        if(o.quatB) frameInB.setRotation( q4( o.quatB ) );
-
-    }
-    
-
-    var useA =  o.useA !== undefined ? o.useA : true;// use fixed frame A for linear llimits
-
-    var joint = null;
-
-    switch(o.type){
-        case "joint_p2p": 
-            joint = new Ammo.btPoint2PointConstraint( body1, body2, point1, point2);
-            if(o.strength) joint.get_m_setting().set_m_tau( o.strength );
-            if(o.damping) joint.get_m_setting().set_m_damping( o.damping ); 
-            if(o.impulse) joint.get_m_setting().set_m_impulseClamp( o.impulse );
-        break;
-        case "joint_hinge": case "joint": joint = new Ammo.btHingeConstraint( body1, body2, point1, point2, axe1, axe2, useA ); break;
-        case "joint_slider": joint = new Ammo.btSliderConstraint( body1, body2, frameInA, frameInB, useA ); break;
-        case "joint_conetwist": joint = new Ammo.btConeTwistConstraint( body1, body2, frameInA, frameInB ); break;
-        case "joint_dof": joint = new Ammo.btGeneric6DofConstraint( body1, body2, frameInA, frameInB, useA );  break;
-        case "joint_spring_dof": joint = new Ammo.btGeneric6DofSpringConstraint( body1, body2, frameInA, frameInB, useA ); break;
-        //case "joint_gear": joint = new Ammo.btGearConstraint( body1, body2, point1, point2, o.ratio || 1); break;
-    }
-
-    if( frameInA ) Ammo.destroy( frameInA );
-    if( frameInB ) Ammo.destroy( frameInB );
-
-    // EXTRA SETTING
-
-    if(o.breaking) joint.setBreakingImpulseThreshold(o.breaking);
-
-    // hinge
-
-    // limite min, limite max, softness, bias, relaxation
-    if(o.limit) joint.setLimit( o.limit[0]*degtorad, o.limit[1]*degtorad, o.limit[2] || 0.9, o.limit[3] || 0.3, o.limit[4] || 0.1);
-    if(o.motor) joint.enableAngularMotor( o.motor[0], o.motor[1], o.motor[2] );
-
-
-    // slider & dof
-    var p;
-    
-    if(o.linLower){ p = v3(o.linLower); joint.setLinearLowerLimit( p ); Ammo.destroy(p); }
-    if(o.linUpper){ p = v3(o.linUpper); joint.setLinearUpperLimit( p ); Ammo.destroy(p); }
-    
-    if(o.angLower){ p = v3(o.angLower); joint.setAngularLowerLimit( p ); Ammo.destroy(p); }
-    if(o.angUpper){ p = v3(o.angUpper); joint.setAngularUpperLimit( p ); Ammo.destroy(p); }
-
-    // spring dof
-    if(o.feedback) joint.enableFeedback(o.feedback);
-    if(o.enableSpring) joint.enableSpring( o.enableSpring[0], o.enableSpring[1] );
-    if(o.damping) joint.setDamping( o.damping[0], o.damping[1] );
-    if(o.stiffness) joint.setStiffness( o.stiffness[0], o.stiffness[1] );
-
-
-    // console.log(joint);
-
-    world.addConstraint( joint, noAllowCollision );
-
-    if(o.name) byName[o.name] = joint;
-    joints.push( joint );
-
-};
-
-
-
-/*
- enum   CollisionFlags { 
-  CF_STATIC_OBJECT = 1, 
-  CF_KINEMATIC_OBJECT = 2, 
-  CF_NO_CONTACT_RESPONSE = 4, 
-  CF_CUSTOM_MATERIAL_CALLBACK = 8, 
-  CF_CHARACTER_OBJECT = 16, 
-  CF_DISABLE_VISUALIZE_OBJECT = 32, 
-  CF_DISABLE_SPU_COLLISION_PROCESSING = 64 
-}
- 
-enum    CollisionObjectTypes { 
-  CO_COLLISION_OBJECT = 1, 
-  CO_RIGID_BODY = 2, 
-  CO_GHOST_OBJECT = 4, 
-  CO_SOFT_BODY = 8, 
-  CO_HF_FLUID = 16, 
-  CO_USER_TYPE = 32, 
-  CO_FEATHERSTONE_LINK = 64 
-}
- 
-enum    AnisotropicFrictionFlags { 
-  CF_ANISOTROPIC_FRICTION_DISABLED =0, 
-  CF_ANISOTROPIC_FRICTION = 1, 
-  CF_ANISOTROPIC_ROLLING_FRICTION = 2 
-}
-
-enum    CollisionFilterGroups { 
-  DefaultFilter = 1, 
-  StaticFilter = 2, 
-  KinematicFilter = 4, 
-  DebrisFilter = 8, 
-  SensorTrigger = 16, 
-  CharacterFilter = 32, 
-  AllFilter = -1 
-}
-
-    CFG_DEFAULT       = 1,
-    CFG_STATIC          = 2,
-    CFG_KINEMATIC       = 4,
-    CFG_DEBRIS          = 8,
-    CFG_SENSORTRIGGER    = 16,
-    CFG_NOCOLLISION    = 32,
-    CFG_GROUP0          = 64,
-    CFG_GROUP1          = 128,
-    CFG_GROUP2          = 256,
-    CFG_GROUP3          = 512,
-    CFG_GROUP4          = 1024,
-    CFG_GROUP5          = 2048,
-    CFG_GROUP6          = 4096,
-    CFG_GROUP7          = 8192,
-*/
-
-//--------------------------------------------------
-//
-//  CHARACTER
-//
-//--------------------------------------------------
-
-function character ( o ) {
-
-    var shape = new Ammo.btCapsuleShape(o.size[0], o.size[1]*0.5);
-
-    var body = new Ammo.btPairCachingGhostObject();
-    body.setCollisionShape(shape);
-
-    body.setCollisionFlags( FLAGS.CHARACTER_OBJECT );
-    
-    body.setFriction( o.friction || 0.1 );
-    body.setRestitution( o.restitution || 0 );
-
-    body.setActivationState( 4 );
-    body.activate();
-
-    var hero = new Ammo.btKinematicCharacterController( body, shape, o.stepH || 0.3, o.upAxis || 1 );
-    hero.setUseGhostSweepTest(shape);
-
-
-    hero.setGravity( vec3(0, -9.8, 0) );
-    hero.setFallSpeed(10);
-    /*hero.setJumpSpeed();
-    hero.setMaxJumpHeight();
-    hero.canJump(); 
-    hero.jump();
-    */
-
-    // The max slope determines the maximum angle that the controller can walk
-    if( o.slopeRadians ) hero.setMaxSlope ( o.slopeRadians );
-
-    hero.warp(v3(o.pos));
-    hero.setVelocityForTimeInterval(vec3(), 1);
-
-    world.addCollisionObject( body, o.group || 1, o.mask || -1 );
-    world.addAction( hero ); 
-
-    console.log( hero );
-
-    heros.push( hero );
-
-}
-
-function move ( id ) {
-
-    var id = id || 0;
-    if( !heros[id] ) return;
-
-    var walkDirection = vec3(0,0,0);
-    var walkSpeed = 1;
-
-    var xform = heros[id].getGhostObject().getWorldTransform();
-
-    var forwardDir = xform.getBasis().getRow(2);
-    var upDir  = xform.getBasis().getRow(1);
-    var strafeDir = xform.getBasis().getRow(0);
-
-    forwardDir.normalize();
-    upDir.normalize();
-    strafeDir.normalize();
-
-    if( key[0] == 1 ) walkDirection.op_add(forwardDir);
-    if( key[1] == 1 ) walkDirection.op_sub(forwardDir);
-
-    if( key[2] == 1 ) walkDirection.op_add(strafeDir);
-    if( key[3] == 1 ) walkDirection.op_sub(strafeDir);
-
-    walkDirection.op_mul(walkSpeed);
-
-
-    //console.log(heros[id].onGround())
-
-
-
-
-    heros[id].setWalkDirection(walkDirection);
-   // heros[id].preStep ( world );
-   //heros[id].setVelocityForTimeInterval(vec3(), 1);
-
-
-}
-
-//--------------------------------------------------
-//
-//  VEHICLE
-//
-//--------------------------------------------------
-
-function vehicle ( o ) {
-
-    var type = o.type || 'box';
-
-    var size = o.size || [2,0.5,4];
-    var pos = o.pos || [0,0,0];
-    var quat = o.quat || [0,0,0,1];
-
-    var carInfo = {
-        steering:0, 
-        engine:0, 
-        breaking:0, 
-
-        incSteering: o.incSteering || 0.04, 
-        maxSteering: o.maxSterring || 0.3,//Math.PI/6,
-        incEngine: o.acceleration || 5, 
-        maxEngine: o.engine || 1000,
-        maxBreaking : o.maxBreaking || 100
-    };
-
-
-
-    //----------------------------
-    // car shape 
-
-    var shape;
-    if( type == 'mesh' ) shape = add( { type:'mesh', v:o.v, mass:1 }, 'isShape');
-    else if( type == 'convex' ) shape = add( { type:'convex', v:o.v }, 'isShape');
-    else shape = add( { type:'box', size:size }, 'isShape');
-
-    //----------------------------
-    // move center of mass
-
-    var massCenter = o.massCenter || [0,0.25,0];
-    var localTransform = new Ammo.btTransform();
-    localTransform.setIdentity();
-    localTransform.setOrigin( v3( massCenter ) );
-    var compound = new Ammo.btCompoundShape();
-    compound.addChildShape( localTransform, shape );
-
-    //----------------------------
-    // position rotation of car 
-
-    var startTransform = new Ammo.btTransform();
-    startTransform.setIdentity();
-    startTransform.setOrigin( v3( pos ) );
-    startTransform.setRotation( q4( quat ) );
-
-    //----------------------------
-    // physics setting
-
-    // mass of vehicle in kg
-    var mass = o.mass || 600;
-    var localInertia = vec3();
-    compound.calculateLocalInertia( mass, localInertia );
-
-    //console.log(localInertia.y());
-    var motionState = new Ammo.btDefaultMotionState( startTransform );
-
-    var rb = new Ammo.btRigidBodyConstructionInfo( mass, motionState, compound, localInertia);
-    rb.set_m_friction( o.friction || 0.5 );
-    rb.set_m_restitution( o.restitution || 0 );
-    rb.set_m_linearDamping( o.linearDamping || 0 );
-    rb.set_m_angularDamping( o.angularDamping || 0 );
-
-    //----------------------------
-    // car body
-
-    var body = new Ammo.btRigidBody( rb );
-
-    /*var massTransform = new Ammo.btTransform();
-    massTransform.setIdentity();
-    massTransform.setOrigin( v3( massCenter ) );
-    body.setCenterOfMassTransform( massTransform );
-
-    body.getMotionState().setWorldTransform( startTransform );*/
-
-
-    body.setAngularVelocity( vec3() );
-    body.setLinearVelocity( vec3() );
-    body.setActivationState( 4 );
-
-    //----------------------------
-    // suspension setting
-
-    var tuning = new Ammo.btVehicleTuning();
-    // 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car
-    tuning.set_m_suspensionStiffness( o.s_stiffness || 20 );
-    // The damping coefficient for when the suspension is compressed. Set
-    // to k * 2.0 * btSqrt(m_suspensionStiffness) so k is proportional to critical damping.
-    // k = 0.0 undamped & bouncy, k = 1.0 critical damping
-    // k = 0.1 to 0.3 are good values , default 0.84
-    tuning.set_m_suspensionCompression( o.s_compression || 0.84);//4.4 );
-    // The damping coefficient for when the suspension is expanding.
-    // m_suspensionDamping should be slightly larger than set_m_suspensionCompression, eg k = 0.2 to 0.5, default : 0.88
-    tuning.set_m_suspensionDamping( o.s_relaxation || 0.88);//2.3 );
-
-     // The maximum distance the suspension can be compressed in Cm // default 500
-    tuning.set_m_maxSuspensionTravelCm( o.s_travel || 100 );
-    // Maximum suspension force
-    tuning.set_m_maxSuspensionForce( o.s_force || 10000 );
-    // suspension resistance Length
-    // The maximum length of the suspension (metres)
-    var s_length = o.s_length || 0.2;
-
-
-    //suspensionForce = stiffness * (restLength – currentLength) + damping * (previousLength – currentLength) / deltaTime
-    // http://www.digitalrune.com/Blog/Post/1697/Car-Physics-for-3D-Games
-
-    //----------------------------
-    // wheel setting
-
-    var radius = o.radius || 0.4;
-    var wPos = o.wPos || [1, 0, 1.6];
-    // friction: The constant friction of the wheels on the surface.
-    // For realistic TS It should be around 0.8. default 10.5
-    // But may be greatly increased to improve controllability (1000 and more)
-    // Set large (10000.0) for kart racers
-    tuning.set_m_frictionSlip( o.w_friction || 1000 );
-    // roll: reduces torque from the wheels
-    // reducing vehicle barrel chance
-    // 0 - no torque, 1 - the actual physical behavior
-    var w_roll = o.w_roll || 0.1;
-
-    //----------------------------
-    // create vehicle
-
-    var vehicleRayCaster = new Ammo.btDefaultVehicleRaycaster( world );
-    var car = new Ammo.btRaycastVehicle(tuning, body, vehicleRayCaster);
-    car.setCoordinateSystem( 0, 1, 2 );
-
-    var numWheels = o.nw || 4, p, fw;
-
-    for( var i = 0; i < numWheels; i++ ){
-        
-        if( i==2 && wPos[4]) wPos[0]+=wPos[4]; 
-
-        if(i==0){ p = vec3(  wPos[0], wPos[1],  wPos[2] ); fw = true; }
-        if(i==1){ p = vec3( -wPos[0], wPos[1],  wPos[2] ); fw = true; }
-        if(i==2){ p = vec3( -wPos[0], wPos[1], -wPos[2] ); fw = false; }
-        if(i==3){ p = vec3(  wPos[0], wPos[1], -wPos[2] ); fw = false; }
-        if(i==4){ p = vec3( -wPos[0], wPos[1], -wPos[3] ); fw = false; }
-        if(i==5){ p = vec3(  wPos[0], wPos[1], -wPos[3] ); fw = false; }
-
-        if( numWheels == 2 ){ // moto
-            if(i==1){ p = vec3( -wPos[0], wPos[1],  -wPos[2] ); fw = false; }
-        }
-
-        addWheel( car, p, radius, tuning, s_length, w_roll, fw );
-
-        car.setBrake( carInfo.maxBreaking, i );
-    
-    };
-
-    world.addAction( car );
-    world.addRigidBody( body );
-
-    //console.log( car );
-    //console.log( body );
-    //console.log( tuning );
-    //console.log( car.getWheelInfo(0).get_m_wheelsDampingRelaxation() );
-    //console.log( car.getWheelInfo(0).get_m_wheelsDampingCompression() );
-    //console.log( car.getWheelInfo(0).get_m_suspensionRestLength1() );
-    //console.log( car.getWheelInfo(0).get_m_maxSuspensionTravelCm() );
-    //console.log( car.getWheelInfo(0).get_m_raycastInfo().get_m_contactPointWS().y() )
-
-
-    body.activate();
-
-    cars.push( car );
-    carsInfo.push( carInfo );
-
-};
-
-function addWheel ( car, p, radius, tuning, s_length, w_roll, isFrontWheel ) {
-
-    var wheelDir = vec3(0, -1, 0);
-    var wheelAxe = vec3(-1, 0, 0);
-
-    var wheel = car.addWheel( p, wheelDir, wheelAxe, s_length, radius, tuning, isFrontWheel );
-    wheel.set_m_rollInfluence( w_roll );
-
-
-
-};
-
-function drive ( id ) {
-
-    var id = id || 0;
-    if( !cars[id] ) return;
-
-    var car = cars[id];
-    var u = carsInfo[id];
-    var wn = car.getNumWheels();
-
-    if( key[2] == 1 ) u.steering += u.incSteering;
-    if( key[3] == 1 ) u.steering -= u.incSteering;
-    if( key[2] == 0 && key[3] == 0 ) u.steering *= 0.9;
-    if( u.steering < -u.maxSteering ) u.steering = -u.maxSteering;
-    if( u.steering > u.maxSteering ) u.steering = u.maxSteering;
-
-    if( key[0] == 1 ) u.engine += u.incEngine;
-    if( key[1] == 1 ) u.engine -= u.incEngine;
-    if( u.engine > u.maxEngineForce ) u.engine = u.maxEngine;
-    if( u.engine < -u.maxEngineForce ) u.engine = -u.maxEngine;
-    
-    if( key[0] == 0 && key[1] == 0 ){
-        if( u.engine > 1 ) u.engine *= 0.9;
-        else if ( u.engine < -1 ) u.engine *= 0.9;
-        else { u.engine = 0; u.breaking = u.maxBreaking; }
-    }
-
-    var i = wn;
-    while(i--){
-        if( i == 0 ) car.setSteeringValue( u.steering, i );
-        if(wn !== 2 && i == 1 ) car.setSteeringValue( u.steering, i );
-        car.applyEngineForce( u.engine, i );
-        car.setBrake( u.breaking, i );
     }
 
 };

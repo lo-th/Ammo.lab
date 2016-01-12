@@ -18,10 +18,11 @@ function afterLoad () {
         addVehicle( i, [-25+(i*4), 0,0], 'convex');
     }
 
-    // ! \\ set the car we drive 0 to 1
+    // ! \\ set the car we drive 0 to 13
     // use keyboard to controle car 
-    view.setDriveCar( 0 );
-    view.activeFollow();
+
+    follow ('car_0');
+    drive ('car_0');
 
 };
 
@@ -82,6 +83,8 @@ function addVehicle (id, pos, type) {
     o.shape = shape;
     o.mesh = mesh;
     o.wheel = geo['w00' + o.w ];
+
+    o.name = 'car_'+id
 
     car( o );
 

@@ -25,7 +25,9 @@ function demo() {
     // ! \\ click on view and use key to controle car
 
     car ({ 
-        type:'box', 
+        type:'box',
+        name:'car',
+        helper: true,
         pos:[0,10,0], // start position of car 
         rot:[0,0,0], // start rotation of car
         size:[1.6, 0.4, 3.6], // chassis size
@@ -42,7 +44,6 @@ function demo() {
 
     });
 
-    view.setDriveCar( 0 );
-    view.activeFollow();
+    follow ('car');
 
 };

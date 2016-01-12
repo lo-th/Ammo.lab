@@ -8,8 +8,8 @@
 
 'use strict';
 // MATH ADD
-Math.degtorad = 0.0174532925199432957;
-Math.radtodeg = 57.295779513082320876;
+Math.degtorad = Math.PI / 180;//0.0174532925199432957;
+Math.radtodeg = 180 / Math.PI;//57.295779513082320876;
 Math.Pi = 3.141592653589793;
 Math.TwoPI = 6.283185307179586;
 Math.PI90 = 1.570796326794896;
@@ -37,21 +37,25 @@ var view = ( function () {
     var terrains = [];
     var softs = [];
     var cars = [];
-    var carsSpeed = [];
+    //var carsSpeed = [];
     var heros = [];
     var extraGeo = [];
 
     var byName = {};
+
+    var currentFollow = null;
 
     //var softsPoints = [];
 
     var geo = {};
     var mat = {};
 
-    var key = [ 0,0,0,0,0,0,0,0 ];
+    // key[8] = controle.
+    var key = [ 0,0,0,0,0,0,0,0,0 ];
+
 
     var imagesLoader;
-    var currentCar = -1;
+    //var currentCar = -1;
     var isCamFollow = false;
     var isWithShadow = false;
     var shadowGround, light, ambient;
@@ -68,11 +72,11 @@ var view = ( function () {
 
     view.init = function ( callback ) {
 
-        debug = document.getElementById('debug');
-
-        canvas = document.getElementById('canvas3d');
+        canvas = document.createElement("canvas");
+        canvas.className = 'canvas3d';
         canvas.oncontextmenu = function(e){ e.preventDefault(); };
         canvas.ondrop = function(e) { e.preventDefault(); };
+        document.body.appendChild( canvas );
 
         // RENDERER
 
@@ -111,6 +115,7 @@ var view = ( function () {
         controls.target.set( 0, 0, 0 );
         controls.enableKeys = false;
         controls.update();
+
 
         // GEOMETRY
 
@@ -157,13 +162,10 @@ var view = ( function () {
         // EVENT
 
         window.addEventListener( 'resize', view.resize, false );
-
         document.addEventListener( 'keydown', view.keyDown, false );
         document.addEventListener( 'keyup', view.keyUp, false );
 
         imagesLoader = new THREE.TextureLoader();
-
-        
 
         this.resize();
         this.initEnv();
@@ -285,21 +287,21 @@ var view = ( function () {
 
         i = cars.length;
         while(i--){
-            if(cars[i].body.material == undefined){
-                k = cars[i].body.children.length;
+            if(cars[i].material == undefined){
+                k = cars[i].children.length;
                 while(k--){
-                    name = cars[i].body.children[k].material.name;
-                    cars[i].body.children[k].material = mat[name]
+                    name = cars[i].children[k].material.name;
+                    if(name!=='helper') cars[i].children[k].material = mat[name]
                 }
             }else{
-                name = cars[i].body.material.name;
-                cars[i].body.material = mat[name];
+                name = cars[i].material.name;
+                cars[i].material = mat[name];
             }
             
-            j = cars[i].w.length;
+            j = cars[i].userData.w.length;
             while(j--){
-                name = cars[i].w[j].material.name;
-                cars[i].w[j].material = mat[name];
+                name = cars[i].userData.w[j].material.name;
+                cars[i].userData.w[j].material = mat[name];
             }
         };
 
@@ -496,21 +498,55 @@ var view = ( function () {
 
     }
 
-    // CAMERA
 
-    view.activeFollow = function () {
+    //--------------------------------------
+    //
+    //   CAMERA AND CONTROL
+    //
+    //--------------------------------------
 
-        isCamFollow = true;
+    view.controlUpdate = function(){
+
+        //+Math.PI90;
+        //key[9] = controls.getPolarAngle();
+
+        //key[8] = controls.getAzimuthalAngle(); 
+        //key[9] = controls.getPolarAngle(); 
+
+        //tell( key[8] * Math.radtodeg + '/' + key[9] * Math.radtodeg);
+
+        if( isCamFollow ) this.follow();
+        //else key[8] = controls.getAzimuthalAngle();
 
     };
 
-    view.follow = function () {
+    view.setFollow = function ( name ) {
 
-        if (currentCar == -1) return;
-        if( carsSpeed[currentCar] < 10 && carsSpeed[currentCar] > -10 ) return;
-        if(cars[currentCar] == undefined ) return;
+        currentFollow = this.getByName(name);
+        if( currentFollow !== null ) isCamFollow = true;
 
-        var mesh = cars[currentCar].body;
+    };
+ 
+    view.follow = function ( name ) {
+
+        if( currentFollow === null ) return;
+
+        //if( currentCar == -1 ) return;
+
+        var mesh = currentFollow;
+
+        if( mesh.userData.speed !== undefined) {// && mesh.userData.type == 'car') {
+            
+            if( mesh.userData.speed < 10 && mesh.userData.speed > -10 ){ 
+               // controls.update();
+                key[8] = controls.getAzimuthalAngle(); 
+                return;
+            }
+        }
+        //if( carsSpeed[currentCar] < 10 && carsSpeed[currentCar] > -10 ) return;
+        //if( cars[currentCar] == undefined ) return;
+
+        //cars[currentCar].body;
 
         var matrix = new THREE.Matrix4();
         matrix.extractRotation( mesh.matrix );
@@ -521,7 +557,8 @@ var view = ( function () {
 
         var target = mesh.position;
         //var front = cars[currentCar].body.position;
-        var h = Math.atan2( front.z, front.x ) * Math.radtodeg;
+        //var h = Math.atan2( front.z, front.x ) * Math.radtodeg;
+        var h = (Math.atan2( front.x, front.z ) * Math.radtodeg)-180;
 
         view.moveCamera( h, 20, 10, 0.3, target );
 
@@ -531,28 +568,38 @@ var view = ( function () {
 
         l = l || 1;
         if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
-        //camera.position.copy( this.orbit( h, v-90, d ) );
-        camera.position.lerp( this.orbit( h, v-90, d ), l );
+        //camera.position.copy( this.orbit( h, v, d ) );
+        camera.position.lerp( this.orbit( h, v, d ), l );
         controls.update();
-
+        
     };
 
     view.orbit = function( h, v, d ) {
 
+        var offset = new THREE.Vector3();
+        
+        var phi = (v-90) * Math.degtorad;
+        var theta = (h+180) * Math.degtorad;
+        offset.x =  d * Math.sin(phi) * Math.sin(theta);
+        offset.y =  d * Math.cos(phi);
+        offset.z =  d * Math.sin(phi) * Math.cos(theta);
+
         var p = new THREE.Vector3();
-        var phi = v * Math.degtorad;
-        var theta = h * Math.degtorad;
+        p.copy(controls.target).add(offset);
+        /*
         p.x = ( d * Math.sin(phi) * Math.cos(theta)) + controls.target.x;
-        p.z = ( d * Math.sin(phi) * Math.sin(theta)) + controls.target.z;
         p.y = ( d * Math.cos(phi)) + controls.target.y;
+        p.z = ( d * Math.sin(phi) * Math.sin(theta)) + controls.target.z;*/
+
+        //key[8] = theta;
+        
         return p;
 
     };
 
-    view.setDriveCar = function ( n ) {
+    view.setDriveCar = function ( name ) {
 
-        currentCar = n;
-        ammo.send('setDriveCar', { n:n });
+        ammo.send('setDriveCar', { n:this.getByName(name).userData.id });
 
     };
 
@@ -616,19 +663,23 @@ var view = ( function () {
 
         while( cars.length > 0 ){
             c = cars.pop();
-            carsSpeed.pop();
-            scene.remove( c.body );
-            scene.remove( c.axe );
-            c.helper.clear();
-            i = c.w.length;
-            while(i--){
-                scene.remove( c.w[i] );
+            if( c.userData.helper ){
+                c.userData.helper.clear();
+                c.remove( c.userData.helper );
             }
+            i = c.userData.w.length;
+            while( i-- ){
+                scene.remove( c.userData.w[i] );
+            }
+            scene.remove( c );
         }
 
         meshs.length = 0;
         perlin = null;
+
         byName = {};
+
+        currentFollow = null;
 
     };
 
@@ -724,6 +775,7 @@ var view = ( function () {
         
         if( o.type == 'capsule' ){
             var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
+            //g.applyMatrix(new THREE.Matrix4().makeRotationY(-Math.PI*0.5));
             mesh = new THREE.Mesh( g, material );
             extraGeo.push(mesh.geometry);
             isCustomGeometry = true;
@@ -917,22 +969,36 @@ var view = ( function () {
         if(o.size.length == 1){ o.size[1] = o.size[0]; }
         if(o.size.length == 2){ o.size[2] = o.size[0]; }
 
-        var pos = o.pos || [0,3,0];
-        var rot = o.rot || [0,0,0];
+        //var pos = o.pos || [0,3,0];
+        o.pos = o.pos == undefined ? [0,3,0] : pos;
+        //var rot = o.rot || [0,0,0];
+
+        o.rot = o.rot == undefined ? [0,0,0] : this.toRad(o.rot);
+        o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
 
         var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
         var mesh = new THREE.Mesh( g, mat.hero );
         extraGeo.push(mesh.geometry);
 
-        mesh.position.set( pos[0], pos[1], pos[2] );
-        mesh.rotation.set( rot[0], rot[1], rot[2] );
+        //mesh.position.set( pos[0], pos[1], pos[2] );
+        //mesh.rotation.set( rot[0], rot[1], rot[2] );
+
+        mesh.position.fromArray( o.pos );
+        mesh.quaternion.fromArray( o.quat );
 
         // copy rotation quaternion
-        o.quat = mesh.quaternion.toArray();
-        o.pos = pos;
+        //o.quat = mesh.quaternion.toArray();
+        //o.pos = pos;
+
+        mesh.userData.speed = 0;
+        mesh.userData.type = 'hero';
 
         scene.add(mesh);
         heros.push(mesh);
+
+
+
+        this.setName( o, mesh );
 
         // send to worker
         ammo.send( 'character', o );
@@ -981,14 +1047,21 @@ var view = ( function () {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
+        
+
         scene.add( mesh );
 
-        // center of mass
+        this.setName( o, mesh );
 
-        var helper = new carHelper( wPos );
+        mesh.userData.speed = 0;
+        mesh.userData.steering = 0;
+        mesh.userData.NumWheels = o.nw || 4;
+        mesh.userData.type = 'car';
 
-        //var axe = //THREE.AxisHelper(1);
-        scene.add( helper.mesh );
+        if(o.helper){
+            mesh.userData.helper = new carHelper( wPos );
+            mesh.add( mesh.userData.helper.mesh );
+        }
 
         // wheels
 
@@ -998,7 +1071,7 @@ var view = ( function () {
 
         var w = [];
 
-        var needScale = o.wheel==undefined ? true : false;
+        var needScale = o.wheel == undefined ? true : false;
 
         var gw = o.wheel || geo['wheel'];
         var gwr = gw.clone();
@@ -1018,10 +1091,16 @@ var view = ( function () {
             scene.add( w[i] );
         }
 
-        var car = { body:mesh, w:w, axe:helper.mesh, nw:o.nw || 4, helper:helper };
+        mesh.userData.w = w;
 
-        cars.push( car );
-        carsSpeed.push( 0 );
+        //var car = { body:mesh, w:w, axe:helper.mesh, nw:o.nw || 4, helper:helper, speed:0 };
+
+        cars.push( mesh );
+
+        mesh.userData.id = cars.length-1;
+        //carsSpeed.push( 0 );
+
+
 
         if( o.mesh ) o.mesh = null;
         if( o.wheel ) o.wheel = null;
@@ -1395,15 +1474,15 @@ var view = ( function () {
     view.setName = function ( o, mesh ) {
 
         if( o.name !== undefined ){ 
-            byName[name] = mesh;
-            mesh.name = name;
+            byName[o.name] = mesh;
+            mesh.name = o.name;
         }
 
     };
 
     view.getByName = function (name){
 
-        return byName[name];
+        return byName[name] || null;
 
     };
 
@@ -1424,6 +1503,8 @@ var view = ( function () {
     }
 
     view.bodyStep = function(){
+
+        if( !meshs.length ) return;
 
         meshs.forEach( function( b, id ) {
             var n = id * 8;
@@ -1446,8 +1527,11 @@ var view = ( function () {
 
     view.heroStep = function(){
 
+        if(heros.length == 0 ) return;
+
         heros.forEach( function( b, id ) {
             var n = id * 8;
+            b.userData.speed = Hr[n] * 100;
             b.position.set( Hr[n+1], Hr[n+2], Hr[n+3] );
             b.quaternion.set( Hr[n+4], Hr[n+5], Hr[n+6], Hr[n+7] );
         });
@@ -1456,37 +1540,46 @@ var view = ( function () {
 
     view.carsStep = function(){
 
+        if( !cars.length ) return;
+
         cars.forEach( function( b, id ) {
             var n = id * 56;
-            carsSpeed[id] = Cr[n];
+            //carsSpeed[id] = Cr[n];
+            b.userData.speed = Cr[n];
 
-            b.body.position.set( Cr[n+1], Cr[n+2], Cr[n+3] );
-            b.body.quaternion.set( Cr[n+4], Cr[n+5], Cr[n+6], Cr[n+7] );
+            b.position.set( Cr[n+1], Cr[n+2], Cr[n+3] );
+            b.quaternion.set( Cr[n+4], Cr[n+5], Cr[n+6], Cr[n+7] );
 
-            b.axe.quaternion.copy( b.body.quaternion );
+            //b.axe.position.copy( b.body.position );
+            //b.axe.quaternion.copy( b.body.quaternion );
 
-            var j = b.nw, w;
+            var j = b.userData.NumWheels, w;
 
-            if( j == 4 ){
-                w = 8 * ( 4 + 1 );
-                b.helper.updateSuspension(Cr[n+w+0], Cr[n+w+1], Cr[n+w+2], Cr[n+w+3]);
+            if(b.userData.helper){
+                if( j == 4 ){
+                    w = 8 * ( 4 + 1 );
+                    b.userData.helper.updateSuspension(Cr[n+w+0], Cr[n+w+1], Cr[n+w+2], Cr[n+w+3]);
+                }
             }
+            
             while(j--){
 
                 w = 8 * ( j + 1 );
                 //if( j == 1 ) steering = a[n+w];// for drive wheel
-                if( j == 1 ) b.axe.position.x = Cr[n+w];
-                if( j == 2 ) b.axe.position.y = Cr[n+w];
-                if( j == 3 ) b.axe.position.z = Cr[n+w];
+                //if( j == 1 ) b.axe.position.x = Cr[n+w];
+                //if( j == 2 ) b.axe.position.y = Cr[n+w];
+                //if( j == 3 ) b.axe.position.z = Cr[n+w];
 
-                b.w[j].position.set( Cr[n+w+1], Cr[n+w+2], Cr[n+w+3] );
-                b.w[j].quaternion.set( Cr[n+w+4], Cr[n+w+5], Cr[n+w+6], Cr[n+w+7] );
+                b.userData.w[j].position.set( Cr[n+w+1], Cr[n+w+2], Cr[n+w+3] );
+                b.userData.w[j].quaternion.set( Cr[n+w+4], Cr[n+w+5], Cr[n+w+6], Cr[n+w+7] );
             }
         });
 
     };
 
     view.softStep = function(){
+
+        if( !softs.length ) return;
 
         var softPoints = 0;
 
@@ -1611,14 +1704,12 @@ var view = ( function () {
 
     view.setLeft = function ( x ) { vs.x = x; };
 
-    view.tell = function ( str ) { debug.innerHTML = str; };
-
     view.resize = function () {
 
         vs.h = window.innerHeight;
         vs.w = window.innerWidth - vs.x;
 
-        debug.style.left = vs.x +'px';
+        //debug.style.left = vs.x +'px';
         canvas.style.left = vs.x +'px';
         camera.aspect = vs.w / vs.h;
         camera.updateProjectionMatrix();
@@ -1637,7 +1728,8 @@ var view = ( function () {
         time = now();
         if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
 
-        if( isCamFollow ) this.follow();
+        
+        this.controlUpdate();
         renderer.render( scene, camera );
 
     };
@@ -1668,7 +1760,7 @@ var view = ( function () {
 
     view.addShadow = function(){
 
-        if(isWithShadow) return;
+       if(isWithShadow) return;
 
         isWithShadow = true;
         renderer.shadowMap.enabled = true;
@@ -1770,7 +1862,7 @@ var view = ( function () {
 
         this.positions = geometry.attributes.position.array;
 
-        var material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors } );
+        var material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, name:'helper' } );
 
         this.mesh = new THREE.LineSegments( geometry, material);
 
