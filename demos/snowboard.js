@@ -35,6 +35,6 @@ function demo() {
     add ({ type:'sphere', size:[1], pos:[5,20,105], mass:0.2 });
     add ({ type:'sphere', size:[1], pos:[-5,20,-5], mass:0.2 });
 
-    view.activeFollow();
+ 
 
 };

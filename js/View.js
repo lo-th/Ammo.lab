@@ -162,8 +162,8 @@ var view = ( function () {
         // EVENT
 
         window.addEventListener( 'resize', view.resize, false );
-        document.addEventListener( 'keydown', view.keyDown, false );
-        document.addEventListener( 'keyup', view.keyUp, false );
+        //document.addEventListener( 'keydown', view.keyDown, false );
+        //document.addEventListener( 'keyup', view.keyUp, false );
 
         imagesLoader = new THREE.TextureLoader();
 
@@ -535,11 +535,11 @@ var view = ( function () {
 
         var mesh = currentFollow;
 
-        if( mesh.userData.speed !== undefined) {// && mesh.userData.type == 'car') {
+        if( mesh.userData.speed !== undefined && mesh.userData.type == 'car') {
             
             if( mesh.userData.speed < 10 && mesh.userData.speed > -10 ){ 
                // controls.update();
-                key[8] = controls.getAzimuthalAngle(); 
+                //key[8] = controls.getAzimuthalAngle(); 
                 return;
             }
         }

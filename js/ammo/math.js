@@ -34,17 +34,14 @@ Ammo.btVector3.prototype.toArray = function( array, offset ){
 
 };
 
-Ammo.btVector3.prototype.direction = function( axis, angle ){
+Ammo.btVector3.prototype.direction = function( q ){
 
-    var halfAngle = angle * 0.5;
-    var s = Math.sin( halfAngle ); 
-
-    // quaternion
+    // quaternion 
     
-    var qw = Math.cos( halfAngle );
-    var qx = axis[0] * s;
-    var qy = axis[1] * s;
-    var qz = axis[2] * s;
+    var qx = q.x();
+    var qy = q.y();
+    var qz = q.z();
+    var qw = q.w();
 
     var x = this.x();
     var y = this.y();
@@ -91,6 +88,13 @@ Ammo.btQuaternion.prototype.toArray = function( array, offset ){
     array[ offset + 3 ] = this.w();
 
     return array;
+
+};
+
+Ammo.btQuaternion.prototype.setFromAxisAngle = function( axis, angle ){
+
+    var halfAngle = angle * 0.5, s = Math.sin( halfAngle );
+    this.setValue( axis[0] * s, axis[1] * s, axis[2] * s, Math.cos( halfAngle ) );
 
 };
 

@@ -1,10 +1,20 @@
 function demo() {
 
     cam ( 0, 10, 10 );
-
     load ( 'track', afterLoad );
 
 }
+
+// ! \\ 
+
+//  click on view and use key to controle character
+//  use W - S or Z - S for front back move
+//  use A - D or Q - D for strafe move
+//  use left right arrow to rotate view
+
+// you can also use Gamepad :)
+
+// TODO : add jump
 
 function afterLoad () {
 
@@ -12,12 +22,9 @@ function afterLoad () {
 
     add({ type:'mesh', shape:view.getGeo()['track'], mass:0, friction:0.6, restitution:0.1 });
 
-    // ! \\ click on view and use key to controle character
-
     character ({ name:'bob', rot:[0,90,0] });
 
     follow ('bob');
-
 
 
     var s, x, y;

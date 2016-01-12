@@ -16,7 +16,7 @@
 
 var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
-var trans, pos, quat, posW;
+var trans, pos, quat, posW, quatW;
 var tmpTrans, tmpPos, tmpQuat;
 var tmpPos1, tmpPos2, tmpPos3, tmpPos4;
 var tmpTrans1, tmpTrans2;
@@ -285,12 +285,14 @@ function init () {
     quat = new Ammo.btQuaternion();
     pos = new Ammo.btVector3();
     posW = new Ammo.btVector3(); // walk direction
+    quatW = new Ammo.btQuaternion();
 
     // tmp Transform
 
     tmpTrans = new Ammo.btTransform()
     tmpPos = new Ammo.btVector3();
     tmpQuat = new Ammo.btQuaternion();
+
 
     // extra vector
 
@@ -345,7 +347,7 @@ function resetARRAY(){
 
 };
 
-function reset () {
+function reset ( fullReset ) {
 
     pause = true;
 
@@ -360,24 +362,18 @@ function reset () {
     // clear body name object
     byName = {};
 
-    //world.getBroadphase().resetPool( world.getDispatcher() );
-    //world.getConstraintSolver().reset();
+    
+
+    if( fullReset ){
+        clearWorld();
+        addWorld();
+    }
 
     pause = false;
 
 };
 
-function dispose () {
 
-    Ammo.destroy( world );
-    Ammo.destroy( solver );
-    Ammo.destroy( collision );
-    Ammo.destroy( dispatcher );
-    Ammo.destroy( broadphase );
-
-    world = null;
-
-};
 
 function wipe (obj) {
     for (var p in obj) {

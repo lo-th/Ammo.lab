@@ -105,7 +105,7 @@ function addVehicle ( o ) {
 
         incSteering: o.incSteering || 0.04, 
         maxSteering: o.maxSterring || 0.3,//Math.PI/6,
-        incEngine: o.acceleration || 5, 
+        incEngine: o.acceleration || 10, 
         maxEngine: o.engine || 1000,
         maxBreaking : o.maxBreaking || 100
     };
@@ -275,18 +275,21 @@ function drive ( id ) {
     var u = carsInfo[id];
     var wn = car.getNumWheels();
 
-    if( key[2] == 1 ) u.steering += u.incSteering;
-    if( key[3] == 1 ) u.steering -= u.incSteering;
-    if( key[2] == 0 && key[3] == 0 ) u.steering *= 0.9;
+    u.steering -= u.incSteering * key[0];
+
+    //if( key[2] == 1 ) u.steering += u.incSteering;
+    //if( key[3] == 1 ) u.steering -= u.incSteering;
+    //if( key[2] == 0 && key[3] == 0 ) u.steering *= 0.9;
     if( u.steering < -u.maxSteering ) u.steering = -u.maxSteering;
     if( u.steering > u.maxSteering ) u.steering = u.maxSteering;
 
-    if( key[0] == 1 ) u.engine += u.incEngine;
-    if( key[1] == 1 ) u.engine -= u.incEngine;
+    u.engine -= u.incEngine * key[1];
+    //if( key[0] == 1 ) u.engine += u.incEngine;
+    //if( key[1] == 1 ) u.engine -= u.incEngine;
     if( u.engine > u.maxEngineForce ) u.engine = u.maxEngine;
     if( u.engine < -u.maxEngineForce ) u.engine = -u.maxEngine;
     
-    if( key[0] == 0 && key[1] == 0 ){
+    if( key[1] == 0  ){// && key[1] == 0 ){
         if( u.engine > 1 ) u.engine *= 0.9;
         else if ( u.engine < -1 ) u.engine *= 0.9;
         else { u.engine = 0; u.breaking = u.maxBreaking; }

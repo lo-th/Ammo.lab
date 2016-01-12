@@ -9,6 +9,21 @@ var world = null;
 var worldInfo = null;
 var solver, solverSoft, collision, dispatcher, broadphase;
 
+function clearWorld () {
+
+    //world.getBroadphase().resetPool( world.getDispatcher() );
+    //world.getConstraintSolver().reset();
+
+    Ammo.destroy( world );
+    Ammo.destroy( solver );
+    Ammo.destroy( solverSoft );
+    Ammo.destroy( collision );
+    Ammo.destroy( dispatcher );
+    Ammo.destroy( broadphase );
+
+    world = null;
+
+};
 
 function addWorld () {
 
@@ -54,8 +69,7 @@ function addWorld () {
     //worldInfo.set_water_offset( 0 );
     //worldInfo.set_water_normal( vec3() );
 
-    console.log(world);
-    
+    //console.log(world);
 };
 
 function gravity ( o ) {

@@ -91,11 +91,17 @@ function addCharacter ( o ) {
 
     hero.rotation = 0;
     hero.speed = 0;
-    /*hero.setJumpSpeed();
-    hero.setMaxJumpHeight();
-    hero.canJump(); 
+
+    hero.setJumpSpeed(10);
+    hero.setMaxJumpHeight(100);
+    /*
+    
+     
     hero.jump();
     */
+    //hero.canJump( true );
+
+    console.log(hero)
 
     // The max slope determines the maximum angle that the controller can walk
     if( o.slopeRadians ) hero.setMaxSlope ( o.slopeRadians );
@@ -122,34 +128,47 @@ function move ( id ) {
     var id = id || 0;
     if( !heros[id] ) return;
 
+    var h = heros[id];
+
     var walkSpeed = 0.3;
+    var rotationSpeed = 0.1;
 
     var x=0,y=0,z=0;
 
-    if(key[0] == 1 || key[1] == 1 || key[2] == 1 || key[3] == 1) heros[id].speed += 0.1;
-    if(key[0] == 0 && key[1] == 0 && key[2] == 0 && key[3] == 0) heros[id].speed -= 0.1;
+    //if(key[0] == 1 || key[1] == 1 ) heros[id].speed += 0.1;
+    //if(key[0] == 0 && key[1] == 0 ) heros[id].speed -= 0.1;
 
 
-    if(heros[id].speed>1) heros[id].speed = 1;
-    if(heros[id].speed<0) heros[id].speed = 0;
+    //if(heros[id].speed>1) heros[id].speed = 1;
+    //if(heros[id].speed<0) heros[id].speed = 0;
 
-    if( key[0] == 1 ) z=-heros[id].speed * walkSpeed;
-    if( key[1] == 1 ) z=heros[id].speed * walkSpeed;
+    //if( key[1] == -1 ) z=-heros[id].speed * walkSpeed;
+    //if( key[1] == 1 ) z=heros[id].speed * walkSpeed;
 
-    if( key[2] == 1 ) x=-heros[id].speed * walkSpeed;
-    if( key[3] == 1 ) x=heros[id].speed * walkSpeed;
+    //if( key[0] == -1 ) x=-heros[id].speed * walkSpeed;
+    //if( key[0] == 1 ) x=heros[id].speed * walkSpeed;
 
-    var angle = key[8]; //heros[id].rotation
+    if( key[4] && h.onGround() ) h.jump();
 
-    // change angle with key
-    //if( key[2] == 1 ) angle -= 0.01;
-    //if( key[3] == 1 ) angle += 0.01;
+    z = walkSpeed * -key[1];
+    x = walkSpeed * -key[0];
+
+
+    h.speed = z+x;
+
+    h.rotation -= key[2] * rotationSpeed;
+
+    var angle = h.rotation;//key[8]; //heros[id].rotation
+
+    // change rotation
+    quatW.setFromAxisAngle( [0,1,0], angle );
+    h.getGhostObject().getWorldTransform().setRotation( quatW );
 
     // walkDirection
-    posW.setValue(x,y,z);
-    posW.direction( [0,1,0], angle );
+    posW.setValue( x, y, z );
+    posW.direction( quatW );
 
-    heros[id].setWalkDirection( posW );
+    h.setWalkDirection( posW );
 
    // heros[id].preStep ( world );
    //heros[id].setVelocityForTimeInterval(vec3(), 1);

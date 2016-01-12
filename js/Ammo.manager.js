@@ -121,10 +121,16 @@ var ammo = ( function () {
         //clearInterval( timer );
         sendTime = now();
 
-        if( isBuffer ) worker.postMessage( { m:'step', key:view.getKey(), Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } , [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ] );
-        else worker.postMessage( { m:'step', key:view.getKey() } );
+        user.update();
+        var key = user.getKey();
 
-        tell( 'THREE '+view.getFps() + ' | AMMO ' + fps +' | '+ delay +'ms' );
+        if( isBuffer ) worker.postMessage( { m:'step', key:key, Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } , [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ] );
+        else worker.postMessage( { m:'step', key:key } );
+
+        var f = view.getFps();
+        tell( 'THREE '+ f + ' | AMMO ' + fps +' | '+ delay +'ms' );
+
+        //tell( key );
         
     };
 
