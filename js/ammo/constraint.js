@@ -8,7 +8,7 @@
 function clearJoint (){
 
     var j;
-    
+
     while( joints.length > 0 ){
 
         j = joints.pop();
@@ -40,7 +40,8 @@ function addJoint ( o ) {
     if(o.type !== "joint_p2p" && o.type !== "joint_hinge" && o.type !== "joint" ){
 
         
-        /*
+        /* 
+        // test force local
         var tmpA = new Ammo.btTransform();
         tmpA.setIdentity();
         tmpA.setOrigin( point1 );
@@ -108,7 +109,6 @@ function addJoint ( o ) {
 
 
     // slider & dof
-    var p;
 
     if(o.linLower){ tmpPos.fromArray(o.linLower); joint.setLinearLowerLimit( tmpPos ); }
     if(o.linUpper){ tmpPos.fromArray(o.linUpper); joint.setLinearUpperLimit( tmpPos ); }
@@ -117,7 +117,8 @@ function addJoint ( o ) {
     if(o.angUpper){ tmpPos.fromArray(o.angUpper); joint.setAngularUpperLimit( tmpPos ); }
 
     // spring dof
-    if(o.feedback) joint.enableFeedback(o.feedback);
+
+    if(o.feedback) joint.enableFeedback( o.feedback );
     if(o.enableSpring) joint.enableSpring( o.enableSpring[0], o.enableSpring[1] );
     if(o.damping) joint.setDamping( o.damping[0], o.damping[1] );
     if(o.stiffness) joint.setStiffness( o.stiffness[0], o.stiffness[1] );

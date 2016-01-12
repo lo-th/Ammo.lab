@@ -98,10 +98,6 @@ function addVehicle ( o ) {
     o.pos = o.pos == undefined ? [0,0,0] : o.pos;
     o.quat = o.quat == undefined ? [0,0,0,1] : o.quat;
 
-    //var size = o.size || [2,0.5,4];
-    //var pos = o.pos || [0,0,0];
-    //var quat = o.quat || [0,0,0,1];
-
     var carInfo = {
         steering:0, 
         engine:0, 

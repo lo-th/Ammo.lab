@@ -4,6 +4,7 @@
 //  AMMO SOFTBODY
 //
 //--------------------------------------------------
+
 var softPoints;
 
 function stepSoftBody() {
@@ -14,7 +15,6 @@ function stepSoftBody() {
 
     softs.forEach( function ( b ) {
 
-        //var t = b.softType; // type of soft body
         var s = b.get_m_nodes(); // get vertrices list
         var j = s.size();
         var n;
@@ -110,7 +110,7 @@ function addSoftBody ( o ) {
 
             self.postMessage({ m:'ellipsoid', o:o });
         break;
-        case 'softConvex':
+        case 'softConvex': // BUG !!
 
             body = softBodyHelpers.CreateFromConvexHull( worldInfo, o.v, o.v.length/3, o.randomize || false );
             body.softType = 4;
@@ -130,15 +130,10 @@ function addSoftBody ( o ) {
             body = softBodyHelpers.CreateFromTriMesh( world.getWorldInfo(), o.v, o.i, o.ntri, o.randomize || true );
             body.softType = 5;
 
-            //console.log('result:' + body.get_m_nodes().size())
-
         break;
     }
 
     var sb = body.get_m_cfg();
-    
-    // Soft-soft and soft-rigid collisions
-    
 
     if( o.viterations !== undefined ) sb.set_viterations( o.viterations );//10
     if( o.piterations !== undefined ) sb.set_piterations( o.piterations );//10
@@ -157,15 +152,6 @@ function addSoftBody ( o ) {
     if( o.kvc !== undefined ) sb.set_kVC(o.kvc);
 
     
-
-    
-    //body.setCollisionShape(Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape())
-
-
-    //
-    //console.log(sb);
-    //console.log(softBodyHelpers);
-
     // Stiffness
     if( o.klst !== undefined ) body.get_m_materials().at(0).set_m_kLST(o.klst);
     if( o.kast !== undefined ) body.get_m_materials().at(0).set_m_kAST(o.kast);
@@ -178,32 +164,13 @@ function addSoftBody ( o ) {
     if(o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin );
 
 
-
-
+    // Soft-soft and soft-rigid collisions
     world.addSoftBody( body, o.group || 1, o.mask || -1 );
 
     if(o.name) byName[o.name] = body;
 
     softs.push( body );
 
-    //var localInertia = vec3();
-    //sh.calculateLocalInertia( mass, localInertia );
+    o = null;
 
-    /*if( o.friction !== undefined ) body.setFriction(o.friction);
-    if( o.rollingFriction !== undefined ) body.setRollingFriction(o.rollingFriction);
-    if( o.anisotropicFriction !== undefined ) body.setAnisotropicFriction(o.anisotropicFriction);
-    if( o.restitution !== undefined ) body.setRestitution(o.restitution);
-    */
-
-    // generateClusters with k=0 will create a convex cluster for each tetrahedron or triangle otherwise an approximation will be used (better performance)
-    // generateClusters (   int     k, int     maxiterations = 8192  )   
-    //body.generateClusters(0);
-
-    
-
-    //body.setWorldTransform(startTransform);
-
-    //console.log(body.get_m_cf
-
-
-}
+};

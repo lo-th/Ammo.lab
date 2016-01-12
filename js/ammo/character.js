@@ -103,19 +103,19 @@ function addCharacter ( o ) {
     
 
 
-   // hero.warp(v3(o.pos));
+    // hero.warp(v3(o.pos));
+    
     tmpPos2.setValue( 0, 0, 0 );
     hero.setVelocityForTimeInterval( tmpPos2, 1 );
 
     world.addCollisionObject( body, o.group || 1, o.mask || -1 );
     world.addAction( hero ); 
 
-    //console.log( hero );
-    //console.log( hero.getGhostObject().getWorldTransform() )
-
     heros.push( hero );
 
-}
+    o = null;
+
+};
 
 function move ( id ) {
 
@@ -131,32 +131,26 @@ function move ( id ) {
 
 
     if(heros[id].speed>1) heros[id].speed = 1;
-    if(heros[id].speed<0) heros[id].speed = 0
+    if(heros[id].speed<0) heros[id].speed = 0;
 
-    //console.log( strafeDir.x(), strafeDir.y(), strafeDir.z() );
+    if( key[0] == 1 ) z=-heros[id].speed * walkSpeed;
+    if( key[1] == 1 ) z=heros[id].speed * walkSpeed;
 
-    //if( key[0] == 1 ) walkDirection.op_add(strafeDir);
-    //if( key[1] == 1 ) walkDirection.op_sub(strafeDir)
+    if( key[2] == 1 ) x=-heros[id].speed * walkSpeed;
+    if( key[3] == 1 ) x=heros[id].speed * walkSpeed;
 
-    if( key[0] == 1 ) z=-heros[id].speed * walkSpeed;//walkDirection.setX(1);//.op_add(forwardDir);
-    if( key[1] == 1 ) z=heros[id].speed * walkSpeed;//walkDirection.setX(-1);//.op_sub(forwardDir);
+    var angle = key[8]; //heros[id].rotation
 
-    if( key[2] == 1 ) x=-heros[id].speed * walkSpeed;//walkDirection.setZ(1);//.op_add(upDir);
-    if( key[3] == 1 ) x=heros[id].speed * walkSpeed;//walkDirection.setZ(-1);//.op_sub(upDir);
-
-    //if( key[2] == 1 ) heros[id].rotation -= 0.01;//xform.setRotation(q4([0,1,0,0.01]));
-    //if( key[3] == 1 ) heros[id].rotation += 0.01;
-
-    //heros[id].speed -=0.1;
-    //0;
-
-    var angle = key[8];
+    // change angle with key
+    //if( key[2] == 1 ) angle -= 0.01;
+    //if( key[3] == 1 ) angle += 0.01;
 
     // walkDirection
     posW.setValue(x,y,z);
     posW.direction( [0,1,0], angle );
 
     heros[id].setWalkDirection( posW );
+
    // heros[id].preStep ( world );
    //heros[id].setVelocityForTimeInterval(vec3(), 1);
 
