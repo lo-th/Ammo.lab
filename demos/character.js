@@ -11,10 +11,10 @@ function demo() {
 //  use W - S or Z - S for front back move
 //  use A - D or Q - D for strafe move
 //  use left right arrow to rotate view
+//  space to jump
 
-// you can also use Gamepad :)
+// you can also use Gamepad ( mapped for xbox )
 
-// TODO : add jump
 
 function afterLoad () {
 
