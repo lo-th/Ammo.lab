@@ -10,7 +10,7 @@
 
 var editor = ( function () {
 
-    var content, codeContent, code, separator, menu, debug, title; 
+    var content, codeContent, code, separator, menuCode, debug, title; 
     var callback = function(){};
     var isSelfDrag = false;
     var isFocus = false;
@@ -20,7 +20,6 @@ var editor = ( function () {
     var left = 0;
     var oldleft = 0;
     var fileName = '';
-    var isMenu = false;
     var nextDemo = null;
     var selectColor = '#308AFF';
     var scrollOn = false;
@@ -28,7 +27,7 @@ var editor = ( function () {
     var bigmenu;
     var bigButton = [];
     var bigContent;
-    var isBigMenu = false;
+    var isMenu = false;
     var isWithCode = true;
 
     var octo, octoArm;
@@ -101,9 +100,9 @@ var editor = ( function () {
         separator.className = 'separator';
         document.body.appendChild( separator );
 
-        menu = document.createElement('div');
-        menu.className = 'menu';
-        content.appendChild( menu );
+        menuCode = document.createElement('div');
+        menuCode.className = 'menuCode';
+        content.appendChild( menuCode );
 
         content.style.display = 'none';
         separator.style.display = 'none';
@@ -157,6 +156,7 @@ var editor = ( function () {
 
         this.removeSeparatorEvent();
 
+        editor.Bdefault(bigButton[1]);
         editor.resize();
 
     };
@@ -200,17 +200,21 @@ var editor = ( function () {
 
     editor.makeBigMenu = function(){
 
+        bigmenu.style.width = window.innerWidth - left +'px';
+
         bigButton[0] = document.createElement( 'div' );
         bigButton[0].className = 'bigButton';
         bigmenu.appendChild( bigButton[0] );
         bigButton[0].innerHTML = "DEMOS";
         bigButton[0].addEventListener('mousedown', editor.selectBigMenu, false );
+        bigButton[0].name = 'demo';
 
         bigButton[1] = document.createElement( 'div' );
         bigButton[1].className = 'bigButton';
         bigmenu.appendChild( bigButton[1] );
         bigButton[1].innerHTML = "CODE";
         bigButton[1].addEventListener('mousedown', editor.selectCode, false );
+        bigButton[1].name = 'code';
 
 
         bigContent = document.createElement( 'div' );
@@ -231,15 +235,15 @@ var editor = ( function () {
 
     editor.selectBigMenu = function(e){
 
-        if(isBigMenu) editor.hideBigMenu();
+        if(isMenu) editor.hideBigMenu();
         else editor.showBigMenu()
     };
 
     editor.showBigMenu = function(e){
 
         //bigContent.style.display = "block";
-        bigmenu.style.background = "rgba(0,0,0,0.5)";
-        isBigMenu = true;
+        bigmenu.style.background = "rgba(42,42,42,0.9)";
+        isMenu = true;
 
 
 
@@ -254,7 +258,7 @@ var editor = ( function () {
 
         //bigContent.style.display = "none";
         bigmenu.style.background = "rgba(0,0,0,0)";
-        isBigMenu = false;
+        isMenu = false;
 
         var i = bigContent.childNodes.length, b;
         while(i--){
@@ -262,6 +266,8 @@ var editor = ( function () {
             b.removeEventListener('mousedown', editor.bigDown );
             bigContent.removeChild( b );
         }
+
+        editor.Bdefault(bigButton[0]);
 
     };
 
@@ -290,9 +296,26 @@ var editor = ( function () {
     };
 
     editor.Bout = function(e){
-        e.target.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-        e.target.style.background = "none";
-        e.target.style.color = "#dedede"
+        var style = 0;
+        if(e.target.name == 'code' && isWithCode) style = 1;
+        if(e.target.name == 'demo' && isMenu) style = 1;
+
+        if(!style){
+            editor.Bdefault(e.target);
+        } else {
+            e.target.style.border = "1px solid rgba(255, 255, 255, 0)";
+            e.target.style.background = "rgba(255, 255, 255, 0.2)";
+            e.target.style.color = "#2A2A2A";
+        }
+        
+    };
+
+    editor.Bdefault = function(b){
+
+        b.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+        b.style.background = "none";
+        b.style.color = "#dedede";
+
     };
 
     // github logo
@@ -437,7 +460,7 @@ var editor = ( function () {
         oScript.text = value;
         document.getElementsByTagName('BODY').item(0).appendChild(oScript);
 
-        menu.innerHTML = '&bull; ' + fileName;
+        menuCode.innerHTML = '&bull; ' + fileName;
         title.innerHTML = fileName.charAt(0).toUpperCase() + fileName.substring(1).toLowerCase();//fileName;
 
         callback( fileName );
