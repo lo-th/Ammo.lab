@@ -1,0 +1,18 @@
+[
+    "src/base.js",
+    "src/Perlin.js",
+    "src/MorphAnimMesh.js",
+    "src/loaders/collada/Animation.js",
+    "src/loaders/collada/AnimationHandler.js",
+    "src/loaders/collada/KeyFrameAnimation.js",
+    "src/loaders/sea3d/SEA3D.js",
+    "src/loaders/sea3d/SEA3DLoader.js",
+    "src/loaders/sea3d/SEA3DLegacy.js",
+    "src/loaders/sea3d/SEA3DLZMA.js",
+    "src/controls/OrbitControls.js",
+    "src/geometries/CapsuleBufferGeometry.js",
+    "src/geometries/ConvexGeometry.js",
+    "src/shaders/TransparentShadow.js",
+    "src/helpers/CarHelper.js",
+    "src/objects/Terrain.js"
+]

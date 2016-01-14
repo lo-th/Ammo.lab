@@ -23,7 +23,6 @@ var demoName = 'basic';
 
 //////////////////////////////
 
-
 var direct = false;
 var isWithCode = false;
 
@@ -37,17 +36,6 @@ function init(){
     loop();
 
 };
-
-/*function afterLoad () {
-
-    user.init();
-    editor.init( launch, isWithCode );
-    ammo.init( ready, direct );
-
-    loop();
-
-};*/
-
 
 function loop () {
 
@@ -101,4 +89,3 @@ function tell ( str ) { editor.tell( str ); };
 function load ( name, callback ) { view.load( name, callback ); };
 
 function anchor ( o ) { ammo.send( 'anchor', o ); };
-
