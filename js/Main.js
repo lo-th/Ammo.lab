@@ -36,7 +36,7 @@ function init(){
 function afterLoad () {
 
     user.init();
-    editor.init( launch );
+    editor.init( launch, isWithCode );
     ammo.init( ready, direct );
     loop();
 

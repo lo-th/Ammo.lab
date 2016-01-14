@@ -28,7 +28,7 @@ var view = ( function () {
 
     var canvas, renderer, scene, camera, controls, debug;
     var ray, mouse, content, targetMouse, rayCallBack, moveplane, isWithRay = false;;
-    var vs = { w:1, h:1, l:400 };
+    var vs = { w:1, h:1, l:0, x:0 };
 
     var helper;
     
@@ -95,7 +95,7 @@ var view = ( function () {
         if(intro !== null ) intro.clear();
 
         renderer.setClearColor(0x2A2A2A, 1);
-        renderer.setSize( 100, 100 );
+        //renderer.setSize( 100, 100 );
         renderer.setPixelRatio( window.devicePixelRatio );
 
         //renderer.sortObjects = true;

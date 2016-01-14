@@ -17,17 +17,18 @@ var editor = ( function () {
     var errorLines = [];
     var widgets = [];
     var interval = null;
-    var left = 400;
+    var left = 0;
     var fileName = '';
     var isMenu = false;
     var nextDemo = null;
     var selectColor = '#308AFF';
     var scrollOn = false;
-    var menuPins;
+    //var menuPins;
     var bigmenu;
     var bigButton = [];
     var bigContent;
     var isBigMenu = false;
+    var isWithCode = true;
 
     var octo, octoArm;
 
@@ -42,11 +43,15 @@ var editor = ( function () {
 
     
 
-    editor.init = function ( Callback ) {
+    editor.init = function ( Callback, withCode ) {
 
         if(Callback) callback = Callback;
 
-        left = ~~ (window.innerWidth*0.4);
+        isWithCode = withCode || false;
+
+
+
+        
 
         // big menu
 
@@ -103,6 +108,9 @@ var editor = ( function () {
         menu.className = 'menu';
         content.appendChild( menu );
 
+        content.style.display = 'none';
+        separator.style.display = 'none';
+
         /*menuPins = document.createElement('div');
         menuPins.className = 'menuPins';
         content.appendChild( menuPins );
@@ -129,7 +137,43 @@ var editor = ( function () {
         menu.addEventListener('mouseout', editor.menu_out, false );
         menu.addEventListener('mousedown', editor.menu_down, false );*/
 
-        this.resize();
+        if(isWithCode){
+            left = ~~ (window.innerWidth*0.4);
+            content.style.display = 'block';
+            separator.style.display = 'block';
+            this.resize();
+        } else {
+            
+        }
+
+        
+
+    };
+
+    editor.selectCode = function (){
+
+        if(isWithCode) editor.hide();
+        else editor.show();
+
+    };
+
+    editor.hide = function (){
+
+        isWithCode = false;
+        content.style.display = 'none';
+        separator.style.display = 'none';
+        left = 0;
+        editor.resize();
+
+    };
+
+    editor.show = function (){
+
+        isWithCode = true;
+        content.style.display = 'block';
+        separator.style.display = 'block';
+        left = ~~ (window.innerWidth*0.4);
+        editor.resize();
 
     };
 
@@ -168,6 +212,7 @@ var editor = ( function () {
         bigButton[1].className = 'bigButton';
         bigmenu.appendChild( bigButton[1] );
         bigButton[1].innerHTML = "CODE";
+        bigButton[1].addEventListener('mousedown', editor.selectCode, false );
 
 
         bigContent = document.createElement( 'div' );
