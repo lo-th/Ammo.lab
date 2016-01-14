@@ -157,7 +157,7 @@ self.onmessage = function ( e ) {
 
     }
 
-    if(m === 'reset') reset();
+    if(m === 'reset') reset( e.data.full );
 
     if(m === 'key') key = e.data.o;
 

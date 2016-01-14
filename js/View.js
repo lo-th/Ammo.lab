@@ -98,7 +98,7 @@ var view = ( function () {
         //renderer.setSize( 100, 100 );
         renderer.setPixelRatio( window.devicePixelRatio );
 
-        //renderer.sortObjects = true;
+        //renderer.sortObjects = false;
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
 
@@ -136,7 +136,7 @@ var view = ( function () {
         mat['statique'] = new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6 });
         mat['hero'] = new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true });
         mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
-        mat['cars'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'cars', wireframe:true, transparent:true });
+        mat['cars'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'cars', wireframe:true, transparent:true, side: THREE.DoubleSide });
         mat['tmp1'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp1', wireframe:true, transparent:true });
         mat['tmp2'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp2', wireframe:true, transparent:true });
         mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
@@ -173,7 +173,9 @@ var view = ( function () {
         this.initEnv();
 
         // charge basic geometry
-        this.load ( 'basic', callback );
+        //this.load ( 'basic', callback );
+
+        if(callback)callback();
 
     };
 

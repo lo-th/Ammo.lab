@@ -12,8 +12,8 @@ function afterLoad () {
 
     add({type:'box', pos:[10,5,0], size:[1,10, 21]});
     add({type:'box', pos:[-10,5,0], size:[1,10, 21]});
-    add({type:'box', pos:[0,5,10], size:[20,10, 1]});
-    add({type:'box', pos:[0,5,-10], size:[20,10, 1]});
+    add({type:'box', pos:[0,5,10], size:[19,10, 1]});
+    add({type:'box', pos:[0,5,-10], size:[19,10, 1]});
 
     // load cars map
     view.addMap('cars.png', 'cars');

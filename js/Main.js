@@ -29,18 +29,24 @@ var isWithCode = false;
 
 function init(){
 
-    view.init( afterLoad );
+    view.init();
+    user.init();
+    editor.init( launch, isWithCode );
+    ammo.init( ready, direct );
+    
+    loop();
 
 };
 
-function afterLoad () {
+/*function afterLoad () {
 
     user.init();
     editor.init( launch, isWithCode );
     ammo.init( ready, direct );
+
     loop();
 
-};
+};*/
 
 
 function loop () {
@@ -61,10 +67,14 @@ function ready () {
 
 function launch (name) {
 
+    var full = true;
+    var hash = location.hash.substr( 1 );
+    if( hash === name ) full = false;
+
     location.hash = name;
 
-    ammo.reset();
-    view.reset();
+    ammo.reset( full );
+    view.reset( full );
 
     demo = new window['demo'];
 

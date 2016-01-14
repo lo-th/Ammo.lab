@@ -140,9 +140,9 @@ var ammo = ( function () {
 
     }
 
-    ammo.reset = function() {
+    ammo.reset = function( full ) {
 
-        worker.postMessage( { m:'reset' });
+        worker.postMessage( { m:'reset', full:full });
 
     };
 
