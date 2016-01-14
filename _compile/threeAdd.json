@@ -14,5 +14,6 @@
     "src/geometries/ConvexGeometry.js",
     "src/shaders/TransparentShadow.js",
     "src/helpers/CarHelper.js",
-    "src/objects/Terrain.js"
+    "src/objects/Terrain.js",
+    "src/utils/ViewUtils.js"
 ]
