@@ -50,10 +50,6 @@ var editor = ( function () {
 
         isWithCode = withCode || false;
 
-
-
-        
-
         // big menu
 
         bigmenu = document.createElement( 'div' );
@@ -112,43 +108,36 @@ var editor = ( function () {
         content.style.display = 'none';
         separator.style.display = 'none';
 
-        /*menuPins = document.createElement('div');
-        menuPins.className = 'menuPins';
-        content.appendChild( menuPins );
-        menuPins.innerHTML = '>';*/
-
-
-        /*var mid = document.createElement('div');
-        mid.className = 'separator_mid';
-        mid.innerHTML = '||';
-        separator.appendChild( mid );*/
-
-
         code.on('change', function () { editor.onChange() } );
         code.on('focus', function () { isFocus = true; view.needFocus(); } );
         code.on('blur', function () { isFocus = false; } );
         code.on('drop', function () { if ( !isSelfDrag ) code.setValue(''); else isSelfDrag = false; } );
         code.on('dragstart', function () { isSelfDrag = true; } );
 
-        separator.addEventListener('mouseover', editor.mid_over, false );
-        separator.addEventListener('mouseout', editor.mid_out, false );
-        separator.addEventListener('mousedown', editor.mid_down, false );
-
-        /*menu.addEventListener('mouseover', editor.menu_over, false );
-        menu.addEventListener('mouseout', editor.menu_out, false );
-        menu.addEventListener('mousedown', editor.menu_down, false );*/
-
         if(isWithCode){
             left = ~~ (window.innerWidth*0.4);
             content.style.display = 'block';
             separator.style.display = 'block';
+            this.addSeparatorEvent();
             this.resize();
-        } else {
-            
         }
 
-        
+    };
 
+    editor.addSeparatorEvent = function(){
+
+        separator.addEventListener('mouseover', editor.mid_over, false );
+        separator.addEventListener('mouseout', editor.mid_out, false );
+        separator.addEventListener('mousedown', editor.mid_down, false );
+        
+    };
+
+    editor.removeSeparatorEvent = function(){
+
+        separator.removeEventListener('mouseover', editor.mid_over, false );
+        separator.removeEventListener('mouseout', editor.mid_out, false );
+        separator.removeEventListener('mousedown', editor.mid_down, false );
+        
     };
 
     editor.selectCode = function (){
@@ -165,6 +154,9 @@ var editor = ( function () {
         separator.style.display = 'none';
         oldleft = left;
         left = 0;
+
+        this.removeSeparatorEvent();
+
         editor.resize();
 
     };
@@ -176,6 +168,9 @@ var editor = ( function () {
         separator.style.display = 'block';
         if( oldleft ) left = oldleft;
         else left = ~~ (window.innerWidth*0.4);
+
+        this.addSeparatorEvent();
+
         editor.resize();
 
     };
@@ -316,112 +311,6 @@ var editor = ( function () {
     editor.Gdown = function(){
         window.location.assign('https://github.com/lo-th/Ammo.lab');
     }
-
-    // menu
-
-    /*editor.menu_over = function () { 
-
-        menu.style.background = 'rgba(255, 255, 255, 0.2)';
-        menu.style.borderBottom = '1px solid rgba(255, 255, 255, 0)';
-        menu.style.color = '#000000';
-        menuPins.style.background = selectColor;
-
-    };
-
-    editor.menu_out = function () { 
-
-        menu.style.background = 'none';
-        menu.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
-        menu.style.color = '#d2cec8';
-        menuPins.style.background = 'none';
-        if( isMenu ) editor.menu_hide();
-
-    };
-
-    editor.menu_move = function ( e ) {
-
-        if( !isMenu ) return;
-        nextDemo = null;
-
-        if(scrollOn) if(e.clientX>(left-35)) return;
-
-        var y = ~~ ((e.clientY-10+menu.scrollTop)/30);
-        var i = menu.childNodes.length, b;
-        while(i--){
-            if(i!==0){
-                b = menu.childNodes[i];
-                if(y === i ){
-                    nextDemo = demos[b.name];
-                    b.style.background = selectColor;
-                } else{
-                    b.style.background = '#0d0d0d';
-                }
-            }
-        }
-
-    };
-
-    editor.menu_down = function () {
-
-        if(isMenu){
-            if( nextDemo !== null ){
-                editor.load('demos/' + nextDemo + '.js');
-                nextDemo = null;
-                editor.menu_hide();
-            }
-        } else {
-
-            var lng = demos.length, name, n=1;
-            var ly = 41+ (((lng-1) * 30));
-            if(ly>window.innerHeight) ly = window.innerHeight;
-            menu.style.height = ly + 'px';
-
-            isMenu = true;
-
-            for( var i = 0; i < lng ; i++ ) {
-                name = demos[i];
-                if( name !== fileName ) editor.addButton( demos[i], i, n++ );
-            }
-
-            if(menu.scrollHeight > menu.clientHeight) scrollOn = true;
-            else scrollOn = false;
-
-            if(scrollOn) menuPins.style.display = 'none';
-
-            menu.addEventListener('mousemove', editor.menu_move, false );
-        }
-        
-    };
-
-    editor.menu_hide = function () { 
-
-        isMenu = false;
-        menu.style.height =  40 + 'px';
-        var i = menu.childNodes.length, b;
-        while(i--){
-            if(i!==0){
-                b = menu.childNodes[i];
-                menu.removeChild( b );
-            }
-        }
-        menuPins.style.display = 'block';
-        menu.removeEventListener('mousemove', editor.menu_move, false );
-
-    };
-
-    editor.addButton = function ( name, id , n ) {
-
-        var b = document.createElement('div');
-        b.className = 'menuButton';
-        menu.appendChild( b );
-        b.innerHTML = '&bull; ' + name;
-        b.style.color = '#d2cec8';
-        b.style.top = (40 + (n-1)*30 )+ 'px';
-        if(n==1) b.style.top = 40 + 'px';
-        b.name = id;
-        if(n==1) b.style.borderTop = '1px solid rgba(255, 255, 255, 0.2)';
-
-    };*/
 
     // separator
 

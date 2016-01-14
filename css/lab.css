@@ -138,77 +138,12 @@ html, body {
     font-size: 16px;
     font-weight: 500;
     line-height: 23px;
-    /*pointer-events:auto;
-    cursor:pointer;*/
     height: 40px;
     background: none;
     border-bottom:1px solid rgba(255, 255, 255, 0.2);
     overflow: hidden;
-    /*z-index: 7;
-    overflow-y:auto;*/
 }
 
-.menu::-webkit-scrollbar-thumb {
-    background-color: #105AE2;/*#333;*/
-    border:5px solid rgba(0,0,0,0);
-    /*border-radius: 25px;*/
-    -webkit-background-clip: padding-box;
-    background-clip: padding-box;
-    box-shadow: 1px 1px 0px 1px rgba(255, 255, 255, 0.1) inset;
-}
-
-.menu::-webkit-scrollbar-thumb:hover {
-    background-color: #105AE2;/*#555;*/
-
-}
-
-.menu::-webkit-scrollbar {
-    width:25px;
-    height:20px;
-    background-color: #0d0d0d;
-    border-left:1px solid rgba(255, 255, 255, 0.2);
-}
-
-.menuPins {
-    right: 20px;
-    top: 10px;
-    width: 20px;
-    height: 20px;
-    position: absolute;
-    font-size: 18px;
-    font-style: normal;
-    font-variant: normal;
-    font-weight: 500;
-    line-height: 16px;
-    -ms-transform: rotate(90deg);
-    -webkit-transform: rotate(90deg);
-    transform: rotate(90deg);
-    /*line-height:17px;
-    font-weight: bold;*/
-    border:1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    text-align: center;
-    background:none;
-    z-index: 8;
-}
-
-.menuButton {
-    position:absolute;
-    padding-left: 20px;
-    padding-top: 2px;
-    font-size: 17px;
-    font-style: normal;
-    font-variant: normal;
-    font-weight: 500;
-    line-height: 23px;
-    height: 30px;
-    left: -10px;
-    right: 0px;
-    background: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    pointer-events:none;
-    background:#0d0d0d;
-}
 
 
 
