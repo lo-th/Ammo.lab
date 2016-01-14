@@ -44,8 +44,6 @@ html, body {
     transition:background 0.3s ease;
 }
 
-
-
 .bigContent {
     padding: 10px 40px;
     width:100%;
@@ -86,6 +84,7 @@ html, body {
     cursor:pointer;
     display: inline-block;
     margin-left: 40px;
+    margin-right: -20px;
     transition:all 0.3s ease;
 }
 

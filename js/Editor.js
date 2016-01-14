@@ -18,6 +18,7 @@ var editor = ( function () {
     var widgets = [];
     var interval = null;
     var left = 0;
+    var oldleft = 0;
     var fileName = '';
     var isMenu = false;
     var nextDemo = null;
@@ -162,6 +163,7 @@ var editor = ( function () {
         isWithCode = false;
         content.style.display = 'none';
         separator.style.display = 'none';
+        oldleft = left;
         left = 0;
         editor.resize();
 
@@ -172,7 +174,8 @@ var editor = ( function () {
         isWithCode = true;
         content.style.display = 'block';
         separator.style.display = 'block';
-        left = ~~ (window.innerWidth*0.4);
+        if( oldleft ) left = oldleft;
+        else left = ~~ (window.innerWidth*0.4);
         editor.resize();
 
     };
