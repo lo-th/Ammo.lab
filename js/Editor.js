@@ -21,7 +21,7 @@ var editor = ( function () {
     var fileName = '';
     var isMenu = false;
     var nextDemo = null;
-    var selectColor = '#105AE2';
+    var selectColor = '#308AFF';
     var scrollOn = false;
     var menuPins;
     var bigmenu;
@@ -48,6 +48,14 @@ var editor = ( function () {
 
         left = ~~ (window.innerWidth*0.4);
 
+        // big menu
+
+        bigmenu = document.createElement( 'div' );
+        bigmenu.className = 'bigmenu';
+        document.body.appendChild( bigmenu );
+
+        this.makeBigMenu();
+
         // github logo
 
         var github = document.createElement( 'div' );
@@ -57,14 +65,6 @@ var editor = ( function () {
 
         octo = document.getElementById('octo');
         octoArm = document.getElementById('octo-arm');
-
-        // big menu
-
-        bigmenu = document.createElement( 'div' );
-        bigmenu.className = 'bigmenu';
-        document.body.appendChild( bigmenu );
-
-        this.makeBigMenu();
 
         // debug
 
@@ -173,7 +173,7 @@ var editor = ( function () {
         bigContent = document.createElement( 'div' );
         bigContent.className = 'bigContent';
         bigmenu.appendChild( bigContent );
-        bigContent.style.display = "none";
+        //bigContent.style.display = "none";
 
 
 
@@ -194,8 +194,11 @@ var editor = ( function () {
 
     editor.showBigMenu = function(e){
 
-        bigContent.style.display = "block";
+        //bigContent.style.display = "block";
+        bigmenu.style.background = "rgba(0,0,0,0.5)";
         isBigMenu = true;
+
+
 
         var lng = demos.length, name, n=1;
         for( var i = 0; i < lng ; i++ ) {
@@ -206,7 +209,8 @@ var editor = ( function () {
 
     editor.hideBigMenu = function(e){
 
-        bigContent.style.display = "none";
+        //bigContent.style.display = "none";
+        bigmenu.style.background = "rgba(0,0,0,0)";
         isBigMenu = false;
 
         var i = bigContent.childNodes.length, b;
@@ -237,8 +241,8 @@ var editor = ( function () {
     };
 
     editor.Bover = function(e){
-        e.target.style.border = "1px solid rgba(255, 255, 255, 0)";
-        e.target.style.background = "rgba(255, 255, 255, 0.2)";
+        e.target.style.border = "1px solid "+selectColor;
+        e.target.style.background = selectColor;;
         e.target.style.color = "#2A2A2A";
     };
 
