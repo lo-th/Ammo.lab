@@ -5,14 +5,15 @@
 *    @author lo.th / http://lo-th.github.io/labs/
 *    CODEMIRROR ultimate editor
 */
+
 'use strict';
+
 var editor = ( function () {
 
     var content, codeContent, code, separator, menu, debug, title; 
     var callback = function(){};
     var isSelfDrag = false;
     var isFocus = false;
-    //var dragView = false;
     var errorLines = [];
     var widgets = [];
     var interval = null;
@@ -23,6 +24,10 @@ var editor = ( function () {
     var selectColor = '#105AE2';
     var scrollOn = false;
     var menuPins;
+    var bigmenu;
+    var bigButton = [];
+    var bigContent;
+    var isBigMenu = false;
 
     var octo, octoArm;
 
@@ -53,7 +58,16 @@ var editor = ( function () {
         octo = document.getElementById('octo');
         octoArm = document.getElementById('octo-arm');
 
+        // big menu
+
+        bigmenu = document.createElement( 'div' );
+        bigmenu.className = 'bigmenu';
+        document.body.appendChild( bigmenu );
+
+        this.makeBigMenu();
+
         // debug
+
         debug = document.createElement( 'div' );
         debug.className = 'debug';
         document.body.appendChild( debug );
@@ -89,10 +103,10 @@ var editor = ( function () {
         menu.className = 'menu';
         content.appendChild( menu );
 
-        menuPins = document.createElement('div');
+        /*menuPins = document.createElement('div');
         menuPins.className = 'menuPins';
         content.appendChild( menuPins );
-        menuPins.innerHTML = '>';
+        menuPins.innerHTML = '>';*/
 
 
         /*var mid = document.createElement('div');
@@ -100,8 +114,8 @@ var editor = ( function () {
         mid.innerHTML = '||';
         separator.appendChild( mid );*/
 
-        var _this = this;
-        code.on('change', function () { _this.onChange() } );
+
+        code.on('change', function () { editor.onChange() } );
         code.on('focus', function () { isFocus = true; view.needFocus(); } );
         code.on('blur', function () { isFocus = false; } );
         code.on('drop', function () { if ( !isSelfDrag ) code.setValue(''); else isSelfDrag = false; } );
@@ -111,9 +125,9 @@ var editor = ( function () {
         separator.addEventListener('mouseout', editor.mid_out, false );
         separator.addEventListener('mousedown', editor.mid_down, false );
 
-        menu.addEventListener('mouseover', editor.menu_over, false );
+        /*menu.addEventListener('mouseover', editor.menu_over, false );
         menu.addEventListener('mouseout', editor.menu_out, false );
-        menu.addEventListener('mousedown', editor.menu_down, false );
+        menu.addEventListener('mousedown', editor.menu_down, false );*/
 
         this.resize();
 
@@ -128,6 +142,8 @@ var editor = ( function () {
             view.resize();
         }
 
+        bigmenu.style.left = left +'px';
+        bigmenu.style.width = window.innerWidth - left +'px';
         title.style.left = left +'px';
         debug.style.left = left +'px';
         separator.style.left = (left-10) + 'px';
@@ -138,7 +154,101 @@ var editor = ( function () {
 
     editor.tell = function ( str ) { debug.innerHTML = str; };
 
-    //
+    // bigmenu
+
+    editor.makeBigMenu = function(){
+
+        bigButton[0] = document.createElement( 'div' );
+        bigButton[0].className = 'bigButton';
+        bigmenu.appendChild( bigButton[0] );
+        bigButton[0].innerHTML = "DEMOS";
+        bigButton[0].addEventListener('mousedown', editor.selectBigMenu, false );
+
+        bigButton[1] = document.createElement( 'div' );
+        bigButton[1].className = 'bigButton';
+        bigmenu.appendChild( bigButton[1] );
+        bigButton[1].innerHTML = "CODE";
+
+
+        bigContent = document.createElement( 'div' );
+        bigContent.className = 'bigContent';
+        bigmenu.appendChild( bigContent );
+        bigContent.style.display = "none";
+
+
+
+
+        var i = bigButton.length;
+        while(i--){
+            bigButton[i].addEventListener('mouseover', editor.Bover, false );
+            bigButton[i].addEventListener('mouseout', editor.Bout, false );
+        }
+
+    }
+
+    editor.selectBigMenu = function(e){
+
+        if(isBigMenu) editor.hideBigMenu();
+        else editor.showBigMenu()
+    };
+
+    editor.showBigMenu = function(e){
+
+        bigContent.style.display = "block";
+        isBigMenu = true;
+
+        var lng = demos.length, name, n=1;
+        for( var i = 0; i < lng ; i++ ) {
+            name = demos[i];
+            if( name !== fileName ) editor.addButtonBig( demos[i] );
+        }
+    };
+
+    editor.hideBigMenu = function(e){
+
+        bigContent.style.display = "none";
+        isBigMenu = false;
+
+        var i = bigContent.childNodes.length, b;
+        while(i--){
+            b = bigContent.childNodes[i];
+            b.removeEventListener('mousedown', editor.bigDown );
+            bigContent.removeChild( b );
+        }
+
+    };
+
+    editor.addButtonBig = function ( name ) {
+
+        var b = document.createElement('div');
+        b.className = 'menuButtonBig';
+        bigContent.appendChild( b );
+        b.innerHTML = '&bull; ' + name.charAt(0).toUpperCase() + name.substring(1).toLowerCase();
+        b.name = name;
+        b.addEventListener('mousedown', editor.bigDown, false );
+
+    };
+
+    editor.bigDown = function(e){
+
+        editor.hideBigMenu();
+        editor.load('demos/' + e.target.name + '.js');
+
+    };
+
+    editor.Bover = function(e){
+        e.target.style.border = "1px solid rgba(255, 255, 255, 0)";
+        e.target.style.background = "rgba(255, 255, 255, 0.2)";
+        e.target.style.color = "#2A2A2A";
+    };
+
+    editor.Bout = function(e){
+        e.target.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+        e.target.style.background = "none";
+        e.target.style.color = "#dedede"
+    };
+
+    // github logo
 
     editor.Gover = function(){
         octo.setAttribute('fill', '#105AE2'); 
@@ -155,9 +265,9 @@ var editor = ( function () {
         window.location.assign('https://github.com/lo-th/Ammo.lab');
     }
 
-    //
+    // menu
 
-    editor.menu_over = function () { 
+    /*editor.menu_over = function () { 
 
         menu.style.background = 'rgba(255, 255, 255, 0.2)';
         menu.style.borderBottom = '1px solid rgba(255, 255, 255, 0)';
@@ -259,7 +369,9 @@ var editor = ( function () {
         b.name = id;
         if(n==1) b.style.borderTop = '1px solid rgba(255, 255, 255, 0.2)';
 
-    };
+    };*/
+
+    // separator
 
     editor.mid_over = function () { 
 
@@ -293,7 +405,7 @@ var editor = ( function () {
 
     };
 
-
+    // code
 
     editor.load = function ( url ) {
 
@@ -302,7 +414,12 @@ var editor = ( function () {
         var xhr = new XMLHttpRequest();
         xhr.overrideMimeType('text/plain; charset=x-user-defined'); 
         xhr.open('GET', url, true);
-        xhr.onload = function(){ code.setValue( xhr.responseText ); }
+        xhr.onload = function(){ 
+
+            code.setValue( xhr.responseText ); 
+
+        }
+        
         xhr.send();
 
     };

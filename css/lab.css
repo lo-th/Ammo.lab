@@ -11,7 +11,7 @@
 }
 
 html, body {
-	font-family: monospace;
+	font-family: "Lucida Console", Monaco, monospace;
 	font-size: 11px;
     font-style: normal;
     font-variant: normal;
@@ -37,8 +37,57 @@ html, body {
     position: absolute; top:0; left:0; pointer-events:auto; width:100%; height:100%; 
 }
 
-.debug {
+.bigmenu {
+    position: absolute;
+    padding-top:40px;
+    background: rgba(0,0,0,0.2);
+}
+
+.bigContent {
+    padding: 20px 40px;
+    
+    width:100%;
+    /*height:40px;background: rgba(200,0,0,0.2);*/
+    display: block;
+}
+
+.menuButtonBig{
+
     font-size: 11px;
+    font-weight: 500;
+    height: 30px;
+    padding: 4px;
+    padding-top: 10px;
+    background: none;
+    pointer-events:auto;
+    cursor: pointer;
+    background:#0d0d0d;
+    text-align: left;
+    display: inline-block;
+    width:110px;
+
+}
+
+.menuButtonBig:hover{
+    color:#308AFF;
+}
+
+.bigButton {
+    
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width:70px;
+    height:18px;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    pointer-events:auto;
+    cursor:pointer;
+    display: inline-block;
+    margin-left: 40px;
+}
+
+.debug {
+    font-size: 9px;
     position:absolute;
     padding-left: 40px;
     bottom: 40px;
@@ -46,7 +95,7 @@ html, body {
 
 .title {
     position:absolute;
-    font-size: 20px;
+    font-size: 16px;
     font-style: normal;
     font-variant: normal;
     font-weight: 500;
@@ -84,18 +133,17 @@ html, body {
     width: 100%;
     padding-left: 10px;
     padding-top: 9px;
-    font-size: 17px;
-    font-style: normal;
-    font-variant: normal;
+    font-size: 16px;
     font-weight: 500;
     line-height: 23px;
-    pointer-events:auto;
-    cursor:pointer;
+    /*pointer-events:auto;
+    cursor:pointer;*/
     height: 40px;
     background: none;
     border-bottom:1px solid rgba(255, 255, 255, 0.2);
-    z-index: 7;
-    overflow-y:auto;
+    overflow: hidden;
+    /*z-index: 7;
+    overflow-y:auto;*/
 }
 
 .menu::-webkit-scrollbar-thumb {
@@ -233,7 +281,7 @@ html, body {
     pointer-events: auto;
    /*  overflow: scroll;*/
     height: 100%;
-    font-family: monospace;
+    font-family: "Lucida Console", Monaco, monospace;
     font-smooth: never;
     -webkit-font-smoothing : none;
     font-size: 11px;

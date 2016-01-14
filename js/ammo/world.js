@@ -57,13 +57,13 @@ function addWorld () {
     //world = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
     world = new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collision, solverSoft );
 
-    tmpPos.setValue(0, -9.8, 0);
-    world.setGravity( tmpPos );
+    gravity.setValue( 0, -9.8, 0 );
+    world.setGravity( gravity );
     
 
     worldInfo = world.getWorldInfo();
 
-    worldInfo.set_m_gravity( tmpPos );
+    worldInfo.set_m_gravity( gravity );
     //worldInfo.set_air_density( 1.2 );
     //worldInfo.set_water_density( 0 );
     //worldInfo.set_water_offset( 0 );
@@ -74,8 +74,8 @@ function addWorld () {
 
 function gravity ( o ) {
 
-    tmpPos.fromArray(o.g);
-    world.setGravity( tmpPos );
-    worldInfo.set_m_gravity( tmpPos );
+    gravity.fromArray(o.g);
+    world.setGravity( gravity );
+    worldInfo.set_m_gravity( gravity );
 
 };

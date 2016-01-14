@@ -25,6 +25,7 @@ var demoName = 'basic';
 
 
 var direct = false;
+var isWithCode = false;
 
 function init(){
 

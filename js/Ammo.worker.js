@@ -16,7 +16,7 @@
 
 var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
-var trans, pos, quat, posW, quatW;
+var trans, pos, quat, posW, quatW, transW, gravity;
 var tmpTrans, tmpPos, tmpQuat;
 var tmpPos1, tmpPos2, tmpPos3, tmpPos4;
 var tmpTrans1, tmpTrans2;
@@ -140,6 +140,7 @@ self.onmessage = function ( e ) {
         isBuffer = e.data.isBuffer;
         timestep = e.data.timestep;
         substep = e.data.substep || 1;
+
         importScripts( e.data.blob );
 
         importScripts( 'ammo/math.js' );
@@ -161,6 +162,7 @@ self.onmessage = function ( e ) {
     if(m === 'key') key = e.data.o;
 
     if(m === 'setDriveCar') currentCar = e.data.o.n;
+
     if(m === 'substep') substep = e.data.o.substep;
 
     if(m === 'add') add( e.data.o );
@@ -244,6 +246,11 @@ self.onmessage = function ( e ) {
 
 };
 
+function preStep(){
+
+
+
+};
 
 function postStep(){
 
@@ -281,18 +288,20 @@ function init () {
     // active transform
 
     trans = new Ammo.btTransform();
-    
     quat = new Ammo.btQuaternion();
     pos = new Ammo.btVector3();
-    posW = new Ammo.btVector3(); // walk direction
+
+    // hero Transform
+
+    posW = new Ammo.btVector3();
     quatW = new Ammo.btQuaternion();
+    transW = new Ammo.btTransform();
 
     // tmp Transform
 
     tmpTrans = new Ammo.btTransform()
     tmpPos = new Ammo.btVector3();
     tmpQuat = new Ammo.btQuaternion();
-
 
     // extra vector
 
@@ -305,6 +314,9 @@ function init () {
 
     tmpTrans1 = new Ammo.btTransform();
     tmpTrans2 = new Ammo.btTransform();
+
+    // gravity
+    gravity = new Ammo.btVector3();
 
 
 
@@ -365,8 +377,10 @@ function reset ( fullReset ) {
     
 
     if( fullReset ){
+
         clearWorld();
         addWorld();
+
     }
 
     pause = false;
@@ -470,11 +484,11 @@ function anchor( o ){
 
 function addRay ( o ) {
 
-    var p1 = v3(o.p1);
-    var p2 = v3(o.p2);
+    if( o.p1 !== undefined ) tmpPos1.fromArray( o.p1 );
+    if( o.p2 !== undefined ) tmpPos2.fromArray( o.p2 );
 
-    var rayCallback = new Ammo.ClosestRayResultCallback(p1,p2);
-    world.rayTest( p1, p2, rayCallback );
+    var rayCallback = new Ammo.ClosestRayResultCallback( tmpPos1, tmpPos2 );
+    world.rayTest( tmpPos1, tmpPos2, rayCallback );
 
     //if(rayCallback.hasHit()){
        // printf("Collision at: <%.2f, %.2f, %.2f>\n", rayCallback.m_hitPointWorld.getX(), rayCallback.m_hitPointWorld.getY(), rayCallback.m_hitPointWorld.getZ());
@@ -490,22 +504,25 @@ function addRay ( o ) {
 
 function apply ( o ) {
 
-    var b = getByName(o.name);
-    if(b!==null){
+    var b = getByName( o.name );
+
+    if( b !== null ){
+
+        if( o.v1 !== undefined ) tmpPos1.fromArray( o.v1 );
+        if( o.v2 !== undefined ) tmpPos2.fromArray( o.v2 );
 
         switch(o.type){
-            case 'force' : b.applyForce( v3(o.v1), v3(o.v2) ); break;
-            case 'torque' : b.applyTorque( v3(o.v1) ); break;
-            case 'localTorque' : b.applyLocalTorque( v3(o.v1) ); break;
-            case 'centralForce' : b.applyCentralForce( v3(o.v1) ); break;
-            case 'centralLocalForce' : b.applyCentralLocalForce( v3(o.v1) ); break;
-            case 'impulse' : b.applyImpulse( v3(o.v1), v3(o.v2) ); break;
-            case 'centralImpulse' : b.applyCentralImpulse( v3(o.v1) ); break;
+            case 'force' : b.applyForce( tmpPos1, tmpPos2 ); break;
+            case 'torque' : b.applyTorque( tmpPos1 ); break;
+            case 'localTorque' : b.applyLocalTorque( tmpPos1 ); break;
+            case 'centralForce' : b.applyCentralForce( tmpPos1 ); break;
+            case 'centralLocalForce' : b.applyCentralLocalForce( tmpPos1 ); break;
+            case 'impulse' : b.applyImpulse( tmpPos1, tmpPos2 ); break;
+            case 'centralImpulse' : b.applyCentralImpulse( tmpPos1 ); break;
 
             // joint
 
-            case 'motor' : b.enableAngularMotor( o.motor[0],o.motor[1],o.motor[2] ); break;
-
+            case 'motor' : b.enableAngularMotor( o.motor[0], o.motor[1], o.motor[2] ); break;
 
         }
     }

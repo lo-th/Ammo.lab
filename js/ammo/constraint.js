@@ -62,7 +62,7 @@ function addJoint ( o ) {
         tmpTrans1.setIdentity();
         tmpTrans1.setOrigin( tmpPos1 );
         if( o.quatA ){
-            tmpQuat.fromArray( o.quadB ); 
+            tmpQuat.fromArray( o.quatA ); 
             tmpTrans1.setRotation( tmpQuat );
         }
         
@@ -71,7 +71,7 @@ function addJoint ( o ) {
         tmpTrans2.setIdentity();
         tmpTrans2.setOrigin( tmpPos2 );
         if( o.quatB ){ 
-            tmpQuat.fromArray( o.quadB );
+            tmpQuat.fromArray( o.quatB );
             tmpTrans2.setRotation( tmpQuat );
         }
 

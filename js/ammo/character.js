@@ -59,6 +59,7 @@ function addCharacter ( o ) {
 
     var body = new Ammo.btPairCachingGhostObject();
     body.setCollisionShape(shape);
+    body.setCollisionFlags( FLAGS.CHARACTER_OBJECT );
 
     tmpPos.fromArray( o.pos );
     tmpQuat.fromArray( o.quat );
@@ -68,8 +69,6 @@ function addCharacter ( o ) {
     tmpTrans.setRotation( tmpQuat );
 
     body.setWorldTransform( tmpTrans );
-
-    body.setCollisionFlags( FLAGS.CHARACTER_OBJECT );
     
     body.setFriction( o.friction || 0.1 );
     body.setRestitution( o.restitution || 0 );
@@ -77,25 +76,23 @@ function addCharacter ( o ) {
     body.setActivationState( 4 );
     body.activate();
 
-    var hero = new Ammo.btKinematicCharacterController( body, shape, o.stepH || 0.3, o.upAxis || 1 );
+    var hero = new Ammo.btKinematicCharacterController( body, shape, o.stepH || 0.35, o.upAxis || 1 );
     //var hero = new Ammo.btKinematicCharacterController( body, shape, o.stepH || 0.3 )
     hero.setUseGhostSweepTest(shape);
 
    // hero.getGhostObject().getWorldTransform().setRotation(q4( o.quat ));
 
-    tmpPos1.setValue( 0, -9.8, 0 );
-
-    hero.setGravity( tmpPos1 );
+    hero.setGravity( gravity );
     hero.setFallSpeed(30);
-    hero.setUpAxis(1);
+    //hero.setUpAxis(1);
 
     hero.rotation = 0;
     hero.speed = 0;
     hero.wasJumping = false;
     hero.verticalVelocity = 0;
     
-    hero.setMaxJumpHeight(2);
-    hero.setJumpSpeed(1)
+    hero.setMaxJumpHeight(200);
+    hero.setJumpSpeed(1000)
     /*
     
      
@@ -132,10 +129,19 @@ function move ( id ) {
 
     var hero = heros[id];
 
+    //btScalar walkVelocity = btScalar(1.1) * 4.0; // 4 km/h -> 1.1 m/s
+    //btScalar walkSpeed = walkVelocity * dt;
+
     var walkSpeed = 0.3;
     var rotationSpeed = 0.1;
 
     var x=0,y=0,z=0;
+
+    transW = hero.getGhostObject().getWorldTransform();
+
+    //console.log(transW.getOrigin().y())
+
+    //y = transW.getOrigin().y();
 
     //if(key[0] == 1 || key[1] == 1 ) heros[id].speed += 0.1;
     //if(key[0] == 0 && key[1] == 0 ) heros[id].speed -= 0.1;
@@ -154,7 +160,9 @@ function move ( id ) {
         hero.wasJumping = true;
         hero.verticalVelocity = 0;
         
-        hero.jump();
+        //hero.jump();
+
+        //y = transW.getOrigin().y()
 
 
 
@@ -189,7 +197,8 @@ function move ( id ) {
 
     // change rotation
     quatW.setFromAxisAngle( [0,1,0], angle );
-    hero.getGhostObject().getWorldTransform().setRotation( quatW );
+    //hero.getGhostObject().getWorldTransform().setRotation( quatW );
+    transW.setRotation( quatW );
 
     // walkDirection
     posW.setValue( x, y+hero.verticalVelocity, z );

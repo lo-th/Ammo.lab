@@ -51,7 +51,7 @@ var view = ( function () {
     var mat = {};
 
     // key[8] = controle.
-    var key = [ 0,0,0,0,0,0,0,0,0 ];
+    //var key = [ 0,0,0,0,0,0,0,0,0 ];
 
 
     var imagesLoader;
@@ -95,7 +95,9 @@ var view = ( function () {
         if(intro !== null ) intro.clear();
 
         renderer.setClearColor(0x2A2A2A, 1);
+        renderer.setSize( 100, 100 );
         renderer.setPixelRatio( window.devicePixelRatio );
+
         //renderer.sortObjects = true;
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
@@ -384,56 +386,6 @@ var view = ( function () {
         }
 
         img.src = 'textures/spherical/'+ envLists[nEnv] +'.jpg';
-
-    };
-
-    view.keyDown = function ( e ) {
-
-        if( editor.getFocus() ) return;
-        e = e || window.event;
-        switch ( e.keyCode ) {
-            case 38: case 87: case 90: key[0] = 1; break; // up, W, Z
-            case 40: case 83:          key[1] = 1; break; // down, S
-            case 37: case 65: case 81: key[2] = 1; break; // left, A, Q
-            case 39: case 68:          key[3] = 1; break; // right, D
-            case 17: case 67:          key[4] = 1; break; // ctrl, C
-            case 69:                   key[5] = 1; break; // E
-            case 32:                   key[6] = 1; break; // space
-            case 16:                   key[7] = 1; break; // shift
-
-            case 71:                   view.sh_grid(); break; // shift
-        }
-
-        // send to worker
-        //ammo.send( 'key', key );
-
-        //console.log( e.which, String.fromCharCode(e.which) );
-
-    };
-
-    view.keyUp = function ( e ) {
-
-        if( editor.getFocus() ) return;
-        e = e || window.event;
-        switch( e.keyCode ) {
-            case 38: case 87: case 90: key[0] = 0; break; // up, W, Z
-            case 40: case 83:          key[1] = 0; break; // down, S
-            case 37: case 65: case 81: key[2] = 0; break; // left, A, Q
-            case 39: case 68:          key[3] = 0; break; // right, D
-            case 17: case 67:          key[4] = 0; break; // ctrl, C
-            case 69:                   key[5] = 0; break; // E
-            case 32:                   key[6] = 0; break; // space
-            case 16:                   key[7] = 0; break; // shift
-        }
-
-        // send to worker
-        //ammo.send( 'key', key );
-
-    };
-
-    view.getKey = function () {
-
-        return key;
 
     };
 

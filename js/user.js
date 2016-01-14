@@ -25,7 +25,9 @@ var user = ( function () {
     // 18 : Xcross axe left     0-1
     // 19 : Xcross axe right    0-1
 
-    var key = new Float32Array( 19 );
+    // 20 : Keyboard or Gamepad    0-1
+
+    var key = new Float32Array( 20 );
     var gamepad;
     var useGamepad = false;
 
@@ -57,10 +59,10 @@ var user = ( function () {
         e = e || window.event;
         switch ( e.keyCode ) {
             // axe L
-            case 65: case 81: key[0] = -1; break; // left, A, Q
-            case 68:          key[0] = 1;  break; // right, D
-            case 87: case 90: key[1] = -1; break; // up, W, Z
-            case 83:          key[1] = 1;  break; // down, S
+            case 65: case 81: key[0] = -1;break;//key[0]<=-1 ? -1:key[0]-= 0.1; break; // left, A, Q
+            case 68:          key[0] = key[0] = 1;  break; // right, D
+            case 87: case 90: key[1] = key[1] = -1; break; // up, W, Z
+            case 83:          key[1] = key[1] = 1;  break; // down, S
             // axe R
             case 37:          key[2] = -1; break; // left
             case 39:          key[2] = 1;  break; // right
