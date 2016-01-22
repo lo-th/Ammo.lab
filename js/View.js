@@ -81,7 +81,8 @@ var view = ( function () {
         // RENDERER
 
         try {
-            renderer = new THREE.WebGLRenderer({ canvas:canvas, precision:"mediump", antialias:true, alpha:false });
+            renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:false });
+            //renderer = new THREE.WebGLRenderer({ canvas:canvas, precision:"mediump", antialias:true, alpha:false });
         } catch( error ) {
             if(intro !== null ) intro.message('<p>Sorry, your browser does not support WebGL.</p>'
                         + '<p>This application uses WebGL to quickly draw'
@@ -94,7 +95,7 @@ var view = ( function () {
 
         if(intro !== null ) intro.clear();
 
-        renderer.setClearColor(0x2A2A2A, 1);
+        renderer.setClearColor(0x2B2A2D, 1);
         //renderer.setSize( 100, 100 );
         renderer.setPixelRatio( window.devicePixelRatio );
 
@@ -164,8 +165,6 @@ var view = ( function () {
         // EVENT
 
         window.addEventListener( 'resize', view.resize, false );
-        //document.addEventListener( 'keydown', view.keyDown, false );
-        //document.addEventListener( 'keyup', view.keyUp, false );
 
         imagesLoader = new THREE.TextureLoader();
 
@@ -179,8 +178,46 @@ var view = ( function () {
 
     };
 
+    view.setLeft = function ( x ) { vs.x = x; };
+
+    view.resize = function () {
+
+        vs.h = window.innerHeight;
+        vs.w = window.innerWidth - vs.x;
+
+        canvas.style.left = vs.x +'px';
+        camera.aspect = vs.w / vs.h;
+        camera.updateProjectionMatrix();
+        renderer.setSize( vs.w, vs.h );
+
+        if(editor) editor.resizeMenu( vs.w );
+
+    };
+
+    view.getFps = function () {
+
+        return fps;
+
+    };
+
+    view.getInfo = function () {
+
+        return renderer.info.programs.length;
+
+    };
+
+    view.render = function () {
+
+        time = now();
+        if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
+
+        this.controlUpdate();
+        renderer.render( scene, camera );
+
+    };
+
     view.addMap = function( name, matName ) {
-        var map = imagesLoader.load( 'textures/'+name );
+        var map = imagesLoader.load( 'textures/' + name );
         //map.wrapS = THREE.RepeatWrapping;
         //map.wrapT = THREE.RepeatWrapping;
         map.flipY = false;
@@ -426,11 +463,24 @@ var view = ( function () {
 
     };
 
+    //--------------------------------------
+    //
+    //   SRC UTILS ViewUtils
+    //
+    //--------------------------------------
+
+
     view.mergeMesh = function(m){
 
         return THREE.ViewUtils.mergeGeometryArray(m);
 
-    }
+    };
+
+    view.prepaGeometry = function ( g, type ) {
+
+        return THREE.ViewUtils.prepaGeometry( g, type );
+
+    };
 
 
     //--------------------------------------
@@ -776,11 +826,7 @@ var view = ( function () {
 
     };
 
-    view.prepaGeometry = function ( g, type ) {
-
-        return THREE.ViewUtils.prepaGeometry( g, type );
-
-    };
+    
 
     view.getGeoByName = function ( name, Buffer ) {
 
@@ -983,7 +1029,7 @@ var view = ( function () {
         o.ntri = g.numFaces;
 
 
-        var mesh = new THREE.Mesh( g, mat.cloth );
+        var mesh = new THREE.Mesh( g, o.material || mat.cloth );
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -1534,37 +1580,7 @@ var view = ( function () {
 
 
 
-    view.setLeft = function ( x ) { vs.x = x; };
-
-    view.resize = function () {
-
-        vs.h = window.innerHeight;
-        vs.w = window.innerWidth - vs.x;
-
-        //debug.style.left = vs.x +'px';
-        canvas.style.left = vs.x +'px';
-        camera.aspect = vs.w / vs.h;
-        camera.updateProjectionMatrix();
-        renderer.setSize( vs.w, vs.h );
-
-    };
-
-    view.getFps = function () {
-
-        return fps;
-
-    };
-
-    view.render = function () {
-
-        time = now();
-        if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
-
-        
-        this.controlUpdate();
-        renderer.render( scene, camera );
-
-    };
+    
 
     //--------------------------------------
     //   SHADOW
