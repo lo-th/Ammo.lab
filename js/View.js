@@ -996,6 +996,10 @@ var view = ( function () {
 
     view.softTriMesh = function ( o ) {
 
+        //console.log(o.shape)
+
+        //if(o.shape.bones) 
+
         var g = o.shape.clone();
         var pos = o.pos || [0,0,0];
         var size = o.size || [1,1,1];
@@ -1017,19 +1021,24 @@ var view = ( function () {
         //console.log('mid', g.realIndices.length);
 
         // extra color
-        var color = new Float32Array( g.maxi*3 );
+        /*var color = new Float32Array( g.maxi*3 );
         var i = g.maxi*3;
         while(i--){
             color[i] = 1;
         }
-        g.addAttribute( 'color', new THREE.BufferAttribute( color, 3 ) );
+        g.addAttribute( 'color', new THREE.BufferAttribute( color, 3 ) );*/
 
         o.v = g.realVertices;
         o.i = g.realIndices;
         o.ntri = g.numFaces;
 
 
+
+
         var mesh = new THREE.Mesh( g, o.material || mat.cloth );
+
+        o.shape = null;
+        o.material = null;
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;

@@ -2,16 +2,13 @@ function demo() {
 
     cam ( 90, 20, 40 );
     load ( 'avatar_low', afterLoad )
-
-    ;
+    view.addMap('avatar.jpg', 'cars');
 
 }
 
 function afterLoad () {
 
-    view.addMap('avatar.jpg', 'cars')
-
-    add({type:'plane' }); // infinie plane
+    //add({type:'plane' }); // infinie plane
 
     add({ type:'box', size:[40,2,40], pos:[0,2.5,0], rot:[0,0,0], mass:0, group:1 });
     
@@ -20,7 +17,7 @@ function afterLoad () {
 
     var geo = view.getGeo();
 
-    var i = 5;
+    var i = 6;
 
 
 
@@ -40,26 +37,26 @@ function afterLoad () {
 
             pos:[x,y,0],
             size:[0.1,0.1,0.1],
-            rot:[0,r,0],
+            //rot:[0,r,0],
 
-            mass:2,
+            mass:10,
             state:4,
 
-            viterations: 1,
-            piterations: 3,
+            viterations: 2,
+            piterations: 2,
             //citerations: 1,
-            //diterations:2,
+            //diterations: 1,
 
-            kdf: 0.5,// friction
+            kdf: 0.1,// friction
             kdp: 0.01,// Damping
-            kpr: 40,// Pressure
+            kpr: 50,// Pressure
             //kvc: 20,
 
             // Stiffness
-            klst: 0.6,
-            kast: 0.6,
+            klst: 0.9,
+            kast: 0.9,
 
-            margin:0.05,
+            margin:0.1,
             fromfaces:true,
         });
 
