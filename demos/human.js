@@ -1,5 +1,7 @@
 function demo() {
 
+    substep( 1 )
+
     cam ( 90, 20, 40 );
     load ( 'avatar_low', afterLoad )
     view.addMap('avatar.jpg', 'cars');
@@ -37,19 +39,19 @@ function afterLoad () {
 
             pos:[x,y,0],
             size:[0.1,0.1,0.1],
-            //rot:[0,r,0],
+            rot:[0,r,0],
 
-            mass:10,
+            mass:75,
             state:4,
 
-            viterations: 2,
-            piterations: 2,
-            //citerations: 1,
-            //diterations: 1,
+            viterations: 7,
+            piterations: 1,
+            citerations: 1,
+            diterations: 0,
 
-            kdf: 0.1,// friction
+            kdf: 0.4,// friction
             kdp: 0.01,// Damping
-            kpr: 50,// Pressure
+            kpr: 250,// Pressure
             //kvc: 20,
 
             // Stiffness

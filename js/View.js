@@ -1005,12 +1005,16 @@ var view = ( function () {
         var size = o.size || [1,1,1];
         var rot = o.rot || [0,0,0];
 
-        g.rotateX( rot[0] *= Math.degtorad );
-        g.rotateY( rot[1] *= Math.degtorad );
-        g.rotateZ( rot[2] *= Math.degtorad );
-
         g.translate( pos[0], pos[1], pos[2] );
         g.scale( size[0], size[1], size[2] );
+
+        //g.rotateX( rot[0] *= Math.degtorad );
+        //g.rotateY( rot[1] *= Math.degtorad );
+        //g.rotateZ( rot[2] *= Math.degtorad );
+        g.applyMatrix(new THREE.Matrix4().makeRotationY(rot[1] *= Math.degtorad))
+
+        
+        
 
         //console.log('start', g.getIndex().count);
 
