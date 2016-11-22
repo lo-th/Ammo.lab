@@ -100,7 +100,7 @@ function addCharacter ( o ) {
     */
     //hero.canJump( true );
 
-    console.log(hero)
+    console.log(hero, tmpQuat.w(), tmpQuat )
 
     // The max slope determines the maximum angle that the controller can walk
     if( o.slopeRadians ) hero.setMaxSlope ( o.slopeRadians );//45
