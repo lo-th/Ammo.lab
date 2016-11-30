@@ -12,9 +12,9 @@ var ammo = ( function () {
 
     var worker, callback;
 
-    var isBuffer = true;
-    var timestep = 0.017;//1/60;
-    var substep = 6;//7;
+    var isBuffer = false;
+    var timestep = 1/60;//0.017;//1/60;
+    var substep = 2;//7;
 
     // main transphere array
     //var ar, dr, hr, jr, sr;
@@ -66,13 +66,13 @@ var ammo = ( function () {
 
         if(m === 'init'){
 
-            if(needDelete) extract.clearBlob('ammo');
-            if(callback) callback();
+            if( needDelete ) extract.clearBlob('ammo');
+            if( callback ) callback();
 
         }
 
         if(m === 'ellipsoid'){
-            view.ellipsoidMesh(e.data.o);
+            view.ellipsoidMesh( e.data.o );
         }
 
         if(m === 'step'){
@@ -90,19 +90,31 @@ var ammo = ( function () {
             //delay = ( timerate - ( time - sendTime ) ).toFixed(2);
             //if(delay < 0) delay = 0;
 
-            delay = ~~ ( timerate - ( time - sendTime ));
-            delay = delay < 0 ? 0 : delay;
+
+
+            //delay = ~~ ( timerate - ( time - sendTime ));
+            //delay = delay < 0 ? 0 : delay;
 
             
 
             
-
-            
-
-            //view.update( ar, dr, hr, jr, sr );
-            timer = setInterval( sendData, delay );
 
             view.update();
+
+            //view.update( ar, dr, hr, jr, sr );
+            if( isBuffer ){ 
+                delay = ~~ ( timerate - ( time - sendTime ));
+                delay = delay < 0 ? 0 : delay;
+                timer = setInterval( sendData, delay );
+            } else {
+
+                user.update();
+                worker.postMessage( { m:'key', key:user.getKey() } );
+                tell( 'THREE '+ view.getFps() + ' | AMMO ' + fps +' | '+ delay +'ms' );
+
+            } 
+
+            
 
             //view.bodyStep();
             //view.heroStep();
@@ -124,8 +136,9 @@ var ammo = ( function () {
         user.update();
         var key = user.getKey();
 
-        if( isBuffer ) worker.postMessage( { m:'step', key:key, Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } , [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ] );
-        else worker.postMessage( { m:'step', key:key } );
+        //if( isBuffer ) 
+        worker.postMessage( { m:'step', key:key, Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } , [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ] );
+        //else worker.postMessage( { m:'step', key:key } );
 
         var f = view.getFps();
         tell( 'THREE '+ f + ' | AMMO ' + fps +' | '+ delay +'ms' );

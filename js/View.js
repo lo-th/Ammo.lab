@@ -8,6 +8,8 @@
 
 'use strict';
 // MATH ADD
+Math.torad = 0.0174532925199432957;
+Math.todeg = 57.295779513082320876;
 Math.degtorad = Math.PI / 180;//0.0174532925199432957;
 Math.radtodeg = 180 / Math.PI;//57.295779513082320876;
 Math.Pi = 3.141592653589793;
@@ -20,6 +22,8 @@ Math.randInt = function (a, b, n) { return Math.lerp(a, b, Math.random()).toFixe
 Math.int = function(x) { return ~~x; };
 
 var view = ( function () {
+
+    'use strict';
 
     var time = 0;
     var temp = 0;
@@ -63,7 +67,7 @@ var view = ( function () {
 
     var perlin = null;//new Perlin();
 
-    var environment, envcontext, nEnv = 0, isWirframe = true;
+    var environment, envcontext, nEnv = 1, isWirframe = true;
     var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
     var envMap;
 
@@ -95,7 +99,7 @@ var view = ( function () {
 
         if(intro !== null ) intro.clear();
 
-        renderer.setClearColor(0x2B2A2D, 1);
+        renderer.setClearColor(0x242424, 1);
         //renderer.setSize( 100, 100 );
         renderer.setPixelRatio( window.devicePixelRatio );
 
@@ -103,22 +107,29 @@ var view = ( function () {
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
 
+        renderer.toneMapping = THREE.Uncharted2ToneMapping;
+        renderer.toneMappingExposure = 3.0;
+        renderer.toneMappingWhitePoint = 5.0;
+
         // SCENE
 
         scene = new THREE.Scene();
 
         content = new THREE.Object3D();
-        scene.add(content);
+        scene.add( content );
 
         // CAMERA / CONTROLER
 
         camera = new THREE.PerspectiveCamera( 60 , 1 , 1, 1000 );
         camera.position.set( 0, 0, 30 );
+
         controls = new THREE.OrbitControls( camera, canvas );
         controls.target.set( 0, 0, 0 );
         controls.enableKeys = false;
         controls.update();
 
+        // LIGHTS
+        view.addLights();
 
         // GEOMETRY
 
@@ -147,13 +158,15 @@ var view = ( function () {
         mat['meca2'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca2', wireframe:true });
         mat['meca3'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca3', wireframe:true });
 
+        mat['pig'] = new THREE.MeshBasicMaterial({ color:0xd3a790, name:'pig', wireframe:true, transparent:false });
+        mat['avatar'] = new THREE.MeshBasicMaterial({ color:0xd3a790, name:'avatar', wireframe:true, transparent:false });
+
         mat['both'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'both', wireframe:true, side:THREE.DoubleSide  });
         mat['back'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'back', wireframe:true, side:THREE.BackSide  });
 
         // GROUND
 
-        helper = new THREE.GridHelper( 50, 2 );
-        helper.setColors( 0xFFFFFF, 0x666666 );
+        helper = new THREE.GridHelper( 50, 20, 0xFFFFFF, 0x333333 );
         helper.material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, transparent:true, opacity:0.1 } );
         scene.add( helper );
 
@@ -174,7 +187,7 @@ var view = ( function () {
         // charge basic geometry
         //this.load ( 'basic', callback );
 
-        if(callback)callback();
+        if( callback ) callback();
 
     };
 
@@ -285,11 +298,13 @@ var view = ( function () {
         }
     }
 
+   
+
     view.changeMaterial = function ( type ) {
 
         var m, matType, name, i, j, k;
 
-        if( type == 0 ) {
+        if( type === 0 ) {
             isWirframe = true;
             matType = 'MeshBasicMaterial';
             this.removeShadow();
@@ -304,8 +319,18 @@ var view = ( function () {
         for( var old in mat ) {
             m = mat[old];
             name = m.name;
-            mat[name] = new THREE[matType]({ map:m.map, vertexColors:m.vertexColors, color:m.color.getHex(), name:name, wireframe:isWirframe, transparent:m.transparent, opacity:m.opacity, side:m.side });
-            if(!isWirframe){
+            mat[ name ] = new THREE[ matType ]({ 
+                name:name, 
+                envMap:null,
+                map:m.map || null, 
+                vertexColors:m.vertexColors || false, 
+                color: m.color === undefined ? 0xFFFFFF : m.color.getHex(),
+                wireframe:isWirframe, 
+                transparent: m.transparent || false, 
+                opacity: m.opacity || 1, 
+                side: m.side || THREE.FrontSide 
+            });
+            if( !isWirframe && envMap ){
                 mat[name].envMap = envMap;
                 mat[name].metalness = 0.5;
                 mat[name].roughness = 0.5;
@@ -390,14 +415,14 @@ var view = ( function () {
 
     };
 
-    view.loadEnv = function (e) {
+    view.loadEnv = function ( e ) {
 
         var b = 0;
 
         if(e){ 
             e.preventDefault();
             b = e.button;
-            if( b == 0 ) nEnv++;
+            if( b === 0 ) nEnv++;
             else nEnv--;
             if( nEnv == envLists.length ) nEnv = 0;
             if( nEnv < 0 ) nEnv = envLists.length-1;
@@ -408,14 +433,14 @@ var view = ( function () {
             
             envcontext.drawImage(img,0,0,64,64);
             
-            envMap = new THREE.Texture(img);
+            envMap = new THREE.Texture( img );
             envMap.mapping = THREE.SphericalReflectionMapping;
             envMap.format = THREE.RGBFormat;
             envMap.needsUpdate = true;
 
-            if( nEnv == 0 && !isWirframe ) view.changeMaterial( 0 );
+            if( nEnv === 0 && !isWirframe ) view.changeMaterial( 0 );
             if( nEnv !== 0  ) {
-                if(isWirframe) view.changeMaterial( 1 );
+                if( isWirframe ) view.changeMaterial( 1 );
                 else{
                     for( var mm in mat ){
                        mat[mm].envMap = envMap;
@@ -430,8 +455,8 @@ var view = ( function () {
 
     view.sh_grid = function(){
 
-        if(helper.visible) helper.visible = false;
-        else helper.visible = true;
+        //if(helper.visible) helper.visible = false;
+        //else helper.visible = true;
     }
 
     view.hideGrid = function(){
@@ -451,6 +476,8 @@ var view = ( function () {
             while(i--){
                 g = loader.geometries[i];
                 geo[g.name] = g;
+
+                //console.log(g.name)
             };
 
             if(callback) callback();
@@ -472,7 +499,7 @@ var view = ( function () {
 
     view.mergeMesh = function(m){
 
-        return THREE.ViewUtils.mergeGeometryArray(m);
+        return THREE.ViewUtils.mergeGeometryArray( m );
 
     };
 
@@ -562,8 +589,8 @@ var view = ( function () {
 
         var offset = new THREE.Vector3();
         
-        var phi = (v-90) * Math.degtorad;
-        var theta = (h+180) * Math.degtorad;
+        var phi = (v-90) * Math.torad;
+        var theta = (h+180) * Math.torad;
         offset.x =  d * Math.sin(phi) * Math.sin(theta);
         offset.y =  d * Math.cos(phi);
         offset.z =  d * Math.sin(phi) * Math.cos(theta);
@@ -590,7 +617,7 @@ var view = ( function () {
     view.toRad = function ( r ) {
 
         var i = r.length;
-        while(i--) r[i] *= Math.degtorad;
+        while(i--) r[i] *= Math.torad;
         return r;
 
     };
@@ -609,30 +636,18 @@ var view = ( function () {
 
         var c, i;
 
-        while( meshs.length > 0 ){
-            scene.remove( meshs.pop() );
-        }
+        while( meshs.length > 0 ) scene.remove( meshs.pop() );
 
-        while( statics.length > 0 ){
-            scene.remove( statics.pop() );
-        }
+        while( statics.length > 0 ) scene.remove( statics.pop() );
+        
+        while( terrains.length > 0 ) scene.remove( terrains.pop() );
+        
+        while( softs.length > 0 ) scene.remove( softs.pop() );
 
-        while( terrains.length > 0 ){ 
-            scene.remove( terrains.pop() );
-        }
-
-        while( softs.length > 0 ){ 
-            scene.remove( softs.pop() );
-        }
-
-        while( heros.length > 0 ){ 
-            scene.remove( heros.pop() );
-        }
-
-        while( extraGeo.length > 0 ){ 
-            extraGeo.pop().dispose();
-        }
-
+        while( heros.length > 0 ) scene.remove( heros.pop() );
+        
+        while( extraGeo.length > 0 ) extraGeo.pop().dispose();
+        
         while( cars.length > 0 ){
             c = cars.pop();
             if( c.userData.helper ){
@@ -803,7 +818,7 @@ var view = ( function () {
 
         if(mesh){
 
-            if( !isCustomGeometry ) mesh.scale.fromArray( o.size );//.set( o.size[0], o.size[1], o.size[2] );
+            if( !isCustomGeometry ) mesh.scale.fromArray( o.size );
 
             mesh.position.fromArray( o.pos );
             mesh.quaternion.fromArray( o.quat );
@@ -819,6 +834,12 @@ var view = ( function () {
             if( o.mass ) meshs.push( mesh );
             else statics.push( mesh );
         }
+
+        if( o.shape ) delete(o.shape);
+        if( o.geometry ) delete(o.geometry);
+        if( o.material ) delete(o.material);
+
+        //console.log(o)
         
 
         // send to worker
@@ -856,7 +877,7 @@ var view = ( function () {
 
         var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
         var mesh = new THREE.Mesh( g, mat.hero );
-        extraGeo.push(mesh.geometry);
+        extraGeo.push( mesh.geometry );
 
         //mesh.position.set( pos[0], pos[1], pos[2] );
         //mesh.rotation.set( rot[0], rot[1], rot[2] );
@@ -871,12 +892,17 @@ var view = ( function () {
         mesh.userData.speed = 0;
         mesh.userData.type = 'hero';
 
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+
         scene.add(mesh);
         heros.push(mesh);
 
 
 
         this.setName( o, mesh );
+
+        if( o.mesh ) delete( o.mesh );
 
         // send to worker
         ammo.send( 'character', o );
@@ -985,6 +1011,9 @@ var view = ( function () {
 
         if ( o.type == 'mesh' || o.type == 'convex' ) o.v = view.prepaGeometry( o.shape, o.type );
 
+        if( o.shape ) delete(o.shape);
+        if( o.mesh ) delete(o.mesh);
+
         // send to worker
         ammo.send( 'vehicle', o );
 
@@ -1011,14 +1040,14 @@ var view = ( function () {
         //g.rotateX( rot[0] *= Math.degtorad );
         //g.rotateY( rot[1] *= Math.degtorad );
         //g.rotateZ( rot[2] *= Math.degtorad );
-        g.applyMatrix(new THREE.Matrix4().makeRotationY(rot[1] *= Math.degtorad))
+        g.applyMatrix( new THREE.Matrix4().makeRotationY(rot[1] *= Math.torad ));
 
         
         
 
         //console.log('start', g.getIndex().count);
 
-        view.prepaGeometry(g);
+        view.prepaGeometry( g );
 
         extraGeo.push( g );
 
@@ -1036,13 +1065,8 @@ var view = ( function () {
         o.i = g.realIndices;
         o.ntri = g.numFaces;
 
-
-
-
-        var mesh = new THREE.Mesh( g, o.material || mat.cloth );
-
-        o.shape = null;
-        o.material = null;
+        var material = o.material === undefined ? mat.cloth : mat[o.material];
+        var mesh = new THREE.Mesh( g, material );
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -1051,6 +1075,9 @@ var view = ( function () {
 
         scene.add( mesh );
         softs.push( mesh );
+
+        if( o.shape ) delete(o.shape);
+        if( o.material ) delete(o.material);
 
         // send to worker
         ammo.send( 'add', o );
@@ -1468,6 +1495,12 @@ var view = ( function () {
 
     };
 
+    view.getSofts = function(){
+
+        return softs;
+
+    };
+
     view.softStep = function(){
 
         if( !softs.length ) return;
@@ -1516,7 +1549,8 @@ var view = ( function () {
 
                 n = 2;
 
-                if(order!==null) {
+                if( order !== null ) {
+
                     j = order.length;
                     while(j--){
                         k = order[j] * 3;
@@ -1602,13 +1636,14 @@ var view = ( function () {
     view.removeShadow = function(){
 
         if(!isWithShadow) return;
+
         isWithShadow = false;
-
         renderer.shadowMap.enabled = false;
+        //light.shadowMap.enabled = false;
 
-        if(shadowGround) scene.remove(shadowGround);
-        scene.remove(light);
-        scene.remove(ambient);
+        if( shadowGround ) scene.remove(shadowGround);
+        //scene.remove(light);
+        //scene.remove(ambient);
 
     };
 
@@ -1619,18 +1654,31 @@ var view = ( function () {
 
     }
 
+    view.addLights = function(){
+
+        light = new THREE.DirectionalLight( 0xffffff, 1 );
+        light.position.set( -3, 50, 5 );
+        light.lookAt( new THREE.Vector3() );
+        scene.add( light );
+
+        ambient = new THREE.AmbientLight( 0x444444 );
+        scene.add( ambient );
+
+    }
+
     view.addShadow = function(){
 
-       if(isWithShadow) return;
+       if( isWithShadow ) return;
 
         isWithShadow = true;
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.soft = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.shadowMap.cullFace = THREE.CullFaceBack;
+        //renderer.shadowMap.renderReverseSided = false;
 
-        if(!terrains.length){
-            shadowGround = new THREE.Mesh( new THREE.PlaneBufferGeometry( 200, 200, 1, 1 ), TransparentShadow(0x040205, 0.5) );
+        if( !terrains.length ){
+            var planemat = new THREE.ShaderMaterial( THREE.ShaderShadow );
+            shadowGround = new THREE.Mesh( new THREE.PlaneBufferGeometry( 200, 200, 1, 1 ), planemat );
             shadowGround.geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI*0.5));
             shadowGround.position.y = spy;
             shadowGround.castShadow = false;
@@ -1638,46 +1686,14 @@ var view = ( function () {
             scene.add( shadowGround );
         }
 
-        
-
-        light = new THREE.DirectionalLight( 0xffffff, 1 );
-        light.position.set( -3, 50, 5 );
-        
-
-
-        //light = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 2, 10, 2 );
-        //light.position.set(  0, 100, 0 );
-        light.target.position.set( 0, 0, 0 );
-
         light.castShadow = true;
-        light.shadowMapWidth = 1024;
-        light.shadowMapHeight = 1024;
-        light.shadowCameraNear = 25;
-        light.shadowCameraFar = 170;
-        light.shadowDarkness = 1;
-        light.shadowBias =  -0.005;
+        var d = 70;
+        var camShadow = new THREE.OrthographicCamera( d, -d, d, -d,  25, 170 );
+        light.shadow = new THREE.LightShadow( camShadow );
 
-        var c = 70;
-        light.shadowCameraRight = c;
-        light.shadowCameraLeft = -c;
-        light.shadowCameraTop    = c;
-        light.shadowCameraBottom = -c;
-
-        //light.shadowCameraFov = 80;
-        
-        //light.shadowCameraFov = 70;
-
-        //scene.add( new THREE.CameraHelper( light.shadow.camera ) );
-        scene.add( light );
-
-        ambient = new THREE.AmbientLight( 0x444444 );
-        scene.add( ambient );
-
-        /*ambient = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.8 );
-        ambient.color.setHSL( 0.6, 1, 0.6 );
-        ambient.groundColor.setHSL( 0.095, 1, 0.75 );
-        ambient.position.set( 0, 10, 0 );
-        scene.add( ambient );*/
+        light.shadow.mapSize.width = 1024;
+        light.shadow.mapSize.height = 1024;
+        //light.shadow.bias = 0.0001;
 
 
     }

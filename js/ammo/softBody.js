@@ -7,6 +7,25 @@
 
 var softPoints;
 
+function moveSoftBody( o ) {
+
+    var soft = softs[o.id];
+    var s = soft.get_m_nodes();
+    //console.log(s)
+    var j = s.size();
+    while(j--){
+        //pos = s.at( j ).get_m_x().add( new Ammo.btVector3(0, 10, 0) );
+    }
+
+    soft.set_m_nodes( s );
+
+
+
+
+
+
+};
+
 function stepSoftBody() {
 
     if( !softs.length ) return;

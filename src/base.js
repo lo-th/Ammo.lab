@@ -3,3 +3,4 @@ var list;
 var extensions;
 var numDiv;
 var data;
+var TextDecoder;

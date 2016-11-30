@@ -19,6 +19,8 @@ var demos = [
 ];
 
 var demo;
+var update = function () {};
+
 var demoName = 'basic';
 
 //////////////////////////////
@@ -39,7 +41,8 @@ function init(){
 
 function loop () {
 
-    requestAnimationFrame(loop);
+    requestAnimationFrame( loop );
+    update();
     view.render();
 
 };

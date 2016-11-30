@@ -4,7 +4,7 @@ function demo() {
 
     cam ( 90, 20, 40 );
     load ( 'avatar_low', afterLoad )
-    view.addMap('avatar.jpg', 'cars');
+    view.addMap('avatar.jpg', 'avatar');
 
 }
 
@@ -33,7 +33,7 @@ function afterLoad () {
         add({ 
             type:'softTriMesh',
             shape: t == 0 ? geo['woman']: geo['man'],
-            material: view.getMat()['cars'], 
+            material: 'avatar', 
             //shape:geo['cubic'],
             //shape:geo['spheric'],
 

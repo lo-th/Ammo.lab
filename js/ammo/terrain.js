@@ -1,9 +1,32 @@
 
+var tmpData = {};
+var terrainData = {};
+var terrainList = [];
+var terrainNeedUpdate = false;
+
 //--------------------------------------------------
 //
 //  AMMO TERRAIN
 //
 //--------------------------------------------------
+
+function terrainPostStep ( o ){
+
+    var name = o.name;
+    terrainList.push( name );
+    tmpData[ name ] = o.hdata;
+    terrainNeedUpdate = true;
+
+}
+
+function terrainUpdate ( o ){
+
+    if( terrainNeedUpdate ){
+        while( terrainList.length ) terrain_data( terrainList.pop() );
+        terrainNeedUpdate = false;
+    }
+
+}
 
 function addTerrain ( o ) {
 

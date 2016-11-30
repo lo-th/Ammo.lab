@@ -9,7 +9,7 @@ function afterLoad () {
 
     add({type:'plane' }); // infinie plane
 
-    add({ type:'box', size:[40,2,40], pos:[0,2.5,0], rot:[0,0,0], mass:0, group:1 });
+    //add({ type:'box', size:[40,2,40], pos:[0,2.5,0], rot:[0,0,0], mass:0, group:1 });
     
     //add({ type:'box', size:[40,10,1], pos:[0,4.6,0], rot:[45,0,0], mass:0 });
     //add({ type:'box', size:[40,2,40], pos:[0,1,-10], rot:[0,0,0], mass:0 });
@@ -22,16 +22,16 @@ function afterLoad () {
 
         var y = 15+(i*15);
         var x = 0;//-5+(i*2.5);
-        var r = Math.randInt(0,360)
+        var r = Math.randInt(0,360);
 
-        add({ 
+        add({
+
             type:'softTriMesh',
             shape:geo['pig'],
-            //shape:geo['cubic'],
-            //shape:geo['spheric'],
+            material:'pig',
 
             pos:[x,y,0],
-            size:[1,1,1],
+            size:[2,2,2],
             rot:[0,r,0],
 
             mass:8,
@@ -40,7 +40,7 @@ function afterLoad () {
             viterations: 1,
             piterations: 1,
             citerations: 1,
-            diterations:2,
+            diterations: 2,
 
             kdf: 0.6,// friction
             kdp: 0.01,// Damping
@@ -58,3 +58,16 @@ function afterLoad () {
     }
 
 }
+
+/*function update () {
+
+    var softs = view.getSofts();
+
+    softs.forEach( function( b, id ) {
+
+        if( id===1 ) ammo.send( 'moveSoftBody', {id:id } ) ;
+
+        //console.log(b.position.y)
+    });
+
+}*/

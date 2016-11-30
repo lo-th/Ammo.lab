@@ -18,7 +18,7 @@ html, body {
     font-weight: 400;
     /*line-height: 23px;*/
     height:100%;
-    background:#2B2A2D;
+    background:#242424;
     color:#dedede;
     /*color:#d2cec8;text-shadow: 1px 1px 1px rgba(0,0,0,0.3);*/
     overflow:hidden;
@@ -27,6 +27,7 @@ html, body {
     pointer-events:none;
     /*text-shadow: 0.5px 0.5px 2px #000000;*/
 }
+
 
 @keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}
 #octo-arm{pointer-events:none;}
@@ -76,13 +77,15 @@ html, body {
 
 .bigButton {
     
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid #5c5c5c;
+    background: #242424;
     width:70px;
-    height:18px;
+    height:30px;
     font-size: 16px;
     font-weight: 500;
     text-align: center;
     pointer-events:auto;
+    line-height: 28px;
     cursor:pointer;
     display: inline-block;
     margin-left: 40px;
@@ -120,14 +123,18 @@ html, body {
     position:absolute; 
     bottom:10px; 
     right:10px;
-    padding: 2px 2px;
-    border:1px dashed rgba(255, 255, 255, 0.2); 
-    width:70px; 
-    height:70px; 
-    background:#0d0d0d;
+    /*padding: 2px 2px;*/
+    border:1px solid #5c5c5c; 
+    width:66px; 
+    height:66px; 
+    background:none;
     cursor:pointer;
     pointer-events:auto;
-    opacity:0.7;
+    /*opacity:0.7;*/
+}
+
+.env:hover{
+    border:1px solid #308aff; 
 }
 
 .menuCode {
@@ -142,7 +149,7 @@ html, body {
     line-height: 23px;
     height: 40px;
     background: none;
-    border-bottom:1px solid rgba(255, 255, 255, 0.2);
+    border-bottom:1px solid #5c5c5c;
     overflow: hidden;
 }
 
@@ -171,8 +178,8 @@ html, body {
 
 .separator {
     position:absolute; background-color:none; pointer-events:auto; display:block; 
-    border-left:1px solid rgba(255, 255, 255, 0.2); 
-    border-right:1px solid rgba(255, 255, 255, 0.2);
+    border-left:1px solid #5c5c5c; 
+    border-right:1px solid #5c5c5c;
     left:calc(50% - 5px); top:0px; width:10px; height:100%;
     color: rgba(255, 255, 255, 0.2);
     cursor: e-resize;

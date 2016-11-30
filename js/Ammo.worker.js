@@ -25,8 +25,10 @@ var bodys, softs, joints, cars, solids, heros, carsInfo;
 // object
 var byName;
 
-var timestep = 0.017;//6;//7;
-var substep = 10;//4//3;// default is 1. 2 or more make simulation more accurate.
+var timeStep = 1/60;
+var timerStep = timeStep * 1000;
+
+var substep = 2;//4//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
@@ -50,10 +52,7 @@ var Sr = new Float32Array( 8192*3 ); // soft buffer nVertices x,y,z
 
 // for terrain
 //var hdata = null;
-var tmpData = {};
-var terrainData = {};
-var terrainList = [];
-var terrainNeedUpdate = false;
+
 
 var fixedTime = 0.01667;
 var last_step = Date.now();
@@ -95,24 +94,24 @@ var GROUP = {
     ALL : -1 
 }
 
-function stepAdvanced () {
+/*function stepAdvanced () {
 
     var time = Date.now();
     var seconds = ( time - last_step ) * 0.001;
     last_step = time;
 
     var maxSubSteps = 1;
-    var fixedTimeStep = seconds;
+    var fixedtimeStep = seconds;
 
     timePassed += seconds;
-    //timeStep < maxSubSteps * fixedTimeStep
+    //timeStep < maxSubSteps * fixedtimeStep
 
     if ( timePassed >= fixedTime ) {
         maxSubSteps = ~~ ( seconds * 60 ); //Math.ceil ( seconds / fixedTime );
-        fixedTimeStep = seconds / maxSubSteps;
+        fixedtimeStep = seconds / maxSubSteps;
     }
 
-    world.stepSimulation( seconds, maxSubSteps, fixedTimeStep );
+    world.stepSimulation( seconds, maxSubSteps, fixedtimeStep );
 
 }
 
@@ -126,131 +125,95 @@ function stepDelta () {
 
     world.stepSimulation( seconds, 1, seconds );
 
-}
+}*/
 
 self.onmessage = function ( e ) {
 
-    var m = e.data.m;
+    var data = e.data;
 
-    var center;
-    var centerPoint;
+    switch( data.m ){
 
-    if(m === 'init'){
+        case 'init': init( data ); break;
+        case 'step': step( data ); break;
+        case 'reset': reset( data ); break;
 
-        isBuffer = e.data.isBuffer;
-        timestep = e.data.timestep;
-        substep = e.data.substep || 1;
+        case 'key': key = data.key; break;
+        case 'setDriveCar': currentCar = data.o.n; break;
+        case 'substep': substep = data.o.substep; break;
+        case 'set': tmpset = data.o;; break;
 
-        importScripts( e.data.blob );
+        case 'moveSoftBody': moveSoftBody( data.o ); break;
 
-        importScripts( 'ammo/math.js' );
-        importScripts( 'ammo/world.js' );
-        importScripts( 'ammo/character.js' );
-        importScripts( 'ammo/constraint.js' );
-        importScripts( 'ammo/rigidBody.js' );
-        importScripts( 'ammo/softBody.js' );
-        importScripts( 'ammo/terrain.js' );
-        importScripts( 'ammo/vehicle.js' );
-        
-        self.postMessage({ m:'init' });
-        init();
+        case 'add': add( data.o ); break;
+        case 'vehicle': addVehicle( data.o ); break;
+        case 'character': addCharacter( data.o ); break;
+        case 'terrain': terrainPostStep( data.o ); break;
+        case 'gravity': gravity( data.o ); break;
+        case 'anchor': anchor( data.o ); break;
+        case 'apply': apply( data.o ); break;
 
-    }
-
-    if(m === 'reset') reset( e.data.full );
-
-    if(m === 'key') key = e.data.o;
-
-    if(m === 'setDriveCar') currentCar = e.data.o.n;
-
-    if(m === 'substep') substep = e.data.o.substep;
-
-    if(m === 'add') add( e.data.o );
-
-    if(m === 'set') tmpset = e.data.o;
-
-    if(m === 'vehicle') addVehicle( e.data.o );
-
-    if(m === 'character') addCharacter( e.data.o );
-
-    if(m === 'gravity') gravity( e.data.o );
-
-    if(m === 'anchor') anchor( e.data.o );
-
-    if(m === 'apply') apply( e.data.o );
-
-    if(m === 'terrain'){
-
-        var name = e.data.name;
-        terrainList.push(name);
-        tmpData[name] = e.data.hdata;
-
-        //hdata = e.data.hdata;
-        terrainNeedUpdate = true;
-        
-    }
-
-    if(m === 'step'){
-
-        if(pause) return;
-
-        // ------- pre step
-
-        key = e.data.key;
-
-        //drive( currentCar );
-        move( 0 );
-
-        if(tmpset!==null) set();
-
-        if( terrainNeedUpdate ){
-            while(terrainList.length){
-                terrain_data(terrainList.pop());
-            }
-
-            terrainNeedUpdate = false;
-        }
-
-        // ------- buffer data
-
-        if( isBuffer ){
-
-            Br = e.data.Br;
-            Cr = e.data.Cr;
-            Hr = e.data.Hr;
-            Jr = e.data.Jr;
-            Sr = e.data.Sr;
-            
-        }
-
-        // ------- step
-
-        world.stepSimulation( timestep, substep );
-        //world.stepSimulation( dt, it, dt );
-
-        drive( currentCar );
-
-        stepRigidBody();
-        stepCharacter();
-        stepVehicle();
-        stepSoftBody();
-
-        //softPoints = 0;
-        //softs.forEach( softUp )
-
-        // ------- post step
-
-        postStep();
-        
     }
 
 };
+
 
 function preStep(){
 
 
 
 };
+
+function step( o ){
+
+    if( pause ) return;
+
+    // ------- pre step
+
+    //key = o.key;
+
+    //drive( currentCar );
+    move( 0 );
+
+    if( tmpset !== null ) set();
+
+    // terrain update
+
+    terrainUpdate();
+
+    // ------- buffer data
+
+    if( isBuffer ){
+
+        Br = o.Br;
+        Cr = o.Cr;
+        Hr = o.Hr;
+        Jr = o.Jr;
+        Sr = o.Sr;
+        
+    }
+
+    // ------- step
+
+    world.stepSimulation( timeStep, substep );
+    //world.stepSimulation( dt, it, dt );
+
+    drive( currentCar );
+
+    stepRigidBody();
+    stepCharacter();
+    stepVehicle();
+    stepSoftBody();
+
+    //softPoints = 0;
+    //softs.forEach( softUp )
+
+    // ------- post step
+
+    postStep();
+
+};
+
+
 
 function postStep(){
 
@@ -283,7 +246,24 @@ function control( o ){
 //
 //--------------------------------------------------
 
-function init () {
+function init ( o ) {
+
+    isBuffer = o.isBuffer || false;
+
+    if(o.timeStep !== undefined ) timeStep = o.timeStep ;
+    timerStep = timeStep * 1000;
+    substep = o.substep || 2;
+
+    importScripts( o.blob );
+
+    importScripts( 'ammo/math.js' );
+    importScripts( 'ammo/world.js' );
+    importScripts( 'ammo/character.js' );
+    importScripts( 'ammo/constraint.js' );
+    importScripts( 'ammo/rigidBody.js' );
+    importScripts( 'ammo/softBody.js' );
+    importScripts( 'ammo/terrain.js' );
+    importScripts( 'ammo/vehicle.js' );
 
     // active transform
 
@@ -337,8 +317,11 @@ function init () {
     //self.postMessage({ m:'init' });
 
     //timer = setInterval( step, 16.667 );
+    self.postMessage({ m:'init' });
 
-    postStep();
+    if( !isBuffer ) timer = setInterval( step, timerStep ); 
+
+    //postStep();
     
 };
 
@@ -359,7 +342,9 @@ function resetARRAY(){
 
 };
 
-function reset ( fullReset ) {
+function reset ( o ) {
+
+    if( timer ) clearInterval( timer );
 
     pause = true;
 
@@ -376,7 +361,7 @@ function reset ( fullReset ) {
 
     
 
-    if( fullReset ){
+    if( o.full ){
 
         clearWorld();
         addWorld();
@@ -384,6 +369,7 @@ function reset ( fullReset ) {
     }
 
     pause = false;
+    if( !isBuffer ) timer = setInterval( step, timerStep );
 
 };
 

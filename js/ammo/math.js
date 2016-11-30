@@ -5,13 +5,20 @@
 //
 //--------------------------------------------------
 
-var degtorad = Math.PI / 180;//0.0174532925199432957;
+const torad = 0.0174532925199432957;
+const todeg = 57.295779513082320876;
 
 //--------------------------------------------------
 //
 //  btVector3 extend
 //
 //--------------------------------------------------
+
+Ammo.btVector3.prototype.add = function( v ){
+
+    this.setValue( this.x() + v.x, this.y() + v.y, this.z() + v.z );
+
+};
 
 Ammo.btVector3.prototype.fromArray = function( array, offset ){
 

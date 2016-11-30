@@ -29,6 +29,7 @@ var editor = ( function () {
     var bigContent;
     var isMenu = false;
     var isWithCode = true;
+    var isMidDown = false;
 
     var octo, octoArm;
 
@@ -92,7 +93,7 @@ var editor = ( function () {
         content.appendChild( codeContent );
 
         code = CodeMirror( codeContent, {
-            lineNumbers: false, matchBrackets: true, indentWithTabs: true, styleActiveLine: true,
+            lineNumbers: true, matchBrackets: true, indentWithTabs: false, styleActiveLine: true,
             theme:'monokai', mode:'text/javascript',
             tabSize: 4, indentUnit: 4, highlightSelectionMatches: {showToken: /\w/}
         });
@@ -212,7 +213,7 @@ var editor = ( function () {
         bigButton[0] = document.createElement( 'div' );
         bigButton[0].className = 'bigButton';
         bigmenu.appendChild( bigButton[0] );
-        bigButton[0].innerHTML = "DEMOS";
+        bigButton[0].innerHTML = "DEMO";
         bigButton[0].addEventListener('mousedown', editor.selectBigMenu, false );
         bigButton[0].name = 'demo';
 
@@ -249,8 +250,8 @@ var editor = ( function () {
     editor.showBigMenu = function(e){
 
         //bigContent.style.display = "block";
-        bigmenu.style.background = "rgba(43,42,45,0.9)";
-        bigmenu.style.borderBottom = "1px solid rgba(255, 255, 255, 0.1)";
+        bigmenu.style.background = "#242424";
+        bigmenu.style.borderBottom = "1px solid #5c5c5c";
         isMenu = true;
 
 
@@ -300,7 +301,7 @@ var editor = ( function () {
     editor.Bover = function(e){
         e.target.style.border = "1px solid "+selectColor;
         e.target.style.background = selectColor;;
-        e.target.style.color = "#2A2A2A";
+        e.target.style.color = "#c2d0ff";
     };
 
     editor.Bout = function(e){
@@ -311,17 +312,17 @@ var editor = ( function () {
         if(!style){
             editor.Bdefault(e.target);
         } else {
-            e.target.style.border = "1px solid rgba(255, 255, 255, 0)";
-            e.target.style.background = "rgba(255, 255, 255, 0.2)";
-            e.target.style.color = "#2A2A2A";
+            e.target.style.border = "1px solid #5c5c5c";
+            e.target.style.background = "#5c5c5c";
+            e.target.style.color = "#999999";
         }
         
     };
 
     editor.Bdefault = function(b){
 
-        b.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-        b.style.background = "none";
+        b.style.border = "1px solid #5c5c5c";
+        b.style.background = "#242424";
         b.style.color = "#dedede";
 
     };
@@ -347,23 +348,19 @@ var editor = ( function () {
 
     editor.mid_over = function () { 
 
-        separator.style.background = 'rgba(255, 255, 255, 0.2)';
-        separator.style.borderLeft = '1px solid rgba(255, 255, 255, 0)';
-        separator.style.borderRight = '1px solid rgba(255, 255, 255, 0)';
-        separator.style.color = '#000000';
+        separator.style.background = '#5c5c5c';
 
     };
 
     editor.mid_out = function () { 
 
-        separator.style.background = 'none';
-        separator.style.borderLeft = '1px solid rgba(255, 255, 255, 0.2)';
-        separator.style.borderRight = '1px solid rgba(255, 255, 255, 0.2)';
-        separator.style.color = 'rgba(255, 255, 255, 0.2)';
+        if( !isMidDown ) separator.style.background = 'none';
 
     };
 
     editor.mid_down = function () {
+
+        isMidDown = true;
 
         document.addEventListener('mouseup', editor.mid_up, false );
         document.addEventListener('mousemove', editor.resize, false );
@@ -371,6 +368,8 @@ var editor = ( function () {
     };
 
     editor.mid_up = function () {
+
+        isMidDown = false;
 
         document.removeEventListener('mouseup', editor.mid_up, false );
         document.removeEventListener('mousemove', editor.resize, false );

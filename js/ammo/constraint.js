@@ -104,7 +104,7 @@ function addJoint ( o ) {
     // hinge
 
     // limite min, limite max, softness, bias, relaxation
-    if(o.limit) joint.setLimit( o.limit[0]*degtorad, o.limit[1]*degtorad, o.limit[2] || 0.9, o.limit[3] || 0.3, o.limit[4] || 0.1);
+    if(o.limit) joint.setLimit( o.limit[0]*torad, o.limit[1]*torad, o.limit[2] || 0.9, o.limit[3] || 0.3, o.limit[4] || 0.1);
     if(o.motor) joint.enableAngularMotor( o.motor[0], o.motor[1], o.motor[2] );
 
 

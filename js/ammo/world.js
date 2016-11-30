@@ -8,6 +8,7 @@
 var world = null;
 var worldInfo = null;
 var solver, solverSoft, collision, dispatcher, broadphase;
+var isSoft = true;
 
 function clearWorld () {
 
@@ -25,57 +26,41 @@ function clearWorld () {
 
 };
 
-function addWorld () {
+function addWorld ( o ) {
+
+    o = o || {};
 
     if( world !== null ) return;
 
+    isSoft = o.soft === undefined ? true : o.soft;
+
     solver = new Ammo.btSequentialImpulseConstraintSolver();
-    solverSoft = new Ammo.btDefaultSoftBodySolver();
-
-    //collision = new Ammo.btDefaultCollisionConfiguration();
-    collision = new Ammo.btSoftBodyRigidBodyCollisionConfiguration();
-
+    solverSoft = isSoft ? new Ammo.btDefaultSoftBodySolver() : null;
+    collision = isSoft ? new Ammo.btSoftBodyRigidBodyCollisionConfiguration() : new Ammo.btDefaultCollisionConfiguration();
     dispatcher = new Ammo.btCollisionDispatcher( collision );
 
-    
+    switch( o.broadphase === undefined ? 2 : o.broadphase ){
 
-    var type = 3;
-    
-    switch( type ){
-
-        //case 1: broadphase = new Ammo.btSimpleBroadphase(); break;
-        case 2: 
-            var s = 1000;
-            tmpPos.setValue(-s,-s,-s);
-            tmpPos1.setValue(s,s,s);
-            broadphase = new Ammo.btAxisSweep3( tmpPos, tmpPos1, 4096 ); 
-        break;//16384;
-        case 3: broadphase = new Ammo.btDbvtBroadphase(); break;
+        //case 0: broadphase = new Ammo.btSimpleBroadphase(); break;
+        case 1: var s = 1000; broadphase = new Ammo.btAxisSweep3( new Ammo.btVector3(-s,-s,-s), new Ammo.btVector3(s,s,s), 4096 ); break;//16384;
+        case 2: broadphase = new Ammo.btDbvtBroadphase(); break;
         
     }
 
-    //world = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
-    world = new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collision, solverSoft );
+    world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collision, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
 
-    gravity.setValue( 0, -9.8, 0 );
-    world.setGravity( gravity );
+    setGravity( o );
     
-
-    worldInfo = world.getWorldInfo();
-
-    worldInfo.set_m_gravity( gravity );
-    //worldInfo.set_air_density( 1.2 );
-    //worldInfo.set_water_density( 0 );
-    //worldInfo.set_water_offset( 0 );
-    //worldInfo.set_water_normal( vec3() );
-
-    //console.log(world);
 };
 
-function gravity ( o ) {
+function setGravity ( o ) {
 
-    gravity.fromArray(o.g);
-    world.setGravity( gravity );
-    worldInfo.set_m_gravity( gravity );
+    gravity.fromArray( o.g || [0,-9.8, 0] );
+    if( isSoft ){
+        worldInfo = world.getWorldInfo();
+        worldInfo.set_m_gravity( gravity );
+    } else {
+        world.setGravity( gravity );
+    }
 
 };
