@@ -296,7 +296,63 @@ var view = ( function () {
 
             rayCallBack( targetMouse );
         }
-    }
+    };
+
+	var kdCallBack = null;
+	var kuCallBack = null;
+	var keycodes = {unknown: "unknown"};
+
+	// Keycode definitions
+
+	keycodes[37] = "left";
+	keycodes[38] = "up";
+	keycodes[39] = "right";
+	keycodes[40] = "down";
+	keycodes[48] = "0";
+	keycodes[49] = "1";
+	keycodes[50] = "2";
+	keycodes[51] = "3";
+	keycodes[52] = "4";
+	keycodes[53] = "5";
+	keycodes[54] = "6";
+	keycodes[55] = "7";
+	keycodes[56] = "8";
+	keycodes[57] = "9";
+	keycodes[65] = "a";
+	keycodes[87] = "w";
+	keycodes[68] = "d";
+	keycodes[83] = "s";
+	keycodes[81] = "q";
+
+    view.keydown = function ( callback ) {
+
+		kdCallBack = callback;
+		canvas.addEventListener( 'keydown', view.keydownTest, false );
+
+    };
+
+	view.keyup = function ( callback ) {
+
+		kuCallBack = callback;
+		canvas.addEventListener( 'keyup', view.keyupTest, false );
+
+	};
+
+	view.keydownTest = function (e) {
+
+		if( kdCallBack ) {
+			kdCallBack(keycodes[e.keyCode || e.which] || keycodes.unknown);
+		}
+
+	};
+
+	view.keyupTest = function (e) {
+
+		if( kuCallBack ) {
+			kuCallBack(keycodes[e.keyCode || e.which] || keycodes.unknown);
+		}
+
+	};
 
    
 
