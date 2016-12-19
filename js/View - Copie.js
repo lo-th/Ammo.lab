@@ -10,8 +10,8 @@
 // MATH ADD
 Math.torad = 0.0174532925199432957;
 Math.todeg = 57.295779513082320876;
-Math.degtorad = 0.0174532925199432957;
-Math.radtodeg = 57.295779513082320876;
+Math.degtorad = Math.PI / 180;//0.0174532925199432957;
+Math.radtodeg = 180 / Math.PI;//57.295779513082320876;
 Math.Pi = 3.141592653589793;
 Math.TwoPI = 6.283185307179586;
 Math.PI90 = 1.570796326794896;
@@ -23,60 +23,58 @@ Math.int = function(x) { return ~~x; };
 
 var view = ( function () {
 
-'use strict';
+    'use strict';
 
-var time = 0;
-var temp = 0;
-var count = 0;
-var fps = 0;
+    var time = 0;
+    var temp = 0;
+    var count = 0;
+    var fps = 0;
 
-var isFirst = true;
+    var canvas, renderer, scene, camera, controls, debug;
+    var ray, mouse, content, targetMouse, rayCallBack, moveplane, isWithRay = false;;
+    var vs = { w:1, h:1, l:0, x:0 };
 
-var canvas, renderer, scene, camera, controls, debug;
-var ray, mouse, content, targetMouse, rayCallBack, moveplane, isWithRay = false;;
-var vs = { w:1, h:1, l:0, x:0 };
+    var helper;
+    
+    var meshs = [];
+    var statics = [];
+    var terrains = [];
+    var softs = [];
+    var cars = [];
+    //var carsSpeed = [];
+    var heros = [];
+    var extraGeo = [];
 
-var helper;
+    var byName = {};
 
-var meshs = [];
-var statics = [];
-var terrains = [];
-var softs = [];
-var cars = [];
-//var carsSpeed = [];
-var heros = [];
-var extraGeo = [];
+    var currentFollow = null;
 
-var byName = {};
+    //var softsPoints = [];
 
-var currentFollow = null;
+    var geo = {};
+    var mat = {};
 
-//var softsPoints = [];
-
-var geo = {};
-var mat = {};
-
-// key[8] = controle.
-//var key = [ 0,0,0,0,0,0,0,0,0 ];
+    // key[8] = controle.
+    //var key = [ 0,0,0,0,0,0,0,0,0 ];
 
 
-var imagesLoader;
-//var currentCar = -1;
-var isCamFollow = false;
-var isWithShadow = false;
-var shadowGround, light, ambient;
-var spy = -0.01;
+    var imagesLoader;
+    //var currentCar = -1;
+    var isCamFollow = false;
+    var isWithShadow = false;
+    var shadowGround, light, ambient;
+    var spy = -0.01;
 
-var perlin = null;//new Perlin();
+    var perlin = null;//new Perlin();
 
-var environment, envcontext, nEnv = 1, isWirframe = true;
-var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
-var envMap;
+    var environment, envcontext, nEnv = 1, isWirframe = true;
+    var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
+    var envMap;
 
 
-view = {
+    view = function () {};
 
-    init: function ( callback ) {
+    view.init = function ( callback ) {
 
         canvas = document.createElement("canvas");
         canvas.className = 'canvas3d';
@@ -99,13 +97,13 @@ view = {
             return;
         }
 
-        if( intro !== null ) intro.clear();
+        if(intro !== null ) intro.clear();
 
         renderer.setClearColor(0x242424, 1);
+        //renderer.setSize( 100, 100 );
         renderer.setPixelRatio( window.devicePixelRatio );
 
-        // TONE MAPPING
-
+        //renderer.sortObjects = false;
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
 
@@ -131,60 +129,40 @@ view = {
         controls.update();
 
         // LIGHTS
-
-        this.addLights();
-
-        // IMAGE LOADER
-
-        imagesLoader = new THREE.TextureLoader();
-
-        // RAYCAST
-
-        ray = new THREE.Raycaster();
-        mouse = new THREE.Vector2();
+        view.addLights();
 
         // GEOMETRY
 
-        geo = {
-
-            box:      new THREE.BoxBufferGeometry(1,1,1),
-            cone:     new THREE.CylinderBufferGeometry( 0,1,0.5 ),
-            wheel:    new THREE.CylinderBufferGeometry( 1,1,1, 18 ),
-            sphere:   new THREE.SphereBufferGeometry( 1, 12, 10 ),
-            cylinder: new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
-
-        }
-
-        geo.wheel.rotateZ( -Math.PI90 );
+        geo['box'] =  new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(1,1,1) );
+        geo['sphere'] = new THREE.SphereBufferGeometry( 1, 12, 10 );
+        geo['cylinder'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 1,1,1,12,1 ) );
+        geo['cone'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 0,1,0.5 ) );
+        geo['wheel'] =  new THREE.BufferGeometry().fromGeometry( new THREE.CylinderGeometry( 1,1,1, 18 ) );
+        geo['wheel'].rotateZ( -Math.PI90 );
 
         // MATERIAL
 
-        mat = {
+        mat['terrain'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'terrain', wireframe:true });
+        mat['cloth'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'cloth', wireframe:true, transparent:true, opacity:0.9, side: THREE.DoubleSide });
+        mat['ball'] = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'ball', wireframe:true });
+        mat['statique'] = new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6 });
+        mat['hero'] = new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true });
+        mat['move'] = new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true });
+        mat['cars'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'cars', wireframe:true, transparent:true, side: THREE.DoubleSide });
+        mat['tmp1'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp1', wireframe:true, transparent:true });
+        mat['tmp2'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp2', wireframe:true, transparent:true });
+        mat['movehigh'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'movehigh', wireframe:true });
+        mat['sleep'] = new THREE.MeshBasicMaterial({ color:0x383838, name:'sleep', wireframe:true });
 
-            terrain: new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'terrain', wireframe:true }),
-            cloth: new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'cloth', wireframe:true, transparent:true, opacity:0.9, side: THREE.DoubleSide }),
-            ball: new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'ball', wireframe:true }),
-            statique: new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6 }),
-            move: new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true }),
-            movehigh: new THREE.MeshBasicMaterial({ color:0xff9999, name:'movehigh', wireframe:true }),
-            sleep: new THREE.MeshBasicMaterial({ color:0x9999FF, name:'sleep', wireframe:true }),
+        mat['meca1'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca1', wireframe:true });
+        mat['meca2'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca2', wireframe:true });
+        mat['meca3'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca3', wireframe:true });
 
-            hero: new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true }),
-            cars: new THREE.MeshBasicMaterial({ color:0xffffff, name:'cars', wireframe:true, transparent:true, side: THREE.DoubleSide }),
-            tmp1: new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp1', wireframe:true, transparent:true }),
-            tmp2: new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp2', wireframe:true, transparent:true }),
-            
-            meca1: new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca1', wireframe:true }),
-            meca2: new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca2', wireframe:true }),
-            meca3: new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca3', wireframe:true }),
+        mat['pig'] = new THREE.MeshBasicMaterial({ color:0xd3a790, name:'pig', wireframe:true, transparent:false });
+        mat['avatar'] = new THREE.MeshBasicMaterial({ color:0xd3a790, name:'avatar', wireframe:true, transparent:false });
 
-            pig: new THREE.MeshBasicMaterial({ color:0xd3a790, name:'pig', wireframe:true, transparent:false }),
-            avatar: new THREE.MeshBasicMaterial({ color:0xd3a790, name:'avatar', wireframe:true, transparent:false }),
-
-            both: new THREE.MeshBasicMaterial({ color:0xffffff, name:'both', wireframe:true, side:THREE.DoubleSide  }),
-            back: new THREE.MeshBasicMaterial({ color:0xffffff, name:'back', wireframe:true, side:THREE.BackSide  }),
-
-        }
+        mat['both'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'both', wireframe:true, side:THREE.DoubleSide  });
+        mat['back'] = new THREE.MeshBasicMaterial({ color:0xffffff, name:'back', wireframe:true, side:THREE.BackSide  });
 
         // GROUND
 
@@ -192,11 +170,16 @@ view = {
         helper.material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, transparent:true, opacity:0.1 } );
         scene.add( helper );
 
+        // RAYCAST
+
+        ray = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+
         // EVENT
 
         window.addEventListener( 'resize', view.resize, false );
 
-        
+        imagesLoader = new THREE.TextureLoader();
 
         this.resize();
         this.initEnv();
@@ -206,21 +189,11 @@ view = {
 
         if( callback ) callback();
 
-    },
+    };
 
-    addLights: function(){
+    view.setLeft = function ( x ) { vs.x = x; };
 
-        light = new THREE.DirectionalLight( 0xffffff, 1 );
-        light.position.set( -3, 50, 5 );
-        light.lookAt( new THREE.Vector3() );
-        scene.add( light );
-
-        ambient = new THREE.AmbientLight( 0x444444 );
-        scene.add( ambient );
-
-    },
-
-    resize: function () {
+    view.resize = function () {
 
         vs.h = window.innerHeight;
         vs.w = window.innerWidth - vs.x;
@@ -230,29 +203,23 @@ view = {
         camera.updateProjectionMatrix();
         renderer.setSize( vs.w, vs.h );
 
-        if( editor ) editor.resizeMenu( vs.w );
+        if(editor) editor.resizeMenu( vs.w );
 
-    },
+    };
 
-    setLeft: function ( x ) { 
-
-        vs.x = x; 
-
-    },
-
-    getFps: function () {
+    view.getFps = function () {
 
         return fps;
 
-    },
+    };
 
-    getInfo: function () {
+    view.getInfo = function () {
 
         return renderer.info.programs.length;
 
-    },
+    };
 
-    render: function () {
+    view.render = function () {
 
         time = now();
         if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
@@ -260,37 +227,30 @@ view = {
         this.controlUpdate();
         renderer.render( scene, camera );
 
-    },
+    };
 
-    addMap: function( name, matName ) {
-
+    view.addMap = function( name, matName ) {
         var map = imagesLoader.load( 'textures/' + name );
         //map.wrapS = THREE.RepeatWrapping;
         //map.wrapT = THREE.RepeatWrapping;
         map.flipY = false;
+
         mat[matName].map = map;
+    }
 
-    },
-
-    getGeo: function () {
-
+    view.getGeo = function () {
         return geo;
+    };
 
-    },
-
-    getMat: function () {
-
+    view.getMat = function () {
         return mat;
+    };
 
-    },
-
-    getScene: function () {
-
+    view.getScene = function () {
         return scene;
+    };
 
-    },
-
-    removeRay: function(){
+    view.removeRay = function(){
         if(isWithRay){
             isWithRay = false;
 
@@ -301,9 +261,9 @@ view = {
             scene.remove(targetMouse);
 
         }
-    },
+    }
 
-    activeRay: function ( callback ) {
+    view.activeRay = function ( callback ) {
 
         isWithRay = true;
 
@@ -320,9 +280,9 @@ view = {
 
         rayCallBack = callback;
 
-    },
+    };
 
-    rayTest: function (e) {
+    view.rayTest = function (e) {
         //vs.h = window.innerHeight;
         //vs.w = window.innerWidth - vs.x;
         mouse.x = ( (e.clientX- vs.x )/ vs.w ) * 2 - 1;
@@ -336,11 +296,11 @@ view = {
 
             rayCallBack( targetMouse );
         }
-    },
+    }
 
    
 
-    changeMaterial: function ( type ) {
+    view.changeMaterial = function ( type ) {
 
         var m, matType, name, i, j, k;
 
@@ -357,8 +317,7 @@ view = {
         // create new material
 
         for( var old in mat ) {
-
-            m = mat[ old ];
+            m = mat[old];
             name = m.name;
             mat[ name ] = new THREE[ matType ]({ 
                 name:name, 
@@ -371,14 +330,11 @@ view = {
                 opacity: m.opacity || 1, 
                 side: m.side || THREE.FrontSide 
             });
-            if( !isWirframe ){
+            if( !isWirframe && envMap ){
                 mat[name].envMap = envMap;
-                mat[name].metalness = 0.6;
-                mat[name].roughness = 0.4;
+                mat[name].metalness = 0.5;
+                mat[name].roughness = 0.5;
             }
-
-            m.dispose();
-
         }
 
         // re-apply material
@@ -430,21 +386,21 @@ view = {
             
         };
 
-    },
+    }
 
-    needFocus: function () {
+    view.needFocus = function () {
 
         canvas.addEventListener('mouseover', editor.unFocus, false );
 
-    },
+    };
 
-    haveFocus: function () {
+    view.haveFocus = function () {
 
         canvas.removeEventListener('mouseover', editor.unFocus, false );
 
-    },
+    };
 
-    initEnv: function () {
+    view.initEnv = function () {
 
         var env = document.createElement( 'div' );
         env.className = 'env';
@@ -457,9 +413,9 @@ view = {
         env.oncontextmenu = this.loadEnv;
         this.loadEnv();
 
-    },
+    };
 
-    loadEnv: function ( e ) {
+    view.loadEnv = function ( e ) {
 
         var b = 0;
 
@@ -495,23 +451,22 @@ view = {
 
         img.src = 'textures/spherical/'+ envLists[nEnv] +'.jpg';
 
-    },
+    };
 
-    sh_grid: function(){
+    view.sh_grid = function(){
 
         //if(helper.visible) helper.visible = false;
         //else helper.visible = true;
-    },
+    }
 
-    hideGrid: function(){
+    view.hideGrid = function(){
 
         helper.visible = false;
-
-    },
+    }
 
     // LOAD
 
-    load: function ( name, callback ) {
+    view.load = function ( name, callback ) {
 
         var loader = new THREE.SEA3D({});
 
@@ -527,11 +482,13 @@ view = {
 
             if(callback) callback();
 
+            //console.log('loaded !! ', loader);
+
         };
 
         loader.load( 'models/'+ name +'.sea' );
 
-    },
+    };
 
     //--------------------------------------
     //
@@ -540,17 +497,17 @@ view = {
     //--------------------------------------
 
 
-    mergeMesh: function(m){
+    view.mergeMesh = function(m){
 
         return THREE.ViewUtils.mergeGeometryArray( m );
 
-    },
+    };
 
-    prepaGeometry: function ( g, type ) {
+    view.prepaGeometry = function ( g, type ) {
 
         return THREE.ViewUtils.prepaGeometry( g, type );
 
-    },
+    };
 
 
     //--------------------------------------
@@ -559,7 +516,7 @@ view = {
     //
     //--------------------------------------
 
-    controlUpdate: function(){
+    view.controlUpdate = function(){
 
         //+Math.PI90;
         //key[9] = controls.getPolarAngle();
@@ -572,16 +529,16 @@ view = {
         if( isCamFollow ) this.follow();
         //else key[8] = controls.getAzimuthalAngle();
 
-    },
+    };
 
-    setFollow: function ( name ) {
+    view.setFollow = function ( name ) {
 
         currentFollow = this.getByName(name);
         if( currentFollow !== null ) isCamFollow = true;
 
-    },
+    };
  
-    follow: function ( name ) {
+    view.follow = function ( name ) {
 
         if( currentFollow === null ) return;
 
@@ -616,9 +573,9 @@ view = {
 
         view.moveCamera( h, 20, 10, 0.3, target );
 
-    },
+    };
 
-    moveCamera: function ( h, v, d, l, target ) {
+    view.moveCamera = function ( h, v, d, l, target ) {
 
         l = l || 1;
         if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
@@ -626,9 +583,9 @@ view = {
         camera.position.lerp( this.orbit( h, v, d ), l );
         controls.update();
         
-    },
+    };
 
-    orbit: function( h, v, d ) {
+    view.orbit = function( h, v, d ) {
 
         var offset = new THREE.Vector3();
         
@@ -649,21 +606,21 @@ view = {
         
         return p;
 
-    },
+    };
 
-    setDriveCar: function ( name ) {
+    view.setDriveCar = function ( name ) {
 
         ammo.send('setDriveCar', { n:this.getByName(name).userData.id });
 
-    },
+    };
 
-    toRad: function ( r ) {
+    view.toRad = function ( r ) {
 
         var i = r.length;
         while(i--) r[i] *= Math.torad;
         return r;
 
-    },
+    };
 
     //--------------------------------------
     //
@@ -671,7 +628,7 @@ view = {
     //
     //--------------------------------------
 
-    reset: function () {
+    view.reset = function () {
 
         view.removeRay();
         view.setShadowPosY(-0.01);
@@ -711,9 +668,7 @@ view = {
 
         currentFollow = null;
 
-        isFirst = true;
-
-    },
+    };
 
     //--------------------------------------
     //
@@ -721,7 +676,7 @@ view = {
     //
     //--------------------------------------
 
-    add: function ( o ) {
+    view.add = function ( o ) {
 
         var isCustomGeometry = false;
 
@@ -755,45 +710,45 @@ view = {
 
         var mesh = null;
 
-        if(o.type.substring(0,5) === 'joint') {
+        if(o.type.substring(0,5) == 'joint') {
 
             ammo.send( 'add', o );
             return;
 
         }
 
-        if(o.type === 'plane'){
+        if(o.type == 'plane'){
             helper.position.set( o.pos[0], o.pos[1], o.pos[2] )
             ammo.send( 'add', o ); 
             return;
         }
 
-        if(o.type === 'softTriMesh'){
+        if(o.type == 'softTriMesh'){
             this.softTriMesh( o ); 
             return;
         }
 
-        if(o.type === 'softConvex'){
+        if(o.type == 'softConvex'){
             this.softConvex( o ); 
             return;
         }
 
-        if(o.type === 'cloth'){
+        if(o.type == 'cloth'){
             this.cloth( o ); 
             return;
         }
 
-        if(o.type === 'rope'){
+        if(o.type == 'rope'){
             this.rope( o ); 
             return;
         }
 
-        if(o.type === 'ellipsoid'){
+        if(o.type == 'ellipsoid'){
             this.ellipsoid( o ); 
             return;
         }
 
-        if(o.type === 'terrain'){
+        if(o.type == 'terrain'){
             this.terrain( o ); 
             return;
         }
@@ -880,18 +835,21 @@ view = {
             else statics.push( mesh );
         }
 
-        if( o.shape ) delete( o.shape );
-        if( o.geometry ) delete( o.geometry );
-        if( o.material ) delete( o.material );
+        if( o.shape ) delete(o.shape);
+        if( o.geometry ) delete(o.geometry);
+        if( o.material ) delete(o.material);
+
+        //console.log(o)
+        
 
         // send to worker
         ammo.send( 'add', o );
 
-    },
+    };
 
     
 
-    getGeoByName: function ( name, Buffer ) {
+    view.getGeoByName = function ( name, Buffer ) {
 
         var g;
         var i = geo.length;
@@ -902,9 +860,9 @@ view = {
         if( buffer ) g = new THREE.BufferGeometry().fromGeometry( g );
         return g;
 
-    },
+    };
 
-    character: function ( o ) {
+    view.character = function ( o ) {
 
         o.size = o.size == undefined ? [0.5,1,1] : o.size;
         if(o.size.length == 1){ o.size[1] = o.size[0]; }
@@ -949,9 +907,9 @@ view = {
         // send to worker
         ammo.send( 'character', o );
 
-    },
+    };
 
-    vehicle: function ( o ) {
+    view.vehicle = function ( o ) {
 
         //var type = o.type || 'box';
         var size = o.size || [2,0.5,4];
@@ -1059,13 +1017,13 @@ view = {
         // send to worker
         ammo.send( 'vehicle', o );
 
-    },
+    };
 
     //--------------------------------------
     //   SOFT TRI MESH
     //--------------------------------------
 
-    softTriMesh: function ( o ) {
+    view.softTriMesh = function ( o ) {
 
         //console.log(o.shape)
 
@@ -1117,13 +1075,13 @@ view = {
         // send to worker
         ammo.send( 'add', o );
         
-    },
+    }
 
     //--------------------------------------
     //   SOFT CONVEX
     //--------------------------------------
 
-    softConvex: function ( o ) {
+    view.softConvex = function ( o ) {
 
         var g = o.shape;
         var pos = o.pos || [0,0,0];
@@ -1147,13 +1105,13 @@ view = {
         // send to worker
         ammo.send( 'add', o );
 
-    },
+    }
 
     //--------------------------------------
     //   CLOTH
     //--------------------------------------
 
-    cloth: function ( o ) {
+    view.cloth = function ( o ) {
 
         var i, x, y, n;
 
@@ -1193,20 +1151,20 @@ view = {
         // send to worker
         ammo.send( 'add', o );
 
-    },
+    }
 
     //--------------------------------------
     //   ROPE
     //--------------------------------------
 
-    rope: function ( o ) {
+    view.rope = function ( o ) {
 
-        //var max = o.numSegment || 10;
-        //var start = o.start || [0,0,0];
-        //var end = o.end || [0,10,0];
+        var max = o.numSegment || 10;
+        var start = o.start || [0,0,0];
+        var end = o.end || [0,10,0];
 
-       // max += 2;
-        /*var ropeIndices = [];
+        max += 2;
+        var ropeIndices = [];
 
         //var n;
         //var pos = new Float32Array( max * 3 );
@@ -1214,21 +1172,15 @@ view = {
 
             ropeIndices.push( i, i + 1 );
 
-        }*/
+        }
 
-        /*var g = new THREE.BufferGeometry();
+        var g = new THREE.BufferGeometry();
         g.setIndex( new THREE.BufferAttribute( new Uint16Array( ropeIndices ), 1 ) );
         g.addAttribute('position', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
         g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
 
         //var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ vertexColors: true }));
-        var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ color: 0xFFFF00 }));*/
-
-        var g = new THREE.Tubex( o , o.numSegment|| 10, o.radius || 0.2, 6, false );
-
-        //console.log(g.positions.length)
-
-        var mesh = new THREE.Mesh( g, mat.ball );
+        var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ color: 0xFFFF00 }));
 
         this.setName( o, mesh );
 
@@ -1244,20 +1196,20 @@ view = {
         // send to worker
         ammo.send( 'add', o );
 
-    },
+    }
 
     //--------------------------------------
     //   ELLIPSOID 
     //--------------------------------------
 
-    ellipsoid: function ( o ) {
+    view.ellipsoid = function ( o ) {
 
         // send to worker
         ammo.send( 'add', o );
 
-    },
+    }
 
-    ellipsoidMesh: function ( o ) {
+    view.ellipsoidMesh = function ( o ) {
 
         var max = o.lng;
         var points = [];
@@ -1344,7 +1296,7 @@ view = {
         scene.add( mesh );
         softs.push( mesh );
 
-    },
+    }
 
     //--------------------------------------
     //
@@ -1352,7 +1304,7 @@ view = {
     //
     //--------------------------------------
 
-    terrain: function ( o ) {
+    view.terrain = function ( o ) {
 
         var i, x, y, n, c;
 
@@ -1378,7 +1330,7 @@ view = {
 
 
         i = o.lng;
-        while( i-- ){
+        while(i--){
             n = i * 3;
             x = i % o.div[0];
             y = ~~ ( i * r );
@@ -1397,8 +1349,7 @@ view = {
         extraGeo.push( g );
         
         var mesh = new THREE.Mesh( g, mat.terrain );
-        //mesh.position.set( o.pos[0], o.pos[1], o.pos[2] );
-        mesh.position.fromArray( o.pos );
+        mesh.position.set( o.pos[0], o.pos[1], o.pos[2] );
 
         mesh.castShadow = false;
         mesh.receiveShadow = true;
@@ -1411,15 +1362,15 @@ view = {
         // send to worker
         ammo.send( 'add', o );
 
-        if( shadowGround ) scene.remove( shadowGround );
+        if(shadowGround) scene.remove( shadowGround );
 
-    },
+    };
 
-    moveTerrain: function ( o ) {
+    view.moveTerrain = function ( o ) {
 
 
 
-    },
+    };
 
     //--------------------------------------
     //
@@ -1427,20 +1378,20 @@ view = {
     //
     //--------------------------------------
 
-    setName: function ( o, mesh ) {
+    view.setName = function ( o, mesh ) {
 
         if( o.name !== undefined ){ 
             byName[o.name] = mesh;
             mesh.name = o.name;
         }
 
-    },
+    };
 
-    getByName: function (name){
+    view.getByName = function (name){
 
         return byName[name] || null;
 
-    },
+    };
 
 
     //--------------------------------------
@@ -1449,23 +1400,20 @@ view = {
     //
     //--------------------------------------
 
-    update: function(){
+    view.update = function(){
 
         this.bodyStep();
         this.heroStep();
         this.carsStep();
         this.softStep();
 
-        if( isFirst ) isFirst = false; 
+    }
 
-    },
-
-    bodyStep: function(){
+    view.bodyStep = function(){
 
         if( !meshs.length ) return;
 
         meshs.forEach( function( b, id ) {
-
             var n = id * 8;
             var s = Br[n];
             if ( s > 0 ) {
@@ -1474,32 +1422,30 @@ view = {
                 if( s > 50 && b.material.name == 'move' ) b.material = mat.movehigh;
                 else if( s < 50 && b.material.name == 'movehigh') b.material = mat.move;
                 
-                b.position.fromArray( Br, n + 1 );
-                b.quaternion.fromArray( Br, n + 4 );
+                b.position.set( Br[n+1], Br[n+2], Br[n+3] );
+                b.quaternion.set( Br[n+4], Br[n+5], Br[n+6], Br[n+7] );
 
             } else {
                 if ( b.material.name == 'move' || b.material.name == 'movehigh' ) b.material = mat.sleep;
             }
         });
 
-    },
+    };
 
-    heroStep: function(){
+    view.heroStep = function(){
 
         if(heros.length == 0 ) return;
 
         heros.forEach( function( b, id ) {
             var n = id * 8;
             b.userData.speed = Hr[n] * 100;
-
-            b.position.fromArray( Hr, n + 1 );
-            b.quaternion.fromArray( Hr, n + 4 );
-
+            b.position.set( Hr[n+1], Hr[n+2], Hr[n+3] );
+            b.quaternion.set( Hr[n+4], Hr[n+5], Hr[n+6], Hr[n+7] );
         });
 
-    },
+    };
 
-    carsStep: function(){
+    view.carsStep = function(){
 
         if( !cars.length ) return;
 
@@ -1508,11 +1454,8 @@ view = {
             //carsSpeed[id] = Cr[n];
             b.userData.speed = Cr[n];
 
-            b.position.fromArray( Cr, n + 1 );
-            b.quaternion.fromArray( Cr, n + 4 );
-
-            //b.position.set( Cr[n+1], Cr[n+2], Cr[n+3] );
-            //b.quaternion.set( Cr[n+4], Cr[n+5], Cr[n+6], Cr[n+7] );
+            b.position.set( Cr[n+1], Cr[n+2], Cr[n+3] );
+            b.quaternion.set( Cr[n+4], Cr[n+5], Cr[n+6], Cr[n+7] );
 
             //b.axe.position.copy( b.body.position );
             //b.axe.quaternion.copy( b.body.quaternion );
@@ -1534,23 +1477,20 @@ view = {
                 //if( j == 2 ) b.axe.position.y = Cr[n+w];
                 //if( j == 3 ) b.axe.position.z = Cr[n+w];
 
-                b.userData.w[j].position.fromArray( Cr, n + w + 1 );
-                b.userData.w[j].quaternion.fromArray( Cr, n + w + 4 );
-
-                //b.userData.w[j].position.set( Cr[n+w+1], Cr[n+w+2], Cr[n+w+3] );
-                //b.userData.w[j].quaternion.set( Cr[n+w+4], Cr[n+w+5], Cr[n+w+6], Cr[n+w+7] );
+                b.userData.w[j].position.set( Cr[n+w+1], Cr[n+w+2], Cr[n+w+3] );
+                b.userData.w[j].quaternion.set( Cr[n+w+4], Cr[n+w+5], Cr[n+w+6], Cr[n+w+7] );
             }
         });
 
-    },
+    };
 
-    getSofts: function(){
+    view.getSofts = function(){
 
         return softs;
 
-    },
+    };
 
-    softStep: function(){
+    view.softStep = function(){
 
         if( !softs.length ) return;
 
@@ -1565,26 +1505,10 @@ view = {
             var isWithColor = b.geometry.attributes.color ? true : false;
             var isWithNormal = b.geometry.attributes.normal ? true : false;
 
-
-            if( t === 2 ){ // rope
-
-                j = b.geometry.positions.length;// * 3;
-                while(j--){
-                    n = (j*3) + softPoints;
-                    b.geometry.positions[j].set( Sr[n], Sr[n+1], Sr[n+2] );
-
-                }
-
-                b.geometry.updatePath();
-                softPoints += b.geometry.positions.length*3;
-            } else {
-
-                //}
-
             p = b.geometry.attributes.position.array;
             if(isWithColor) c = b.geometry.attributes.color.array;
 
-            if( t === 5 || t === 4 ){ // softTriMesh // softConvex
+            if( t == 5 || t == 4 ){ // softTriMesh // softConvex
 
                 var max = b.geometry.numVertices;
                 var maxi = b.geometry.maxi;
@@ -1605,21 +1529,7 @@ view = {
                     }
                 }
 
-            /*}else if( t === 2 ){ // new rope
-
-                j = b.geometry.positions.length;// * 3;
-                while(j--){
-                    n = (j*3) + softPoints;
-                    b.geometry.positions[j].set( Sr[n], Sr[n+1], Sr[n+2] );
-
-                }
-
-                b.geometry.updatePath();
-                softPoints += b.geometry.positions.length*3;*/
-
             }else{
-
-
 
 
                 if( b.geometry.attributes.order ) order = b.geometry.attributes.order.array;
@@ -1691,12 +1601,11 @@ view = {
             
             b.geometry.computeBoundingSphere();
 
-            if( t === 5 ) softPoints += b.geometry.numVertices * 3;
+            if( t == 5 ) softPoints += b.geometry.numVertices * 3;
             else softPoints += p.length;
-        }
         });
 
-    },
+    };
     
 
 
@@ -1713,7 +1622,7 @@ view = {
     //   SHADOW
     //--------------------------------------
 
-    removeShadow: function(){
+    view.removeShadow = function(){
 
         if(!isWithShadow) return;
 
@@ -1725,16 +1634,28 @@ view = {
         //scene.remove(light);
         //scene.remove(ambient);
 
-    },
+    };
 
-    setShadowPosY: function( y ){
+    view.setShadowPosY = function( y ){
 
         spy = y;
         if(shadowGround) shadowGround.position.y = spy;
 
-    },
+    }
 
-    addShadow: function(){
+    view.addLights = function(){
+
+        light = new THREE.DirectionalLight( 0xffffff, 1 );
+        light.position.set( -3, 50, 5 );
+        light.lookAt( new THREE.Vector3() );
+        scene.add( light );
+
+        ambient = new THREE.AmbientLight( 0x444444 );
+        scene.add( ambient );
+
+    }
+
+    view.addShadow = function(){
 
        if( isWithShadow ) return;
 
@@ -1764,10 +1685,10 @@ view = {
         //light.shadow.bias = 0.0001;
 
 
-    },
+    }
 
-}
-
-return view;
+    return view;
 
 })();
+
+

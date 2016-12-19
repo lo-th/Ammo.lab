@@ -56,7 +56,7 @@ function ready () {
 
 };
 
-function launch (name) {
+function launch ( name ) {
 
     var full = true;
     var hash = location.hash.substr( 1 );
@@ -68,6 +68,10 @@ function launch (name) {
     view.reset( full );
 
     demo = new window['demo'];
+
+    // start Physics engine
+    setTimeout( ammo.start, 100 );
+    //ammo.start();
 
 };
 

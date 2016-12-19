@@ -7,7 +7,7 @@
 
 function stepRigidBody() {
 
-    if( !bodys.length ) return;
+    //if( !bodys.length ) return;
 
     bodys.forEach( function ( b, id ) {
 
@@ -17,17 +17,8 @@ function stepRigidBody() {
         if ( Br[n] > 0 ) {
 
             b.getMotionState().getWorldTransform( trans );
-            pos = trans.getOrigin();
-            quat = trans.getRotation();
-
-            Br[n+1] = pos.x();
-            Br[n+2] = pos.y();
-            Br[n+3] = pos.z();
-
-            Br[n+4] = quat.x();
-            Br[n+5] = quat.y();
-            Br[n+6] = quat.z();
-            Br[n+7] = quat.w();
+            trans.getOrigin().toArray( Br, n + 1 );
+            trans.getRotation().toArray( Br, n + 4 );
 
         }
 
@@ -166,10 +157,15 @@ function addRigidBody ( o, extra ) {
 
 
     if ( o.mass !== 0 ){
-        body.setCollisionFlags(o.flag || 0);
+        body.setCollisionFlags( o.flag || 0 );
         world.addRigidBody( body, o.group || 1, o.mask || -1 );
 
-        body.activate();
+
+        /*var n = bodys.length;
+        tmpPos.toArray( Br, n + 1 );
+        tmpQuat.toArray( Br, n + 4 );*/
+
+        //body.activate();
         /*
         AMMO.ACTIVE = 1;
         AMMO.ISLAND_SLEEPING = 2;

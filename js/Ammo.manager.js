@@ -33,79 +33,76 @@ var ammo = ( function () {
     var timer = 0;
     var needDelete = true;
 
-    ammo = function () {};
+    ammo = {//function () {};
 
-    ammo.init = function ( Callback, direct ) {
+        init: function ( Callback, direct ) {
 
-        callback = Callback;
+            callback = Callback;
 
-        worker = new Worker('js/Ammo.worker.js');
+            worker = new Worker('js/Ammo.worker.js');
 
-        worker.onmessage = this.message;
-        worker.postMessage = worker.webkitPostMessage || worker.postMessage;
+            worker.onmessage = this.message;
+            worker.postMessage = worker.webkitPostMessage || worker.postMessage;
 
-        var blob;
+            var blob;
 
-        if(direct){
-            var blob = document.location.href.replace(/\/[^/]*$/,"/") + "libs/ammo.js";
-            needDelete = false;
-            //worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
-        }else{
-            blob = extract.get('ammo');
-        }
+            if(direct){
+                var blob = document.location.href.replace(/\/[^/]*$/,"/") + "libs/ammo.js";
+                needDelete = false;
+                //worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
+            }else{
+                blob = extract.get('ammo');
+            }
 
-        //worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep, Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr });
-        worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
-        
-    };
+            //worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep, Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr });
+            worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
+            
+        },
 
-    ammo.message = function( e ) {
-
-        var m = e.data.m;
-       
-
-        if(m === 'init'){
+        onInit: function () {
 
             if( needDelete ) extract.clearBlob('ammo');
             if( callback ) callback();
 
-        }
+        },
 
-        if(m === 'ellipsoid'){
-            view.ellipsoidMesh( e.data.o );
-        }
+        start: function () {
 
-        if(m === 'step'){
+            ammo.send('start');
+
+        },
+
+        message: function( e ) {
+
+            var data = e.data;
+
+            switch( data.m ){
+                case 'init': ammo.onInit( data ); break;
+                case 'step': ammo.step( data ); break;
+                case 'ellipsoid': view.ellipsoidMesh( data.o ); break;
+            }
+
+        },
+
+        step: function ( data ) {
 
             time = now();
             if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
             
-            Br = e.data.Br;
-            Cr = e.data.Cr;
-            Hr = e.data.Hr;
-            Jr = e.data.Jr;
-            Sr = e.data.Sr;
-
-            // delay
-            //delay = ( timerate - ( time - sendTime ) ).toFixed(2);
-            //if(delay < 0) delay = 0;
-
-
-
-            //delay = ~~ ( timerate - ( time - sendTime ));
-            //delay = delay < 0 ? 0 : delay;
-
-            
-
-            
+            Br = data.Br;
+            Cr = data.Cr;
+            Hr = data.Hr;
+            Jr = data.Jr;
+            Sr = data.Sr;
 
             view.update();
 
-            //view.update( ar, dr, hr, jr, sr );
             if( isBuffer ){ 
+
                 delay = ~~ ( timerate - ( time - sendTime ));
                 delay = delay < 0 ? 0 : delay;
-                timer = setInterval( sendData, delay );
+                timer = setTimeout( ammo.sendData, delay );
+
             } else {
 
                 user.update();
@@ -114,50 +111,40 @@ var ammo = ( function () {
 
             } 
 
+        },
+
+        sendData: function (){
+
+            clearTimeout( timer );
+            //clearInterval( timer );
+            sendTime = now();
+
+            user.update();
+            var key = user.getKey();
+
+            worker.postMessage( { m:'step', key:key, Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } , [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ] );
+            //else worker.postMessage( { m:'step', key:key } );
+
+            var f = view.getFps();
+            tell( 'THREE '+ f + ' | AMMO ' + fps +' | '+ delay +'ms' );
+
+            //tell( key );
             
+        },
 
-            //view.bodyStep();
-            //view.heroStep();
-            //view.carsStep();
-            //view.softStep();
+        send: function ( m, o ) {
 
-            //timer = setTimeout( sendData , delay );
+            worker.postMessage( { m:m, o:o });
 
-        }
+        },
 
-    };
+        reset: function( full ) {
 
-    function sendData(){
+            if( isBuffer ) clearTimeout( timer );
+            worker.postMessage( { m:'reset', full:full });
 
-        clearTimeout(timer);
-        //clearInterval( timer );
-        sendTime = now();
-
-        user.update();
-        var key = user.getKey();
-
-        //if( isBuffer ) 
-        worker.postMessage( { m:'step', key:key, Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } , [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ] );
-        //else worker.postMessage( { m:'step', key:key } );
-
-        var f = view.getFps();
-        tell( 'THREE '+ f + ' | AMMO ' + fps +' | '+ delay +'ms' );
-
-        //tell( key );
-        
-    };
-
-    ammo.send = function ( m, o ) {
-
-        worker.postMessage( { m:m, o:o });
-
+        },
     }
-
-    ammo.reset = function( full ) {
-
-        worker.postMessage( { m:'reset', full:full });
-
-    };
 
     return ammo;
 

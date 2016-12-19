@@ -5,7 +5,51 @@
 //
 //--------------------------------------------------
 
-function clearJoint (){
+
+Ammo.btTypedConstraint.prototype.getA = function( v ){
+
+    return 1
+
+};
+
+function stepConstraint () {
+
+    if( !joints.length ) return;
+
+    joints.forEach( function ( b, id ) {
+
+        var n = id * 4;
+
+        if( b.type ){
+
+            Jr[ n ] = b.type;
+
+        }
+        
+
+        
+
+            /*b.getMotionState().getWorldTransform( trans );
+            pos = trans.getOrigin();
+            quat = trans.getRotation();
+
+            Br[n+1] = pos.x();
+            Br[n+2] = pos.y();
+            Br[n+3] = pos.z();
+
+            Br[n+4] = quat.x();
+            Br[n+5] = quat.y();
+            Br[n+6] = quat.z();
+            Br[n+7] = quat.w();
+            */
+
+        
+
+    });
+
+};
+
+function clearJoint () {
 
     var j;
 
@@ -26,10 +70,10 @@ function addJoint ( o ) {
 
     var noAllowCollision = true;
     var collision = o.collision || false;
-    if(collision) noAllowCollision = false;
+    if( collision ) noAllowCollision = false;
 
-    var body1 = getByName(o.body1);
-    var body2 = getByName(o.body2);
+    var body1 = getByName( o.body1 );
+    var body2 = getByName( o.body2 );
 
     tmpPos1.fromArray( o.pos1 || [0,0,0] );
     tmpPos2.fromArray( o.pos2 || [0,0,0] );
@@ -81,25 +125,27 @@ function addJoint ( o ) {
     var useA =  o.useA !== undefined ? o.useA : true;
 
     var joint = null;
+    var t = 0;
 
     switch(o.type){
-        case "joint_p2p": 
+        case "joint_p2p":
+            t = 1;
             joint = new Ammo.btPoint2PointConstraint( body1, body2, tmpPos1, tmpPos2 );
             if(o.strength) joint.get_m_setting().set_m_tau( o.strength );
             if(o.damping) joint.get_m_setting().set_m_damping( o.damping ); 
             if(o.impulse) joint.get_m_setting().set_m_impulseClamp( o.impulse );
         break;
-        case "joint_hinge": case "joint": joint = new Ammo.btHingeConstraint( body1, body2, tmpPos1, tmpPos2, tmpPos3, tmpPos4, useA ); break;
-        case "joint_slider": joint = new Ammo.btSliderConstraint( body1, body2, tmpTrans1, tmpTrans2, useA ); break;
-        case "joint_conetwist": joint = new Ammo.btConeTwistConstraint( body1, body2, tmpTrans1, tmpTrans2 ); break;
-        case "joint_dof": joint = new Ammo.btGeneric6DofConstraint( body1, body2, tmpTrans1, tmpTrans2, useA );  break;
-        case "joint_spring_dof": joint = new Ammo.btGeneric6DofSpringConstraint( body1, body2, tmpTrans1, tmpTrans2, useA ); break;
+        case "joint_hinge": case "joint": t = 2; joint = new Ammo.btHingeConstraint( body1, body2, tmpPos1, tmpPos2, tmpPos3, tmpPos4, useA ); break;
+        case "joint_slider": t = 3; joint = new Ammo.btSliderConstraint( body1, body2, tmpTrans1, tmpTrans2, useA ); break;
+        case "joint_conetwist": t = 4; joint = new Ammo.btConeTwistConstraint( body1, body2, tmpTrans1, tmpTrans2 ); break;
+        case "joint_dof": t = 5; joint = new Ammo.btGeneric6DofConstraint( body1, body2, tmpTrans1, tmpTrans2, useA );  break;
+        case "joint_spring_dof": t = 6; joint = new Ammo.btGeneric6DofSpringConstraint( body1, body2, tmpTrans1, tmpTrans2, useA ); break;
         //case "joint_gear": joint = new Ammo.btGearConstraint( body1, body2, point1, point2, o.ratio || 1); break;
     }
 
     // EXTRA SETTING
 
-    if(o.breaking) joint.setBreakingImpulseThreshold(o.breaking);
+    if(o.breaking) joint.setBreakingImpulseThreshold( o.breaking );
 
     // hinge
 
@@ -124,14 +170,29 @@ function addJoint ( o ) {
     if(o.stiffness) joint.setStiffness( o.stiffness[0], o.stiffness[1] );
 
 
-    // console.log(joint);
+    // debug test 
+    joint.type = 0;
+    if( o.debug ){
+        joint.type = t
+        joint.bodyA = body1;
+        joint.bodyB = body2;
+    }
+    
+
+
+    
 
     world.addConstraint( joint, noAllowCollision );
 
-    if(o.name) byName[o.name] = joint;
+    if( o.name ) byName[o.name] = joint;
 
     joints.push( joint );
+
+    //console.log( joint );
 
     o = null;
 
 };
+
+
+

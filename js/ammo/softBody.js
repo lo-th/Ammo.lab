@@ -98,7 +98,15 @@ function addSoftBody ( o ) {
             tmpPos1.fromArray( o.start || [ -10, 0, 0 ] );
             tmpPos2.fromArray( o.end || [ 10, 0, 0 ] );
 
-            body = softBodyHelpers.CreateRope( worldInfo, tmpPos1, tmpPos2, o.numSegment || 10, o.fixed || 0 );
+            var nseg = o.numSegment || 10;
+            nseg -= 2;
+
+            o.margin = (o.radius || 0.2)*2;
+
+            body = softBodyHelpers.CreateRope( worldInfo, tmpPos1, tmpPos2, nseg, o.fixed || 0 );
+
+
+            //console.log(body.get_m_nodes().size())
             
             body.softType = 2;
         break;

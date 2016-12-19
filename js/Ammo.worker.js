@@ -16,6 +16,8 @@
 
 var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
+var isFirst = true;
+
 var trans, pos, quat, posW, quatW, transW, gravity;
 var tmpTrans, tmpPos, tmpQuat;
 var tmpPos1, tmpPos2, tmpPos3, tmpPos4;
@@ -32,7 +34,7 @@ var substep = 2;//4//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 
-var pause = false;
+var pause = true;
 
 var timer = 0;
 var isBuffer;
@@ -42,14 +44,14 @@ var tmpset = null;
 var currentCar = 0;
 
 // main transphere array
-/*var Br, Cr, Jr, Hr, Sr;*/
+var Br, Cr, Jr, Hr, Sr;
 
-var Br = new Float32Array( 1000*8 ); // rigid buffer max 1000
+/*var Br = new Float32Array( 1000*8 ); // rigid buffer max 1000
 var Cr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
 var Jr = new Float32Array( 100*4 ); // joint buffer max 100
 var Hr = new Float32Array( 10*8 ); // hero buffer max 10
 var Sr = new Float32Array( 8192*3 ); // soft buffer nVertices x,y,z
-
+*/
 // for terrain
 //var hdata = null;
 
@@ -94,6 +96,17 @@ var GROUP = {
     ALL : -1 
 }
 
+
+function initARRAY(){
+
+    Br = new Float32Array( 1000*8 ); // rigid buffer max 1000
+    Cr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
+    Jr = new Float32Array( 100*4 ); // joint buffer max 100
+    Hr = new Float32Array( 10*8 ); // hero buffer max 10
+    Sr = new Float32Array( 8192*3 ); // soft buffer nVertices x,y,z
+
+};
+
 /*function stepAdvanced () {
 
     var time = Date.now();
@@ -135,6 +148,7 @@ self.onmessage = function ( e ) {
 
         case 'init': init( data ); break;
         case 'step': step( data ); break;
+        case 'start': start(); break;
         case 'reset': reset( data ); break;
 
         case 'key': key = data.key; break;
@@ -182,7 +196,7 @@ function step( o ){
 
     // ------- buffer data
 
-    if( isBuffer ){
+    if( isBuffer && !isFirst ){
 
         Br = o.Br;
         Cr = o.Cr;
@@ -199,17 +213,19 @@ function step( o ){
 
     drive( currentCar );
 
+    stepConstraint();
     stepRigidBody();
     stepCharacter();
     stepVehicle();
     stepSoftBody();
 
-    //softPoints = 0;
-    //softs.forEach( softUp )
+    
 
     // ------- post step
 
     postStep();
+
+    if( isFirst ) isFirst = false;
 
 };
 
@@ -219,6 +235,8 @@ function postStep(){
 
     if( isBuffer ) self.postMessage({ m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
     else self.postMessage( { m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } );
+
+    
 
 };
 
@@ -313,42 +331,37 @@ function init ( o ) {
     // use for get object by name
     byName = {};
 
+    initARRAY();
+
 
     //self.postMessage({ m:'init' });
 
     //timer = setInterval( step, 16.667 );
     self.postMessage({ m:'init' });
 
-    if( !isBuffer ) timer = setInterval( step, timerStep ); 
+    //if( !isBuffer ) timer = setInterval( step, timerStep ); 
 
     //postStep();
     
 };
 
+function start () {
 
-
-function resetARRAY(){
-
-    var i = Br.length;
-    while(i--) Br[i] = 0;
-    i = Cr.length;
-    while(i--) Cr[i] = 0;
-    i = Jr.length;
-    while(i--) Jr[i] = 0;
-    i = Hr.length;
-    while(i--) Hr[i] = 0;
-    i = Sr.length;
-    while(i--) Sr[i] = 0;
+    pause = false;
+    isFirst = true;
+    if( isBuffer ) step();
+    else timer = setInterval( step, timerStep );
 
 };
 
+
+
+
+
 function reset ( o ) {
 
-    if( timer ) clearInterval( timer );
-
     pause = true;
-
-    resetARRAY();
+    if( timer ) clearInterval( timer );
 
     clearJoint();
     clearRigidBody();
@@ -359,6 +372,9 @@ function reset ( o ) {
     // clear body name object
     byName = {};
 
+
+    initARRAY();
+
     
 
     if( o.full ){
@@ -368,8 +384,12 @@ function reset ( o ) {
 
     }
 
-    pause = false;
-    if( !isBuffer ) timer = setInterval( step, timerStep );
+    //isFirst = true;
+
+    //pause = false;
+    //if( !isBuffer ) timer = setInterval( step, timerStep );
+
+
 
 };
 
@@ -377,7 +397,7 @@ function reset ( o ) {
 
 function wipe (obj) {
     for (var p in obj) {
-        if (obj.hasOwnProperty(p)) delete obj[p];
+        if ( obj.hasOwnProperty( p ) ) delete obj[p];
     }
 };
 
@@ -420,34 +440,15 @@ function getByName(name){
 
 function add ( o, extra ) {
 
-    o.type = o.type == undefined ? 'box' : o.type;
+    o.type = o.type === undefined ? 'box' : o.type;
 
-    // CONSTRAINT
-    if(o.type.substring(0,5) == 'joint') {
+    var type = o.type;
+    var prev = o.type.substring( 0, 4 );
 
-        addJoint( o );
-        return;
-
-    }
-
-    // SOFTBODY
-    if(o.type.substring(0,4) == 'soft' || o.type == 'ellipsoid'  || o.type == 'rope'  || o.type == 'cloth' ) {
-
-        addSoftBody( o );
-        return;
-
-    }
-
-    // TERRAIN
-    if(o.type == 'terrain') {
-
-        addTerrain( o );
-        return;
-
-    }
-
-    // RIGIDBODY
-    addRigidBody( o, extra );
+    if( prev === 'join' ) addJoint( o );
+    else if( prev === 'soft' || type === 'ellipsoid'  || type === 'rope'  || type === 'cloth' ) addSoftBody( o );
+    else if( type === 'terrain' ) addTerrain( o );
+    else addRigidBody( o, extra )
 
 };
 

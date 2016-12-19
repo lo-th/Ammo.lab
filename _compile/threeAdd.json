@@ -8,6 +8,7 @@
     "src/controls/OrbitControls.js",
     "src/geometries/CapsuleBufferGeometry.js",
     "src/geometries/ConvexGeometry.js",
+    "src/geometries/Tubex.js",
     "src/shaders/ShaderShadow.js",
     "src/helpers/CarHelper.js",
     "src/objects/Terrain.js",

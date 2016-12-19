@@ -11,7 +11,8 @@ function demo() {
 
         add({ 
             type:'rope', name:'r1', 
-            mass:20,
+            radius:0.5,
+            mass:1,
             state:4, 
             start:[-40,10,z],
             end:[40,10,z], 
@@ -21,14 +22,14 @@ function demo() {
             citerations:4,
             diterations:0,
             fixed: 1+2,
-            margin:0.1,
+            //margin:0.1,
         });
     }
 
-    add({ type:'sphere', size:[3], pos:[-20, 40, 0], mass:1});
-    add({ type:'sphere', size:[3], pos:[-10, 50, 0], mass:1});
-    add({ type:'sphere', size:[3], pos:[0, 60, 0], mass:1});
-    add({ type:'sphere', size:[3], pos:[10, 70, 0], mass:1});
-    add({ type:'sphere', size:[3], pos:[20, 80, 0], mass:1});
+    add({ type:'sphere', size:[3], pos:[-20, 40, 0], mass:0.2});
+    add({ type:'sphere', size:[3], pos:[-10, 50, 0], mass:0.2});
+    add({ type:'sphere', size:[3], pos:[0, 60, 0], mass:0.2});
+    add({ type:'sphere', size:[3], pos:[10, 70, 0], mass:0.2});
+    add({ type:'sphere', size:[3], pos:[20, 80, 0], mass:0.2});
 
 }
