@@ -6,7 +6,7 @@
  *
  */
 
-THREE.Tubex = function ( pp, tubularSegments, radius, radialSegments, closed ) {
+THREE.Tubex = function ( pp, tubularSegments, radius, radialSegments, closed, CurveType ) {
 
     THREE.BufferGeometry.call( this );
 
@@ -40,6 +40,9 @@ THREE.Tubex = function ( pp, tubularSegments, radius, radialSegments, closed ) {
     }
 
     this.path = new THREE.CatmullRomCurve3( this.positions );
+    // 'catmullrom', 'centripetal', 'chordal'
+    var curveType = CurveType || 'catmullrom'; 
+    this.path.type = curveType;
     this.path.closed = this.closed;
 
     this.frames = this.path.computeFrenetFrames( this.tubularSegments, this.closed );

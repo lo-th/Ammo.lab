@@ -5,7 +5,8 @@ function demo() {
     add({type:'plane', friction:0.6, restitution:0.1 }); // infinie plane
 
     var z = 0;
-    for(var i=0; i< 20; i++){
+    
+    for( var i = 0; i < 20; i++){
 
         z = -20 + i*2;
 

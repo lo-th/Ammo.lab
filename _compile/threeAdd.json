@@ -1,10 +1,6 @@
 [
     "src/base.js",
     "src/Perlin.js",
-    "src/loaders/sea3d/SEA3D.js",
-    "src/loaders/sea3d/SEA3DLoader.js",
-    "src/loaders/sea3d/SEA3DLegacy.js",
-    "src/loaders/sea3d/SEA3DLZMA.js",
     "src/controls/OrbitControls.js",
     "src/geometries/CapsuleBufferGeometry.js",
     "src/geometries/ConvexGeometry.js",
