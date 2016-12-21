@@ -55,10 +55,10 @@ function addCharacter ( o ) {
     o.pos = o.pos == undefined ? [0,0,0] : o.pos;
     o.quat = o.quat == undefined ? [0,0,0,1] : o.quat;
 
-    var shape = new Ammo.btCapsuleShape(o.size[0], o.size[1]*0.5);
+    var shape = new Ammo.btCapsuleShape( o.size[0], o.size[1]*0.5 );
 
     var body = new Ammo.btPairCachingGhostObject();
-    body.setCollisionShape(shape);
+    body.setCollisionShape( shape );
     body.setCollisionFlags( FLAGS.CHARACTER_OBJECT );
 
     tmpPos.fromArray( o.pos );
@@ -100,7 +100,7 @@ function addCharacter ( o ) {
     */
     //hero.canJump( true );
 
-    console.log(hero, tmpQuat.w(), tmpQuat )
+    //console.log(hero, tmpQuat.w(), tmpQuat )
 
     // The max slope determines the maximum angle that the controller can walk
     if( o.slopeRadians ) hero.setMaxSlope ( o.slopeRadians );//45
@@ -122,6 +122,16 @@ function addCharacter ( o ) {
 
 };
 
+function setHeroRotation( id, angle ){
+
+    var t = heros[id].getGhostObject().getWorldTransform();
+    quatW.setFromAxisAngle( [0,1,0], angle );
+    t.setRotation( quatW );
+
+    heros[id].rotation = angle;
+
+};
+
 function move ( id ) {
 
     var id = id || 0;
@@ -137,7 +147,7 @@ function move ( id ) {
 
     var x=0,y=0,z=0;
 
-    transW = hero.getGhostObject().getWorldTransform();
+    //transW = hero.getGhostObject().getWorldTransform();
 
     //console.log(transW.getOrigin().y())
 
@@ -191,14 +201,18 @@ function move ( id ) {
 
     hero.speed = z+x;
 
+    // rotation
+
     hero.rotation -= key[2] * rotationSpeed;
 
-    var angle = hero.rotation;//key[8]; //heros[id].rotation
+    setHeroRotation( id, hero.rotation );
+
+   // var angle = hero.rotation;//key[8]; //heros[id].rotation
 
     // change rotation
-    quatW.setFromAxisAngle( [0,1,0], angle );
+   // quatW.setFromAxisAngle( [0,1,0], angle );
     //hero.getGhostObject().getWorldTransform().setRotation( quatW );
-    transW.setRotation( quatW );
+   // transW.setRotation( quatW );
 
     // walkDirection
     posW.setValue( x, y+hero.verticalVelocity, z );

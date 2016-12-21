@@ -35,7 +35,9 @@ var ammo = ( function () {
 
     ammo = {//function () {};
 
-        init: function ( Callback, direct ) {
+        init: function ( Callback, direct, buff ) {
+
+            isBuffer = buff || false;
 
             callback = Callback;
 
@@ -86,6 +88,8 @@ var ammo = ( function () {
 
         step: function ( data ) {
 
+            if(!isBuffer) ammo.send( 'key', { key:user.getKey() } );
+
             time = now();
             if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
             
@@ -105,8 +109,9 @@ var ammo = ( function () {
 
             } else {
 
-                user.update();
-                worker.postMessage( { m:'key', key:user.getKey() } );
+                //user.update();
+                //worker.postMessage( { m:'key', key:user.getKey() } );
+                
                 tell( 'THREE '+ view.getFps() + ' | AMMO ' + fps +' | '+ delay +'ms' );
 
             } 
@@ -137,6 +142,8 @@ var ammo = ( function () {
             worker.postMessage( { m:m, o:o });
 
         },
+        //ammo.send( 'key', { key:user.getKey() } );
+
 
         reset: function( full ) {
 

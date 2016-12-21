@@ -33,6 +33,7 @@ var timerStep = timeStep * 1000;
 var substep = 2;//4//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
+var tmpKey = [ 0,0,0,0,0,0,0,0 ];
 
 var pause = true;
 
@@ -143,20 +144,45 @@ function stepDelta () {
 self.onmessage = function ( e ) {
 
     var data = e.data;
+    var m = data.m;
 
-    switch( data.m ){
+    /*if( m === 'init' ) init( data );
+    if( m === 'step' ) step( data );
+    if( m === 'start' ) start();
+    if( m === 'reset' ) reset( data );
+
+    if( m === 'key' ) key = data.o.key;
+    if( m === 'setDriveCar' ) currentCar = data.o.n;
+    if( m === 'substep' ) substep = data.o.substep;
+    if( m === 'set' ) tmpset = data.o;
+
+    if( m === 'moveSoftBody' ) moveSoftBody( data.o );
+
+    if( m === 'add' ) add( data.o );
+    if( m === 'vehicle' ) addVehicle( data.o );
+    if( m === 'character' ) addCharacter( data.o );
+    if( m === 'terrain' ) terrainPostStep( data.o );
+    if( m === 'gravity' ) gravity( data.o );
+    if( m === 'anchor' ) anchor( data.o );
+    if( m === 'apply' ) apply( data.o );*/
+
+
+
+    switch( m ){
 
         case 'init': init( data ); break;
         case 'step': step( data ); break;
         case 'start': start(); break;
         case 'reset': reset( data ); break;
 
-        case 'key': key = data.key; break;
+        case 'key': tmpKey = data.o.key; break;
         case 'setDriveCar': currentCar = data.o.n; break;
         case 'substep': substep = data.o.substep; break;
-        case 'set': tmpset = data.o;; break;
+        case 'set': tmpset = data.o; break;
 
         case 'moveSoftBody': moveSoftBody( data.o ); break;
+
+        case 'heroRotation': setHeroRotation( data.o.id, data.o.angle ); break;
 
         case 'add': add( data.o ); break;
         case 'vehicle': addVehicle( data.o ); break;
@@ -183,10 +209,10 @@ function step( o ){
 
     // ------- pre step
 
-    //key = o.key;
+    key = tmpKey;//o.key;
 
     //drive( currentCar );
-    move( 0 );
+    
 
     if( tmpset !== null ) set();
 
@@ -212,11 +238,14 @@ function step( o ){
     //world.stepSimulation( dt, it, dt );
 
     drive( currentCar );
+    move( 0 );
+
+    stepCharacter();
+    stepVehicle();
 
     stepConstraint();
     stepRigidBody();
-    stepCharacter();
-    stepVehicle();
+    
     stepSoftBody();
 
     
@@ -224,6 +253,8 @@ function step( o ){
     // ------- post step
 
     postStep();
+
+    
 
     if( isFirst ) isFirst = false;
 
@@ -250,9 +281,9 @@ function postStep(){
 
 function control( o ){
 
-    key = o;
+    /*key = o;
     drive( 0 );
-    move( 0 );
+    move( 0 );*/
 
 };
 

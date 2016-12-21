@@ -1,7 +1,6 @@
-"use strict";
-
-
 var user = ( function () {
+
+    "use strict";
 
     // key map
     // 0 : axe L | left:right  -1>1
@@ -31,102 +30,105 @@ var user = ( function () {
     var gamepad;
     var useGamepad = false;
 
-    user = function () {};
+    user = {
 
-    user.init = function ( callback ) {
+        init: function ( callback ) {
 
-        gamepad = new Gamepad( key ); 
+            gamepad = new user.Gamepad( key ); 
 
-        document.addEventListener( 'keydown', user.keyDown, false );
-        document.addEventListener( 'keyup', user.keyUp, false );
+            document.addEventListener( 'keydown', user.keyDown, false );
+            document.addEventListener( 'keyup', user.keyUp, false );
 
 
-    };
+        },
 
-    user.update = function () {
+        update: function ( full ) {
 
-        gamepad.update();
+            gamepad.update();
 
-        if(gamepad.ready) gamepad.getValue(0);
-       // else { if() useGamepad = true; }
+            if( gamepad.ready ) gamepad.getValue(0);
+            // else { if() useGamepad = true; }
 
+            //if( full ) ammo.send( 'key', { key:key } );
+
+        },
+
+
+        keyDown: function ( e ) {
+
+            if( editor.getFocus() ) return;
+            e = e || window.event;
+            switch ( e.which ) {
+                // axe L
+                case 65: case 81: key[0] = -1;break;//key[0]<=-1 ? -1:key[0]-= 0.1; break; // left, A, Q
+                case 68:          key[0] = 1;  break; // right, D
+                case 87: case 90: key[1] = -1; break; // up, W, Z
+                case 83:          key[1] = 1;  break; // down, S
+                // axe R
+                case 37:          key[2] = -1; break; // left
+                case 39:          key[2] = 1;  break; // right
+                case 38:          key[3] = -1; break; // up
+                case 40:          key[3] = 1;  break; // down
+                
+
+                case 17: case 67: key[5] = 1; break; // ctrl, C
+                case 69:          key[5] = 1; break; // E
+                case 32:          key[4] = 1; break; // space
+                case 16:          key[7] = 1; break; // shift
+
+                case 71:          view.hideGrid(); break; // G
+            }
+
+            gamepad.reset();
+
+            //if(useGamepad){ useGamepad = false;  }
+
+            // send to worker
+            //ammo.send( 'key', key );
+
+            //console.log( e.which, String.fromCharCode(e.which) );
+
+        },
+
+        keyUp: function ( e ) {
+
+            if( editor.getFocus() ) return;
+            e = e || window.event;
+            switch( e.which ) {
+                // axe L
+                case 65: case 81: key[0] = key[0]<0 ? 0:key[0]; break; // left, A, Q
+                case 68:          key[0] = key[0]>0 ? 0:key[0]; break; // right, D
+                case 87: case 90: key[1] = key[1]<0 ? 0:key[1]; break; // up, W, Z
+                case 83:          key[1] = key[1]>0 ? 0:key[1]; break; // down, S
+                // axe R
+                case 37:          key[2] = key[2]<0 ? 0:key[2]; break; // left
+                case 39:          key[2] = key[2]>0 ? 0:key[2]; break; // right
+                case 38:          key[3] = key[3]<0 ? 0:key[3]; break; // up
+                case 40:          key[3] = key[3]>0 ? 0:key[3]; break; // down
+                
+
+
+
+
+                case 17: case 67: key[5] = 0; break; // ctrl, C
+                case 69:          key[5] = 0; break; // E
+                case 32:          key[4] = 0; break; // space
+                case 16:          key[7] = 0; break; // shift
+            }
+
+            //if(!useGamepad)useGamepad = true;
+
+            // send to worker
+            //ammo.send( 'key', key );
+
+        },
+
+        getKey: function () {
+
+            return key;
+
+        },
     }
-
-
-    user.keyDown = function ( e ) {
-
-        if( editor.getFocus() ) return;
-        e = e || window.event;
-        switch ( e.keyCode ) {
-            // axe L
-            case 65: case 81: key[0] = -1;break;//key[0]<=-1 ? -1:key[0]-= 0.1; break; // left, A, Q
-            case 68:          key[0] = key[0] = 1;  break; // right, D
-            case 87: case 90: key[1] = key[1] = -1; break; // up, W, Z
-            case 83:          key[1] = key[1] = 1;  break; // down, S
-            // axe R
-            case 37:          key[2] = -1; break; // left
-            case 39:          key[2] = 1;  break; // right
-            case 38:          key[3] = -1; break; // up
-            case 40:          key[3] = 1;  break; // down
-            
-
-            case 17: case 67:          key[5] = 1; break; // ctrl, C
-            case 69:                   key[5] = 1; break; // E
-            case 32:                   key[4] = 1; break; // space
-            case 16:                   key[7] = 1; break; // shift
-
-            case 71:                   view.sh_grid(); break; // G
-        }
-
-        gamepad.reset();
-
-        //if(useGamepad){ useGamepad = false;  }
-
-        // send to worker
-        //ammo.send( 'key', key );
-
-        //console.log( e.which, String.fromCharCode(e.which) );
-
-    };
-
-    user.keyUp = function ( e ) {
-
-        if( editor.getFocus() ) return;
-        e = e || window.event;
-        switch( e.keyCode ) {
-            // axe L
-            case 65: case 81: key[0] = key[0]<0 ? 0:key[0]; break; // left, A, Q
-            case 68:          key[0] = key[0]>0 ? 0:key[0]; break; // right, D
-            case 87: case 90: key[1] = key[1]<0 ? 0:key[1]; break; // up, W, Z
-            case 83:          key[1] = key[1]>0 ? 0:key[1]; break; // down, S
-            // axe R
-            case 37:          key[2] = key[2]<0 ? 0:key[2]; break; // left
-            case 39:          key[2] = key[2]>0 ? 0:key[2]; break; // right
-            case 38:          key[3] = key[3]<0 ? 0:key[3]; break; // up
-            case 40:          key[3] = key[3]>0 ? 0:key[3]; break; // down
-            
-
-
-
-
-            case 17: case 67:          key[5] = 0; break; // ctrl, C
-            case 69:                   key[5] = 0; break; // E
-            case 32:                   key[4] = 0; break; // space
-            case 16:                   key[7] = 0; break; // shift
-        }
-
-        //if(!useGamepad)useGamepad = true;
-
-        // send to worker
-        //ammo.send( 'key', key );
-
-    };
-
-    user.getKey = function () {
-
-        return key;
-
-    };
 
 
     //--------------------------------------
@@ -135,7 +137,7 @@ var user = ( function () {
     //
     //--------------------------------------
 
-    var Gamepad = function( key ){
+    user.Gamepad = function( key ){
 
         this.values = []; 
         this.key = key;
@@ -143,7 +145,7 @@ var user = ( function () {
 
     };
 
-    Gamepad.prototype = {
+    user.Gamepad.prototype = {
 
         update:function(){
 
