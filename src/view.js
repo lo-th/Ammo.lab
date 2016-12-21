@@ -923,7 +923,7 @@ view = {
         if(o.size.length == 2){ o.size[2] = o.size[0]; }
 
         //var pos = o.pos || [0,3,0];
-        o.pos = o.pos == undefined ? [0,3,0] : pos;
+        o.pos = o.pos === undefined ? [0,3,0] : o.pos;
         //var rot = o.rot || [0,0,0];
 
         o.rot = o.rot == undefined ? [0,0,0] : this.toRad( o.rot );
@@ -1026,7 +1026,7 @@ view = {
 
         var radius = o.radius || 0.4;
         var deep = o.deep || 0.3;
-        var wPos = o.wPos || [1, -0.25, 1.6];
+        wPos = o.wPos || [1, -0.25, 1.6];
 
         var w = [];
 
@@ -1294,8 +1294,10 @@ view = {
         
 
          // get new order of vertices
-        var v = gt.vertices;
-        var i = max, j, k;
+        v = gt.vertices;
+        i = max;
+        //var v = gt.vertices;
+        //var i = max, j, k;
         while(i--){
             j = max;
             while(j--){
@@ -1317,7 +1319,7 @@ view = {
         }
 
         // get indices of faces
-        var i = gt.faces.length;
+        i = gt.faces.length;
         while(i--){
             n = i*3;
             var face = gt.faces[i];
@@ -1574,7 +1576,7 @@ view = {
 
         softs.forEach( function( b, id ) {
 
-            var n, c, cc, p, j, k;
+            var n, c, cc, p, j, k, u;
 
             var t = b.softType; // type of softBody
             var order = null;
@@ -1612,10 +1614,10 @@ view = {
                         else k = pPoint[j+1] - pPoint[j];
                         var d = pPoint[j];
                         while(k--){
-                            var id = lPoint[d+k]*3;
-                            p[id] = Sr[n];
-                            p[id+1] = Sr[n+1]; 
-                            p[id+2] = Sr[n+2];
+                            u = lPoint[d+k]*3;
+                            p[u] = Sr[n];
+                            p[u+1] = Sr[n+1]; 
+                            p[u+2] = Sr[n+2];
                         }
                     }
 
@@ -1691,10 +1693,10 @@ view = {
                         var d = pPoint[j];
                         var ref = lPoint[d]*3;
                         while(k--){
-                            var id = lPoint[d+k]*3;
-                            norm[id] = norm[ref];
-                            norm[id+1] = norm[ref+1]; 
-                            norm[id+2] = norm[ref+2];
+                            u = lPoint[d+k]*3;
+                            norm[u] = norm[ref];
+                            norm[u+1] = norm[ref+1]; 
+                            norm[u+2] = norm[ref+2];
                         }
                     }
 

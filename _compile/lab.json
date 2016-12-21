@@ -8,5 +8,10 @@
     "src/shaders/ShaderShadow.js",
     "src/helpers/CarHelper.js",
     "src/objects/Terrain.js",
-    "src/utils/ViewUtils.js"
+    "src/utils/ViewUtils.js",
+    "src/user.js",
+    "src/gui.js",
+    "src/tools.js",
+    "src/editor.js",
+    "src/view.js"
 ]
