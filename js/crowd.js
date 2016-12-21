@@ -1,3 +1,11 @@
+/**   _   _____ _   _   
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / http://lo-th.github.io/labs/
+*    CROWD worker launcher
+*/
+
 var crowd = ( function () {
 
     'use strict';
@@ -5,14 +13,38 @@ var crowd = ( function () {
     var worker = null;
     var blob = null;
     var callbackInit = null, callback = null;
-    var useTransferrable = false;
+    var isBuffer = false;
+    var needDelete = false;
 
     // transfer array
     var ar = new Float32Array( 100 * 5 );
 
     crowd = {
 
-        load: function ( CallbackInit, Callback ) {
+        init: function ( Callback, direct, buff ){
+
+            isBuffer = buff || false;
+
+            callback = Callback;
+
+            worker = new Worker( './js/worker/worker.crowd.js' );
+            worker.onmessage = this.message;
+            worker.postMessage = worker.webkitPostMessage || worker.postMessage;
+
+            var blob;
+
+            if( direct ){
+                var blob = document.location.href.replace(/\/[^/]*$/,"/") + "libs/crowd.js";
+                needDelete = false;
+            }else{
+                blob = extract.get('crowd');
+            }
+
+            worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
+            
+        },
+
+        /*load: function ( CallbackInit, Callback ) {
 
             callbackInit = CallbackInit === undefined ? function(){} : CallbackInit;
             callback = Callback === undefined ? function(){} : Callback;
@@ -36,16 +68,16 @@ var crowd = ( function () {
 
             crowd.post( { message: 'init', blob: blob, fps:30, iteration:1, timeStep:0.5 } );
 
-        },
+        },*/
 
         post: function ( o, buffer ) {
 
-            if( useTransferrable ) worker.postMessage( o, buffer );
+            if( isBuffer ) worker.postMessage( o, buffer );
             else worker.postMessage( o );
 
         },
 
-        onmessage: function ( e ) {
+        message: function ( e ) {
 
             var data = e.data;
 
@@ -53,13 +85,13 @@ var crowd = ( function () {
                 case 'init':
                     URL.revokeObjectURL( blob );
                     callbackInit( 'crowd init' );
-                    if( useTransferrable ) crowd.post( { message: 'start', useTransferrable: true, ar: ar }, [ ar.buffer ] );
-                    else crowd.post( { message: 'start', useTransferrable: false, ar: ar } );
+                    if( isBuffer ) crowd.post( { message: 'start', isBuffer: true, ar: ar }, [ ar.buffer ] );
+                    else crowd.post( { message: 'start', isBuffer: false, ar: ar } );
                 break;
                 case 'run':
                     ar = data.ar;
                     callback( ar );
-                    if( useTransferrable ) crowd.post( { message: 'run', ar: ar }, [ ar.buffer ] );
+                    if( isBuffer ) crowd.post( { message: 'run', ar: ar }, [ ar.buffer ] );
                 break;
             }
 

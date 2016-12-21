@@ -6,9 +6,9 @@
 *    AMMO worker launcher
 */
 
-'use strict';
-
 var ammo = ( function () {
+
+    'use strict';
 
     var worker, callback;
 
@@ -41,7 +41,7 @@ var ammo = ( function () {
 
             callback = Callback;
 
-            worker = new Worker('js/ammo.worker.js');
+            worker = new Worker('./js/ammo.worker.js');
 
             worker.onmessage = this.message;
             worker.postMessage = worker.webkitPostMessage || worker.postMessage;
