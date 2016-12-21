@@ -270,7 +270,7 @@ view = {
 
     addMap: function( name, matName ) {
 
-        var map = imagesLoader.load( 'textures/' + name );
+        var map = imagesLoader.load( './assets/textures/' + name );
         //map.wrapS = THREE.RepeatWrapping;
         //map.wrapT = THREE.RepeatWrapping;
         map.flipY = false;
@@ -502,7 +502,7 @@ view = {
             }
         }
 
-        img.src = 'textures/spherical/'+ envLists[nEnv] +'.jpg';
+        img.src = './assets/textures/spherical/'+ envLists[nEnv] +'.jpg';
 
     },
 
@@ -535,7 +535,7 @@ view = {
 
         };
 
-        loader.load( 'models/'+ name +'.sea' );
+        loader.load( './assets/models/'+ name +'.sea' );
 
     },
 

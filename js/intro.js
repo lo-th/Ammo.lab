@@ -9,7 +9,7 @@ var intro = ( function () {
 
         content = document.createElement( 'img' );
         content.style.cssText = "position:absolute; margin:0; padding:0; top:50%; left:50%; width:375px; height:150px; margin-left:-187px; margin-top:-75px; display:block; pointer-events:none";
-        content.src = 'textures/logo.png';
+        content.src = 'assets/textures/logo.png';
         document.body.appendChild( content );
 
         txt = document.createElement( 'div' );
