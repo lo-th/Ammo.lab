@@ -3192,7 +3192,7 @@ view = {
 
     addMap: function( name, matName ) {
 
-        var map = imagesLoader.load( 'textures/' + name );
+        var map = imagesLoader.load( './assets/textures/' + name );
         //map.wrapS = THREE.RepeatWrapping;
         //map.wrapT = THREE.RepeatWrapping;
         map.flipY = false;
@@ -3424,7 +3424,7 @@ view = {
             }
         }
 
-        img.src = 'textures/spherical/'+ envLists[nEnv] +'.jpg';
+        img.src = './assets/textures/spherical/'+ envLists[nEnv] +'.jpg';
 
     },
 
@@ -3457,7 +3457,7 @@ view = {
 
         };
 
-        loader.load( 'models/'+ name +'.sea' );
+        loader.load( './assets/models/'+ name +'.sea' );
 
     },
 
@@ -3751,14 +3751,14 @@ view = {
         if(o.material !== undefined) material = mat[o.material];
         else material = o.mass ? mat.move : mat.statique;
         
-        if( o.type == 'capsule' ){
+        if( o.type === 'capsule' ){
             var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
             //g.applyMatrix(new THREE.Matrix4().makeRotationY(-Math.PI*0.5));
             mesh = new THREE.Mesh( g, material );
             extraGeo.push(mesh.geometry);
             isCustomGeometry = true;
 
-        } else if( o.type == 'mesh' || o.type == 'convex' ){ 
+        } else if( o.type === 'mesh' || o.type === 'convex' ){ 
             o.v = view.prepaGeometry( o.shape, o.type );
             if(o.geometry){
                 mesh = new THREE.Mesh( o.geometry, material );
@@ -3788,7 +3788,8 @@ view = {
 
             if( o.geometry ){
                 extraGeo.push(o.geometry);
-                mesh.scale.fromArray( o.geoSize );
+                if(o.geoSize) mesh.scale.fromArray( o.geoSize );
+                if(!o.geoSize && o.size) mesh.scale.fromArray( o.size );
                 isCustomGeometry = true;
             }
 
