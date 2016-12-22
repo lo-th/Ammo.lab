@@ -1230,6 +1230,8 @@ view = {
 
         }*/
 
+        if( o.numSeg === undefined ) o.numSeg = o.numSegment;
+
         /*var g = new THREE.BufferGeometry();
         g.setIndex( new THREE.BufferAttribute( new Uint16Array( ropeIndices ), 1 ) );
         g.addAttribute('position', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
@@ -1238,7 +1240,7 @@ view = {
         //var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ vertexColors: true }));
         var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ color: 0xFFFF00 }));*/
 
-        var g = new THREE.Tubex( o , o.numSegment|| 10, o.radius || 0.2, 6, false );
+        var g = new THREE.Tubex( o, o.numSeg || 10, o.radius || 0.2, o.numRad || 6, false );
 
         //console.log(g.positions.length)
 

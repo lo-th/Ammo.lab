@@ -13,7 +13,7 @@ var Br, Cr, Jr, Hr, Sr;
 
 var demos = [ 
     'basic', 'terrain', 'supermaket', 'car', 'collision', 'ragdoll',
-    'kinematics', 'multyCars', 'snowboard', 'cloth', 'rope', 'ellipsoid',
+    'kinematics', 'multyCars', 'snowboard', 'cloth', 'rope', 'rope2', 'ellipsoid',
     'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove',
     'character', 'meca', 'joints', 'empty', 'human', 'loadtest'
 ];

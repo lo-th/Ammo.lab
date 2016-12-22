@@ -101,9 +101,12 @@ function addSoftBody ( o ) {
             var nseg = o.numSegment || 10;
             nseg -= 2;
 
-            o.margin = (o.radius || 0.2)*2;
+            o.margin = (o.radius || 0.2);//*2;
 
             body = softBodyHelpers.CreateRope( worldInfo, tmpPos1, tmpPos2, nseg, o.fixed || 0 );
+            //body.setTotalMass(o.mass);
+
+            //console.log(body)
 
 
             //console.log(body.get_m_nodes().size())

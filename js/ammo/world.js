@@ -58,6 +58,10 @@ function setGravity ( o ) {
     gravity.fromArray( o.g || [0,-9.8, 0] );
     if( isSoft ){
         worldInfo = world.getWorldInfo();
+        worldInfo.set_air_density(1.2);
+        worldInfo.set_water_density(0);
+        worldInfo.set_water_offset(0);
+        worldInfo.set_water_normal(new Ammo.btVector3(0, 0, 0));
         worldInfo.set_m_gravity( gravity );
     } else {
         world.setGravity( gravity );
