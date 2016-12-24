@@ -19,6 +19,7 @@ THREE.CapsuleBufferGeometry = function( Radius, Height, SRadius, H) {
     var m1 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1);
     var m2 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1);
     var mtx0 = new THREE.Matrix4().makeTranslation(0,0,0);
+    if(SRadius===6) mtx0.makeRotationY(30*0.0174532925199432957);
     var mtx1 = new THREE.Matrix4().makeTranslation(0, height*0.5,0);
     var mtx2 = new THREE.Matrix4().makeTranslation(0, -height*0.5,0);
     g.merge( m0, mtx0);

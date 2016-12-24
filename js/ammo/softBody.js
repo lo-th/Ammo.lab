@@ -19,11 +19,6 @@ function moveSoftBody( o ) {
 
     soft.set_m_nodes( s );
 
-
-
-
-
-
 };
 
 function stepSoftBody() {

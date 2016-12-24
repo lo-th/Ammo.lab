@@ -1,7 +1,7 @@
 function demo() {
 
     cam ( 0, 10, 10 );
-    load ( 'track', afterLoad );
+    load ( ['track', 'hero'], afterLoad );
 
 }
 
@@ -18,17 +18,19 @@ function demo() {
 
 function afterLoad () {
 
+    var m = view.getResult();
+
     add({type:'plane'}); // infinie plane
 
     add({ type:'mesh', shape:view.getGeo()['track'], mass:0, friction:0.6, restitution:0.1 });
 
-    character ({ name:'bob', rot:[0,90,0] });
+    character ({ name:'bob', rot:[0,90,0], mesh:m.hero[ Math.randInt(0, 4) ], scale:0.07, debug:true });
 
     follow ('bob');
 
 
     var s, x, y;
-    for(var i = 0; i<40; i++){
+    for(var i = 0; i < 40; i++){
         x = Math.rand(-50, 50);
         z = Math.rand(-50, 50);
         s = Math.rand(0.5, 5);

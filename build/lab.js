@@ -5,10 +5,13 @@ var numDiv;
 var data;
 var TextDecoder;
 
-var ammo, intro, UIL, esprima, CodeMirror;
+var ammo, intro, UIL, esprima, CodeMirror, update;
 
 var Br, Cr, Jr, Hr, Sr;
 var demos;
+
+// tween
+var module, exports, process, define;
 //var ARRAY32
 //if(!ARRAY32) ARRAY32 = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
 
@@ -82,6 +85,889 @@ Perlin.prototype = {
         return 70.0 * (n0 + n1 + n2);
     }
 };
+/**
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/tweenjs/tween.js
+ * ----------------------------------------------
+ *
+ * See https://github.com/tweenjs/tween.js/graphs/contributors for the full list of contributors.
+ * Thank you all, you're awesome!
+ */
+
+var TWEEN = TWEEN || (function () {
+
+	var _tweens = [];
+
+	return {
+
+		getAll: function () {
+
+			return _tweens;
+
+		},
+
+		removeAll: function () {
+
+			_tweens = [];
+
+		},
+
+		add: function (tween) {
+
+			_tweens.push(tween);
+
+		},
+
+		remove: function (tween) {
+
+			var i = _tweens.indexOf(tween);
+
+			if (i !== -1) {
+				_tweens.splice(i, 1);
+			}
+
+		},
+
+		update: function (time, preserve) {
+
+			if (_tweens.length === 0) {
+				return false;
+			}
+
+			var i = 0;
+
+			time = time !== undefined ? time : TWEEN.now();
+
+			while (i < _tweens.length) {
+
+				if (_tweens[i].update(time) || preserve) {
+					i++;
+				} else {
+					_tweens.splice(i, 1);
+				}
+
+			}
+
+			return true;
+
+		}
+	};
+
+})();
+
+
+// Include a performance.now polyfill.
+// In node.js, use process.hrtime.
+if (typeof (window) === 'undefined' && typeof (process) !== 'undefined') {
+	TWEEN.now = function () {
+		var time = process.hrtime();
+
+		// Convert [seconds, nanoseconds] to milliseconds.
+		return time[0] * 1000 + time[1] / 1000000;
+	};
+}
+// In a browser, use window.performance.now if it is available.
+else if (typeof (window) !== 'undefined' &&
+         window.performance !== undefined &&
+		 window.performance.now !== undefined) {
+	// This must be bound, because directly assigning this function
+	// leads to an invocation exception in Chrome.
+	TWEEN.now = window.performance.now.bind(window.performance);
+}
+// Use Date.now if it is available.
+else if (Date.now !== undefined) {
+	TWEEN.now = Date.now;
+}
+// Otherwise, use 'new Date().getTime()'.
+else {
+	TWEEN.now = function () {
+		return new Date().getTime();
+	};
+}
+
+
+TWEEN.Tween = function (object) {
+
+	var _object = object;
+	var _valuesStart = {};
+	var _valuesEnd = {};
+	var _valuesStartRepeat = {};
+	var _duration = 1000;
+	var _repeat = 0;
+	var _repeatDelayTime;
+	var _yoyo = false;
+	var _isPlaying = false;
+	var _reversed = false;
+	var _delayTime = 0;
+	var _startTime = null;
+	var _easingFunction = TWEEN.Easing.Linear.None;
+	var _interpolationFunction = TWEEN.Interpolation.Linear;
+	var _chainedTweens = [];
+	var _onStartCallback = null;
+	var _onStartCallbackFired = false;
+	var _onUpdateCallback = null;
+	var _onCompleteCallback = null;
+	var _onStopCallback = null;
+
+	this.to = function (properties, duration) {
+
+		_valuesEnd = properties;
+
+		if (duration !== undefined) {
+			_duration = duration;
+		}
+
+		return this;
+
+	};
+
+	this.start = function (time) {
+
+		TWEEN.add(this);
+
+		_isPlaying = true;
+
+		_onStartCallbackFired = false;
+
+		_startTime = time !== undefined ? time : TWEEN.now();
+		_startTime += _delayTime;
+
+		for (var property in _valuesEnd) {
+
+			// Check if an Array was provided as property value
+			if (_valuesEnd[property] instanceof Array) {
+
+				if (_valuesEnd[property].length === 0) {
+					continue;
+				}
+
+				// Create a local copy of the Array with the start value at the front
+				_valuesEnd[property] = [_object[property]].concat(_valuesEnd[property]);
+
+			}
+
+			// If `to()` specifies a property that doesn't exist in the source object,
+			// we should not set that property in the object
+			if (_object[property] === undefined) {
+				continue;
+			}
+
+			// Save the starting value.
+			_valuesStart[property] = _object[property];
+
+			if ((_valuesStart[property] instanceof Array) === false) {
+				_valuesStart[property] *= 1.0; // Ensures we're using numbers, not strings
+			}
+
+			_valuesStartRepeat[property] = _valuesStart[property] || 0;
+
+		}
+
+		return this;
+
+	};
+
+	this.stop = function () {
+
+		if (!_isPlaying) {
+			return this;
+		}
+
+		TWEEN.remove(this);
+		_isPlaying = false;
+
+		if (_onStopCallback !== null) {
+			_onStopCallback.call(_object, _object);
+		}
+
+		this.stopChainedTweens();
+		return this;
+
+	};
+
+	this.end = function () {
+
+		this.update(_startTime + _duration);
+		return this;
+
+	};
+
+	this.stopChainedTweens = function () {
+
+		for (var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i++) {
+			_chainedTweens[i].stop();
+		}
+
+	};
+
+	this.delay = function (amount) {
+
+		_delayTime = amount;
+		return this;
+
+	};
+
+	this.repeat = function (times) {
+
+		_repeat = times;
+		return this;
+
+	};
+
+	this.repeatDelay = function (amount) {
+
+		_repeatDelayTime = amount;
+		return this;
+
+	};
+
+	this.yoyo = function (yoyo) {
+
+		_yoyo = yoyo;
+		return this;
+
+	};
+
+
+	this.easing = function (easing) {
+
+		_easingFunction = easing;
+		return this;
+
+	};
+
+	this.interpolation = function (interpolation) {
+
+		_interpolationFunction = interpolation;
+		return this;
+
+	};
+
+	this.chain = function () {
+
+		_chainedTweens = arguments;
+		return this;
+
+	};
+
+	this.onStart = function (callback) {
+
+		_onStartCallback = callback;
+		return this;
+
+	};
+
+	this.onUpdate = function (callback) {
+
+		_onUpdateCallback = callback;
+		return this;
+
+	};
+
+	this.onComplete = function (callback) {
+
+		_onCompleteCallback = callback;
+		return this;
+
+	};
+
+	this.onStop = function (callback) {
+
+		_onStopCallback = callback;
+		return this;
+
+	};
+
+	this.update = function (time) {
+
+		var property;
+		var elapsed;
+		var value;
+
+		if (time < _startTime) {
+			return true;
+		}
+
+		if (_onStartCallbackFired === false) {
+
+			if (_onStartCallback !== null) {
+				_onStartCallback.call(_object, _object);
+			}
+
+			_onStartCallbackFired = true;
+		}
+
+		elapsed = (time - _startTime) / _duration;
+		elapsed = elapsed > 1 ? 1 : elapsed;
+
+		value = _easingFunction(elapsed);
+
+		for (property in _valuesEnd) {
+
+			// Don't update properties that do not exist in the source object
+			if (_valuesStart[property] === undefined) {
+				continue;
+			}
+
+			var start = _valuesStart[property] || 0;
+			var end = _valuesEnd[property];
+
+			if (end instanceof Array) {
+
+				_object[property] = _interpolationFunction(end, value);
+
+			} else {
+
+				// Parses relative end values with start as base (e.g.: +10, -3)
+				if (typeof (end) === 'string') {
+
+					if (end.charAt(0) === '+' || end.charAt(0) === '-') {
+						end = start + parseFloat(end);
+					} else {
+						end = parseFloat(end);
+					}
+				}
+
+				// Protect against non numeric properties.
+				if (typeof (end) === 'number') {
+					_object[property] = start + (end - start) * value;
+				}
+
+			}
+
+		}
+
+		if (_onUpdateCallback !== null) {
+			_onUpdateCallback.call(_object, value);
+		}
+
+		if (elapsed === 1) {
+
+			if (_repeat > 0) {
+
+				if (isFinite(_repeat)) {
+					_repeat--;
+				}
+
+				// Reassign starting values, restart by making startTime = now
+				for (property in _valuesStartRepeat) {
+
+					if (typeof (_valuesEnd[property]) === 'string') {
+						_valuesStartRepeat[property] = _valuesStartRepeat[property] + parseFloat(_valuesEnd[property]);
+					}
+
+					if (_yoyo) {
+						var tmp = _valuesStartRepeat[property];
+
+						_valuesStartRepeat[property] = _valuesEnd[property];
+						_valuesEnd[property] = tmp;
+					}
+
+					_valuesStart[property] = _valuesStartRepeat[property];
+
+				}
+
+				if (_yoyo) {
+					_reversed = !_reversed;
+				}
+
+				if (_repeatDelayTime !== undefined) {
+					_startTime = time + _repeatDelayTime;
+				} else {
+					_startTime = time + _delayTime;
+				}
+
+				return true;
+
+			} else {
+
+				if (_onCompleteCallback !== null) {
+
+					_onCompleteCallback.call(_object, _object);
+				}
+
+				for (var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i++) {
+					// Make the chained tweens start exactly at the time they should,
+					// even if the `update()` method was called way past the duration of the tween
+					_chainedTweens[i].start(_startTime + _duration);
+				}
+
+				return false;
+
+			}
+
+		}
+
+		return true;
+
+	};
+
+};
+
+
+TWEEN.Easing = {
+
+	Linear: {
+
+		None: function (k) {
+
+			return k;
+
+		}
+
+	},
+
+	Quadratic: {
+
+		In: function (k) {
+
+			return k * k;
+
+		},
+
+		Out: function (k) {
+
+			return k * (2 - k);
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return 0.5 * k * k;
+			}
+
+			return - 0.5 * (--k * (k - 2) - 1);
+
+		}
+
+	},
+
+	Cubic: {
+
+		In: function (k) {
+
+			return k * k * k;
+
+		},
+
+		Out: function (k) {
+
+			return --k * k * k + 1;
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return 0.5 * k * k * k;
+			}
+
+			return 0.5 * ((k -= 2) * k * k + 2);
+
+		}
+
+	},
+
+	Quartic: {
+
+		In: function (k) {
+
+			return k * k * k * k;
+
+		},
+
+		Out: function (k) {
+
+			return 1 - (--k * k * k * k);
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return 0.5 * k * k * k * k;
+			}
+
+			return - 0.5 * ((k -= 2) * k * k * k - 2);
+
+		}
+
+	},
+
+	Quintic: {
+
+		In: function (k) {
+
+			return k * k * k * k * k;
+
+		},
+
+		Out: function (k) {
+
+			return --k * k * k * k * k + 1;
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return 0.5 * k * k * k * k * k;
+			}
+
+			return 0.5 * ((k -= 2) * k * k * k * k + 2);
+
+		}
+
+	},
+
+	Sinusoidal: {
+
+		In: function (k) {
+
+			return 1 - Math.cos(k * Math.PI / 2);
+
+		},
+
+		Out: function (k) {
+
+			return Math.sin(k * Math.PI / 2);
+
+		},
+
+		InOut: function (k) {
+
+			return 0.5 * (1 - Math.cos(Math.PI * k));
+
+		}
+
+	},
+
+	Exponential: {
+
+		In: function (k) {
+
+			return k === 0 ? 0 : Math.pow(1024, k - 1);
+
+		},
+
+		Out: function (k) {
+
+			return k === 1 ? 1 : 1 - Math.pow(2, - 10 * k);
+
+		},
+
+		InOut: function (k) {
+
+			if (k === 0) {
+				return 0;
+			}
+
+			if (k === 1) {
+				return 1;
+			}
+
+			if ((k *= 2) < 1) {
+				return 0.5 * Math.pow(1024, k - 1);
+			}
+
+			return 0.5 * (- Math.pow(2, - 10 * (k - 1)) + 2);
+
+		}
+
+	},
+
+	Circular: {
+
+		In: function (k) {
+
+			return 1 - Math.sqrt(1 - k * k);
+
+		},
+
+		Out: function (k) {
+
+			return Math.sqrt(1 - (--k * k));
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return - 0.5 * (Math.sqrt(1 - k * k) - 1);
+			}
+
+			return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
+
+		}
+
+	},
+
+	Elastic: {
+
+		In: function (k) {
+
+			if (k === 0) {
+				return 0;
+			}
+
+			if (k === 1) {
+				return 1;
+			}
+
+			return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
+
+		},
+
+		Out: function (k) {
+
+			if (k === 0) {
+				return 0;
+			}
+
+			if (k === 1) {
+				return 1;
+			}
+
+			return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1;
+
+		},
+
+		InOut: function (k) {
+
+			if (k === 0) {
+				return 0;
+			}
+
+			if (k === 1) {
+				return 1;
+			}
+
+			k *= 2;
+
+			if (k < 1) {
+				return -0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
+			}
+
+			return 0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1;
+
+		}
+
+	},
+
+	Back: {
+
+		In: function (k) {
+
+			var s = 1.70158;
+
+			return k * k * ((s + 1) * k - s);
+
+		},
+
+		Out: function (k) {
+
+			var s = 1.70158;
+
+			return --k * k * ((s + 1) * k + s) + 1;
+
+		},
+
+		InOut: function (k) {
+
+			var s = 1.70158 * 1.525;
+
+			if ((k *= 2) < 1) {
+				return 0.5 * (k * k * ((s + 1) * k - s));
+			}
+
+			return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
+
+		}
+
+	},
+
+	Bounce: {
+
+		In: function (k) {
+
+			return 1 - TWEEN.Easing.Bounce.Out(1 - k);
+
+		},
+
+		Out: function (k) {
+
+			if (k < (1 / 2.75)) {
+				return 7.5625 * k * k;
+			} else if (k < (2 / 2.75)) {
+				return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
+			} else if (k < (2.5 / 2.75)) {
+				return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
+			} else {
+				return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
+			}
+
+		},
+
+		InOut: function (k) {
+
+			if (k < 0.5) {
+				return TWEEN.Easing.Bounce.In(k * 2) * 0.5;
+			}
+
+			return TWEEN.Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
+
+		}
+
+	}
+
+};
+
+TWEEN.Interpolation = {
+
+	Linear: function (v, k) {
+
+		var m = v.length - 1;
+		var f = m * k;
+		var i = Math.floor(f);
+		var fn = TWEEN.Interpolation.Utils.Linear;
+
+		if (k < 0) {
+			return fn(v[0], v[1], f);
+		}
+
+		if (k > 1) {
+			return fn(v[m], v[m - 1], m - f);
+		}
+
+		return fn(v[i], v[i + 1 > m ? m : i + 1], f - i);
+
+	},
+
+	Bezier: function (v, k) {
+
+		var b = 0;
+		var n = v.length - 1;
+		var pw = Math.pow;
+		var bn = TWEEN.Interpolation.Utils.Bernstein;
+
+		for (var i = 0; i <= n; i++) {
+			b += pw(1 - k, n - i) * pw(k, i) * v[i] * bn(n, i);
+		}
+
+		return b;
+
+	},
+
+	CatmullRom: function (v, k) {
+
+		var m = v.length - 1;
+		var f = m * k;
+		var i = Math.floor(f);
+		var fn = TWEEN.Interpolation.Utils.CatmullRom;
+
+		if (v[0] === v[m]) {
+
+			if (k < 0) {
+				i = Math.floor(f = m * (1 + k));
+			}
+
+			return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i);
+
+		} else {
+
+			if (k < 0) {
+				return v[0] - (fn(v[0], v[0], v[1], v[1], -f) - v[0]);
+			}
+
+			if (k > 1) {
+				return v[m] - (fn(v[m], v[m], v[m - 1], v[m - 1], f - m) - v[m]);
+			}
+
+			return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i);
+
+		}
+
+	},
+
+	Utils: {
+
+		Linear: function (p0, p1, t) {
+
+			return (p1 - p0) * t + p0;
+
+		},
+
+		Bernstein: function (n, i) {
+
+			var fc = TWEEN.Interpolation.Utils.Factorial;
+
+			return fc(n) / fc(i) / fc(n - i);
+
+		},
+
+		Factorial: (function () {
+
+			var a = [1];
+
+			return function (n) {
+
+				var s = 1;
+
+				if (a[n]) {
+					return a[n];
+				}
+
+				for (var i = n; i > 1; i--) {
+					s *= i;
+				}
+
+				a[n] = s;
+				return s;
+
+			};
+
+		})(),
+
+		CatmullRom: function (p0, p1, p2, p3, t) {
+
+			var v0 = (p2 - p0) * 0.5;
+			var v1 = (p3 - p1) * 0.5;
+			var t2 = t * t;
+			var t3 = t * t2;
+
+			return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (- 3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
+
+		}
+
+	}
+
+};
+
+// UMD (Universal Module Definition)
+(function (root) {
+
+	if (typeof define === 'function' && define.amd) {
+
+		// AMD
+		define([], function () {
+			return TWEEN;
+		});
+
+	} else if (typeof module !== 'undefined' && typeof exports === 'object') {
+
+		// Node.js
+		module.exports = TWEEN;
+
+	} else if (root !== undefined) {
+
+		// Global variable
+		root.TWEEN = TWEEN;
+
+	}
+
+})(this);
+
 /**
  * @author qiao / https://github.com/qiao
  * @author mrdoob / http://mrdoob.com
@@ -1120,6 +2006,7 @@ THREE.CapsuleBufferGeometry = function( Radius, Height, SRadius, H) {
     var m1 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1);
     var m2 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1);
     var mtx0 = new THREE.Matrix4().makeTranslation(0,0,0);
+    if(SRadius===6) mtx0.makeRotationY(30*0.0174532925199432957);
     var mtx1 = new THREE.Matrix4().makeTranslation(0, height*0.5,0);
     var mtx2 = new THREE.Matrix4().makeTranslation(0, -height*0.5,0);
     g.merge( m0, mtx0);
@@ -2976,11 +3863,18 @@ var byName = {};
 var isCamFollow = false;
 var currentFollow = null;
 var cameraGroup;
-var azimut = 0, oldAzimut = 0;
 
+//var azimut = 0, oldAzimut = 0;
+//var polar = 0, oldPolar = 0;
 
+var cam = { theta:0, phi:0, oTheta:0, oPhi:0 };
 
 var geo, mat;
+
+var urls = [];
+var callback_load = null;
+//var seaLoader = null;
+var results = {};
 
 
 
@@ -3098,6 +3992,8 @@ view = {
             movehigh: new THREE.MeshBasicMaterial({ color:0xff9999, name:'movehigh', wireframe:true }),
             sleep: new THREE.MeshBasicMaterial({ color:0x9999FF, name:'sleep', wireframe:true }),
 
+            debug: new THREE.MeshBasicMaterial({ color:0x11ff11, name:'debug', wireframe:true, opacity:0.1, transparent:true }),
+
             hero: new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true }),
             cars: new THREE.MeshBasicMaterial({ color:0xffffff, name:'cars', wireframe:true, transparent:true, side: THREE.DoubleSide }),
             tmp1: new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp1', wireframe:true, transparent:true }),
@@ -3125,6 +4021,8 @@ view = {
 
         window.addEventListener( 'resize', view.resize, false );
 
+        //seaLoader = new THREE.SEA3D();
+
         
 
         this.resize();
@@ -3134,6 +4032,9 @@ view = {
         //this.load ( 'basic', callback );
 
         if( callback ) callback();
+
+
+        this.render();
 
     },
 
@@ -3183,9 +4084,16 @@ view = {
 
     render: function () {
 
+        requestAnimationFrame( view.render );
+
         time = now();
         if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
-        
+
+        TWEEN.update();
+        THREE.SEA3D.AnimationHandler.update( 0.017 );
+
+        update();
+
         renderer.render( scene, camera );
 
     },
@@ -3289,24 +4197,28 @@ view = {
 
             m = mat[ old ];
             name = m.name;
-            mat[ name ] = new THREE[ matType ]({ 
-                name:name, 
-                envMap:null,
-                map:m.map || null, 
-                vertexColors:m.vertexColors || false, 
-                color: m.color === undefined ? 0xFFFFFF : m.color.getHex(),
-                wireframe:isWirframe, 
-                transparent: m.transparent || false, 
-                opacity: m.opacity || 1, 
-                side: m.side || THREE.FrontSide 
-            });
-            if( !isWirframe ){
-                mat[name].envMap = envMap;
-                mat[name].metalness = 0.6;
-                mat[name].roughness = 0.4;
-            }
+            if(name!=='debug'){
 
-            m.dispose();
+
+                mat[ name ] = new THREE[ matType ]({ 
+                    name:name, 
+                    envMap:null,
+                    map:m.map || null, 
+                    vertexColors:m.vertexColors || false, 
+                    color: m.color === undefined ? 0xFFFFFF : m.color.getHex(),
+                    wireframe:isWirframe, 
+                    transparent: m.transparent || false, 
+                    opacity: m.opacity || 1, 
+                    side: m.side || THREE.FrontSide 
+                });
+                if( !isWirframe ){
+                    mat[name].envMap = envMap;
+                    mat[name].metalness = 0.6;
+                    mat[name].roughness = 0.4;
+                }
+
+                m.dispose();
+            }
 
         }
 
@@ -3437,27 +4349,56 @@ view = {
 
     },
 
-    // LOAD
+    //--------------------------------------
+    //
+    //   LOAD SEA3D
+    //
+    //--------------------------------------
 
-    load: function ( name, callback ) {
+    load: function( Urls, Callback ){
 
-        var loader = new THREE.SEA3D({});
+        if ( typeof Urls == 'string' || Urls instanceof String ) urls.push( Urls );
+        else urls = urls.concat( Urls );
 
-        loader.onComplete = function( e ) {
+        callback_load = Callback || function(){};
 
-            var i = loader.geometries.length, g;
-            while(i--){
-                g = loader.geometries[i];
-                geo[g.name] = g;
+        view.load_sea( urls[0] );
 
-                //console.log(g.name)
+    },
+
+    load_next: function () {
+
+        urls.shift();
+        if( urls.length === 0 ) callback_load();
+        else view.load_sea( urls[0] );
+
+    },
+
+    load_sea: function ( n ) {
+
+        var l = new THREE.SEA3D();
+
+        l.onComplete = function( e ) {
+
+            results[ n ] = l.meshes;
+
+            var i = l.geometries.length, g;
+            while( i-- ){
+                g = l.geometries[i];
+                geo[ g.name ] = g;
             };
 
-            if( callback ) callback();
+            view.load_next();
 
         };
 
-        loader.load( './assets/models/'+ name +'.sea' );
+        l.load( './assets/models/'+ n +'.sea' );
+
+    },
+
+    getResult : function(){
+
+        return results;
 
     },
 
@@ -3489,38 +4430,64 @@ view = {
 
     controlUpdate: function(){
 
+        
+
         if( !isCamFollow ) return;
         if( currentFollow === null ) return;
 
+        var h, v;
         var mesh = currentFollow;
         var type = mesh.userData.type;
         var speed = mesh.userData.speed;
 
+        v = (-70) * Math.torad;
+
         if( type === 'car' ) {
+
+            
             
             if( speed < 10 && speed > -10 ){ 
 
                 view.setControle( true );
                 return;
 
+            } else {
+
+                view.setControle( false );
+
             }
         }
+
+
 
         if( type === 'hero' ){
 
-            if( speed === 0 ){
+            //if( speed === 0 ){
                 view.setControle( true );
-                azimut = controls.getAzimuthalAngle() + Math.Pi;
-                if( azimut !== oldAzimut ) {
-                    oldAzimut = azimut;
-                    ammo.send('heroRotation', { id:mesh.userData.id, angle:oldAzimut })
+
+                cam.theta = controls.getAzimuthalAngle() + Math.Pi;
+                cam.phi = -controls.getPolarAngle();// - Math.PI90;
+
+
+
+                if( cam.phi !== cam.oPhi ) {
+                    cam.oPhi = cam.phi;
+                    v = cam.phi;
                 }
-                return;
-            }
+                if( cam.theta !== cam.oTheta ) {
+                    cam.oTheta = cam.theta;
+                    ammo.send('heroRotation', { id:mesh.userData.id, angle:cam.theta })
+                }
+
+                // - (90*Math.torad);
+                //return;
+           // }
 
         }
 
-        view.setControle( false );
+        //console.log(cam.phi*Math.todeg)
+
+        //view.setControle( false );
 
         var matrix = new THREE.Matrix4();
         matrix.extractRotation( mesh.matrix );
@@ -3530,9 +4497,14 @@ view = {
         //matrix.multiplyVector3( front );
 
         var target = mesh.position;
-        var h = ( Math.atan2( front.x, front.z ) * Math.radtodeg ) - 180;
+        h = Math.atan2( front.x, front.z );// * Math.radtodeg ) - 180;
+        //v = (20-90) * Math.torad;
 
-        view.moveCamera( h, 20, 10, 0.3, target );
+
+        view.autoCamera( h, v, 10, 0.3, target );
+
+        //if( type === 'car' ) 
+        //else view.setTarget(target);
 
     },
 
@@ -3545,13 +4517,33 @@ view = {
 
     },
 
+    setTarget: function ( target ) {
+
+        controls.target.copy( target );
+        controls.update();
+
+    },
+
+    autoCamera:function ( h, v, d, l, target ) {
+
+        l = l || 1;
+        //if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
+        //camera.position.copy( this.orbit( h, v, d ) );
+        camera.position.lerp( this.orbit( h, v, d ), l );
+
+        if( target ) view.setTarget( target );
+        //controls.update();
+
+    },
+
     moveCamera: function ( h, v, d, l, target ) {
 
         l = l || 1;
-        if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
-        //camera.position.copy( this.orbit( h, v, d ) );
-        camera.position.lerp( this.orbit( h, v, d ), l );
-        controls.update();
+       // if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
+        camera.position.lerp( this.orbit( (h+180) * Math.torad, (v-90) * Math.torad, d ), l );
+        //controls.update();
+
+        if( target ) view.setTarget( target );
         
     },
 
@@ -3559,8 +4551,8 @@ view = {
 
         var offset = new THREE.Vector3();
         
-        var phi = (v-90) * Math.torad;
-        var theta = (h+180) * Math.torad;
+        var phi = v;
+        var theta = h;
         offset.x =  d * Math.sin(phi) * Math.sin(theta);
         offset.y =  d * Math.cos(phi);
         offset.z =  d * Math.sin(phi) * Math.cos(theta);
@@ -3841,42 +4833,69 @@ view = {
 
     character: function ( o ) {
 
-        o.size = o.size == undefined ? [0.5,1,1] : o.size;
+        o.size = o.size == undefined ? [0.25,2,2] : o.size;
         if(o.size.length == 1){ o.size[1] = o.size[0]; }
         if(o.size.length == 2){ o.size[2] = o.size[0]; }
 
-        //var pos = o.pos || [0,3,0];
-        o.pos = o.pos === undefined ? [0,3,0] : o.pos;
-        //var rot = o.rot || [0,0,0];
-
+        o.pos = o.pos === undefined ? [0,0,0] : o.pos;
         o.rot = o.rot == undefined ? [0,0,0] : this.toRad( o.rot );
         o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
 
-        var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
-        var mesh = new THREE.Mesh( g, mat.hero );
-        extraGeo.push( mesh.geometry );
+        var g = new THREE.CapsuleBufferGeometry( o.size[0], o.size[1]*0.5, 6 );
 
-        //mesh.position.set( pos[0], pos[1], pos[2] );
-        //mesh.rotation.set( rot[0], rot[1], rot[2] );
+        var mesh = new THREE.Group();//o.mesh || new THREE.Mesh( g );
 
-        mesh.position.fromArray( o.pos );
-        mesh.quaternion.fromArray( o.quat );
+        if( o.debug ){
+            var mm = new THREE.Mesh( g, mat.debug );
+            extraGeo.push( g );
+            mesh.add( mm )
 
-        // copy rotation quaternion
-        //o.quat = mesh.quaternion.toArray();
-        //o.pos = pos;
+
+        }
+
+        //mesh.material = mat.hero;
+        if( o.mesh ){
+
+            mat.hero.skinning = true;
+            //mesh.userData.skin = true;
+
+            o.mesh.material = mat.hero;
+            o.mesh.scale.multiplyScalar( o.scale || 1 );
+            o.mesh.position.set(0,0,0);
+            o.mesh.play(0);
+
+            mesh.add( o.mesh );
+            mesh.skin = o.mesh;
+
+            extraGeo.push( mesh.skin.geometry );
+            
+        } else {
+
+            var mx = new THREE.Mesh( g, mat.hero );
+            extraGeo.push( g );
+            mesh.add( mx );
+
+        }
+        
+
+
+        
 
         mesh.userData.speed = 0;
         mesh.userData.type = 'hero';
         mesh.userData.id = heros.length;
+
+         // copy rotation quaternion
+        mesh.position.fromArray( o.pos );
+        mesh.quaternion.fromArray( o.quat );
+
+        
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
         scene.add( mesh );
         heros.push( mesh );
-
-
 
         this.setName( o, mesh );
 
@@ -4152,6 +5171,8 @@ view = {
 
         }*/
 
+        if( o.numSeg === undefined ) o.numSeg = o.numSegment;
+
         /*var g = new THREE.BufferGeometry();
         g.setIndex( new THREE.BufferAttribute( new Uint16Array( ropeIndices ), 1 ) );
         g.addAttribute('position', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
@@ -4160,7 +5181,7 @@ view = {
         //var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ vertexColors: true }));
         var mesh = new THREE.LineSegments( g, new THREE.LineBasicMaterial({ color: 0xFFFF00 }));*/
 
-        var g = new THREE.Tubex( o , o.numSegment|| 10, o.radius || 0.2, 6, false );
+        var g = new THREE.Tubex( o, o.numSeg || 10, o.radius || 0.2, o.numRad || 6, false );
 
         //console.log(g.positions.length)
 
@@ -4431,9 +5452,25 @@ view = {
         heros.forEach( function( b, id ) {
 
             var n = id * 8;
-            b.userData.speed = Hr[n] * 100;
+            var s = Hr[n] * 3.33;
+            b.userData.speed = s * 100;
             b.position.fromArray( Hr, n + 1 );
             b.quaternion.fromArray( Hr, n + 4 );
+
+            if(b.skin){
+
+
+
+                if( s === 0 ) b.skin.play( 0, 0.3 );
+                else{ 
+                    b.skin.play( 1, 0.3 );
+                    b.skin.setTimeScale( s );
+
+                }
+
+                //console.log(s)
+                
+            }
 
         });
 

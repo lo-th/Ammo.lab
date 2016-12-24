@@ -36,11 +36,11 @@ function init(){
     editor.init( launch, isWithCode );
     ammo.init( ready, direct, isBuffer );
     
-    loop();
+   //loop();
 
 };
 
-function loop () {
+/*function loop () {
 
     requestAnimationFrame( loop );
     //view.update();
@@ -48,12 +48,11 @@ function loop () {
     update();
     view.render();
 
-};
+};*/
 
 function ready () {
 
     var hash = location.hash.substr( 1 );
-
     if(hash !=='') demoName = hash;
     editor.load('demos/' + demoName + '.js');
 

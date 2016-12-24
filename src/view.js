@@ -54,11 +54,18 @@ var byName = {};
 var isCamFollow = false;
 var currentFollow = null;
 var cameraGroup;
-var azimut = 0, oldAzimut = 0;
 
+//var azimut = 0, oldAzimut = 0;
+//var polar = 0, oldPolar = 0;
 
+var cam = { theta:0, phi:0, oTheta:0, oPhi:0 };
 
 var geo, mat;
+
+var urls = [];
+var callback_load = null;
+//var seaLoader = null;
+var results = {};
 
 
 
@@ -176,6 +183,8 @@ view = {
             movehigh: new THREE.MeshBasicMaterial({ color:0xff9999, name:'movehigh', wireframe:true }),
             sleep: new THREE.MeshBasicMaterial({ color:0x9999FF, name:'sleep', wireframe:true }),
 
+            debug: new THREE.MeshBasicMaterial({ color:0x11ff11, name:'debug', wireframe:true, opacity:0.1, transparent:true }),
+
             hero: new THREE.MeshBasicMaterial({ color:0x993399, name:'hero', wireframe:true }),
             cars: new THREE.MeshBasicMaterial({ color:0xffffff, name:'cars', wireframe:true, transparent:true, side: THREE.DoubleSide }),
             tmp1: new THREE.MeshBasicMaterial({ color:0xffffff, name:'tmp1', wireframe:true, transparent:true }),
@@ -203,6 +212,8 @@ view = {
 
         window.addEventListener( 'resize', view.resize, false );
 
+        //seaLoader = new THREE.SEA3D();
+
         
 
         this.resize();
@@ -212,6 +223,9 @@ view = {
         //this.load ( 'basic', callback );
 
         if( callback ) callback();
+
+
+        this.render();
 
     },
 
@@ -261,9 +275,16 @@ view = {
 
     render: function () {
 
+        requestAnimationFrame( view.render );
+
         time = now();
         if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
-        
+
+        TWEEN.update();
+        THREE.SEA3D.AnimationHandler.update( 0.017 );
+
+        update();
+
         renderer.render( scene, camera );
 
     },
@@ -367,24 +388,28 @@ view = {
 
             m = mat[ old ];
             name = m.name;
-            mat[ name ] = new THREE[ matType ]({ 
-                name:name, 
-                envMap:null,
-                map:m.map || null, 
-                vertexColors:m.vertexColors || false, 
-                color: m.color === undefined ? 0xFFFFFF : m.color.getHex(),
-                wireframe:isWirframe, 
-                transparent: m.transparent || false, 
-                opacity: m.opacity || 1, 
-                side: m.side || THREE.FrontSide 
-            });
-            if( !isWirframe ){
-                mat[name].envMap = envMap;
-                mat[name].metalness = 0.6;
-                mat[name].roughness = 0.4;
-            }
+            if(name!=='debug'){
 
-            m.dispose();
+
+                mat[ name ] = new THREE[ matType ]({ 
+                    name:name, 
+                    envMap:null,
+                    map:m.map || null, 
+                    vertexColors:m.vertexColors || false, 
+                    color: m.color === undefined ? 0xFFFFFF : m.color.getHex(),
+                    wireframe:isWirframe, 
+                    transparent: m.transparent || false, 
+                    opacity: m.opacity || 1, 
+                    side: m.side || THREE.FrontSide 
+                });
+                if( !isWirframe ){
+                    mat[name].envMap = envMap;
+                    mat[name].metalness = 0.6;
+                    mat[name].roughness = 0.4;
+                }
+
+                m.dispose();
+            }
 
         }
 
@@ -515,27 +540,56 @@ view = {
 
     },
 
-    // LOAD
+    //--------------------------------------
+    //
+    //   LOAD SEA3D
+    //
+    //--------------------------------------
 
-    load: function ( name, callback ) {
+    load: function( Urls, Callback ){
 
-        var loader = new THREE.SEA3D({});
+        if ( typeof Urls == 'string' || Urls instanceof String ) urls.push( Urls );
+        else urls = urls.concat( Urls );
 
-        loader.onComplete = function( e ) {
+        callback_load = Callback || function(){};
 
-            var i = loader.geometries.length, g;
-            while(i--){
-                g = loader.geometries[i];
-                geo[g.name] = g;
+        view.load_sea( urls[0] );
 
-                //console.log(g.name)
+    },
+
+    load_next: function () {
+
+        urls.shift();
+        if( urls.length === 0 ) callback_load();
+        else view.load_sea( urls[0] );
+
+    },
+
+    load_sea: function ( n ) {
+
+        var l = new THREE.SEA3D();
+
+        l.onComplete = function( e ) {
+
+            results[ n ] = l.meshes;
+
+            var i = l.geometries.length, g;
+            while( i-- ){
+                g = l.geometries[i];
+                geo[ g.name ] = g;
             };
 
-            if( callback ) callback();
+            view.load_next();
 
         };
 
-        loader.load( './assets/models/'+ name +'.sea' );
+        l.load( './assets/models/'+ n +'.sea' );
+
+    },
+
+    getResult : function(){
+
+        return results;
 
     },
 
@@ -567,38 +621,64 @@ view = {
 
     controlUpdate: function(){
 
+        
+
         if( !isCamFollow ) return;
         if( currentFollow === null ) return;
 
+        var h, v;
         var mesh = currentFollow;
         var type = mesh.userData.type;
         var speed = mesh.userData.speed;
 
+        v = (-70) * Math.torad;
+
         if( type === 'car' ) {
+
+            
             
             if( speed < 10 && speed > -10 ){ 
 
                 view.setControle( true );
                 return;
 
+            } else {
+
+                view.setControle( false );
+
             }
         }
+
+
 
         if( type === 'hero' ){
 
-            if( speed === 0 ){
+            //if( speed === 0 ){
                 view.setControle( true );
-                azimut = controls.getAzimuthalAngle() + Math.Pi;
-                if( azimut !== oldAzimut ) {
-                    oldAzimut = azimut;
-                    ammo.send('heroRotation', { id:mesh.userData.id, angle:oldAzimut })
+
+                cam.theta = controls.getAzimuthalAngle() + Math.Pi;
+                cam.phi = -controls.getPolarAngle();// - Math.PI90;
+
+
+
+                if( cam.phi !== cam.oPhi ) {
+                    cam.oPhi = cam.phi;
+                    v = cam.phi;
                 }
-                return;
-            }
+                if( cam.theta !== cam.oTheta ) {
+                    cam.oTheta = cam.theta;
+                    ammo.send('heroRotation', { id:mesh.userData.id, angle:cam.theta })
+                }
+
+                // - (90*Math.torad);
+                //return;
+           // }
 
         }
 
-        view.setControle( false );
+        //console.log(cam.phi*Math.todeg)
+
+        //view.setControle( false );
 
         var matrix = new THREE.Matrix4();
         matrix.extractRotation( mesh.matrix );
@@ -608,9 +688,14 @@ view = {
         //matrix.multiplyVector3( front );
 
         var target = mesh.position;
-        var h = ( Math.atan2( front.x, front.z ) * Math.radtodeg ) - 180;
+        h = Math.atan2( front.x, front.z );// * Math.radtodeg ) - 180;
+        //v = (20-90) * Math.torad;
 
-        view.moveCamera( h, 20, 10, 0.3, target );
+
+        view.autoCamera( h, v, 10, 0.3, target );
+
+        //if( type === 'car' ) 
+        //else view.setTarget(target);
 
     },
 
@@ -623,13 +708,33 @@ view = {
 
     },
 
+    setTarget: function ( target ) {
+
+        controls.target.copy( target );
+        controls.update();
+
+    },
+
+    autoCamera:function ( h, v, d, l, target ) {
+
+        l = l || 1;
+        //if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
+        //camera.position.copy( this.orbit( h, v, d ) );
+        camera.position.lerp( this.orbit( h, v, d ), l );
+
+        if( target ) view.setTarget( target );
+        //controls.update();
+
+    },
+
     moveCamera: function ( h, v, d, l, target ) {
 
         l = l || 1;
-        if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
-        //camera.position.copy( this.orbit( h, v, d ) );
-        camera.position.lerp( this.orbit( h, v, d ), l );
-        controls.update();
+       // if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
+        camera.position.lerp( this.orbit( (h+180) * Math.torad, (v-90) * Math.torad, d ), l );
+        //controls.update();
+
+        if( target ) view.setTarget( target );
         
     },
 
@@ -637,8 +742,8 @@ view = {
 
         var offset = new THREE.Vector3();
         
-        var phi = (v-90) * Math.torad;
-        var theta = (h+180) * Math.torad;
+        var phi = v;
+        var theta = h;
         offset.x =  d * Math.sin(phi) * Math.sin(theta);
         offset.y =  d * Math.cos(phi);
         offset.z =  d * Math.sin(phi) * Math.cos(theta);
@@ -919,42 +1024,69 @@ view = {
 
     character: function ( o ) {
 
-        o.size = o.size == undefined ? [0.5,1,1] : o.size;
+        o.size = o.size == undefined ? [0.25,2,2] : o.size;
         if(o.size.length == 1){ o.size[1] = o.size[0]; }
         if(o.size.length == 2){ o.size[2] = o.size[0]; }
 
-        //var pos = o.pos || [0,3,0];
-        o.pos = o.pos === undefined ? [0,3,0] : o.pos;
-        //var rot = o.rot || [0,0,0];
-
+        o.pos = o.pos === undefined ? [0,0,0] : o.pos;
         o.rot = o.rot == undefined ? [0,0,0] : this.toRad( o.rot );
         o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
 
-        var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
-        var mesh = new THREE.Mesh( g, mat.hero );
-        extraGeo.push( mesh.geometry );
+        var g = new THREE.CapsuleBufferGeometry( o.size[0], o.size[1]*0.5, 6 );
 
-        //mesh.position.set( pos[0], pos[1], pos[2] );
-        //mesh.rotation.set( rot[0], rot[1], rot[2] );
+        var mesh = new THREE.Group();//o.mesh || new THREE.Mesh( g );
 
-        mesh.position.fromArray( o.pos );
-        mesh.quaternion.fromArray( o.quat );
+        if( o.debug ){
+            var mm = new THREE.Mesh( g, mat.debug );
+            extraGeo.push( g );
+            mesh.add( mm )
 
-        // copy rotation quaternion
-        //o.quat = mesh.quaternion.toArray();
-        //o.pos = pos;
+
+        }
+
+        //mesh.material = mat.hero;
+        if( o.mesh ){
+
+            mat.hero.skinning = true;
+            //mesh.userData.skin = true;
+
+            o.mesh.material = mat.hero;
+            o.mesh.scale.multiplyScalar( o.scale || 1 );
+            o.mesh.position.set(0,0,0);
+            o.mesh.play(0);
+
+            mesh.add( o.mesh );
+            mesh.skin = o.mesh;
+
+            extraGeo.push( mesh.skin.geometry );
+            
+        } else {
+
+            var mx = new THREE.Mesh( g, mat.hero );
+            extraGeo.push( g );
+            mesh.add( mx );
+
+        }
+        
+
+
+        
 
         mesh.userData.speed = 0;
         mesh.userData.type = 'hero';
         mesh.userData.id = heros.length;
+
+         // copy rotation quaternion
+        mesh.position.fromArray( o.pos );
+        mesh.quaternion.fromArray( o.quat );
+
+        
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
         scene.add( mesh );
         heros.push( mesh );
-
-
 
         this.setName( o, mesh );
 
@@ -1511,9 +1643,25 @@ view = {
         heros.forEach( function( b, id ) {
 
             var n = id * 8;
-            b.userData.speed = Hr[n] * 100;
+            var s = Hr[n] * 3.33;
+            b.userData.speed = s * 100;
             b.position.fromArray( Hr, n + 1 );
             b.quaternion.fromArray( Hr, n + 4 );
+
+            if(b.skin){
+
+
+
+                if( s === 0 ) b.skin.play( 0, 0.3 );
+                else{ 
+                    b.skin.play( 1, 0.3 );
+                    b.skin.setTimeScale( s );
+
+                }
+
+                //console.log(s)
+                
+            }
 
         });
 
