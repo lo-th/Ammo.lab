@@ -99,7 +99,7 @@ var ammo = ( function () {
             Jr = data.Jr;
             Sr = data.Sr;
 
-            view.update();
+            view.needUpdate();
 
             if( isBuffer ){ 
 

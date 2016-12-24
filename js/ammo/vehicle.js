@@ -283,6 +283,8 @@ function drive ( id ) {
     if( u.steering < -u.maxSteering ) u.steering = -u.maxSteering;
     if( u.steering > u.maxSteering ) u.steering = u.maxSteering;
 
+    u.steering *= 0.9;
+
     u.engine -= u.incEngine * key[1];
     //if( key[0] == 1 ) u.engine += u.incEngine;
     //if( key[1] == 1 ) u.engine -= u.incEngine;

@@ -25,14 +25,12 @@ var view = ( function () {
 
 'use strict';
 
+var _V;
+
 var time = 0;
 var temp = 0;
 var count = 0;
 var fps = 0;
-
-var isFirst = true;
-
-
 
 var canvas, renderer, scene, camera, controls, debug;
 var ray, mouse, content, targetMouse, rayCallBack, moveplane, isWithRay = false;;
@@ -49,6 +47,8 @@ var heros = [];
 var extraGeo = [];
 
 var byName = {};
+
+var isNeedUpdate = false;
 
 // camera
 var isCamFollow = false;
@@ -76,14 +76,93 @@ var isWithShadow = false;
 var shadowGround, light, ambient;
 var spy = -0.01;
 
-var perlin = null;//new Perlin();
+var perlin = null;
 
 var environment, envcontext, nEnv = 1, isWirframe = true;
-var envLists = ['wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky'];
+var envLists = [ 'wireframe','ceramic','plastic','smooth','metal','chrome','brush','black','glow','red','sky' ];
 var envMap;
 
 
 view = {
+
+    //--------------------------------------
+    //
+    //   LOOP
+    //
+    //--------------------------------------
+
+    render: function () {
+
+        requestAnimationFrame( _V.render );
+
+        TWEEN.update();
+        THREE.SEA3D.AnimationHandler.update( 0.017 );
+
+        update();
+
+        if( isNeedUpdate ){
+
+            _V.bodyStep();
+            _V.heroStep();
+            _V.carsStep();
+            _V.softStep();
+
+            _V.controlUpdate();
+
+            isNeedUpdate = false;
+
+        }
+
+        renderer.render( scene, camera );
+
+        time = now();
+        if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
+
+    },
+
+    needUpdate: function (){ isNeedUpdate = true; },
+
+
+    //--------------------------------------
+    //
+    //   RESET
+    //
+    //--------------------------------------
+
+    reset: function () {
+
+        this.removeRay();
+        this.resetCamera();
+        this.setShadowPosY(-0.01);
+        helper.visible = true;
+
+        var c, i;
+
+        while( meshs.length > 0 ) scene.remove( meshs.pop() );
+        while( statics.length > 0 ) scene.remove( statics.pop() );
+        while( terrains.length > 0 ) scene.remove( terrains.pop() );
+        while( softs.length > 0 ) scene.remove( softs.pop() );
+        while( heros.length > 0 ) scene.remove( heros.pop() );
+        while( extraGeo.length > 0 ) extraGeo.pop().dispose();
+        
+        while( cars.length > 0 ){
+            c = cars.pop();
+            if( c.userData.helper ){
+                c.remove( c.userData.helper );
+                c.userData.helper.dispose();
+            }
+            i = c.userData.w.length;
+            while( i-- ){
+                scene.remove( c.userData.w[i] );
+            }
+            scene.remove( c );
+        }
+
+        //meshs.length = 0;
+        perlin = null;
+        byName = {};
+
+    },
 
     init: function ( callback ) {
 
@@ -92,6 +171,11 @@ view = {
         canvas.oncontextmenu = function(e){ e.preventDefault(); };
         canvas.ondrop = function(e) { e.preventDefault(); };
         document.body.appendChild( canvas );
+
+
+        _V = this;
+
+
 
         // RENDERER
 
@@ -125,7 +209,6 @@ view = {
         // SCENE
 
         scene = new THREE.Scene();
-
 
         content = new THREE.Group();
         scene.add( content );
@@ -208,24 +291,20 @@ view = {
         helper.material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, transparent:true, opacity:0.1 } );
         scene.add( helper );
 
-        // EVENT
-
-        window.addEventListener( 'resize', view.resize, false );
-
-        //seaLoader = new THREE.SEA3D();
-
-        
-
         this.resize();
         this.initEnv();
 
-        // charge basic geometry
-        //this.load ( 'basic', callback );
 
-        if( callback ) callback();
 
+        
+
+        
+
+        window.addEventListener( 'resize', _V.resize, false );
 
         this.render();
+
+        if( callback ) callback();
 
     },
 
@@ -273,21 +352,7 @@ view = {
 
     },
 
-    render: function () {
-
-        requestAnimationFrame( view.render );
-
-        time = now();
-        if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
-
-        TWEEN.update();
-        THREE.SEA3D.AnimationHandler.update( 0.017 );
-
-        update();
-
-        renderer.render( scene, camera );
-
-    },
+    
 
     addMap: function( name, matName ) {
 
@@ -323,7 +388,7 @@ view = {
         if(isWithRay){
             isWithRay = false;
 
-            canvas.removeEventListener( 'mousemove', view.rayTest, false );
+            canvas.removeEventListener( 'mousemove', _V.rayTest, false );
             rayCallBack = null;
 
             content.remove(moveplane);
@@ -345,7 +410,7 @@ view = {
         targetMouse = new THREE.Mesh( geo['box'] ,  new THREE.MeshBasicMaterial({color:0xFF0000}));
         scene.add(targetMouse);
 
-        canvas.addEventListener( 'mousemove', view.rayTest, false );
+        canvas.addEventListener( 'mousemove', _V.rayTest, false );
 
         rayCallBack = callback;
 
@@ -516,9 +581,9 @@ view = {
             envMap.format = THREE.RGBFormat;
             envMap.needsUpdate = true;
 
-            if( nEnv === 0 && !isWirframe ) view.changeMaterial( 0 );
+            if( nEnv === 0 && !isWirframe ) _V.changeMaterial( 0 );
             if( nEnv !== 0  ) {
-                if( isWirframe ) view.changeMaterial( 1 );
+                if( isWirframe ) _V.changeMaterial( 1 );
                 else{
                     for( var mm in mat ){
                        mat[mm].envMap = envMap;
@@ -553,7 +618,7 @@ view = {
 
         callback_load = Callback || function(){};
 
-        view.load_sea( urls[0] );
+        _V.load_sea( urls[0] );
 
     },
 
@@ -561,7 +626,7 @@ view = {
 
         urls.shift();
         if( urls.length === 0 ) callback_load();
-        else view.load_sea( urls[0] );
+        else _V.load_sea( urls[0] );
 
     },
 
@@ -579,7 +644,7 @@ view = {
                 geo[ g.name ] = g;
             };
 
-            view.load_next();
+            _V.load_next();
 
         };
 
@@ -639,12 +704,12 @@ view = {
             
             if( speed < 10 && speed > -10 ){ 
 
-                view.setControle( true );
+                this.setControle( true );
                 return;
 
             } else {
 
-                view.setControle( false );
+                this.setControle( false );
 
             }
         }
@@ -654,7 +719,7 @@ view = {
         if( type === 'hero' ){
 
             //if( speed === 0 ){
-                view.setControle( true );
+                this.setControle( true );
 
                 cam.theta = controls.getAzimuthalAngle() + Math.Pi;
                 cam.phi = -controls.getPolarAngle();// - Math.PI90;
@@ -692,7 +757,7 @@ view = {
         //v = (20-90) * Math.torad;
 
 
-        view.autoCamera( h, v, 10, 0.3, target );
+        this.autoCamera( h, v, 10, 0.3, target );
 
         //if( type === 'car' ) 
         //else view.setTarget(target);
@@ -722,7 +787,7 @@ view = {
         //camera.position.copy( this.orbit( h, v, d ) );
         camera.position.lerp( this.orbit( h, v, d ), l );
 
-        if( target ) view.setTarget( target );
+        if( target ) this.setTarget( target );
         //controls.update();
 
     },
@@ -734,7 +799,7 @@ view = {
         camera.position.lerp( this.orbit( (h+180) * Math.torad, (v-90) * Math.torad, d ), l );
         //controls.update();
 
-        if( target ) view.setTarget( target );
+        if( target ) this.setTarget( target );
         
     },
 
@@ -775,7 +840,7 @@ view = {
 
     resetCamera: function(){
 
-        view.setControle( true );
+        _V.setControle( true );
         currentFollow = null;
 
     },
@@ -794,57 +859,7 @@ view = {
 
     },
 
-    //--------------------------------------
-    //
-    //   RESET
-    //
-    //--------------------------------------
 
-    reset: function () {
-
-        view.removeRay();
-        view.setShadowPosY(-0.01);
-        helper.visible = true;
-
-        var c, i;
-
-        while( meshs.length > 0 ) scene.remove( meshs.pop() );
-
-        while( statics.length > 0 ) scene.remove( statics.pop() );
-        
-        while( terrains.length > 0 ) scene.remove( terrains.pop() );
-        
-        while( softs.length > 0 ) scene.remove( softs.pop() );
-
-        while( heros.length > 0 ) scene.remove( heros.pop() );
-        
-        while( extraGeo.length > 0 ) extraGeo.pop().dispose();
-        
-        while( cars.length > 0 ){
-            c = cars.pop();
-            if( c.userData.helper ){
-                c.remove( c.userData.helper );
-                c.userData.helper.dispose();
-            }
-            i = c.userData.w.length;
-            while( i-- ){
-                scene.remove( c.userData.w[i] );
-            }
-            scene.remove( c );
-        }
-
-        meshs.length = 0;
-        perlin = null;
-
-        byName = {};
-
-        view.resetCamera();
-
-        
-
-        isFirst = true;
-
-    },
 
     //--------------------------------------
     //
@@ -942,7 +957,7 @@ view = {
             isCustomGeometry = true;
 
         } else if( o.type === 'mesh' || o.type === 'convex' ){ 
-            o.v = view.prepaGeometry( o.shape, o.type );
+            o.v = _V.prepaGeometry( o.shape, o.type );
             if(o.geometry){
                 mesh = new THREE.Mesh( o.geometry, material );
                 extraGeo.push(o.geometry);
@@ -1197,7 +1212,7 @@ view = {
         if( o.mesh ) o.mesh = null;
         if( o.wheel ) o.wheel = null;
 
-        if ( o.type == 'mesh' || o.type == 'convex' ) o.v = view.prepaGeometry( o.shape, o.type );
+        if ( o.type == 'mesh' || o.type == 'convex' ) o.v = _V.prepaGeometry( o.shape, o.type );
 
         if( o.shape ) delete(o.shape);
         if( o.mesh ) delete(o.mesh);
@@ -1235,7 +1250,7 @@ view = {
 
         //console.log('start', g.getIndex().count);
 
-        view.prepaGeometry( g );
+        _V.prepaGeometry( g );
 
         extraGeo.push( g );
 
@@ -1276,7 +1291,7 @@ view = {
 
         g.translate( pos[0], pos[1], pos[2] );
 
-        view.prepaGeometry(g);
+        _V.prepaGeometry(g);
 
         o.v = g.realVertices;
 
@@ -1599,18 +1614,7 @@ view = {
     //
     //--------------------------------------
 
-    update: function(){
-
-        this.bodyStep();
-        this.heroStep();
-        this.carsStep();
-        this.softStep();
-
-        this.controlUpdate();
-
-        if( isFirst ) isFirst = false;
-
-    },
+    
 
     bodyStep: function(){
 

@@ -67,12 +67,12 @@ function launch ( name ) {
     location.hash = name;
 
     ammo.reset( full );
-    view.reset( full );
+    view.reset();
 
     demo = new window['demo'];
 
     // start Physics engine
-    setTimeout( ammo.start, 100 );
+    setTimeout( ammo.start, 10 );
     //ammo.start();
 
 };
