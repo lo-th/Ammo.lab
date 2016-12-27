@@ -5,7 +5,7 @@ var numDiv;
 var data;
 var TextDecoder;
 
-var ammo, intro, UIL, esprima, CodeMirror, update;
+var ammo, intro, UIL, esprima, CodeMirror, update, postUpdate;
 
 var Br, Cr, Jr, Hr, Sr;
 var demos;

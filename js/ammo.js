@@ -10,9 +10,9 @@ var ammo = ( function () {
 
     'use strict';
 
-    var worker, callback;
+    var worker, callback, blob;
+    var isDirect, isBuffer;
 
-    var isBuffer = false;
     var timestep = 1/60;//0.017;//1/60;
     var substep = 2;//7;
 
@@ -31,39 +31,33 @@ var ammo = ( function () {
     var fps = 0;
 
     var timer = 0;
-    var needDelete = true;
 
-    ammo = {//function () {};
+    ammo = {
 
         init: function ( Callback, direct, buff ) {
 
             isBuffer = buff || false;
+            isDirect = direct || false;
 
             callback = Callback;
 
             worker = new Worker('./js/ammo.worker.js');
-
             worker.onmessage = this.message;
             worker.postMessage = worker.webkitPostMessage || worker.postMessage;
 
-            var blob;
+            if( isDirect ) blob = document.location.href.replace(/\/[^/]*$/,"/") + "./libs/ammo.js";
+            else blob = extract.get('ammo');
 
-            if( direct ){
-                var blob = document.location.href.replace(/\/[^/]*$/,"/") + "libs/ammo.js";
-                needDelete = false;
-                //worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
-            }else{
-                blob = extract.get('ammo');
-            }
-
-            //worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep, Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr });
             worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
             
         },
 
         onInit: function () {
 
-            if( needDelete ) extract.clearBlob('ammo');
+            window.URL.revokeObjectURL( blob );
+            if( !isDirect ) extract.clearBlob('ammo');
+            blob = null;
+
             if( callback ) callback();
 
         },
@@ -79,7 +73,7 @@ var ammo = ( function () {
             var data = e.data;
 
             switch( data.m ){
-                case 'init': ammo.onInit( data ); break;
+                case 'init': ammo.onInit(); break;
                 case 'step': ammo.step( data ); break;
                 case 'ellipsoid': view.ellipsoidMesh( data.o ); break;
             }

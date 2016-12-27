@@ -5,7 +5,7 @@ var numDiv;
 var data;
 var TextDecoder;
 
-var ammo, intro, UIL, esprima, CodeMirror, update;
+var ammo, intro, UIL, esprima, CodeMirror, update, postUpdate;
 
 var Br, Cr, Jr, Hr, Sr;
 var demos;
@@ -2694,6 +2694,8 @@ THREE.ShaderShadow = {
 
     lights: true,
     transparent:true,
+    //depthTest:false,
+    depthWrite:false,
 
 }
 THREE.CarHelper = function ( p ) {
@@ -3858,6 +3860,7 @@ var extraGeo = [];
 var byName = {};
 
 var isNeedUpdate = false;
+var isNeedCrowdUpdate = false;
 
 // camera
 var isCamFollow = false;
@@ -3922,6 +3925,8 @@ view = {
 
         }
 
+        postUpdate();
+
         renderer.render( scene, camera );
 
         time = now();
@@ -3930,6 +3935,7 @@ view = {
     },
 
     needUpdate: function (){ isNeedUpdate = true; },
+    needCrowdUpdate: function (){ isNeedCrowdUpdate = true; },
 
 
     //--------------------------------------
@@ -3970,6 +3976,9 @@ view = {
         //meshs.length = 0;
         perlin = null;
         byName = {};
+
+        postUpdate = function () {};
+        update = function () {};
 
     },
 
@@ -5423,7 +5432,7 @@ view = {
     //
     //--------------------------------------
 
-    
+    getBody: function(){ return meshs },
 
     bodyStep: function(){
 

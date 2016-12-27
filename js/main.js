@@ -8,18 +8,22 @@
 
 'use strict';
 
-// main transphere array for worker
+// transphere array for AMMO worker
 var Br, Cr, Jr, Hr, Sr;
+
+// transphere array for CROWD worker
+var Ar;
 
 var demos = [ 
     'basic', 'terrain', 'supermaket', 'car', 'collision', 'ragdoll',
     'kinematics', 'multyCars', 'snowboard', 'cloth', 'rope', 'rope2', 'ellipsoid',
     'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove',
-    'character', 'meca', 'joints', 'empty', 'human', 'loadtest'
+    'character', 'meca', 'joints', 'empty', 'human', 'loadtest', 'planetoid'
 ];
 
 var demo;
 var update = function () {};
+var postUpdate = function () {};
 
 var demoName = 'basic';
 
@@ -98,3 +102,5 @@ function tell ( str ) { editor.tell( str ); };
 function load ( name, callback ) { view.load( name, callback ); };
 
 function anchor ( o ) { ammo.send( 'anchor', o ); };
+
+function gravity ( a ) { ammo.send( 'gravity', {g:a} ); };

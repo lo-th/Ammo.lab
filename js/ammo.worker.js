@@ -188,9 +188,10 @@ self.onmessage = function ( e ) {
         case 'vehicle': addVehicle( data.o ); break;
         case 'character': addCharacter( data.o ); break;
         case 'terrain': terrainPostStep( data.o ); break;
-        case 'gravity': gravity( data.o ); break;
+        case 'gravity': setGravity( data.o ); break;
         case 'anchor': anchor( data.o ); break;
         case 'apply': apply( data.o ); break;
+        case 'multyApplys': multyApplys( data.o ); break;
 
     }
 
@@ -214,7 +215,7 @@ function step( o ){
     //drive( currentCar );
     
 
-    if( tmpset !== null ) set();
+    set();
 
     // terrain update
 
@@ -362,17 +363,11 @@ function init ( o ) {
     // use for get object by name
     byName = {};
 
+    //
+
     initARRAY();
 
-
-    //self.postMessage({ m:'init' });
-
-    //timer = setInterval( step, 16.667 );
     self.postMessage({ m:'init' });
-
-    //if( !isBuffer ) timer = setInterval( step, timerStep ); 
-
-    //postStep();
     
 };
 
@@ -440,18 +435,31 @@ function wipe (obj) {
 
 function set ( ) {
 
+    if( tmpset === null ) return;
+
     var o = tmpset;
-
     var b = getByName( o.name );
-    if(b == null) return;
 
-    tmpPos.fromArray( o.pos );
-    tmpQuat.fromArray( o.quat );
+    if( b === null ) return;
+
+    var p = false, q = false;
+
     tmpTrans.setIdentity();
-    if(o.pos) tmpTrans.setOrigin( tmpPos );
-    if(o.quat) tmpTrans.setRotation( tmpQuat );
+    
+    if(o.pos){ 
+        tmpPos.fromArray( o.pos ); 
+        tmpTrans.setOrigin( tmpPos );
+        p = true; 
+    }
+    if(o.quat){
+        tmpQuat.fromArray( o.quat );
+        tmpTrans.setRotation( tmpQuat );
+        q = true;
+    }
 
-    b.getMotionState().setWorldTransform(tmpTrans);
+    if( p || q ){
+        b.getMotionState().setWorldTransform( tmpTrans );
+    }
 
     tmpset = null;
 
@@ -479,7 +487,7 @@ function add ( o, extra ) {
     if( prev === 'join' ) addJoint( o );
     else if( prev === 'soft' || type === 'ellipsoid'  || type === 'rope'  || type === 'cloth' ) addSoftBody( o );
     else if( type === 'terrain' ) addTerrain( o );
-    else addRigidBody( o, extra )
+    else addRigidBody( o, extra );
 
 };
 
@@ -519,6 +527,16 @@ function addRay ( o ) {
 //  FORCE
 //
 //--------------------------------------------------
+
+function multyApplys( o ) {
+
+    var r = o.r;
+    var lng = r.length;
+    for(var i=0; i< lng; i++){
+        apply( { name:r[i][0], type:r[i][1], v1:r[i][2], v2:r[i][3] } )
+    }
+
+}
 
 function apply ( o ) {
 

@@ -14,6 +14,10 @@ function afterLoad () {
     //add({ type:'box', size:[40,10,1], pos:[0,4.6,0], rot:[45,0,0], mass:0 });
     //add({ type:'box', size:[40,2,40], pos:[0,1,-10], rot:[0,0,0], mass:0 });
 
+    add({ type:'cylinder', size:[2,10,2], rot:[0,0,90], pos:[0,0,0], mass:0 });
+    add({ type:'cylinder', size:[2,10,2], rot:[0,0,90], pos:[0,0,4], mass:0 });
+    add({ type:'cylinder', size:[2,10,2], rot:[0,0,90], pos:[0,0,-4], mass:0 });
+
     var geo = view.getGeo();
 
     var i = 6;

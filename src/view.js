@@ -49,6 +49,7 @@ var extraGeo = [];
 var byName = {};
 
 var isNeedUpdate = false;
+var isNeedCrowdUpdate = false;
 
 // camera
 var isCamFollow = false;
@@ -113,6 +114,8 @@ view = {
 
         }
 
+        postUpdate();
+
         renderer.render( scene, camera );
 
         time = now();
@@ -121,6 +124,7 @@ view = {
     },
 
     needUpdate: function (){ isNeedUpdate = true; },
+    needCrowdUpdate: function (){ isNeedCrowdUpdate = true; },
 
 
     //--------------------------------------
@@ -161,6 +165,9 @@ view = {
         //meshs.length = 0;
         perlin = null;
         byName = {};
+
+        postUpdate = function () {};
+        update = function () {};
 
     },
 
@@ -1614,7 +1621,7 @@ view = {
     //
     //--------------------------------------
 
-    
+    getBody: function(){ return meshs },
 
     bodyStep: function(){
 

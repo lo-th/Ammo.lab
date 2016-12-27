@@ -77,6 +77,12 @@ var agents = [];
 var obstacles = [];
 var way = [];
 
+function initARRAY(){
+
+    ar = new Float32Array( 100 * 5 );
+
+}
+
 var crowd = {
 
     init: function ( o ) {
@@ -115,6 +121,10 @@ var crowd = {
         //
 
         CROWD.setTimeStep( o.timeStep || 0.3 );
+
+        //
+
+        initARRAY();
 
         post( { message:'init' } );
 

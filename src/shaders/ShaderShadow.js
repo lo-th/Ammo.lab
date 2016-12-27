@@ -73,5 +73,7 @@ THREE.ShaderShadow = {
 
     lights: true,
     transparent:true,
+    //depthTest:false,
+    depthWrite:false,
 
 }
