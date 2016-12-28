@@ -18,7 +18,7 @@ var demos = [
     'basic', 'terrain', 'supermaket', 'car', 'collision', 'ragdoll',
     'kinematics', 'multyCars', 'snowboard', 'cloth', 'rope', 'rope2', 'ellipsoid',
     'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove',
-    'character', 'meca', 'joints', 'empty', 'human', 'loadtest', 'planetoid'
+    'character', 'meca', 'joints', 'empty', 'human', 'planetoid'
 ];
 
 var demo;
@@ -35,8 +35,17 @@ var isBuffer = false;
 
 function init(){
 
-    view.init();
+    view.init( next );
     user.init();
+    //editor.init( launch, isWithCode );
+    //ammo.init( ready, direct, isBuffer );
+    
+   //loop();
+
+};
+
+function next(){
+
     editor.init( launch, isWithCode );
     ammo.init( ready, direct, isBuffer );
     
@@ -95,7 +104,7 @@ function follow ( name ) { view.setFollow( name ); };
 
 function substep ( substep ) { ammo.send( 'substep', {substep:substep} ) ; };
 
-function cam ( h,v,d,t ){ view.moveCamera( h, v, d, 0, t || { x:0, y:0, z:0 } ); };
+function cam ( h,v,d,t ){ view.moveCamera( h, v, d, t || [0,0,0] ); };
 
 function tell ( str ) { editor.tell( str ); };
 

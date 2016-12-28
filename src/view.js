@@ -252,6 +252,7 @@ view = {
         geo = {
 
             box:      new THREE.BoxBufferGeometry(1,1,1),
+            hardbox:  new THREE.BoxBufferGeometry(1,1,1),
             cone:     new THREE.CylinderBufferGeometry( 0,1,0.5 ),
             wheel:    new THREE.CylinderBufferGeometry( 1,1,1, 18 ),
             sphere:   new THREE.SphereBufferGeometry( 1, 16, 12 ),
@@ -311,7 +312,9 @@ view = {
 
         this.render();
 
-        if( callback ) callback();
+        this.load ( 'basic', callback );
+
+        //if( callback ) callback();
 
     },
 
@@ -799,14 +802,32 @@ view = {
 
     },
 
-    moveCamera: function ( h, v, d, l, target ) {
+    moveCamera: function ( h, v, d, target ) {
 
-        l = l || 1;
+        /*l = l || 1;
        // if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
         camera.position.lerp( this.orbit( (h+180) * Math.torad, (v-90) * Math.torad, d ), l );
         //controls.update();
 
-        if( target ) this.setTarget( target );
+
+
+        if( target ) this.setTarget( target );*/
+
+        var dest = this.orbit( (h+180) * Math.torad, (v-90) * Math.torad, d );
+
+
+        new TWEEN.Tween( camera.position ).to( { x: dest.x, y: dest.y, z: dest.z }, 400 )
+                    .easing( TWEEN.Easing.Quadratic.Out )
+                    //.onUpdate( function(){ isMove = true; } )
+                    //.onComplete( function(){ current = rubrique; isMove = false; } )
+                    .start();
+
+
+        new TWEEN.Tween( controls.target ).to( { x: target[0], y: target[1], z: target[2] }, 400 )
+                    .easing( TWEEN.Easing.Quadratic.Out )
+                    .onUpdate( function(){ controls.update(); } )
+                    //.onComplete( function(){ current = rubrique; isMove = false; } )
+                    .start();
         
     },
 
@@ -987,9 +1008,9 @@ view = {
                     //material.side = THREE.BackSide;
                 }
             }
-            
 
-            mesh = new THREE.Mesh( o.geometry || geo[o.type], material );
+            if(o.mass === 0 && o.type === 'box' ) mesh = new THREE.Mesh( o.geometry || geo['hardbox'], material );
+            else mesh = new THREE.Mesh( o.geometry || geo[o.type], material );
 
             if( o.geometry ){
                 extraGeo.push(o.geometry);
