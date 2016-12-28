@@ -5,6 +5,7 @@ function demo () {
     gravity([0,0,0]);
 
     view.hideGrid();
+    view.hideGroundShadow();
 
     add({ type:'sphere', name:'planete', size:[10], pos:[0,0,0], mass:0 });
     

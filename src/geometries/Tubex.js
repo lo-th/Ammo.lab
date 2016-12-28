@@ -56,6 +56,7 @@ THREE.Tubex = function ( pp, tubularSegments, radius, radialSegments, closed, Cu
     // buffer
 
     this.vertices = [];
+    this.colors = [];
     this.normals = [];
     this.uvs = [];
     this.indices = [];
@@ -68,6 +69,7 @@ THREE.Tubex = function ( pp, tubularSegments, radius, radialSegments, closed, Cu
 
     this.setIndex( new ( this.indices.length > 65535 ? THREE.Uint32BufferAttribute : THREE.Uint16BufferAttribute )( this.indices, 1 ) );
     this.addAttribute( 'position', new THREE.Float32BufferAttribute( this.vertices, 3 ) );
+    this.addAttribute( 'color', new THREE.Float32BufferAttribute( this.colors, 3 ) );
     this.addAttribute( 'normal', new THREE.Float32BufferAttribute( this.normals, 3 ) );
     this.addAttribute( 'uv', new THREE.Float32BufferAttribute( this.uvs, 2 ) );
 
@@ -139,6 +141,10 @@ THREE.Tubex.prototype.generateSegment = function ( i ) {
 
         this.vertices.push( this.vertex.x, this.vertex.y, this.vertex.z );
 
+        // colors
+
+        this.colors.push( 1, 1, 1 );
+
     }
 
 }
@@ -183,6 +189,7 @@ THREE.Tubex.prototype.updatePath = function ( path ) {
 
     this.normals = this.attributes.normal.array;
     this.vertices = this.attributes.position.array;
+    this.colors = this.attributes.color.array;
     
 
     for ( var i = 0; i < this.tubularSegments; i ++ ) {
@@ -201,7 +208,7 @@ THREE.Tubex.prototype.updatePath = function ( path ) {
     
 
 
-
+    this.attributes.color.needsUpdate = true;
     this.attributes.position.needsUpdate = true;
     this.attributes.normal.needsUpdate = true;
    
@@ -267,7 +274,7 @@ THREE.Tubex.prototype.updateSegment = function ( i ) {
         this.normal.z = ( cos * N.z + sin * B.z );
         this.normal.normalize();
 
-        this.normals[n+ n2] =  this.normal.x;
+        this.normals[n + n2] =  this.normal.x;
         this.normals[n + n2 +1] =  this.normal.y;
         this.normals[n + n2 +2] =  this.normal.z;
 
@@ -276,6 +283,12 @@ THREE.Tubex.prototype.updateSegment = function ( i ) {
         this.vertices[n + n2] =  P.x + this.radius * this.normal.x;
         this.vertices[n + n2 +1] =  P.y + this.radius * this.normal.y;
         this.vertices[n + n2 +2] =  P.z + this.radius * this.normal.z;
+
+        // color
+
+        this.colors[n + n2] = Math.abs(this.normal.x);
+        this.colors[n + n2 +1] = Math.abs(this.normal.y);
+        this.colors[n + n2 +2] = Math.abs(this.normal.z);
 
     }
 

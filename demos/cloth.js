@@ -2,8 +2,8 @@ function demo() {
 
     cam ( 90, 20, 100 );
 
-    view.setShadowPosY(-20.1)
     view.hideGrid();
+    view.hideGroundShadow();
 
     // static box
     add({ type:'box', size:[10,10,10], pos:[0,-5,0], rot:[0,0,0], mass:0 });

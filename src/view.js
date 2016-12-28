@@ -1891,16 +1891,25 @@ view = {
         renderer.shadowMap.enabled = false;
         //light.shadowMap.enabled = false;
 
-        if( shadowGround ) scene.remove(shadowGround);
+        if( shadowGround ) scene.remove( shadowGround );
         //scene.remove(light);
         //scene.remove(ambient);
+
+    },
+
+    hideGroundShadow: function(){
+
+        shadowGround.visible = false;
 
     },
 
     setShadowPosY: function( y ){
 
         spy = y;
-        if(shadowGround) shadowGround.position.y = spy;
+        if( shadowGround ){ 
+            shadowGround.position.y = spy;
+            shadowGround.visible = true;
+        }
 
     },
 
