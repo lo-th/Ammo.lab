@@ -201,7 +201,7 @@ view = {
 
         if( intro !== null ) intro.clear();
 
-        renderer.setClearColor(0x242424, 1);
+        renderer.setClearColor(0x252525, 1);
         renderer.setPixelRatio( window.devicePixelRatio );
 
         // TONE MAPPING

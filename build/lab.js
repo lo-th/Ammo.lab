@@ -3354,41 +3354,40 @@ var now;
 
 var editor = ( function () {
 
-    var content, codeContent, code, separator, menuCode, debug, title; 
-    var callback = function(){};
-    var isSelfDrag = false;
-    var isFocus = false;
-    var errorLines = [];
-    var widgets = [];
-    var interval = null;
-    var left = 0;
-    var oldleft = 0;
-    var fileName = '';
-    var nextDemo = null;
-    var selectColor = '#308AFF';
-    var scrollOn = false;
-    //var menuPins;
-    var bigmenu;
-    var bigButton = [];
-    var bigContent;
-    var isMenu = false;
-    var isWithCode = true;
-    var isMidDown = false;
+var content, codeContent, code, separator, menuCode, debug, title; 
+var callback = function(){};
+var isSelfDrag = false;
+var isFocus = false;
+var errorLines = [];
+var widgets = [];
+var interval = null;
+var left = 0;
+var oldleft = 0;
+var fileName = '';
+var nextDemo = null;
+var selectColor = '#3998d6';
+var scrollOn = false;
+//var menuPins;
+var bigmenu;
+var bigButton = [];
+var bigContent;
+var isMenu = false;
+var isWithCode = true;
+var isMidDown = false;
 
-    var octo, octoArm;
+var octo, octoArm;
 
-    var icon_Github = [
-        "<svg width='80' height='80' viewBox='0 0 250 250' style='fill:rgba(255,255,255,0.2); color:#2B2A2D; position: absolute; top: 0; border: 0; right: 0;'>",
-        "<path d='M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z' id='octo' onmouseover='editor.Gover();' onmouseout='editor.Gout();' onmousedown='editor.Gdown();'></path>",
-        "<path d='M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2' fill='currentColor' style='transform-origin: 130px 106px;' id='octo-arm'></path>",
-        "<path d='M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z' fill='currentColor' id='octo-body'></path></svg>",
-    ].join("\n");
+var icon_Github = [
+    "<svg width='80' height='80' viewBox='0 0 250 250' style='fill:rgba(255,255,255,0.2); color:#2B2A2D; position: absolute; top: 0; border: 0; right: 0;'>",
+    "<path d='M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z' id='octo' onmouseover='editor.Gover();' onmouseout='editor.Gout();' onmousedown='editor.Gdown();'></path>",
+    "<path d='M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2' fill='currentColor' style='transform-origin: 130px 106px;' id='octo-arm'></path>",
+    "<path d='M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z' fill='currentColor' id='octo-body'></path></svg>",
+].join("\n");
 
-    editor = function () {};
 
-    
+editor = {
 
-    editor.init = function ( Callback, withCode ) {
+    init: function ( Callback, withCode ) {
 
         if(Callback) callback = Callback;
 
@@ -3469,32 +3468,32 @@ var editor = ( function () {
 
         bigmenu.style.width =  window.innerWidth - left +'px';
 
-    };
+    },
 
-    editor.addSeparatorEvent = function(){
+    addSeparatorEvent: function(){
 
         separator.addEventListener('mouseover', editor.mid_over, false );
         separator.addEventListener('mouseout', editor.mid_out, false );
         separator.addEventListener('mousedown', editor.mid_down, false );
         
-    };
+    },
 
-    editor.removeSeparatorEvent = function(){
+    removeSeparatorEvent: function(){
 
         separator.removeEventListener('mouseover', editor.mid_over, false );
         separator.removeEventListener('mouseout', editor.mid_out, false );
         separator.removeEventListener('mousedown', editor.mid_down, false );
         
-    };
+    },
 
-    editor.selectCode = function (){
+    selectCode: function (){
 
         if(isWithCode) editor.hide();
         else editor.show();
 
-    };
+    },
 
-    editor.hide = function (){
+    hide: function (){
 
         isWithCode = false;
         content.style.display = 'none';
@@ -3507,9 +3506,9 @@ var editor = ( function () {
         editor.Bdefault(bigButton[1]);
         editor.resize();
 
-    };
+    },
 
-    editor.show = function (){
+    show: function (){
 
         isWithCode = true;
         content.style.display = 'block';
@@ -3521,15 +3520,15 @@ var editor = ( function () {
 
         editor.resize();
 
-    };
+    },
 
-    editor.resizeMenu = function ( w ) {
+    resizeMenu: function ( w ) {
 
         if( bigmenu ) bigmenu.style.width = w +'px';
 
-    };
+    },
 
-    editor.resize = function ( e ) {
+    resize: function ( e ) {
 
         if( e ) left = e.clientX + 10;
 
@@ -3544,13 +3543,17 @@ var editor = ( function () {
         content.style.width = (left-10) + 'px';
         code.refresh();
 
-    };
+    },
 
-    editor.tell = function ( str ) { debug.innerHTML = str; };
+    tell: function ( str ) { 
+
+        debug.innerHTML = str; 
+
+    },
 
     // bigmenu
 
-    editor.makeBigMenu = function(){
+    makeBigMenu: function(){
 
         bigmenu.style.width = window.innerWidth - left +'px';
 
@@ -3583,19 +3586,20 @@ var editor = ( function () {
             bigButton[i].addEventListener('mouseout', editor.Bout, false );
         }
 
-    }
+    },
 
-    editor.selectBigMenu = function(e){
+    selectBigMenu: function( e ){
 
         if(isMenu) editor.hideBigMenu();
-        else editor.showBigMenu()
-    };
+        else editor.showBigMenu();
 
-    editor.showBigMenu = function(e){
+    },
+
+    showBigMenu: function( e ){
 
         //bigContent.style.display = "block";
-        bigmenu.style.background = "#242424";
-        bigmenu.style.borderBottom = "1px solid #5c5c5c";
+        bigmenu.style.background = "#252525";
+        bigmenu.style.borderBottom = "1px solid #3f3f3f";
         isMenu = true;
 
 
@@ -3605,9 +3609,9 @@ var editor = ( function () {
             name = demos[i];
             if( name !== fileName ) editor.addButtonBig( demos[i] );
         }
-    };
+    },
 
-    editor.hideBigMenu = function(e){
+    hideBigMenu: function( e ){
 
         bigmenu.style.background = "rgba(0,0,0,0)";
         bigmenu.style.borderBottom = "1px solid rgba(255, 255, 255, 0)";
@@ -3622,9 +3626,9 @@ var editor = ( function () {
 
         editor.Bdefault(bigButton[0]);
 
-    };
+    },
 
-    editor.addButtonBig = function ( name ) {
+    addButtonBig: function ( name ) {
 
         var b = document.createElement('div');
         b.className = 'menuButtonBig';
@@ -3633,22 +3637,25 @@ var editor = ( function () {
         b.name = name;
         b.addEventListener('mousedown', editor.bigDown, false );
 
-    };
+    },
 
-    editor.bigDown = function(e){
+    bigDown: function( e ){
 
         editor.hideBigMenu();
         editor.load('demos/' + e.target.name + '.js');
 
-    };
+    },
 
-    editor.Bover = function(e){
+    Bover: function( e ){
+
         e.target.style.border = "1px solid "+selectColor;
         e.target.style.background = selectColor;;
-        e.target.style.color = "#c2d0ff";
-    };
+        e.target.style.color = "#FFFFFF";
 
-    editor.Bout = function(e){
+    },
+
+    Bout: function( e ){
+
         var style = 0;
         if(e.target.name == 'code' && isWithCode) style = 1;
         if(e.target.name == 'demo' && isMenu) style = 1;
@@ -3656,73 +3663,77 @@ var editor = ( function () {
         if(!style){
             editor.Bdefault(e.target);
         } else {
-            e.target.style.border = "1px solid #5c5c5c";
-            e.target.style.background = "#5c5c5c";
+            e.target.style.border = "1px solid #3f3f3f";
+            e.target.style.background = "#3f3f3f";
             e.target.style.color = "#999999";
         }
         
-    };
+    },
 
-    editor.Bdefault = function(b){
+    Bdefault: function( b ){
 
-        b.style.border = "1px solid #5c5c5c";
-        b.style.background = "#242424";
-        b.style.color = "#dedede";
+        b.style.border = "1px solid #3f3f3f";
+        b.style.background = "#252525";
+        b.style.color = selectColor;
 
-    };
+    },
 
     // github logo
 
-    editor.Gover = function(){
+    Gover: function(){
+
         octo.setAttribute('fill', '#105AE2'); 
         octoArm.style.webkitAnimationName = 'octocat-wave'; 
         octoArm.style.webkitAnimationDuration = '560ms';
-    }
 
-    editor.Gout = function(){
+    },
+
+    Gout: function(){
+
         octo.setAttribute('fill','rgba(255,255,255,0.2)');  
         octoArm.style.webkitAnimationName = 'none';
-    }
 
-    editor.Gdown = function(){
+    },
+
+    Gdown: function(){
+
         window.location.assign('https://github.com/lo-th/Ammo.lab');
-    }
+
+    },
 
     // separator
 
-    editor.mid_over = function () { 
+    mid_over: function () { 
 
-        separator.style.background = '#5c5c5c';
+        separator.style.background = '#3f3f3f';
 
-    };
+    },
 
-    editor.mid_out = function () { 
+    mid_out: function () { 
 
         if( !isMidDown ) separator.style.background = 'none';
 
-    };
+    },
 
-    editor.mid_down = function () {
+    mid_down: function () {
 
         isMidDown = true;
-
         document.addEventListener('mouseup', editor.mid_up, false );
         document.addEventListener('mousemove', editor.resize, false );
 
-    };
+    },
 
-    editor.mid_up = function () {
+    mid_up: function () {
 
         isMidDown = false;
-
         document.removeEventListener('mouseup', editor.mid_up, false );
         document.removeEventListener('mousemove', editor.resize, false );
 
-    };
+    },
 
     // code
 
-    editor.load = function ( url ) {
+    load: function ( url ) {
 
         fileName = url.substring(url.indexOf("/")+1, url.indexOf("."));
 
@@ -3737,28 +3748,28 @@ var editor = ( function () {
         
         xhr.send();
 
-    };
+    },
 
-    editor.unFocus = function () {
+    unFocus: function () {
 
         code.getInputField().blur();
         view.haveFocus();
 
-    };
+    },
 
-    editor.refresh = function () {
+    refresh: function () {
 
         code.refresh();
 
     },
 
-    editor.getFocus = function () {
+    getFocus: function () {
 
         return isFocus;
 
     },
 
-    editor.validate = function ( value ) {
+    validate: function ( value ) {
 
         return code.operation( function () {
             while ( errorLines.length > 0 ) code.removeLineClass( errorLines.shift(), 'background', 'errorLine' );
@@ -3793,9 +3804,9 @@ var editor = ( function () {
             return errorLines.length === 0;
         });
 
-    };
+    },
 
-    editor.onChange = function () {
+    onChange: function () {
 
         clearTimeout( interval );
         var value = code.getValue();
@@ -3803,7 +3814,7 @@ var editor = ( function () {
 
     },
 
-    editor.inject = function ( value ) {
+    inject: function ( value ) {
 
         var oScript = document.createElement("script");
         oScript.language = "javascript";
@@ -3812,14 +3823,16 @@ var editor = ( function () {
         document.getElementsByTagName('BODY').item(0).appendChild(oScript);
 
         menuCode.innerHTML = '&bull; ' + fileName;
-        title.innerHTML = fileName.charAt(0).toUpperCase() + fileName.substring(1).toLowerCase();//fileName;
+        title.innerHTML = fileName.charAt(0).toUpperCase() + fileName.substring(1).toLowerCase();
 
         callback( fileName );
 
-    };
+    },
+
+}
 
 
-    return editor;
+return editor;
 
 })();
 /**   _   _____ _   _   
@@ -4025,7 +4038,7 @@ view = {
 
         if( intro !== null ) intro.clear();
 
-        renderer.setClearColor(0x242424, 1);
+        renderer.setClearColor(0x252525, 1);
         renderer.setPixelRatio( window.devicePixelRatio );
 
         // TONE MAPPING

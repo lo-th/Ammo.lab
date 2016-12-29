@@ -18,7 +18,7 @@ html, body {
     font-weight: 400;
     /*line-height: 23px;*/
     height:100%;
-    background:#242424;
+    background:#252525;
     color:#dedede;
     /*color:#d2cec8;text-shadow: 1px 1px 1px rgba(0,0,0,0.3);*/
     overflow:hidden;
@@ -77,8 +77,9 @@ html, body {
 
 .bigButton {
     
-    border: 1px solid #5c5c5c;
-    background: #242424;
+    border: 1px solid #3f3f3f;
+    background: #252525;
+    color:#3998d6;
     width:70px;
     height:30px;
     font-size: 16px;
@@ -91,6 +92,7 @@ html, body {
     margin-left: 40px;
     margin-right: -20px;
     transition:all 0.3s ease;
+    border-radius: 3px;
 }
 
 .debug {
@@ -124,7 +126,7 @@ html, body {
     bottom:10px; 
     right:10px;
     /*padding: 2px 2px;*/
-    border:1px solid #5c5c5c; 
+    border:1px solid #3f3f3f; 
     width:66px; 
     height:66px; 
     background:none;
@@ -149,7 +151,7 @@ html, body {
     line-height: 23px;
     height: 40px;
     background: none;
-    border-bottom:1px solid #5c5c5c;
+    border-bottom:1px solid #3f3f3f;
     overflow: hidden;
 }
 
@@ -178,8 +180,8 @@ html, body {
 
 .separator {
     position:absolute; background-color:none; pointer-events:auto; display:block; 
-    border-left:1px solid #5c5c5c; 
-    border-right:1px solid #5c5c5c;
+    border-left:1px solid #3f3f3f; 
+    border-right:1px solid #3f3f3f;
     left:calc(50% - 5px); top:0px; width:10px; height:100%;
     color: rgba(255, 255, 255, 0.2);
     cursor: e-resize;
