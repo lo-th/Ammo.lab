@@ -3682,7 +3682,7 @@ editor = {
 
     Gover: function(){
 
-        octo.setAttribute('fill', '#105AE2'); 
+        octo.setAttribute('fill', '#3998d6'); 
         octoArm.style.webkitAnimationName = 'octocat-wave'; 
         octoArm.style.webkitAnimationDuration = '560ms';
 
@@ -4088,12 +4088,13 @@ view = {
 
         geo = {
 
-            box:      new THREE.BoxBufferGeometry(1,1,1),
-            hardbox:  new THREE.BoxBufferGeometry(1,1,1),
-            cone:     new THREE.CylinderBufferGeometry( 0,1,0.5 ),
-            wheel:    new THREE.CylinderBufferGeometry( 1,1,1, 18 ),
-            sphere:   new THREE.SphereBufferGeometry( 1, 16, 12 ),
-            cylinder: new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
+            box:        new THREE.BoxBufferGeometry(1,1,1),
+            hardbox:    new THREE.BoxBufferGeometry(1,1,1),
+            cone:       new THREE.CylinderBufferGeometry( 0,1,0.5 ),
+            wheel:      new THREE.CylinderBufferGeometry( 1,1,1, 18 ),
+            sphere:     new THREE.SphereBufferGeometry( 1, 16, 12 ),
+            highsphere: new THREE.SphereBufferGeometry( 1, 32, 24 ),
+            cylinder:   new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
 
         }
 
@@ -4316,8 +4317,8 @@ view = {
                 });
                 if( !isWirframe ){
                     mat[name].envMap = envMap;
-                    mat[name].metalness = 0.6;
-                    mat[name].roughness = 0.4;
+                    mat[name].metalness = 0.8;
+                    mat[name].roughness = 0.2;
                 }
 
                 m.dispose();

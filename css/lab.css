@@ -126,9 +126,9 @@ html, body {
     bottom:10px; 
     right:10px;
     /*padding: 2px 2px;*/
-    border:1px solid #3f3f3f; 
-    width:66px; 
-    height:66px; 
+    border:2px solid #3f3f3f; 
+    width:68px; 
+    height:68px; 
     background:none;
     cursor:pointer;
     pointer-events:auto;
@@ -136,7 +136,7 @@ html, body {
 }
 
 .env:hover{
-    border:1px solid #308aff; 
+    border:2px solid #3998d6; 
 }
 
 .menuCode {

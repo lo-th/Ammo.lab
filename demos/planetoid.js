@@ -10,7 +10,7 @@ function demo () {
 
     var geo = view.getGeo();
 
-    add({ type:'sphere', name:'planete', size:[10], pos:[0,0,0], mass:0, friction:0.5, restitution:0.6 });
+    add({ type:'sphere', name:'planete', geometry:geo.highsphere, size:[10], pos:[0,0,0], mass:0, friction:0.5, restitution:0.6 });
     
     var s, x, y, z;
     for(var i = 0; i<100; i++){

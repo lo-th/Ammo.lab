@@ -338,7 +338,7 @@ editor = {
 
     Gover: function(){
 
-        octo.setAttribute('fill', '#105AE2'); 
+        octo.setAttribute('fill', '#3998d6'); 
         octoArm.style.webkitAnimationName = 'octocat-wave'; 
         octoArm.style.webkitAnimationDuration = '560ms';
 
