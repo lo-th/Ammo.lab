@@ -169,6 +169,11 @@ function addJoint ( o ) {
     if(o.damping) joint.setDamping( o.damping[0], o.damping[1] );
     if(o.stiffness) joint.setStiffness( o.stiffness[0], o.stiffness[1] );
 
+    if(o.angularOnly) joint.setAngularOnly( o.angularOnly );
+    if(o.enableMotor) joint.enableMotor( o.enableMotor );
+    if(o.maxMotorImpulse) joint.setMaxMotorImpulse( o.maxMotorImpulse );
+    if(o.motorTarget) joint.setMotorTarget( o.motorTarget );
+
 
     // debug test 
     joint.type = 0;

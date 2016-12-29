@@ -361,7 +361,7 @@ editor = {
 
     mid_over: function () { 
 
-        separator.style.background = '#3f3f3f';
+        separator.style.background = '#5f5f5f';
 
     },
 
