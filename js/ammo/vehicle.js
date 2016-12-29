@@ -171,6 +171,7 @@ function addVehicle ( o ) {
     // suspension setting
 
     var tuning = new Ammo.btVehicleTuning();
+
     // 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car
     tuning.set_m_suspensionStiffness( o.s_stiffness || 20 );
     // The damping coefficient for when the suspension is compressed. Set
@@ -189,6 +190,8 @@ function addVehicle ( o ) {
     // suspension resistance Length
     // The maximum length of the suspension (metres)
     var s_length = o.s_length || 0.2;
+
+    //console.log(tuning.get_m_suspensionCompression())
 
 
     //suspensionForce = stiffness * (restLength – currentLength) + damping * (previousLength – currentLength) / deltaTime
@@ -263,6 +266,11 @@ function addWheel ( car, p, radius, tuning, s_length, w_roll, isFrontWheel ) {
 
     var wheel = car.addWheel( tmpPos1, tmpPos2, tmpPos3, s_length, radius, tuning, isFrontWheel );
     wheel.set_m_rollInfluence( w_roll );
+
+    //wheel.set_m_frictionSlip(tuning.get_m_frictionSlip());
+
+
+    //console.log(wheel.get_m_raycastInfo().get_m_suspensionLength())
 
 };
 

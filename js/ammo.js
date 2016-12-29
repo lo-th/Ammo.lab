@@ -45,8 +45,8 @@ var ammo = ( function () {
             worker.onmessage = this.message;
             worker.postMessage = worker.webkitPostMessage || worker.postMessage;
 
-            if( isDirect ) blob = document.location.href.replace(/\/[^/]*$/,"/") + "./libs/ammo.js";
-            else blob = extract.get('ammo');
+            if( isDirect ) blob = document.location.href.replace(/\/[^/]*$/,"/") + "./libs/ammo3.js";
+            else blob = extract.get('ammo3');
 
             worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
             
@@ -55,7 +55,7 @@ var ammo = ( function () {
         onInit: function () {
 
             window.URL.revokeObjectURL( blob );
-            if( !isDirect ) extract.clearBlob('ammo');
+            if( !isDirect ) extract.clearBlob('ammo3');
             blob = null;
 
             if( callback ) callback();

@@ -18,7 +18,7 @@ var demos = [
     'basic', 'terrain', 'supermaket', 'car', 'collision', 'ragdoll',
     'kinematics', 'multyCars', 'snowboard', 'cloth', 'rope', 'rope2', 'ellipsoid',
     'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove',
-    'character', 'meca', 'joints', 'empty', 'human', 'planetoid'
+    'character', 'meca', 'joints', 'empty', 'human', 'planetoid', 'point2point'
 ];
 
 var demo;

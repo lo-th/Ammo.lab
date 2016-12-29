@@ -7,7 +7,7 @@
 
 var world = null;
 var worldInfo = null;
-var solver, solverSoft, collision, dispatcher, broadphase;
+var solver, solverSoft, collision, dispatcher, broadphase, ghostPairCallback;
 var isSoft = true;
 
 function clearWorld () {
@@ -48,6 +48,16 @@ function addWorld ( o ) {
     }
 
     world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collision, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
+
+    //console.log(world.getDispatchInfo().get_m_allowedCcdPenetration())
+
+    /*
+    ghostPairCallback = new Ammo.btGhostPairCallback();
+    world.getPairCache().setInternalGhostPairCallback( ghostPairCallback );
+    */
+
+    world.getDispatchInfo().set_m_allowedCcdPenetration(0.001);// default 0.0399
+    
 
     setGravity( o );
     
