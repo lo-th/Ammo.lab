@@ -150,7 +150,10 @@ function addJoint ( o ) {
     // hinge
 
     // limite min, limite max, softness, bias, relaxation
-    if(o.limit) joint.setLimit( o.limit[0]*torad, o.limit[1]*torad, o.limit[2] || 0.9, o.limit[3] || 0.3, o.limit[4] || 0.1);
+    if(o.limit){ 
+        if(o.type === 'joint_hinge' || o.type === 'joint' ) joint.setLimit( o.limit[0]*torad, o.limit[1]*torad, o.limit[2] || 0.9, o.limit[3] || 0.3, o.limit[4] || 1.0 );
+        else if(o.type === 'joint_conetwist' ) joint.setLimit( o.limit[0]*torad, o.limit[1]*torad, o.limit[2]*torad, o.limit[3] || 0.9, o.limit[4] || 0.3, o.limit[5] || 1.0 );
+    }
     if(o.motor) joint.enableAngularMotor( o.motor[0], o.motor[1], o.motor[2] );
 
 
@@ -172,7 +175,7 @@ function addJoint ( o ) {
     if(o.angularOnly) joint.setAngularOnly( o.angularOnly );
     if(o.enableMotor) joint.enableMotor( o.enableMotor );
     if(o.maxMotorImpulse) joint.setMaxMotorImpulse( o.maxMotorImpulse );
-    if(o.motorTarget) joint.setMotorTarget( o.motorTarget );
+    if(o.motorTarget) joint.setMotorTarget( tmpQuat.fromArray( o.motorTarget ) );
 
 
     // debug test 

@@ -46,8 +46,10 @@ function demo() {
             type:'joint_conetwist', body1:b1, body2:b2, 
             pos1:[0,0,0], pos2:[2.1,0,0], 
             quatA:quat.toArray(), quatB:quat.toArray(), 
-            collision:true, limit:[22, 22, 22], 
-            angularOnly:true, enableMotor:true, maxMotorImpulse:100000000, motorTarget:quat  
+            collision:true, angularOnly:true, enableMotor:true, 
+            limit:[22, 22, 0],
+            maxMotorImpulse:100000000, 
+            motorTarget:quat.toArray()  
         });
    
     }
