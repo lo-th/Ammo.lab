@@ -31,7 +31,7 @@ function demo() {
         pos:[0,10,0], // start position of car 
         rot:[0,0,0], // start rotation of car
         size:[1.5, 0.4, 3.6], // chassis size
-        massCenter:[0,0.6,0], // local center of mass (best is on chassis bottom)
+        masscenter:[0,-0.6,0], // local center of mass (best is on chassis bottom)
 
         friction: 0.6, 
         restitution: 0.0, 

@@ -17,7 +17,7 @@ var ammo = ( function () {
     var pause = false;
 
     var worker, callback, blob;
-    var isDirect, isBuffer;
+    var isDirect, isBuffer, isDynamic;
 
     var timestep = 1/60;//0.017;//1/60;
     var substep = 2;//7;
@@ -55,9 +55,9 @@ var ammo = ( function () {
             /*var ab = new ArrayBuffer(1);
             worker.postMessage(ab, [ab]);
             if (ab.byteLength) isBuffer = false;
-            else isBuffer = true;*/
+            else{ isBuffer = true; isDynamic = true }*/
 
-            worker.postMessage( { m:'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
+            worker.postMessage( { m:'init', blob:blob, isBuffer: isBuffer, isDynamic: isDynamic, timestep:timestep, substep:substep });
             
         },
 
@@ -128,12 +128,16 @@ var ammo = ( function () {
         sendData: function (){
 
             
-            if( isBuffer ){ 
+            if( isBuffer ){
                 sendTime = Date.now();
-                worker.postMessage( { m:'step', key:user.getKey(), Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr }, [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
+                if( isDynamic ) worker.postMessage( { m:'step', key:user.getKey() });
+                else worker.postMessage( { m:'step', key:user.getKey(), Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr }, [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
+                tell( 'THREE '+ view.getFps() + ' | AMMO ' + fps +' | '+ delay.toFixed(1) +' ms' );
+            } else { 
+                worker.postMessage( { m:'step', key:user.getKey() });
+                tell( 'THREE '+ view.getFps() + ' | AMMO ' + fps );
             }
-            else worker.postMessage( { m:'step', key:user.getKey() });
-            tell( 'THREE '+ view.getFps() + ' | AMMO ' + fps +' | '+ delay.toFixed(1) +' ms' );
+            
             
         },
 

@@ -80,8 +80,6 @@ function addVehicle (id, pos, type) {
     o.s_damping = 0.88;
     o.s_stiffness = 40;
 
-    o.massCenter = [0,0,0];
-
     o.wPos[1] = o.radius;//*2;
     
     o.shape = shape;

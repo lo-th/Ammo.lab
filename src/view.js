@@ -1168,7 +1168,9 @@ view = {
 
         var wPos = o.wPos || [1, 0, 1.6];
 
-        var massCenter = o.massCenter || [0,0.25,0];
+        o.masscenter = o.masscenter == undefined ? [0,0,0] : o.masscenter;
+
+        //var masscenter = o.masscenter || [0,0.25,0];
 
         this.toRad( rot );
 
@@ -1178,14 +1180,14 @@ view = {
             mesh = o.mesh;
             var k = mesh.children.length;
                 while(k--){
-                    mesh.children[k].position.set( massCenter[0], massCenter[1], massCenter[2] );
-                    //mesh.children[k].geometry.translate( massCenter[0], massCenter[1], massCenter[2] );
+                    mesh.children[k].position.fromArray( o.masscenter ).negate();//.set( -masscenter[0], -masscenter[1], -masscenter[2] );
+                    //mesh.children[k].geometry.translate( masscenter[0], masscenter[1], masscenter[2] );
                     mesh.children[k].castShadow = true;
                     mesh.children[k].receiveShadow = true;
                 }
         } else {
             var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
-            g.translate( massCenter[0], massCenter[1], massCenter[2] );
+            g.translate( -o.masscenter[0], -o.masscenter[1], -o.masscenter[2] );
             extraGeo.push( g );
             mesh = new THREE.Mesh( g, mat.move );
         } 
@@ -1245,7 +1247,7 @@ view = {
         mesh.userData.w = w;
 
         if(o.helper){
-            mesh.userData.helper = new THREE.CarHelper( wPos, massCenter, deep );
+            mesh.userData.helper = new THREE.CarHelper( wPos, o.masscenter, deep );
             mesh.add( mesh.userData.helper );
         }
 

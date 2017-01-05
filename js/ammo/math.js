@@ -10,34 +10,64 @@ const todeg = 57.295779513082320876;
 
 //--------------------------------------------------
 //
+//  btTransform extend
+//
+//--------------------------------------------------
+
+Ammo.btTransform.prototype.toArray = function( array, offset ){
+
+    //if ( offset === undefined ) offset = 0;
+    offset = offset || 0;
+
+    this.getOrigin().toArray( array , offset );
+    this.getRotation().toArray( array , offset + 3 );
+
+    //return array;
+
+};
+
+//--------------------------------------------------
+//
 //  btVector3 extend
 //
 //--------------------------------------------------
 
+Ammo.btVector3.prototype.negate = function( v ){
+
+    this.setValue( -this.x(), -this.y(), -this.z() );
+    return this;
+
+};
+
 Ammo.btVector3.prototype.add = function( v ){
 
-    this.setValue( this.x() + v.x, this.y() + v.y, this.z() + v.z );
+    this.setValue( this.x() + v.x(), this.y() + v.y(), this.z() + v.z() );
+    return this;
 
 };
 
 Ammo.btVector3.prototype.fromArray = function( array, offset ){
 
-    if ( offset === undefined ) offset = 0;
+    //if ( offset === undefined ) offset = 0;
+    offset = offset || 0;
 
     this.setValue( array[ offset ], array[ offset + 1 ], array[ offset + 2 ] );
+
+    return this;
 
 };
 
 Ammo.btVector3.prototype.toArray = function( array, offset ){
 
-    if ( array === undefined ) array = [];
-    if ( offset === undefined ) offset = 0;
+    //if ( array === undefined ) array = [];
+    //if ( offset === undefined ) offset = 0;
+    offset = offset || 0;
 
     array[ offset ] = this.x();
     array[ offset + 1 ] = this.y();
     array[ offset + 2 ] = this.z();
 
-    return array;
+    //return array;
 
 };
 
@@ -79,22 +109,24 @@ Ammo.btVector3.prototype.direction = function( q ){
 
 Ammo.btQuaternion.prototype.fromArray = function( array, offset ){
 
-    if ( offset === undefined ) offset = 0;
+    //if ( offset === undefined ) offset = 0;
+    offset = offset || 0;
     this.setValue( array[ offset ], array[ offset + 1 ], array[ offset + 2 ], array[ offset + 3 ] );
 
 };
 
 Ammo.btQuaternion.prototype.toArray = function( array, offset ){
 
-    if ( array === undefined ) array = [];
-    if ( offset === undefined ) offset = 0;
+    //if ( array === undefined ) array = [];
+    //if ( offset === undefined ) offset = 0;
+    offset = offset || 0;
 
     array[ offset ] = this.x();
     array[ offset + 1 ] = this.y();
     array[ offset + 2 ] = this.z();
     array[ offset + 3 ] = this.w();
 
-    return array;
+    //return array;
 
 };
 

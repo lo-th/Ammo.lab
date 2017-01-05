@@ -48,7 +48,7 @@ var tmpKey = [ 0,0,0,0,0,0,0,0 ];
 var pause = true;
 
 //var timer = 0;
-var isBuffer;
+var isBuffer, isDynamic;
 
 
 
@@ -254,14 +254,16 @@ function step( o ){
 
     // ------- buffer data
 
-    //if( isBuffer ) dynamicARRAY();
-
     if( isBuffer ){
-        Br = o.Br;
-        Cr = o.Cr;
-        Hr = o.Hr;
-        Jr = o.Jr;
-        Sr = o.Sr;
+
+        if( isDynamic ) dynamicARRAY();
+        else {
+            Br = o.Br;
+            Cr = o.Cr;
+            Hr = o.Hr;
+            Jr = o.Jr;
+            Sr = o.Sr;
+        }
     }
 
     // ------- step
@@ -297,6 +299,7 @@ function step( o ){
 function init ( o ) {
 
     isBuffer = o.isBuffer || false;
+    isDynamic = o.isDynamic || false;
 
     if(o.timeStep !== undefined ) timeStep = o.timeStep;
     timerStep = timeStep * 1000;
@@ -392,15 +395,20 @@ function reset ( o ) {
 
     }
 
-    //if( !isBuffer ) 
-    initARRAY();
-
-
-
     pause = false;
 
-    if( isBuffer ) self.postMessage({ m:'start', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
-    else self.postMessage({ m:'start' });
+    if( isBuffer ){
+
+        if( isDynamic ) dynamicARRAY();
+        else initARRAY();
+        self.postMessage({ m:'start', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
+
+    } else {
+
+        initARRAY();
+        self.postMessage({ m:'start' });
+
+    }
 
 };
 

@@ -13,27 +13,17 @@ function stepVehicle () {
         var n = id * 56, j, w, t;
 
         // speed km/h
-        Cr[n+0] = b.getCurrentSpeedKmHour();
+        Cr[ n + 0 ] = b.getCurrentSpeedKmHour();
 
         //var centerPoint = b.getRigidBody().getCenterOfMassTransform().getOrigin();
 
         b.getRigidBody().getMotionState().getWorldTransform( trans );
-        pos = trans.getOrigin();
-        quat = trans.getRotation();
 
-        // chassis pos / rot
-        Cr[n+1] = pos.x();
-        Cr[n+2] = pos.y();
-        Cr[n+3] = pos.z();
-
-        Cr[n+4] = quat.x();
-        Cr[n+5] = quat.y();
-        Cr[n+6] = quat.z();
-        Cr[n+7] = quat.w();
+        trans.toArray( Cr, n + 1 );
 
         // wheels pos / rot
         j = b.getNumWheels(); //2, 4 or 6;
-        if(j==4){
+        if( j === 4 ){
             w = 8 * ( 4 + 1 );
             Cr[n+w+0] = b.getWheelInfo(0).get_m_raycastInfo().get_m_suspensionLength();
             Cr[n+w+1] = b.getWheelInfo(1).get_m_raycastInfo().get_m_suspensionLength();
@@ -44,25 +34,12 @@ function stepVehicle () {
         while(j--){
             b.updateWheelTransform( j, true );
             t = b.getWheelTransformWS( j );
-            pos = t.getOrigin();
-            quat = t.getRotation();
-           
+
             w = 8 * ( j + 1 );
+            t.toArray( Cr, n + w + 1 );
+           
+            if( j === 0 ) Cr[ n + w ] = b.getWheelInfo(0).get_m_steering();
 
-            if( j == 0 ) Cr[n+w] = b.getWheelInfo(0).get_m_steering();
-            //if( j == 1 ) Cr[n+w] = centerPoint.x();
-            //if( j == 2 ) Cr[n+w] = centerPoint.y();
-            //if( j == 3 ) Cr[n+w] = centerPoint.z();
-
-            //else a[n+w] = i;
-            Cr[n+w+1] = pos.x();
-            Cr[n+w+2] = pos.y();
-            Cr[n+w+3] = pos.z();
-
-            Cr[n+w+4] = quat.x();
-            Cr[n+w+5] = quat.y();
-            Cr[n+w+6] = quat.z();
-            Cr[n+w+7] = quat.w();
         }
 
     });
@@ -95,7 +72,7 @@ function addVehicle ( o ) {
     var gearRatio = [-1, 0, 2.3, 1.8, 1.3, 0.9, 0.5 ];
 
     o.mass = o.mass == undefined ? 800 : o.mass;
-    o.massCenter = o.massCenter == undefined ? [0,0.25,0] : o.massCenter;
+    o.masscenter = o.masscenter == undefined ? [0,0,0] : o.masscenter;
     o.size = o.size == undefined ? [2,0.5,4] : o.size;
     o.pos = o.pos == undefined ? [0,0,0] : o.pos;
     o.quat = o.quat == undefined ? [0,0,0,1] : o.quat;
@@ -124,7 +101,7 @@ function addVehicle ( o ) {
     //----------------------------
     // move center of mass
 
-    tmpPos4.fromArray( o.massCenter );
+    tmpPos4.fromArray( o.masscenter ).negate();
     tmpTrans1.setIdentity();
     tmpTrans1.setOrigin( tmpPos4 );
 
@@ -205,7 +182,8 @@ function addVehicle ( o ) {
     var radius = o.radius || 0.4;
     var wPos = o.wPos || [1, 0, 1.6];
 
-    wPos[1] += o.massCenter[1];
+    //wPos[1] += o.masscenter[1];
+    wPos[1] -= o.masscenter[1];
 
     // friction: The constant friction of the wheels on the surface.
     // For realistic TS It should be around 0.8. default 10.5
