@@ -25,7 +25,7 @@ function afterLoad () {
         helper: true,
         pos:[0,1,0], // start position of car 
         rot:[0,90,0], // start rotation of car
-        size:[ 1.6, 0.4, 3.6 ], // chassis size
+        size:[ 1.5, 0.4, 3.6 ], // chassis size
         massCenter:[ 0, 0.6, 0 ], // local center of mass (best is on chassis bottom)
 
         friction: 0.6, 
@@ -35,7 +35,7 @@ function afterLoad () {
 
         radius:0.5,// wheels radius
         deep:0.4, // wheels deep only for three cylinder
-        wPos:[1, 0.8, 1.6], // wheels position on chassis
+        wPos:[1, 0, 1.6], // wheels position on chassis
 
         // car setting
 
@@ -46,13 +46,13 @@ function afterLoad () {
         // suspension setting
 
         // Damping relaxation should be slightly larger than compression
-        s_compression: 4.4,// 0.1 to 0.3 are real values default 0.84
-        s_relaxation: 2.3, // The damping coefficient for when the suspension is expanding. default : 0.88
+        s_compression: 2.2,// 0.1 to 0.3 are real values default 0.84
+        s_damping: 2.4, // The damping coefficient for when the suspension is expanding. default : 0.88
 
         s_stiffness: 20,// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car 
         s_travel: 100, // The maximum distance the suspension can be compressed in Cm
         s_force: 10000, // Maximum suspension force
-        s_length: 0.6,//0.1, // The maximum length of the suspension in meter
+        s_length: 0.2,//0.1, // The maximum length of the suspension in meter
 
         // wheel setting
 

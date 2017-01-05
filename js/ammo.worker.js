@@ -15,13 +15,23 @@
 'use strict';
 
 var Module = { TOTAL_MEMORY: 256*1024*1024 };
-
-var isFirst = true;
+//var Module = { TOTAL_MEMORY: 256*1024*1024 };
+//var Module = { TOTAL_MEMORY: 256*1024*1024 };
+//var isFirst = true;
 
 var trans, pos, quat, posW, quatW, transW, gravity;
 var tmpTrans, tmpPos, tmpQuat;
 var tmpPos1, tmpPos2, tmpPos3, tmpPos4;
 var tmpTrans1, tmpTrans2;
+
+// forces
+var tmpForce = [];//null;
+
+// kinematic
+var tmpMatrix = [];
+
+//var tmpset = null;
+
 // array
 var bodys, softs, joints, cars, solids, heros, carsInfo;
 // object
@@ -37,25 +47,15 @@ var tmpKey = [ 0,0,0,0,0,0,0,0 ];
 
 var pause = true;
 
-var timer = 0;
+//var timer = 0;
 var isBuffer;
 
-var tmpset = null;
+
 
 var currentCar = 0;
 
 // main transphere array
 var Br, Cr, Jr, Hr, Sr;
-
-/*var Br = new Float32Array( 1000*8 ); // rigid buffer max 1000
-var Cr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
-var Jr = new Float32Array( 100*4 ); // joint buffer max 100
-var Hr = new Float32Array( 10*8 ); // hero buffer max 10
-var Sr = new Float32Array( 8192*3 ); // soft buffer nVertices x,y,z
-*/
-// for terrain
-//var hdata = null;
-
 
 var fixedTime = 0.01667;
 var last_step = Date.now();
@@ -104,7 +104,31 @@ function initARRAY(){
     Cr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
     Jr = new Float32Array( 100*4 ); // joint buffer max 100
     Hr = new Float32Array( 10*8 ); // hero buffer max 10
-    Sr = new Float32Array( 8192*3 ); // soft buffer nVertices x,y,z
+    Sr = new Float32Array( 8192*3 );// soft buffer nVertices x,y,z
+
+
+    /*Br = new Float32Array( new ArrayBuffer(1000*8) ); // rigid buffer max 1000
+    Cr = new Float32Array( new ArrayBuffer(14*56) ); // car buffer max 14 / 6 wheels
+    Jr = new Float32Array( new ArrayBuffer(100*4) ); // joint buffer max 100
+    Hr = new Float32Array( new ArrayBuffer(10*8) ); // hero buffer max 10
+    Sr = new Float32Array( new ArrayBuffer(8192*3) );*/
+
+};
+
+ function dynamicARRAY(){
+
+    Br = new Float32Array( bodys.length*8 ); // rigid buffer max 1000
+    Cr = new Float32Array( cars.length*56 ); // car buffer max 14 / 6 wheels
+    Jr = new Float32Array( joints.length*4 ); // joint buffer max 100
+    Hr = new Float32Array( heros.length*8 ); // hero buffer max 10
+
+    var p = 0;
+    softs.forEach( function ( b ) { p += b.points; });
+    Sr = new Float32Array( p*3 );// soft buffer nVertices x,y,z
+
+    
+    //Sr = new Float32Array( 8192*3 );
+
 
 };
 
@@ -172,13 +196,13 @@ self.onmessage = function ( e ) {
 
         case 'init': init( data ); break;
         case 'step': step( data ); break;
-        case 'start': start(); break;
+        case 'start': start( data ); break;
         case 'reset': reset( data ); break;
 
         case 'key': tmpKey = data.o.key; break;
         case 'setDriveCar': currentCar = data.o.n; break;
         case 'substep': substep = data.o.substep; break;
-        case 'set': tmpset = data.o; break;
+        //case 'set': tmpset = data.o; break;
 
         case 'moveSoftBody': moveSoftBody( data.o ); break;
 
@@ -190,8 +214,10 @@ self.onmessage = function ( e ) {
         case 'terrain': terrainPostStep( data.o ); break;
         case 'gravity': setGravity( data.o ); break;
         case 'anchor': anchor( data.o ); break;
-        case 'apply': apply( data.o ); break;
-        case 'multyApplys': multyApplys( data.o ); break;
+        //case 'apply': apply( data.o ); break;
+
+        case 'forces': tmpForce = data.o.r; break;
+        case 'matrix': tmpMatrix = data.o.r; break;
 
     }
 
@@ -210,12 +236,17 @@ function step( o ){
 
     // ------- pre step
 
-    key = tmpKey;//o.key;
+    key = o.key;
 
-    //drive( currentCar );
-    
+    //set();
 
-    set();
+    // update matrix
+
+    updateMatrix();
+
+    // update forces
+
+    updateForce();
 
     // terrain update
 
@@ -223,19 +254,20 @@ function step( o ){
 
     // ------- buffer data
 
-    if( isBuffer && !isFirst ){
+    //if( isBuffer ) dynamicARRAY();
 
+    if( isBuffer ){
         Br = o.Br;
         Cr = o.Cr;
         Hr = o.Hr;
         Jr = o.Jr;
         Sr = o.Sr;
-        
     }
 
     // ------- step
 
     world.stepSimulation( timeStep, substep );
+    //world.stepSimulation( o.delay, substep, timeStep );
     //world.stepSimulation( dt, it, dt );
 
     drive( currentCar );
@@ -243,51 +275,17 @@ function step( o ){
 
     stepCharacter();
     stepVehicle();
-
     stepConstraint();
     stepRigidBody();
-    
     stepSoftBody();
 
-    
 
     // ------- post step
-
-    postStep();
-
-    
-
-    if( isFirst ) isFirst = false;
-
-};
-
-
-
-function postStep(){
 
     if( isBuffer ) self.postMessage({ m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
     else self.postMessage( { m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } );
 
-    
-
 };
-
-
-//--------------------------------------------------
-//
-//  INTERN CONTROL
-//
-//--------------------------------------------------
-
-
-function control( o ){
-
-    /*key = o;
-    drive( 0 );
-    move( 0 );*/
-
-};
-
 
 
 //--------------------------------------------------
@@ -300,7 +298,7 @@ function init ( o ) {
 
     isBuffer = o.isBuffer || false;
 
-    if(o.timeStep !== undefined ) timeStep = o.timeStep ;
+    if(o.timeStep !== undefined ) timeStep = o.timeStep;
     timerStep = timeStep * 1000;
     substep = o.substep || 2;
 
@@ -348,8 +346,6 @@ function init ( o ) {
     // gravity
     gravity = new Ammo.btVector3();
 
-
-
     addWorld();
 
     bodys = [];
@@ -365,29 +361,18 @@ function init ( o ) {
 
     //
 
-    initARRAY();
-
     self.postMessage({ m:'init' });
     
 };
 
-function start () {
-
-    pause = false;
-    isFirst = true;
-    if( isBuffer ) step();
-    else timer = setInterval( step, timerStep );
-
-};
-
-
-
-
-
 function reset ( o ) {
 
+    //if( !isBuffer ) 
+    //clearInterval( timer );
+
     pause = true;
-    if( timer ) clearInterval( timer );
+
+    tmpForce = [];
 
     clearJoint();
     clearRigidBody();
@@ -398,10 +383,7 @@ function reset ( o ) {
     // clear body name object
     byName = {};
 
-
-    initARRAY();
-
-    
+    setGravity();
 
     if( o.full ){
 
@@ -410,12 +392,15 @@ function reset ( o ) {
 
     }
 
-    //isFirst = true;
-
-    //pause = false;
-    //if( !isBuffer ) timer = setInterval( step, timerStep );
+    //if( !isBuffer ) 
+    initARRAY();
 
 
+
+    pause = false;
+
+    if( isBuffer ) self.postMessage({ m:'start', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
+    else self.postMessage({ m:'start' });
 
 };
 
@@ -427,49 +412,8 @@ function wipe (obj) {
     }
 };
 
-//--------------------------------------------------
-//
-//  RIGIDBODY
-//
-//--------------------------------------------------
 
-function set ( ) {
 
-    if( tmpset === null ) return;
-
-    var o = tmpset;
-    var b = getByName( o.name );
-
-    if( b === null ) return;
-
-    var p = false, q = false;
-
-    tmpTrans.setIdentity();
-    
-    if(o.pos){ 
-        tmpPos.fromArray( o.pos ); 
-        tmpTrans.setOrigin( tmpPos );
-        p = true; 
-    }
-    if(o.quat){
-        tmpQuat.fromArray( o.quat );
-        tmpTrans.setRotation( tmpQuat );
-        q = true;
-    }
-
-    if( p || q ){
-        b.getMotionState().setWorldTransform( tmpTrans );
-    }
-
-    tmpset = null;
-
-};
-
-function getByName(name){
-
-    return byName[name] || null;
-
-};
 
 //--------------------------------------------------
 //
@@ -524,43 +468,80 @@ function addRay ( o ) {
 
 //--------------------------------------------------
 //
-//  FORCE
+//  GET OBJECT
 //
 //--------------------------------------------------
 
-function multyApplys( o ) {
+function getByName( name ){
 
-    var r = o.r;
-    var lng = r.length;
-    for(var i=0; i< lng; i++){
-        apply( { name:r[i][0], type:r[i][1], v1:r[i][2], v2:r[i][3] } )
-    }
+    return byName[ name ] || null;
 
 }
 
-function apply ( o ) {
 
-    var b = getByName( o.name );
+//--------------------------------------------------
+//
+//  FORCE APPLY
+//
+//--------------------------------------------------
 
-    if( b !== null ){
+function updateForce () {
 
-        if( o.v1 !== undefined ) tmpPos1.fromArray( o.v1 );
-        if( o.v2 !== undefined ) tmpPos2.fromArray( o.v2 );
+    while( tmpForce.length > 0 ) applyForce( tmpForce.pop() );
 
-        switch(o.type){
-            case 'force' : b.applyForce( tmpPos1, tmpPos2 ); break;
-            case 'torque' : b.applyTorque( tmpPos1 ); break;
-            case 'localTorque' : b.applyLocalTorque( tmpPos1 ); break;
-            case 'centralForce' : b.applyCentralForce( tmpPos1 ); break;
-            case 'centralLocalForce' : b.applyCentralLocalForce( tmpPos1 ); break;
-            case 'impulse' : b.applyImpulse( tmpPos1, tmpPos2 ); break;
-            case 'centralImpulse' : b.applyCentralImpulse( tmpPos1 ); break;
+}
 
-            // joint
+function applyForce ( r ) {
 
-            case 'motor' : b.enableAngularMotor( o.motor[0], o.motor[1], o.motor[2] ); break;
+    var b = getByName( r[0] );
 
-        }
+    if( b === null ) return;
+
+    if( r[2] !== undefined ) tmpPos1.fromArray( r[2] );
+    if( r[3] !== undefined ) tmpPos2.fromArray( r[3] );
+
+    switch(r[1]){
+        case 'force' : b.applyForce( tmpPos1, tmpPos2 ); break;// force , rel_pos 
+        case 'torque' : b.applyTorque( tmpPos1 ); break;
+        case 'localTorque' : b.applyLocalTorque( tmpPos1 ); break;
+        case 'centralForce' : b.applyCentralForce( tmpPos1 ); break;
+        case 'centralLocalForce' : b.applyCentralLocalForce( tmpPos1 ); break;
+        case 'impulse' : b.applyImpulse( tmpPos1, tmpPos2 ); break;// impulse , rel_pos 
+        case 'centralImpulse' : b.applyCentralImpulse( tmpPos1 ); break;
+
+        // joint
+
+        case 'motor' : b.enableAngularMotor( true, r[2][0], r[2][1] ); break; // bool, targetVelocity, maxMotorImpulse
+
     }
+    
 
-};
+}
+
+
+//--------------------------------------------------
+//
+//  KINEMATICS MATRIX SET
+//
+//--------------------------------------------------
+
+function updateMatrix () {
+
+    while( tmpMatrix.length > 0 ) applyMatrix( tmpMatrix.pop() );
+
+}
+
+function applyMatrix ( r ) {
+
+    var b = getByName( r[0] );
+
+    if( b === null ) return;
+
+    tmpTrans.setIdentity();
+
+    if( r[1] !== undefined ) { tmpPos.fromArray( r[1] ); tmpTrans.setOrigin( tmpPos ); }
+    if( r[2] !== undefined ) { tmpQuat.fromArray( r[2] ); tmpTrans.setRotation( tmpQuat ); }
+
+    b.getMotionState().setWorldTransform( tmpTrans );
+
+}

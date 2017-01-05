@@ -56,6 +56,10 @@ function addVehicle (id, pos, type) {
     var chassis = geo['mcar'+o.n];
     var down = geo['down'+o.n];
     var inside = geo['inside'+o.n] ? geo['inside'+o.n] : null;
+
+    var yy = shape.boundingBox.min.y;
+
+    //console.log(shape.boundingBox.min.y)
     
     var mesh = new THREE.Group();
 
@@ -66,25 +70,27 @@ function addVehicle (id, pos, type) {
     if( inside ) mesh.add( new THREE.Mesh( inside, mat.move ));
 
     // The maximum length of the suspension (metres)
-    o.s_length = o.radius+0.06;// * 0.25;
+    o.s_length = 0.1;//o.radius;// * 0.5;
     //The maximum distance the suspension can be compressed in Cm 
-    o.s_travel = (o.radius*2)*100;
+    //o.s_travel = (o.radius*2)*100;
     // Maximum suspension force
     o.s_force = o.mass*10;
 
     o.s_compression = 0.84;
-    o.s_relaxation = 0.88;
+    o.s_damping = 0.88;
     o.s_stiffness = 40;
 
     o.massCenter = [0,0,0];
 
-    o.wPos[1] = o.radius*2;
+    o.wPos[1] = o.radius;//*2;
     
     o.shape = shape;
     o.mesh = mesh;
     o.wheel = geo['w00' + o.w ];
 
-    o.name = 'car_'+id
+    o.name = 'car_'+id;
+
+    o.helper = true;
 
     car( o );
 

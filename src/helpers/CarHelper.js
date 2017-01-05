@@ -1,19 +1,19 @@
-THREE.CarHelper = function ( p ) {
+THREE.CarHelper = function ( p, center, deep ) {
 
     var s = 0.2;
-    var d = 0.5;
+    var d = - deep;// * 0.5;
 
-    this.py = p[1];
+    this.py = p[1] + center[1];
 
     var vertices = new Float32Array( [
         -s, 0, 0,  s, 0, 0,
         0, 0, 0,  0, s*2, 0,
         0, 0, -s,  0, 0, s,
 
-        p[0]*d, p[1], p[2],    p[0]*d, p[1]+1, p[2],
-        -p[0]*d, p[1], p[2],   -p[0]*d, p[1]+1, p[2],
-        -p[0]*d, p[1],-p[2],   -p[0]*d, p[1]+1, -p[2],
-        p[0]*d, p[1], -p[2],    p[0]*d, p[1]+1, -p[2],
+        p[0]-d, this.py, p[2],    p[0]-d, this.py+1, p[2],
+        -p[0]+d, this.py, p[2],   -p[0]+d, this.py+1, p[2],
+        -p[0]+d, this.py,-p[2],   -p[0]+d, this.py+1, -p[2],
+        p[0]-d, this.py, -p[2],    p[0]-d, this.py+1, -p[2],
     ] );
 
     var colors = new Float32Array( [

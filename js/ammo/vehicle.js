@@ -6,7 +6,7 @@
 
 function stepVehicle () {
 
-    if( !cars.length ) return;
+    //if( !cars.length ) return;
 
     cars.forEach( function ( b, id ) {
 
@@ -92,7 +92,9 @@ function addVehicle ( o ) {
 
     var type = o.type || 'box';
 
-    o.mass = o.mass == undefined ? 600 : o.mass;
+    var gearRatio = [-1, 0, 2.3, 1.8, 1.3, 0.9, 0.5 ];
+
+    o.mass = o.mass == undefined ? 800 : o.mass;
     o.massCenter = o.massCenter == undefined ? [0,0.25,0] : o.massCenter;
     o.size = o.size == undefined ? [2,0.5,4] : o.size;
     o.pos = o.pos == undefined ? [0,0,0] : o.pos;
@@ -181,7 +183,7 @@ function addVehicle ( o ) {
     tuning.set_m_suspensionCompression( o.s_compression || 0.84);//4.4 );
     // The damping coefficient for when the suspension is expanding.
     // m_suspensionDamping should be slightly larger than set_m_suspensionCompression, eg k = 0.2 to 0.5, default : 0.88
-    tuning.set_m_suspensionDamping( o.s_relaxation || 0.88);//2.3 );
+    tuning.set_m_suspensionDamping( o.s_damping || 0.88);//2.3 );
 
      // The maximum distance the suspension can be compressed in Cm // default 500
     tuning.set_m_maxSuspensionTravelCm( o.s_travel || 100 );
@@ -202,6 +204,8 @@ function addVehicle ( o ) {
 
     var radius = o.radius || 0.4;
     var wPos = o.wPos || [1, 0, 1.6];
+
+    wPos[1] += o.massCenter[1];
 
     // friction: The constant friction of the wheels on the surface.
     // For realistic TS It should be around 0.8. default 10.5

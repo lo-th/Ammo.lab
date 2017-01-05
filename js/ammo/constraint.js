@@ -12,9 +12,9 @@ Ammo.btTypedConstraint.prototype.getA = function( v ){
 
 };
 
-function stepConstraint () {
+function stepConstraint ( ) {
 
-    if( !joints.length ) return;
+    //if( !joints.length ) return;
 
     joints.forEach( function ( b, id ) {
 

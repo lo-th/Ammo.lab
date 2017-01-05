@@ -6,18 +6,21 @@
 *    AMMO worker launcher
 */
 
+
+// transphere array for AMMO worker
+var Br, Cr, Jr, Hr, Sr;
+
 var ammo = ( function () {
 
     'use strict';
+
+    var pause = false;
 
     var worker, callback, blob;
     var isDirect, isBuffer;
 
     var timestep = 1/60;//0.017;//1/60;
     var substep = 2;//7;
-
-    // main transphere array
-    //var ar, dr, hr, jr, sr;
 
     var timerate = timestep * 1000;
     
@@ -48,7 +51,13 @@ var ammo = ( function () {
             if( isDirect ) blob = document.location.href.replace(/\/[^/]*$/,"/") + "./libs/ammo3.js";
             else blob = extract.get('ammo3');
 
-            worker.postMessage( { m: 'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
+            // test transferrables
+            /*var ab = new ArrayBuffer(1);
+            worker.postMessage(ab, [ab]);
+            if (ab.byteLength) isBuffer = false;
+            else isBuffer = true;*/
+
+            worker.postMessage( { m:'init', blob:blob, isBuffer: isBuffer, timestep:timestep, substep:substep });
             
         },
 
@@ -62,10 +71,22 @@ var ammo = ( function () {
 
         },
 
-        start: function () {
+        start: function ( o ) {
 
-            ammo.send('start');
+            if( isBuffer ){ 
+                
+                Br = o.Br;
+                Cr = o.Cr;
+                Hr = o.Hr;
+                Jr = o.Jr;
+                Sr = o.Sr;
 
+            }
+
+            pause = false;
+            if(isBuffer) timer = setTimeout( ammo.sendData, 10 );
+            else timer = setInterval( ammo.sendData, timerate );
+           
         },
 
         message: function( e ) {
@@ -76,58 +97,43 @@ var ammo = ( function () {
                 case 'init': ammo.onInit(); break;
                 case 'step': ammo.step( data ); break;
                 case 'ellipsoid': view.ellipsoidMesh( data.o ); break;
+                case 'start': ammo.start( data ); break;
             }
 
         },
 
-        step: function ( data ) {
+        step: function ( o ) {
 
-            if(!isBuffer) ammo.send( 'key', { key:user.getKey() } );
+            if( pause ) return;
 
-            time = now();
+            time = Date.now();//now();
             if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
-            
-            Br = data.Br;
-            Cr = data.Cr;
-            Hr = data.Hr;
-            Jr = data.Jr;
-            Sr = data.Sr;
 
-            view.needUpdate();
+            Br = o.Br;
+            Cr = o.Cr;
+            Hr = o.Hr;
+            Jr = o.Jr;
+            Sr = o.Sr;
 
-            if( isBuffer ){ 
+            view.needUpdate( true );
 
-                delay = ~~ ( timerate - ( time - sendTime ));
+            if( isBuffer ){
+                delay = ( timerate - ( time - sendTime ));
                 delay = delay < 0 ? 0 : delay;
                 timer = setTimeout( ammo.sendData, delay );
-
-            } else {
-
-                //user.update();
-                //worker.postMessage( { m:'key', key:user.getKey() } );
-                
-                tell( 'THREE '+ view.getFps() + ' | AMMO ' + fps +' | '+ delay +'ms' );
-
-            } 
-
+            }
+            
         },
 
         sendData: function (){
 
-            clearTimeout( timer );
-            //clearInterval( timer );
-            sendTime = now();
-
-            user.update();
-            var key = user.getKey();
-
-            worker.postMessage( { m:'step', key:key, Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } , [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ] );
-            //else worker.postMessage( { m:'step', key:key } );
-
-            var f = view.getFps();
-            tell( 'THREE '+ f + ' | AMMO ' + fps +' | '+ delay +'ms' );
-
-            //tell( key );
+            
+            if( isBuffer ){ 
+                sendTime = Date.now();
+                worker.postMessage( { m:'step', key:user.getKey(), Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr }, [ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
+            }
+            else worker.postMessage( { m:'step', key:user.getKey() });
+            tell( 'THREE '+ view.getFps() + ' | AMMO ' + fps +' | '+ delay.toFixed(1) +' ms' );
             
         },
 
@@ -136,12 +142,19 @@ var ammo = ( function () {
             worker.postMessage( { m:m, o:o });
 
         },
-        //ammo.send( 'key', { key:user.getKey() } );
-
 
         reset: function( full ) {
 
             if( isBuffer ) clearTimeout( timer );
+            else clearInterval( timer )
+
+            pause = true;
+            view.needUpdate( false );
+
+            view.reset();
+
+            sendTime = 0;
+            delay = 0;
             worker.postMessage( { m:'reset', full:full });
 
         },

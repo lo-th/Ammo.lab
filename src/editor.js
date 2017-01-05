@@ -203,7 +203,8 @@ editor = {
 
     tell: function ( str ) { 
 
-        debug.innerHTML = str; 
+        //debug.innerHTML = str; 
+        debug.textContent  = str;
 
     },
 

@@ -9,7 +9,7 @@
 'use strict';
 
 // transphere array for AMMO worker
-var Br, Cr, Jr, Hr, Sr;
+//var Br, Cr, Jr, Hr, Sr;
 
 // transphere array for CROWD worker
 var Ar;
@@ -18,8 +18,10 @@ var demos = [
     'basic', 'terrain', 'supermaket', 'car', 'collision', 'ragdoll',
     'kinematics', 'multyCars', 'snowboard', 'cloth', 'rope', 'rope2', 'ellipsoid',
     'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove',
-    'character', 'meca', 'joints', 'empty', 'human', 'planetoid', 'point2point'
+    'character', 'mecanum', 'joints', 'empty', 'human', 'planetoid', 'point2point', 'drone'
 ];
+
+demos.sort();
 
 var demo;
 var update = function () {};
@@ -80,17 +82,17 @@ function launch ( name ) {
     location.hash = name;
 
     ammo.reset( full );
-    view.reset();
+    
 
     demo = new window['demo'];
 
     // start Physics engine
-    setTimeout( ammo.start, 10 );
+    //setTimeout( ammo.start, 10 );
     //ammo.start();
 
 };
 
-function add ( o ) { view.add( o ); };
+function add ( o ) { return view.add( o ); };
 
 function joint ( o ) { o.type = o.type == undefined ? 'joint' : o.type; view.add( o ); };
 
@@ -113,3 +115,5 @@ function load ( name, callback ) { view.load( name, callback ); };
 function anchor ( o ) { ammo.send( 'anchor', o ); };
 
 function gravity ( a ) { ammo.send( 'gravity', {g:a} ); };
+
+function water ( o ) { ammo.send( 'gravity', o ); };

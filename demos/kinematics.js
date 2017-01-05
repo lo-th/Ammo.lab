@@ -22,12 +22,8 @@ function demo () {
 
 function rayMove ( m ) {
 
-    var o = {
-        name:'bob',
-        pos:[ m.position.x, m.position.y+1.1, m.position.z ],
-        quat: m.quaternion.toArray()
-    }
-
-    ammo.send( 'set', o );
+    var r = [];
+    r.push( [ 'bob', [ m.position.x, m.position.y+1.1, m.position.z ], m.quaternion.toArray() ] );
+    ammo.send( 'matrix', { r:r } );
 
 };

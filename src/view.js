@@ -21,6 +21,9 @@ Math.rand = function (a, b) { return Math.lerp(a, b, Math.random()); };
 Math.randInt = function (a, b, n) { return Math.lerp(a, b, Math.random()).toFixed(n || 0)*1; };
 Math.int = function(x) { return ~~x; };
 
+
+
+
 var view = ( function () {
 
 'use strict';
@@ -107,7 +110,6 @@ view = {
             _V.heroStep();
             _V.carsStep();
             _V.softStep();
-
             _V.controlUpdate();
 
             isNeedUpdate = false;
@@ -123,7 +125,7 @@ view = {
 
     },
 
-    needUpdate: function (){ isNeedUpdate = true; },
+    needUpdate: function ( b ){ isNeedUpdate = b; },
     needCrowdUpdate: function (){ isNeedCrowdUpdate = true; },
 
 
@@ -986,14 +988,18 @@ view = {
             isCustomGeometry = true;
 
         } else if( o.type === 'mesh' || o.type === 'convex' ){ 
-            o.v = _V.prepaGeometry( o.shape, o.type );
+            if(o.shape) {
+                o.v = _V.prepaGeometry( o.shape, o.type );
+                extraGeo.push( o.shape );
+            }
             if(o.geometry){
+
                 mesh = new THREE.Mesh( o.geometry, material );
                 extraGeo.push(o.geometry);
-                extraGeo.push(o.shape);
+                
             } else {
                 mesh = new THREE.Mesh( o.shape, material );
-                extraGeo.push(mesh.geometry);
+                //extraGeo.push(mesh.geometry);
             }
         } else {
             if(o.geometry){
@@ -1033,21 +1039,33 @@ view = {
             mesh.receiveShadow = true;
             mesh.castShadow = true;
             
-            this.setName( o, mesh );
+            view.setName( o, mesh );
 
-            scene.add( mesh );
+            if( o.parent !== undefined ) o.parent.add( mesh );
+            else scene.add( mesh );
 
-            // push 
-            if( o.mass ) meshs.push( mesh );
-            else statics.push( mesh );
+            
         }
 
         if( o.shape ) delete( o.shape );
         if( o.geometry ) delete( o.geometry );
         if( o.material ) delete( o.material );
 
-        // send to worker
-        ammo.send( 'add', o );
+        
+        if( o.noPhy === undefined ){
+
+            // push 
+            if(mesh){
+                if( o.mass ) meshs.push( mesh );
+                else statics.push( mesh );
+            }
+
+            // send to worker
+            ammo.send( 'add', o );
+
+        }
+
+        if(mesh) return mesh;
 
     },
 
@@ -1194,10 +1212,7 @@ view = {
         mesh.userData.NumWheels = o.nw || 4;
         mesh.userData.type = 'car';
 
-        if(o.helper){
-            mesh.userData.helper = new THREE.CarHelper( wPos );
-            mesh.add( mesh.userData.helper );
-        }
+        
 
         // wheels
 
@@ -1228,6 +1243,11 @@ view = {
         }
 
         mesh.userData.w = w;
+
+        if(o.helper){
+            mesh.userData.helper = new THREE.CarHelper( wPos, massCenter, deep );
+            mesh.add( mesh.userData.helper );
+        }
 
         //var car = { body:mesh, w:w, axe:helper.mesh, nw:o.nw || 4, helper:helper, speed:0 };
 
@@ -1297,6 +1317,7 @@ view = {
         mesh.receiveShadow = true;
         
         mesh.softType = 5;
+        mesh.points = o.v.length / 3;
 
         scene.add( mesh );
         softs.push( mesh );
@@ -1330,6 +1351,7 @@ view = {
         mesh.receiveShadow = true;
         
         mesh.softType = 4;
+        mesh.points = o.v.length / 3;
 
         scene.add( mesh );
         softs.push( mesh );
@@ -1358,7 +1380,7 @@ view = {
         g.rotateX( -Math.PI90 );
         //g.translate( -size[0]*0.5, 0, -size[2]*0.5 );
 
-        var numVerts = g.attributes.position.array.length / 3;
+        //var numVerts = g.attributes.position.array.length / 3;
 
         var mesh = new THREE.Mesh( g, mat.cloth );
 
@@ -1372,6 +1394,7 @@ view = {
         //mesh.frustumCulled = false;
 
         mesh.softType = 1;
+        mesh.points = g.attributes.position.array.length / 3;
 
         scene.add( mesh );
         softs.push( mesh );
@@ -1427,8 +1450,9 @@ view = {
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+
         mesh.softType = 2;
-        //mesh.frustumCulled = false;
+        mesh.points = g.positions.length;
 
         scene.add( mesh );
         softs.push( mesh );
@@ -1531,6 +1555,9 @@ view = {
         this.setName( o, mesh );
 
         mesh.softType = 3;
+        mesh.points = g.attributes.position.array.length / 3;
+
+        //console.log( mesh.points )
 
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -1754,42 +1781,43 @@ view = {
 
     softStep: function(){
 
-        if( !softs.length ) return;
+        //if( !softs.length ) return;
 
         var softPoints = 0;
 
         softs.forEach( function( b, id ) {
 
-            var n, c, cc, p, j, k, u;
+            if(Sr.length< softPoints+(b.points * 3) ) return;
 
+            var n, c, cc, p, j, k, u;
+            var g = b.geometry;
             var t = b.softType; // type of softBody
             var order = null;
-            var isWithColor = b.geometry.attributes.color ? true : false;
-            var isWithNormal = b.geometry.attributes.normal ? true : false;
+            var isWithColor = g.attributes.color ? true : false;
+            var isWithNormal = g.attributes.normal ? true : false;
 
 
             if( t === 2 ){ // rope
 
-                j = b.geometry.positions.length;
+                j = g.positions.length;
                 while( j-- ){
                     n = softPoints + ( j * 3 );
-                    b.geometry.positions[j].set( Sr[n], Sr[n+1], Sr[n+2] );
+                    g.positions[j].set( Sr[n], Sr[n+1], Sr[n+2] );
                 }
 
-                b.geometry.updatePath();
-                softPoints += b.geometry.positions.length*3;
+                g.updatePath();
 
             } else {
 
-                p = b.geometry.attributes.position.array;
-                if(isWithColor) c = b.geometry.attributes.color.array;
+                p = g.attributes.position.array;
+                if( isWithColor ) c = g.attributes.color.array;
 
                 if( t === 5 || t === 4 ){ // softTriMesh // softConvex
 
-                    var max = b.geometry.numVertices;
-                    var maxi = b.geometry.maxi;
-                    var pPoint = b.geometry.pPoint;
-                    var lPoint = b.geometry.lPoint;
+                    var max = g.numVertices;
+                    var maxi = g.maxi;
+                    var pPoint = g.pPoint;
+                    var lPoint = g.lPoint;
 
                     j = max;
                     while(j--){
@@ -1805,25 +1833,9 @@ view = {
                         }
                     }
 
-                /*}else if( t === 2 ){ // new rope
+                } else { // cloth // ellipsoid
 
-                    j = b.geometry.positions.length;// * 3;
-                    while(j--){
-                        n = (j*3) + softPoints;
-                        b.geometry.positions[j].set( Sr[n], Sr[n+1], Sr[n+2] );
-
-                    }
-
-                    b.geometry.updatePath();
-                    softPoints += b.geometry.positions.length*3;*/
-
-                }else{
-
-
-
-
-                    if( b.geometry.attributes.order ) order = b.geometry.attributes.order.array;
-                    //if( m.geometry.attributes.same ) same = m.geometry.attributes.same.array;
+                    if( g.attributes.order ) order = g.attributes.order.array;
                     j = p.length;
 
                     n = 2;
@@ -1847,7 +1859,7 @@ view = {
                     } else {
                          while(j--){
                              
-                            p[j] = Sr[j+softPoints];
+                            p[j] = Sr[ j + softPoints ];
                             if(n==1){ 
                                 cc = Math.abs(p[j]/10);
                                 c[j-1] = cc;
@@ -1855,20 +1867,18 @@ view = {
                                 c[j+1] = cc;
                             }
                             n--;
-                            n = n<0 ? 2 : n;
+                            n = n < 0 ? 2 : n;
                         }
 
                     }
 
                 }
 
-                if(t!==2) b.geometry.computeVertexNormals();
+                if(t!==2) g.computeVertexNormals();
 
-                b.geometry.attributes.position.needsUpdate = true;
+                if( isWithNormal ){
 
-                if(isWithNormal){
-
-                    var norm = b.geometry.attributes.normal.array;
+                    var norm = g.attributes.normal.array;
 
                     j = max;
                     while(j--){
@@ -1884,16 +1894,17 @@ view = {
                         }
                     }
 
-                    b.geometry.attributes.normal.needsUpdate = true;
+                    g.attributes.normal.needsUpdate = true;
                 }
 
-                if(isWithColor) b.geometry.attributes.color.needsUpdate = true;
+                if( isWithColor ) g.attributes.color.needsUpdate = true;
+                g.attributes.position.needsUpdate = true;
                 
-                b.geometry.computeBoundingSphere();
+                g.computeBoundingSphere();
 
-                if( t === 5 ) softPoints += b.geometry.numVertices * 3;
-                else softPoints += p.length;
             }
+
+            softPoints += b.points * 3;
         });
 
     },

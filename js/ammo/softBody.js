@@ -21,9 +21,9 @@ function moveSoftBody( o ) {
 
 };
 
-function stepSoftBody() {
+function stepSoftBody () {
 
-    if( !softs.length ) return;
+    //if( !softs.length ) return;
 
     softPoints = 0;
 
@@ -34,11 +34,13 @@ function stepSoftBody() {
         var n;
                 
         while(j--){
-            n = (j*3) + softPoints;
-            pos = s.at( j ).get_m_x();
-            Sr[n] = pos.x();
-            Sr[n+1] = pos.y();
-            Sr[n+2] = pos.z();
+            n = softPoints + ( j * 3 );
+            s.at( j ).get_m_x().toArray( Sr, n );
+            //pos = s.at( j ).get_m_x();
+            
+            //Sr[n] = pos.x();
+            //Sr[n+1] = pos.y();
+            //Sr[n+2] = pos.z();
         }
 
         softPoints += s.size()*3;
@@ -184,6 +186,9 @@ function addSoftBody ( o ) {
 
 
     body.setTotalMass( o.mass, o.fromfaces || false );
+    //body.setPose( true, true );
+
+    //console.log(body)
 
 
     if(o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin );
@@ -192,9 +197,13 @@ function addSoftBody ( o ) {
     // Soft-soft and soft-rigid collisions
     world.addSoftBody( body, o.group || 1, o.mask || -1 );
 
+    body.points = body.get_m_nodes().size();
+
     if(o.name) byName[o.name] = body;
 
     softs.push( body );
+
+
 
     o = null;
 

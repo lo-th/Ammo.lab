@@ -7,7 +7,7 @@ function demo() {
     add ({ 
         type:'terrain', 
         pos : [0,-5,0], // terrain position
-        size : [100,10,100], // terrain size in meter
+        size : [200,10,200], // terrain size in meter
         div : [64,64], // number of subdivision
         complexity : 30, // complexity of noise
         flipEdge : false, // inverse the triangle
@@ -30,7 +30,7 @@ function demo() {
         helper: true,
         pos:[0,10,0], // start position of car 
         rot:[0,0,0], // start rotation of car
-        size:[1.6, 0.4, 3.6], // chassis size
+        size:[1.5, 0.4, 3.6], // chassis size
         massCenter:[0,0.6,0], // local center of mass (best is on chassis bottom)
 
         friction: 0.6, 
@@ -38,9 +38,9 @@ function demo() {
         linearDamping: 0.3, 
         angularDamping: 0.3,
 
-        radius:0.4,// wheels radius
-        deep:0.3, // wheels deep
-        wPos:[1, 0.4, 1.6], // wheels position on chassis
+        radius:0.5,// wheels radius
+        deep:0.4, // wheels deep
+        wPos:[1, 0, 1.7], // wheels position on chassis
 
     });
 

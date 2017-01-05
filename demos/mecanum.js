@@ -1,7 +1,7 @@
 function demo() {
 
     cam ( 0, 20, 30 );
-    load ( 'meca', afterLoadGeometry );
+    load ( 'mecanum', afterLoadGeometry );
 
 };
 

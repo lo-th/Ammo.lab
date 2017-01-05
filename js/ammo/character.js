@@ -7,7 +7,7 @@
 
 function stepCharacter() {
 
-    if( !heros.length ) return;
+    //if( !heros.length ) return;
 
     heros.forEach( function ( b, id ) {
 

@@ -21,7 +21,7 @@ function demo () {
         add({ type:'box', geometry:geo.dice, size:[s,s,s], pos:[x,y,z], mass:s, friction:0.5, restitution:0.6 });
     }
 
-    postUpdate = postUp
+    postUpdate = postUp;
 
 };
 
@@ -39,6 +39,6 @@ function postUp() {
 
     });
 
-    ammo.send( 'multyApplys', {r:r} );
+    ammo.send( 'forces', { r:r } );
 
 };

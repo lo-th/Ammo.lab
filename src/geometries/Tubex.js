@@ -211,6 +211,8 @@ THREE.Tubex.prototype.updatePath = function ( path ) {
     this.attributes.color.needsUpdate = true;
     this.attributes.position.needsUpdate = true;
     this.attributes.normal.needsUpdate = true;
+
+    this.computeBoundingSphere();
    
 
 }
