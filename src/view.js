@@ -137,6 +137,11 @@ view = {
 
     reset: function () {
 
+        isNeedUpdate = false;
+
+        postUpdate = function () {};
+        update = function () {};
+
         this.removeRay();
         this.resetCamera();
         this.setShadowPosY(-0.01);
@@ -167,9 +172,6 @@ view = {
         //meshs.length = 0;
         perlin = null;
         byName = {};
-
-        postUpdate = function () {};
-        update = function () {};
 
     },
 
