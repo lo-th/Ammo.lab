@@ -290,6 +290,8 @@ view = {
             meca2: new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca2', wireframe:true }),
             meca3: new THREE.MeshBasicMaterial({ color:0xffffff, name:'meca3', wireframe:true }),
 
+            drone: new THREE.MeshBasicMaterial({ color:0xffffff, name:'drone', wireframe:true }),
+
             pig: new THREE.MeshBasicMaterial({ color:0xd3a790, name:'pig', wireframe:true, transparent:false }),
             avatar: new THREE.MeshBasicMaterial({ color:0xd3a790, name:'avatar', wireframe:true, transparent:false }),
 
@@ -469,8 +471,6 @@ view = {
             m = mat[ old ];
             name = m.name;
             if(name!=='debug'){
-
-
                 mat[ name ] = new THREE[ matType ]({ 
                     name:name, 
                     envMap:null,

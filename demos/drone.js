@@ -13,6 +13,9 @@ var tmpMatrix, tmpPos;
 
 function afterLoadGeometry () {
 
+    // load drone map
+    view.addMap('drone.jpg', 'drone');
+
     // infinie plane
     add({type:'plane'});
 
@@ -20,6 +23,7 @@ function afterLoadGeometry () {
     var mat = view.getMat();
 
     drone = add({ 
+        
         name:'drone',
         type:'convex',
         shape:geo['drone_shape'],
@@ -28,7 +32,7 @@ function afterLoadGeometry () {
         pos:[0, 0, 0],
 
         geometry:debug ? undefined : geo['drone_chassis'],
-        //material:debug ? undefined : 'meca1',
+        material:debug ? undefined : 'drone',
         state:4,
 
     });
@@ -44,8 +48,8 @@ function afterLoadGeometry () {
             parent: drone,
             pos:rpos[i].toArray(),
             geometry: geo['drone_rotor'],
+            material:debug ? undefined : 'drone',
             noPhy:true,
-            material:'move'
 
         }) 
 
@@ -56,6 +60,7 @@ function afterLoadGeometry () {
 
         parent: drone,
         geometry: geo['drone_side'],
+        material:debug ? undefined : 'drone',
         noPhy:true,
 
     })

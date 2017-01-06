@@ -386,7 +386,7 @@ function reset ( o ) {
     // clear body name object
     byName = {};
 
-    setGravity();
+    
 
     if( o.full ){
 
@@ -394,6 +394,8 @@ function reset ( o ) {
         addWorld();
 
     }
+
+    setGravity();
 
     pause = false;
 
@@ -480,9 +482,9 @@ function addRay ( o ) {
 //
 //--------------------------------------------------
 
-function getByName( name ){
+function getByName( n ){
 
-    return byName[ name ] || null;
+    return byName[ n ] || null;
 
 }
 
@@ -503,7 +505,11 @@ function applyForce ( r ) {
 
     var b = getByName( r[0] );
 
+    //console.log( r[0], b )
+
     if( b === null ) return;
+
+
 
     if( r[2] !== undefined ) tmpPos1.fromArray( r[2] );
     if( r[3] !== undefined ) tmpPos2.fromArray( r[3] );

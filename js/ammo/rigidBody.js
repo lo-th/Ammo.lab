@@ -178,9 +178,8 @@ function addRigidBody ( o, extra ) {
         world.addCollisionObject( body, o.group || 1, o.mask || -1 );
     }
     
-    if( o.name ) byName[o.name] = body;
-    else if ( o.mass !== 0 ) byName[bodys.length] = body;
-
+    if( o.name ) byName[ o.name ] = body;
+    else if ( o.mass !== 0 ) byName[ bodys.length ] = body;
 
     if ( o.mass !== 0 ) bodys.push( body );
     else solids.push( body );
