@@ -17,7 +17,11 @@ function stepRigidBody() {
         if ( Br[n] > 0 ) {
 
             b.getMotionState().getWorldTransform( trans );
+            
             trans.toArray( Br, n + 1 );
+
+            //trans.getOrigin().toArray( Br , n + 1 );
+            //trans.getRotation().toArray( Br ,n + 4 );
 
         }
 

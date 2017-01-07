@@ -307,8 +307,9 @@ function init ( o ) {
 
     importScripts( o.blob );
 
-    importScripts( 'ammo/math.js' );
+    
     importScripts( 'ammo/world.js' );
+    importScripts( 'ammo/math.js' );
     importScripts( 'ammo/character.js' );
     importScripts( 'ammo/constraint.js' );
     importScripts( 'ammo/rigidBody.js' );
