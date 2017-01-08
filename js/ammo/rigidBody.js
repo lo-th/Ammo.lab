@@ -5,20 +5,20 @@
 //
 //--------------------------------------------------
 
-function stepRigidBody() {
+function stepRigidBody( AR, N ) {
 
     //if( !bodys.length ) return;
 
     bodys.forEach( function ( b, id ) {
 
-        var n = id * 8;
-        Br[n] = b.getLinearVelocity().length() * 9.8;//b.isActive() ? 1 : 0;
+        var n = N + (id * 8);
+        AR[n] = b.getLinearVelocity().length() * 9.8;//b.isActive() ? 1 : 0;
 
-        if ( Br[n] > 0 ) {
+        if ( AR[n] > 0 ) {
 
             b.getMotionState().getWorldTransform( trans );
             
-            trans.toArray( Br, n + 1 );
+            trans.toArray( AR, n + 1 );
 
             //trans.getOrigin().toArray( Br , n + 1 );
             //trans.getRotation().toArray( Br ,n + 4 );

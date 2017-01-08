@@ -4,31 +4,31 @@
 //
 //--------------------------------------------------
 
-function stepVehicle () {
+function stepVehicle ( AR, N  ) {
 
     //if( !cars.length ) return;
 
     cars.forEach( function ( b, id ) {
 
-        var n = id * 56, j, w, t;
+        var n = N + (id * 56), j, w, t;
 
         // speed km/h
-        Cr[ n + 0 ] = b.getCurrentSpeedKmHour();
+        AR[ n + 0 ] = b.getCurrentSpeedKmHour();
 
         //var centerPoint = b.getRigidBody().getCenterOfMassTransform().getOrigin();
 
         b.getRigidBody().getMotionState().getWorldTransform( trans );
 
-        trans.toArray( Cr, n + 1 );
+        trans.toArray( AR, n + 1 );
 
         // wheels pos / rot
         j = b.getNumWheels(); //2, 4 or 6;
         if( j === 4 ){
             w = 8 * ( 4 + 1 );
-            Cr[n+w+0] = b.getWheelInfo(0).get_m_raycastInfo().get_m_suspensionLength();
-            Cr[n+w+1] = b.getWheelInfo(1).get_m_raycastInfo().get_m_suspensionLength();
-            Cr[n+w+2] = b.getWheelInfo(2).get_m_raycastInfo().get_m_suspensionLength();
-            Cr[n+w+3] = b.getWheelInfo(3).get_m_raycastInfo().get_m_suspensionLength();
+            AR[n+w+0] = b.getWheelInfo(0).get_m_raycastInfo().get_m_suspensionLength();
+            AR[n+w+1] = b.getWheelInfo(1).get_m_raycastInfo().get_m_suspensionLength();
+            AR[n+w+2] = b.getWheelInfo(2).get_m_raycastInfo().get_m_suspensionLength();
+            AR[n+w+3] = b.getWheelInfo(3).get_m_raycastInfo().get_m_suspensionLength();
         }
 
         while(j--){
@@ -36,9 +36,9 @@ function stepVehicle () {
             t = b.getWheelTransformWS( j );
 
             w = 8 * ( j + 1 );
-            t.toArray( Cr, n + w + 1 );
+            t.toArray( AR, n + w + 1 );
            
-            if( j === 0 ) Cr[ n + w ] = b.getWheelInfo(0).get_m_steering();
+            if( j === 0 ) AR[ n + w ] = b.getWheelInfo(0).get_m_steering();
 
         }
 

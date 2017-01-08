@@ -12,17 +12,17 @@ Ammo.btTypedConstraint.prototype.getA = function( v ){
 
 };
 
-function stepConstraint ( ) {
+function stepConstraint ( AR, N ) {
 
     //if( !joints.length ) return;
 
     joints.forEach( function ( b, id ) {
 
-        var n = id * 4;
+        var n = N + (id * 4);
 
         if( b.type ){
 
-            Jr[ n ] = b.type;
+            AR[ n ] = b.type;
 
         }
         

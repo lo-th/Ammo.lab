@@ -7,7 +7,7 @@ var TextDecoder;
 
 var ammo, intro, UIL, esprima, CodeMirror, update, postUpdate;
 
-var Br, Cr, Jr, Hr, Sr;
+var Ar, ArLng, ArPos, ArMax;
 var demos;
 
 // tween
@@ -3952,11 +3952,20 @@ view = {
 
         if( isNeedUpdate ){
 
-            _V.bodyStep();
-            _V.heroStep();
-            _V.carsStep();
-            _V.softStep();
+            _V.heroStep( Ar, ArPos[0] );
+            _V.carsStep( Ar, ArPos[1] );
+            _V.bodyStep( Ar, ArPos[2] );
+            _V.softStep( Ar, ArPos[3] );
+            /*
+
+            _V.heroStep( Hr, 0 );
+            _V.carsStep( Cr, 0 );
+
+            _V.bodyStep( Br, 0 );
+            _V.softStep( Sr, 0 );*/
+
             _V.controlUpdate();
+            
 
             isNeedUpdate = false;
 
@@ -5522,22 +5531,22 @@ view = {
 
     getBody: function(){ return meshs },
 
-    bodyStep: function(){
+    bodyStep: function( AR, N ){
 
         if( !meshs.length ) return;
 
         meshs.forEach( function( b, id ) {
 
-            var n = id * 8;
-            var s = Br[n];
+            var n = N + ( id * 8 );
+            var s = AR[n];
             if ( s > 0 ) {
 
                 if ( b.material.name == 'sleep' ) b.material = mat.move;
                 if( s > 50 && b.material.name == 'move' ) b.material = mat.movehigh;
                 else if( s < 50 && b.material.name == 'movehigh') b.material = mat.move;
                 
-                b.position.fromArray( Br, n + 1 );
-                b.quaternion.fromArray( Br, n + 4 );
+                b.position.fromArray( AR, n + 1 );
+                b.quaternion.fromArray( AR, n + 4 );
 
             } else {
                 if ( b.material.name == 'move' || b.material.name == 'movehigh' ) b.material = mat.sleep;
@@ -5546,17 +5555,17 @@ view = {
 
     },
 
-    heroStep: function(){
+    heroStep: function( AR, N ){
 
         if( !heros.length ) return;
 
         heros.forEach( function( b, id ) {
 
-            var n = id * 8;
-            var s = Hr[n] * 3.33;
+            var n = N + (id * 8);
+            var s = AR[n] * 3.33;
             b.userData.speed = s * 100;
-            b.position.fromArray( Hr, n + 1 );
-            b.quaternion.fromArray( Hr, n + 4 );
+            b.position.fromArray( AR, n + 1 );
+            b.quaternion.fromArray( AR, n + 4 );
 
             if(b.skin){
 
@@ -5577,18 +5586,18 @@ view = {
 
     },
 
-    carsStep: function(){
+    carsStep: function( AR, N ){
 
         if( !cars.length ) return;
 
         cars.forEach( function( b, id ) {
 
-            var n = id * 56;
+            var n = N + (id * 56);
             //carsSpeed[id] = Cr[n];
-            b.userData.speed = Cr[n];
+            b.userData.speed = AR[n];
 
-            b.position.fromArray( Cr, n + 1 );
-            b.quaternion.fromArray( Cr, n + 4 );
+            b.position.fromArray( AR, n + 1 );
+            b.quaternion.fromArray( AR, n + 4 );
 
             //b.position.set( Cr[n+1], Cr[n+2], Cr[n+3] );
             //b.quaternion.set( Cr[n+4], Cr[n+5], Cr[n+6], Cr[n+7] );
@@ -5601,7 +5610,7 @@ view = {
             if(b.userData.helper){
                 if( j == 4 ){
                     w = 8 * ( 4 + 1 );
-                    b.userData.helper.updateSuspension(Cr[n+w+0], Cr[n+w+1], Cr[n+w+2], Cr[n+w+3]);
+                    b.userData.helper.updateSuspension(AR[n+w+0], AR[n+w+1], AR[n+w+2], AR[n+w+3]);
                 }
             }
             
@@ -5613,8 +5622,8 @@ view = {
                 //if( j == 2 ) b.axe.position.y = Cr[n+w];
                 //if( j == 3 ) b.axe.position.z = Cr[n+w];
 
-                b.userData.w[j].position.fromArray( Cr, n + w + 1 );
-                b.userData.w[j].quaternion.fromArray( Cr, n + w + 4 );
+                b.userData.w[j].position.fromArray( AR, n + w + 1 );
+                b.userData.w[j].quaternion.fromArray( AR, n + w + 4 );
 
                 //b.userData.w[j].position.set( Cr[n+w+1], Cr[n+w+2], Cr[n+w+3] );
                 //b.userData.w[j].quaternion.set( Cr[n+w+4], Cr[n+w+5], Cr[n+w+6], Cr[n+w+7] );
@@ -5629,15 +5638,15 @@ view = {
 
     },
 
-    softStep: function(){
+    softStep: function( AR, N ){
 
-        //if( !softs.length ) return;
+        if( !softs.length ) return;
 
-        var softPoints = 0;
+        var softPoints = N;
 
         softs.forEach( function( b, id ) {
 
-            if(Sr.length< softPoints+(b.points * 3) ) return;
+            //if(Sr.length< softPoints+(b.points * 3) ) return;
 
             var n, c, cc, p, j, k, u;
             var g = b.geometry;
@@ -5652,12 +5661,14 @@ view = {
                 j = g.positions.length;
                 while( j-- ){
                     n = softPoints + ( j * 3 );
-                    g.positions[j].set( Sr[n], Sr[n+1], Sr[n+2] );
+                    g.positions[j].set( AR[n], AR[n+1], AR[n+2] );
                 }
 
                 g.updatePath();
 
             } else {
+
+                if( !g.attributes.position ) return;
 
                 p = g.attributes.position.array;
                 if( isWithColor ) c = g.attributes.color.array;
@@ -5677,9 +5688,9 @@ view = {
                         var d = pPoint[j];
                         while(k--){
                             u = lPoint[d+k]*3;
-                            p[u] = Sr[n];
-                            p[u+1] = Sr[n+1]; 
-                            p[u+2] = Sr[n+2];
+                            p[u] = AR[n];
+                            p[u+1] = AR[n+1]; 
+                            p[u+2] = AR[n+2];
                         }
                     }
 
@@ -5696,11 +5707,11 @@ view = {
                         while(j--){
                             k = order[j] * 3;
                             n = j*3 + softPoints;
-                            p[k] = Sr[n];
-                            p[k+1] = Sr[n+1];
-                            p[k+2] = Sr[n+2];
+                            p[k] = AR[n];
+                            p[k+1] = AR[n+1];
+                            p[k+2] = AR[n+2];
 
-                            cc = Math.abs(Sr[n+1]/10);
+                            cc = Math.abs(AR[n+1]/10);
                             c[k] = cc;
                             c[k+1] = cc;
                             c[k+2] = cc;
@@ -5709,7 +5720,7 @@ view = {
                     } else {
                          while(j--){
                              
-                            p[j] = Sr[ j + softPoints ];
+                            p[j] = AR[ j + softPoints ];
                             if(n==1){ 
                                 cc = Math.abs(p[j]/10);
                                 c[j-1] = cc;

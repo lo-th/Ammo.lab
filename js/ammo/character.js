@@ -5,28 +5,29 @@
 //
 //--------------------------------------------------
 
-function stepCharacter() {
+function stepCharacter( AR, N ) {
 
     //if( !heros.length ) return;
 
     heros.forEach( function ( b, id ) {
 
-        var n = id * 8;
-        Hr[n] = b.speed;
+        var n = N + (id * 8);
+        
+        AR[n] = b.speed;
         //Hr[n] = b.onGround ? 1 : 0;
 
         var t = b.getGhostObject().getWorldTransform();
         pos = t.getOrigin();
         quat = t.getRotation();
 
-        Hr[n+1] = pos.x();
-        Hr[n+2] = pos.y();
-        Hr[n+3] = pos.z();
+        AR[n+1] = pos.x();
+        AR[n+2] = pos.y();
+        AR[n+3] = pos.z();
 
-        Hr[n+4] = quat.x();
-        Hr[n+5] = quat.y();
-        Hr[n+6] = quat.z();
-        Hr[n+7] = quat.w();
+        AR[n+4] = quat.x();
+        AR[n+5] = quat.y();
+        AR[n+6] = quat.z();
+        AR[n+7] = quat.w();
 
     });
 

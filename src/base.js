@@ -7,7 +7,7 @@ var TextDecoder;
 
 var ammo, intro, UIL, esprima, CodeMirror, update, postUpdate;
 
-var Br, Cr, Jr, Hr, Sr;
+var Ar, ArLng, ArPos, ArMax;
 var demos;
 
 // tween

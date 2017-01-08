@@ -5,7 +5,35 @@
 //
 //--------------------------------------------------
 
-var softPoints;
+//var softPoints;
+
+function stepSoftBody ( AR, N ) {
+
+    //if( !softs.length ) return;
+
+    var softPoints = N;
+
+    softs.forEach( function ( b ) {
+
+        var s = b.get_m_nodes(); // get vertrices list
+        var j = s.size();
+        var n;
+                
+        while(j--){
+            n = softPoints + ( j * 3 );
+            s.at( j ).get_m_x().toArray( AR, n );
+            //pos = s.at( j ).get_m_x();
+            
+            //Sr[n] = pos.x();
+            //Sr[n+1] = pos.y();
+            //Sr[n+2] = pos.z();
+        }
+
+        softPoints += s.size()*3;
+
+    });
+
+};
 
 function moveSoftBody( o ) {
 
@@ -21,33 +49,7 @@ function moveSoftBody( o ) {
 
 };
 
-function stepSoftBody () {
 
-    //if( !softs.length ) return;
-
-    softPoints = 0;
-
-    softs.forEach( function ( b ) {
-
-        var s = b.get_m_nodes(); // get vertrices list
-        var j = s.size();
-        var n;
-                
-        while(j--){
-            n = softPoints + ( j * 3 );
-            s.at( j ).get_m_x().toArray( Sr, n );
-            //pos = s.at( j ).get_m_x();
-            
-            //Sr[n] = pos.x();
-            //Sr[n+1] = pos.y();
-            //Sr[n+2] = pos.z();
-        }
-
-        softPoints += s.size()*3;
-
-    });
-
-};
 
 function clearSoftBody () {
 

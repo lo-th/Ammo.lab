@@ -55,7 +55,13 @@ var isBuffer, isDynamic;
 var currentCar = 0;
 
 // main transphere array
-var Br, Cr, Jr, Hr, Sr;
+var Ar, aAr;
+var ArLng, ArPos, ArMax;
+
+
+//var Br, Cr, Jr, Hr, Sr;
+ // ArrayBuffer
+//var aBr, aCr, aJr, aHr, aSr;
 
 var fixedTime = 0.01667;
 var last_step = Date.now();
@@ -100,37 +106,15 @@ var GROUP = {
 
 function initARRAY(){
 
-    Br = new Float32Array( 1000*8 ); // rigid buffer max 1000
-    Cr = new Float32Array( 14*56 ); // car buffer max 14 / 6 wheels
-    Jr = new Float32Array( 100*4 ); // joint buffer max 100
-    Hr = new Float32Array( 10*8 ); // hero buffer max 10
-    Sr = new Float32Array( 8192*3 );// soft buffer nVertices x,y,z
+    aAr = new ArrayBuffer( ArMax * Float32Array.BYTES_PER_ELEMENT );
+    Ar = new Float32Array( aAr );
 
-
-    /*Br = new Float32Array( new ArrayBuffer(1000*8) ); // rigid buffer max 1000
-    Cr = new Float32Array( new ArrayBuffer(14*56) ); // car buffer max 14 / 6 wheels
-    Jr = new Float32Array( new ArrayBuffer(100*4) ); // joint buffer max 100
-    Hr = new Float32Array( new ArrayBuffer(10*8) ); // hero buffer max 10
-    Sr = new Float32Array( new ArrayBuffer(8192*3) );*/
+   // console.log(aAr.byteLength)
 
 };
 
- function dynamicARRAY(){
-
-    Br = new Float32Array( bodys.length*8 ); // rigid buffer max 1000
-    Cr = new Float32Array( cars.length*56 ); // car buffer max 14 / 6 wheels
-    Jr = new Float32Array( joints.length*4 ); // joint buffer max 100
-    Hr = new Float32Array( heros.length*8 ); // hero buffer max 10
-
-    var p = 0;
-    softs.forEach( function ( b ) { p += b.points; });
-    Sr = new Float32Array( p*3 );// soft buffer nVertices x,y,z
-
-    
-    //Sr = new Float32Array( 8192*3 );
 
 
-};
 
 /*function stepAdvanced () {
 
@@ -256,14 +240,16 @@ function step( o ){
 
     if( isBuffer ){
 
-        if( isDynamic ) dynamicARRAY();
-        else {
-            Br = o.Br;
+        //if( isDynamic ) dynamicARRAY();
+        //else {
+            aAr = o.aAr;
+            Ar = new Float32Array( aAr );
+            /*Br = o.Br;
             Cr = o.Cr;
             Hr = o.Hr;
             Jr = o.Jr;
-            Sr = o.Sr;
-        }
+            Sr = o.Sr;*/
+        //}
     }
 
     // ------- step
@@ -275,17 +261,48 @@ function step( o ){
     drive( currentCar );
     move( 0 );
 
-    stepCharacter();
-    stepVehicle();
-    stepConstraint();
-    stepRigidBody();
-    stepSoftBody();
+    //[ hero, cars, joint, rigid, soft ]
+
+    stepCharacter( Ar, ArPos[0] );
+    stepVehicle( Ar, ArPos[1] );
+    
+    stepRigidBody( Ar, ArPos[2] );
+    stepSoftBody( Ar, ArPos[3] );
+
+    stepConstraint( Ar, ArPos[4] );
+
+
+    /*stepCharacter( Hr, 0 );
+    stepVehicle( Cr, 0 );
+    stepConstraint( Jr, 0 );
+    stepRigidBody( Br, 0 );
+    stepSoftBody( Sr, 0 );*/
 
 
     // ------- post step
 
-    if( isBuffer ) self.postMessage({ m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
-    else self.postMessage( { m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } );
+    //if( isBuffer ) self.postMessage({ m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
+    //else self.postMessage( { m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } );
+
+
+    //if( isBuffer ) self.postMessage({ m:'step', Ar:Ar },[ Ar.buffer ]);
+    //else self.postMessage( { m:'step', Ar:Ar } );
+
+
+    //else 
+
+    //self.postMessage( { m:'step', Ar: JSON.stringify( Ar ) } );
+    if( isBuffer ) self.postMessage({ m:'step', aAr:aAr },[ aAr ]);
+    else self.postMessage( { m:'step', Ar:Ar } );
+
+    //self.postMessage( { m:'step', Ar:aAr } );
+
+
+    //else self.postMessage( { m:'step', Br:aBr, Cr:aCr, Hr:aHr, Jr:aJr, Sr:aSr } );
+
+    /*for(var i = 0; i < ArMax; i++) {
+        postMessage({ m:'step', result:Ar[i], n:i});
+    }*/
 
 };
 
@@ -304,6 +321,14 @@ function init ( o ) {
     if(o.timeStep !== undefined ) timeStep = o.timeStep;
     timerStep = timeStep * 1000;
     substep = o.substep || 2;
+
+    //
+
+    ArLng = o.settings[0];
+    ArPos = o.settings[1];
+    ArMax = o.settings[2];
+
+    //
 
     importScripts( o.blob );
 
@@ -363,6 +388,8 @@ function init ( o ) {
     // use for get object by name
     byName = {};
 
+    
+
     //
 
     self.postMessage({ m:'init' });
@@ -402,9 +429,13 @@ function reset ( o ) {
 
     if( isBuffer ){
 
-        if( isDynamic ) dynamicARRAY();
-        else initARRAY();
-        self.postMessage({ m:'start', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
+        //if( isDynamic ) dynamicARRAY();
+        //else 
+        initARRAY();
+        //self.postMessage({ m:'start', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
+
+        //self.postMessage({ m:'start', Ar:Ar },[ Ar.buffer ]);
+        self.postMessage({ m:'start', aAr:aAr },[ aAr ]);
 
     } else {
 
