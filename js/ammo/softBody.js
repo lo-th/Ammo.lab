@@ -201,11 +201,9 @@ function addSoftBody ( o ) {
 
     body.points = body.get_m_nodes().size();
 
-    if(o.name) byName[o.name] = body;
+    if( o.name ) byName[o.name] = body;
 
     softs.push( body );
-
-
 
     o = null;
 

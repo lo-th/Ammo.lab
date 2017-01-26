@@ -33,7 +33,7 @@ var tmpMatrix = [];
 //var tmpset = null;
 
 // array
-var bodys, softs, joints, cars, solids, heros, carsInfo;
+var bodys, solids, softs, joints, cars, heros, carsInfo;
 // object
 var byName;
 
@@ -377,10 +377,10 @@ function init ( o ) {
 
     addWorld();
 
-    bodys = [];
-    softs = [];
-    joints = [];
-    cars = [];
+    bodys = []; // 0
+    softs = []; // 1
+    joints = []; // 2
+    cars = []; 
     carsInfo = [];
     heros = [];
     solids = [];
@@ -520,6 +520,26 @@ function getByName( n ){
 
 }
 
+function getByIdx( n ){
+
+    var u = n.toFixed(1);
+    var id = parseInt( u );
+    var range = Number( u.substring( u.lastIndexOf('.') + 1 ));
+
+    switch( range ){
+
+        case 1 : return heros[id]; break;
+        case 2 : return cars[id]; break;
+        case 3 : return bodys[id]; break;
+        case 4 : return solids[id]; break;
+        case 5 : return terrains[id]; break;
+        case 6 : return softs[id]; break;
+        case 7 : return joints[id]; break;
+
+    }
+
+}
+
 
 //--------------------------------------------------
 //
@@ -527,6 +547,51 @@ function getByName( n ){
 //
 //--------------------------------------------------
 
+function updateForce () {
+
+    var i = tmpForce.length / 8, n;
+    while(i--){
+        n = i*8;
+        applyForce( tmpForce[n], tmpForce[n+1], [tmpForce[n+2], tmpForce[n+3], tmpForce[n+4]], [tmpForce[n+5], tmpForce[n+6], tmpForce[n+7]] );
+    }
+
+    tmpForce = [];
+
+    //while( tmpForce.length > 0 ) applyForce( tmpForce.pop() );
+
+}
+
+function applyForce ( idx, type, v1, v2 ) {
+
+    var b = getByIdx( idx );
+
+    //console.log( r[0], b )
+
+    if( b === null ) return;
+
+
+
+    tmpPos1.fromArray( v1 );
+    tmpPos2.fromArray( v2 );
+
+    switch( type ){
+        case 'force' : case 0 : b.applyForce( tmpPos1, tmpPos2 ); break;// force , rel_pos 
+        case 'torque' : case 1 : b.applyTorque( tmpPos1 ); break;
+        case 'localTorque' : case 2 : b.applyLocalTorque( tmpPos1 ); break;
+        case 'centralForce' :case 3 :  b.applyCentralForce( tmpPos1 ); break;
+        case 'centralLocalForce' : case 4 : b.applyCentralLocalForce( tmpPos1 ); break;
+        case 'impulse' : case 5 : b.applyImpulse( tmpPos1, tmpPos2 ); break;// impulse , rel_pos 
+        case 'centralImpulse' : case 6 : b.applyCentralImpulse( tmpPos1 ); break;
+
+        // joint
+
+        case 'motor' : case 7 : b.enableAngularMotor( true, v1[0], v1[1] ); break; // bool, targetVelocity, maxMotorImpulse
+
+    }
+    
+
+}
+/*
 function updateForce () {
 
     while( tmpForce.length > 0 ) applyForce( tmpForce.pop() );
@@ -547,22 +612,22 @@ function applyForce ( r ) {
     if( r[3] !== undefined ) tmpPos2.fromArray( r[3] );
 
     switch(r[1]){
-        case 'force' : b.applyForce( tmpPos1, tmpPos2 ); break;// force , rel_pos 
-        case 'torque' : b.applyTorque( tmpPos1 ); break;
-        case 'localTorque' : b.applyLocalTorque( tmpPos1 ); break;
-        case 'centralForce' : b.applyCentralForce( tmpPos1 ); break;
-        case 'centralLocalForce' : b.applyCentralLocalForce( tmpPos1 ); break;
-        case 'impulse' : b.applyImpulse( tmpPos1, tmpPos2 ); break;// impulse , rel_pos 
-        case 'centralImpulse' : b.applyCentralImpulse( tmpPos1 ); break;
+        case 'force' : case 0 : b.applyForce( tmpPos1, tmpPos2 ); break;// force , rel_pos 
+        case 'torque' : case 1 : b.applyTorque( tmpPos1 ); break;
+        case 'localTorque' : case 2 : b.applyLocalTorque( tmpPos1 ); break;
+        case 'centralForce' :case 3 :  b.applyCentralForce( tmpPos1 ); break;
+        case 'centralLocalForce' : case 4 : b.applyCentralLocalForce( tmpPos1 ); break;
+        case 'impulse' : case 5 : b.applyImpulse( tmpPos1, tmpPos2 ); break;// impulse , rel_pos 
+        case 'centralImpulse' : case 6 : b.applyCentralImpulse( tmpPos1 ); break;
 
         // joint
 
-        case 'motor' : b.enableAngularMotor( true, r[2][0], r[2][1] ); break; // bool, targetVelocity, maxMotorImpulse
+        case 'motor' : case 7 : b.enableAngularMotor( true, r[2][0], r[2][1] ); break; // bool, targetVelocity, maxMotorImpulse
 
     }
     
 
-}
+}*/
 
 
 //--------------------------------------------------

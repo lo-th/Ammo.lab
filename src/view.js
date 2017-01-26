@@ -41,12 +41,24 @@ var vs = { w:1, h:1, l:0, x:0 };
 
 var helper;
 
-var meshs = [];
-var statics = [];
-var terrains = [];
-var softs = [];
-var cars = [];
-var heros = [];
+var ranges = {
+    'heros' : 1,
+    'cars' : 2,
+    'bodys' : 3,
+    'solids' : 4,
+    'terrains' : 5,
+    'softs' : 6,
+    'joints' : 7, 
+};
+
+var heros = []; // 1
+var cars = []; // 2
+var bodys = []; // 3
+var solids = []; // 4
+var terrains = []; // 5
+var softs = []; // 6
+var joints = []; // 7
+
 var extraGeo = [];
 
 var byName = {};
@@ -158,8 +170,8 @@ view = {
 
         var c, i;
 
-        while( meshs.length > 0 ) scene.remove( meshs.pop() );
-        while( statics.length > 0 ) scene.remove( statics.pop() );
+        while( bodys.length > 0 ) scene.remove( bodys.pop() );
+        while( solids.length > 0 ) scene.remove( solids.pop() );
         while( terrains.length > 0 ) scene.remove( terrains.pop() );
         while( softs.length > 0 ) scene.remove( softs.pop() );
         while( heros.length > 0 ) scene.remove( heros.pop() );
@@ -178,7 +190,7 @@ view = {
             scene.remove( c );
         }
 
-        //meshs.length = 0;
+        //bodys.length = 0;
         perlin = null;
         byName = {};
 
@@ -504,16 +516,16 @@ view = {
 
         // re-apply material
 
-        i = meshs.length;
+        i = bodys.length;
         while(i--){
-            name = meshs[i].material.name;
-            meshs[i].material = mat[name];
+            name = bodys[i].material.name;
+            bodys[i].material = mat[name];
         };
 
-        i = statics.length;
+        i = solids.length;
         while(i--){
-            name = statics[i].material.name;
-            statics[i].material = mat[name];
+            name = solids[i].material.name;
+            solids[i].material = mat[name];
         };
 
         i = cars.length;
@@ -1050,7 +1062,7 @@ view = {
             mesh.receiveShadow = true;
             mesh.castShadow = true;
             
-            view.setName( o, mesh );
+            //view.setName( o, mesh );
 
             if( o.parent !== undefined ) o.parent.add( mesh );
             else scene.add( mesh );
@@ -1067,8 +1079,21 @@ view = {
 
             // push 
             if(mesh){
-                if( o.mass ) meshs.push( mesh );
-                else statics.push( mesh );
+                if( o.mass ){
+
+                    mesh.idx = view.setIdx( bodys.length, 'bodys' );
+                    view.setName( o, mesh );
+
+                    bodys.push( mesh );
+
+                } else {
+
+                    mesh.idx = view.setIdx( solids.length, 'solids' );
+                    view.setName( o, mesh );
+
+                    solids.push( mesh );
+
+                };
             }
 
             // send to worker
@@ -1158,10 +1183,13 @@ view = {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
+        mesh.idx = view.setIdx( heros.length, 'heros' );
+        view.setName( o, mesh );
+
         scene.add( mesh );
         heros.push( mesh );
 
-        this.setName( o, mesh );
+        
 
         if( o.mesh ) delete( o.mesh );
 
@@ -1218,7 +1246,8 @@ view = {
 
         scene.add( mesh );
 
-        this.setName( o, mesh );
+        mesh.idx = view.setIdx( cars.length, 'cars' );
+        view.setName( o, mesh );
 
         mesh.userData.speed = 0;
         mesh.userData.steering = 0;
@@ -1332,6 +1361,9 @@ view = {
         mesh.softType = 5;
         mesh.points = o.v.length / 3;
 
+        mesh.idx = view.setIdx( softs.length, 'softs' );
+        view.setName( o, mesh );
+
         scene.add( mesh );
         softs.push( mesh );
 
@@ -1366,6 +1398,9 @@ view = {
         mesh.softType = 4;
         mesh.points = o.v.length / 3;
 
+        mesh.idx = view.setIdx( softs.length, 'softs' );
+        view.setName( o, mesh );
+
         scene.add( mesh );
         softs.push( mesh );
 
@@ -1397,7 +1432,9 @@ view = {
 
         var mesh = new THREE.Mesh( g, mat.cloth );
 
-        this.setName( o, mesh );
+        mesh.idx = view.setIdx( softs.length, 'softs' );
+
+        view.setName( o, mesh );
 
        // mesh.material.needsUpdate = true;
         mesh.position.set( pos[0], pos[1], pos[2] );
@@ -1457,6 +1494,8 @@ view = {
         //console.log(g.positions.length)
 
         var mesh = new THREE.Mesh( g, mat.ball );
+
+        mesh.idx = view.setIdx( softs.length, 'softs' );
 
         this.setName( o, mesh );
 
@@ -1565,6 +1604,8 @@ view = {
         //g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
         var mesh = new THREE.Mesh( g, mat.ball );
 
+        mesh.idx = view.setIdx( softs.length, 'softs' );
+
         this.setName( o, mesh );
 
         mesh.softType = 3;
@@ -1637,6 +1678,10 @@ view = {
         mesh.castShadow = false;
         mesh.receiveShadow = true;
 
+        mesh.idx = view.setIdx( terrains.length, 'terrains' );
+
+        //console.log(mesh.idx)
+
         this.setName( o, mesh );
 
         scene.add( mesh );
@@ -1661,18 +1706,53 @@ view = {
     //
     //--------------------------------------
 
+    setIdx: function  ( id, type ){
+
+        return id + ( ranges[type] * 0.1 );
+
+    },
+
+    getByIdx: function ( n ){
+
+        var u = n.toFixed(1);
+        var id = parseInt( u );
+        var range = Number( u.substring( u.lastIndexOf('.') + 1 ));
+
+        switch( range ){
+
+            case 1 : return heros[id]; break;
+            case 2 : return cars[id]; break;
+            case 3 : return bodys[id]; break;
+            case 4 : return solids[id]; break;
+            case 5 : return terrains[id]; break;
+            case 6 : return softs[id]; break;
+            case 7 : return joints[id]; break;
+
+        }
+
+    },
+
     setName: function ( o, mesh ) {
 
         if( o.name !== undefined ){ 
-            byName[o.name] = mesh;
+            byName[ o.name ] = mesh.idx;
+            //byName[ o.name ] = mesh;
             mesh.name = o.name;
         }
 
     },
 
-    getByName: function (name){
+    getByName: function ( name ){
 
-        return byName[name] || null;
+        //return byName[name] || null;
+
+        return view.getByIdx( byName[name] );
+
+    },
+
+    getNameIdx: function ( name ){
+
+        return byName[name];
 
     },
 
@@ -1683,13 +1763,13 @@ view = {
     //
     //--------------------------------------
 
-    getBody: function(){ return meshs },
+    getBody: function(){ return bodys },
 
     bodyStep: function( AR, N ){
 
-        if( !meshs.length ) return;
+        if( !bodys.length ) return;
 
-        meshs.forEach( function( b, id ) {
+        bodys.forEach( function( b, id ) {
 
             var n = N + ( id * 8 );
             var s = AR[n];

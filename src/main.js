@@ -33,10 +33,17 @@ function init(){
 
     view.init();
     user.init();
-    editor.init( launch, isWithCode );
+    editor.init( launch, reset, isWithCode );
     ammo.init( ready, direct, isBuffer );
     
     loop();
+
+};
+
+function reset ( full ) {
+
+    ammo.reset( full );
+    view.reset( full );
 
 };
 
@@ -61,20 +68,20 @@ function ready () {
 
 function launch ( name ) {
 
-    var full = true;
+    /*var full = true;
     var hash = location.hash.substr( 1 );
-    if( hash === name ) full = false;
+    if( hash === name ) full = false;*/
 
-    location.hash = name;
+    //location.hash = name;
 
-    ammo.reset( full );
-    view.reset( full );
+    //ammo.reset( full );
+    //view.reset( full );
 
     demo = new window['demo'];
 
     // start Physics engine
-    setTimeout( ammo.start, 100 );
-    //ammo.start();
+    //setTimeout( ammo.start, 100 );
+    ammo.start();
 
 };
 
