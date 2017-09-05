@@ -75,6 +75,7 @@ function meca () {
         state:4,
         group:buggyGroup, 
         mask:buggyMask, 
+
     });
 
     add({type:'box', name:'boyA', mass:10, pos:[0,15,0], size:[2] });
@@ -483,7 +484,7 @@ function wheel ( n ) {
     var axe = [];
 
     while(i--){
-        angle = -(45*i)*Math.degtorad;
+        angle = -(45*i)*Math.torad;
         x = (radius * Math.cos(angle));
         y = (radius * Math.sin(angle));
         z = position[2];

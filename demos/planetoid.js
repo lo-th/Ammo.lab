@@ -35,9 +35,7 @@ function postUp() {
     bodys.forEach( function( b, id ) {
 
         p = b.position.clone().negate().normalize().multiplyScalar(9.8);
-        //r.push( [ id, 'centralForce', [p.x,p.y,p.z], [0,0,0] ] );
-
-        r.push( b.idx, 3, p.x,p.y,p.z, 0,0,0 );
+        r.push( [ b.idx, 3, p.toArray(), [0,0,0] ] );
 
     });
 

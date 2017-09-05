@@ -83,7 +83,7 @@ function postUp() {
     tmpPos.set( 0, 1, 0 );
     tmpPos.applyMatrix4( tmpMatrix );
 
-    force.y = 26.3;//0.435;
+    force.y = 25.;//0.435;
     //var p = drone.position.clone();//.negate().normalize().multiplyScalar(9.8);
     var r = [];
     var p;

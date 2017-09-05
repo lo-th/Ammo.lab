@@ -3,39 +3,21 @@
 *    | |_ _| | |  _  |
 *    |___|_|_| |_| |_|
 *    @author lo.th / http://lo-th.github.io/labs/
-*    THREE ultimate manager
+*    THREE manager
 */
-
-'use strict';
-// MATH ADD
-Math.torad = 0.0174532925199432957;
-Math.todeg = 57.295779513082320876;
-Math.degtorad = 0.0174532925199432957;
-Math.radtodeg = 57.295779513082320876;
-Math.Pi = 3.141592653589793;
-Math.TwoPI = 6.283185307179586;
-Math.PI90 = 1.570796326794896;
-Math.PI270 = 4.712388980384689;
-Math.lerp = function (a, b, percent) { return a + (b - a) * percent; };
-Math.rand = function (a, b) { return Math.lerp(a, b, Math.random()); };
-Math.randInt = function (a, b, n) { return Math.lerp(a, b, Math.random()).toFixed(n || 0)*1; };
-Math.int = function(x) { return ~~x; };
-
-
-
 
 var view = ( function () {
 
 'use strict';
 
-var _V;
+//var _V;
 
 var time = 0;
 var temp = 0;
 var count = 0;
 var fps = 0;
 
-var canvas, renderer, scene, camera, controls, debug;
+var canvas, renderer, scene, camera, controler, debug;
 var ray, mouse, content, targetMouse, rayCallBack, moveplane, isWithRay = false;;
 var vs = { w:1, h:1, l:0, x:0 };
 
@@ -69,10 +51,7 @@ var isNeedCrowdUpdate = false;
 // camera
 var isCamFollow = false;
 var currentFollow = null;
-var cameraGroup;
-
-//var azimut = 0, oldAzimut = 0;
-//var polar = 0, oldPolar = 0;
+var camTween = null;
 
 var cam = { theta:0, phi:0, oTheta:0, oPhi:0 };
 
@@ -107,9 +86,9 @@ view = {
     //
     //--------------------------------------
 
-    render: function () {
+    render: function ( stamp ) {
 
-        requestAnimationFrame( _V.render );
+        requestAnimationFrame( view.render );
 
         TWEEN.update();
         THREE.SEA3D.AnimationHandler.update( 0.017 );
@@ -118,10 +97,10 @@ view = {
 
         if( isNeedUpdate ){
 
-            _V.heroStep( Ar, ArPos[0] );
-            _V.carsStep( Ar, ArPos[1] );
-            _V.bodyStep( Ar, ArPos[2] );
-            _V.softStep( Ar, ArPos[3] );
+            view.heroStep( Ar, ArPos[0] );
+            view.carsStep( Ar, ArPos[1] );
+            view.bodyStep( Ar, ArPos[2] );
+            view.softStep( Ar, ArPos[3] );
             /*
 
             _V.heroStep( Hr, 0 );
@@ -130,7 +109,7 @@ view = {
             _V.bodyStep( Br, 0 );
             _V.softStep( Sr, 0 );*/
 
-            _V.controlUpdate();
+            view.controlUpdate();
             
 
             isNeedUpdate = false;
@@ -141,7 +120,7 @@ view = {
 
         renderer.render( scene, camera );
 
-        time = now();
+        time = stamp === undefined ? now() : stamp;
         if ( (time - 1000) > temp ){ temp = time; fps = count; count = 0; }; count++;
 
     },
@@ -205,7 +184,7 @@ view = {
         document.body.appendChild( canvas );
 
 
-        _V = this;
+        //_V = this;
 
 
 
@@ -235,8 +214,8 @@ view = {
         renderer.gammaOutput = true;
 
         renderer.toneMapping = THREE.Uncharted2ToneMapping;
-        renderer.toneMappingExposure = 3.0;
-        renderer.toneMappingWhitePoint = 5.0;
+        renderer.toneMappingExposure = 2.2;//3.0;
+        renderer.toneMappingWhitePoint = 2.2;//5.0;
 
         // SCENE
 
@@ -250,18 +229,14 @@ view = {
         camera = new THREE.PerspectiveCamera( 60 , 1 , 1, 1000 );
         camera.position.set( 0, 0, 30 );
 
-        controls = new THREE.OrbitControls( camera, canvas );
-        controls.target.set( 0, 0, 0 );
-        controls.enableKeys = false;
-        controls.update();
-
-        cameraGroup = new THREE.Group();
-        scene.add( cameraGroup );
-        cameraGroup.add( camera );
+        controler = new THREE.OrbitControls( camera, canvas );
+        controler.target.set( 0, 0, 0 );
+        controler.enableKeys = false;
+        controler.update();
 
         // LIGHTS
 
-        this.addLights();
+        view.addLights();
 
         // IMAGE LOADER
 
@@ -295,7 +270,7 @@ view = {
             terrain: new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'terrain', wireframe:true }),
             cloth: new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'cloth', wireframe:true, transparent:true, opacity:0.9, side: THREE.DoubleSide }),
             ball: new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors, name:'ball', wireframe:true }),
-            statique: new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6 }),
+            statique: new THREE.MeshBasicMaterial({ color:0x333399, name:'statique', wireframe:true, transparent:true, opacity:0.6, depthTest:true, depthWrite: false }),
             move: new THREE.MeshBasicMaterial({ color:0x999999, name:'move', wireframe:true }),
             movehigh: new THREE.MeshBasicMaterial({ color:0xff9999, name:'movehigh', wireframe:true }),
             sleep: new THREE.MeshBasicMaterial({ color:0x9999FF, name:'sleep', wireframe:true }),
@@ -330,21 +305,17 @@ view = {
         this.resize();
         this.initEnv();
 
-
-
-        
-
-        
-
-        window.addEventListener( 'resize', _V.resize, false );
+        window.addEventListener( 'resize', view.resize, false );
 
         this.render();
 
         this.load ( 'basic', callback );
 
-        //if( callback ) callback();
-
     },
+
+    //-----------------------------
+    // LIGHTS
+    //-----------------------------
 
     addLights: function(){
 
@@ -353,7 +324,7 @@ view = {
         light.lookAt( new THREE.Vector3() );
         scene.add( light );
 
-        ambient = new THREE.AmbientLight( 0x444444 );
+        ambient = new THREE.AmbientLight( 0x333333 );
         scene.add( ambient );
 
     },
@@ -372,61 +343,39 @@ view = {
 
     },
 
-    setLeft: function ( x ) { 
+    //-----------------------------
+    // SET
+    //-----------------------------
 
-        vs.x = x; 
+    setLeft: function ( x ) { vs.x = x; },
 
-    },
+    //-----------------------------
+    // GET
+    //----------------------------
 
-    getFps: function () {
+    getFps: function () { return fps; },
 
-        return fps;
+    getInfo: function () { return renderer.info.programs.length; },
 
-    },
+    getGeo: function () { return geo; },
 
-    getInfo: function () {
+    getMat: function () { return mat; },
 
-        return renderer.info.programs.length;
-
-    },
+    getScene: function () { return scene; },
 
     
 
-    addMap: function( name, matName ) {
+    
 
-        var map = imagesLoader.load( './assets/textures/' + name );
-        //map.wrapS = THREE.RepeatWrapping;
-        //map.wrapT = THREE.RepeatWrapping;
-        map.flipY = false;
-        mat[matName].map = map;
-
-    },
-
-    getGeo: function () {
-
-        return geo;
-
-    },
-
-    getMat: function () {
-
-        return mat;
-
-    },
-
-    getScene: function () {
-
-        return scene;
-
-    },
-
+    //-----------------------------
     // RAYCAST
+    //-----------------------------
 
     removeRay: function(){
         if(isWithRay){
             isWithRay = false;
 
-            canvas.removeEventListener( 'mousemove', _V.rayTest, false );
+            canvas.removeEventListener( 'mousemove', view.rayTest, false );
             rayCallBack = null;
 
             content.remove(moveplane);
@@ -448,7 +397,7 @@ view = {
         targetMouse = new THREE.Mesh( geo['box'] ,  new THREE.MeshBasicMaterial({color:0xFF0000}));
         scene.add(targetMouse);
 
-        canvas.addEventListener( 'mousemove', _V.rayTest, false );
+        canvas.addEventListener( 'mousemove', view.rayTest, false );
 
         rayCallBack = callback;
 
@@ -469,7 +418,19 @@ view = {
         }
     },
 
+    //-----------------------------
     // MATERIAL
+    //-----------------------------
+
+    addMap: function( name, matName ) {
+
+        var map = imagesLoader.load( './assets/textures/' + name );
+        //map.wrapS = THREE.RepeatWrapping;
+        //map.wrapT = THREE.RepeatWrapping;
+        map.flipY = false;
+        mat[matName].map = map;
+
+    },
 
     changeMaterial: function ( type ) {
 
@@ -617,9 +578,9 @@ view = {
             envMap.format = THREE.RGBFormat;
             envMap.needsUpdate = true;
 
-            if( nEnv === 0 && !isWirframe ) _V.changeMaterial( 0 );
+            if( nEnv === 0 && !isWirframe ) view.changeMaterial( 0 );
             if( nEnv !== 0  ) {
-                if( isWirframe ) _V.changeMaterial( 1 );
+                if( isWirframe ) view.changeMaterial( 1 );
                 else{
                     for( var mm in mat ){
                        mat[mm].envMap = envMap;
@@ -654,7 +615,7 @@ view = {
 
         callback_load = Callback || function(){};
 
-        _V.load_sea( urls[0] );
+        view.load_sea( urls[0] );
 
     },
 
@@ -662,7 +623,7 @@ view = {
 
         urls.shift();
         if( urls.length === 0 ) callback_load();
-        else _V.load_sea( urls[0] );
+        else view.load_sea( urls[0] );
 
     },
 
@@ -680,7 +641,7 @@ view = {
                 geo[ g.name ] = g;
             };
 
-            _V.load_next();
+            view.load_next();
 
         };
 
@@ -720,9 +681,68 @@ view = {
     //
     //--------------------------------------
 
-    controlUpdate: function(){
+    //-----------------------------
+    // CAMERA AUTO CONTROL
+    //-----------------------------
 
+    moveCamera: function ( h, v, d, t, time ) {
+
+        //console.log( view.getCurrentPosition() )
+
+        t = t || [0,0,0];
+        view.autoRotate( { polar: -v, azim: h, distance: d, x: t[0], y: t[1], z: t[2] }, time || 1000 );
         
+    },
+
+    autoRotate: function ( o, time, delay, callback ) {
+
+        callback = callback || function(){};
+
+        var c = view.getCurrentPosition();
+        controler.enabled = false;
+
+        //TWEEN.remove( camTween );
+
+        camTween = new TWEEN.Tween( c ).to( o, time || 2000 )
+        .delay( delay || 0 )
+        .easing( TWEEN.Easing.Quadratic.Out )
+        .onUpdate( function() { view.orbit( c ); } )
+        .onComplete( function() { controler.enabled = true;  callback(); } )
+        .start();
+
+    },
+
+    orbit: function ( o ) {
+
+        var phi = ( o.polar + 90 ) * Math.torad;
+        var theta = o.azim * Math.torad;
+
+        controler.target.set( o.x, o.y, o.z );
+        camera.position.copy( controler.target );
+        camera.position.x += o.distance * Math.sin(phi) * Math.sin(theta);
+        camera.position.y += o.distance * Math.cos(phi);
+        camera.position.z += o.distance * Math.sin(phi) * Math.cos(theta);
+        controler.update();
+
+    },
+
+    getCurrentPosition: function ( log ) {
+
+        var p = {};
+        var t = controler.target;
+        var c = camera.position;
+        p.x = t.x;
+        p.y = t.y;
+        p.z = t.z;
+        p.distance = Math.floor( c.distanceTo( t ) );
+        p.polar = Math.unwrapDeg( Math.floor( controler.getPolarAngle() * Math.todeg ) - 90 );
+        p.azim = Math.unwrapDeg( Math.floor( controler.getAzimuthalAngle() * Math.todeg )  );
+        if( log ) console.log( JSON.stringify( p ) )
+        return p;
+
+    },
+
+    controlUpdate: function(){
 
         if( !isCamFollow ) return;
         if( currentFollow === null ) return;
@@ -732,20 +752,18 @@ view = {
         var type = mesh.userData.type;
         var speed = mesh.userData.speed;
 
-        v = (-70) * Math.torad;
+        v = 20;//(-70) * Math.torad;
 
         if( type === 'car' ) {
 
-            
-            
             if( speed < 10 && speed > -10 ){ 
 
-                this.setControle( true );
+                view.setControle( true );
                 return;
 
             } else {
 
-                this.setControle( false );
+                view.setControle( false );
 
             }
         }
@@ -755,10 +773,10 @@ view = {
         if( type === 'hero' ){
 
             //if( speed === 0 ){
-                this.setControle( true );
+                view.setControle( true );
 
-                cam.theta = controls.getAzimuthalAngle() + Math.Pi;
-                cam.phi = -controls.getPolarAngle();// - Math.PI90;
+                cam.theta = controler.getAzimuthalAngle() + Math.Pi;
+                cam.phi = -controler.getPolarAngle();// - Math.PI90;
 
 
 
@@ -789,11 +807,15 @@ view = {
         //matrix.multiplyVector3( front );
 
         var target = mesh.position;
-        h = Math.atan2( front.x, front.z );// * Math.radtodeg ) - 180;
+        h = (Math.atan2( front.x, front.z ) * Math.todeg) - 180;// );
         //v = (20-90) * Math.torad;
 
+        //view.moveCamera( h, v, 30, target.toArray(), 200 );
 
-        this.autoCamera( h, v, 10, 0.3, target );
+        view.orbit( { polar:-v, azim:h, distance:20, x:target.x, y:target.y, z:target.z } )
+ 
+
+        //this.autoCamera( h, v, 10, 0.3, target );
 
         //if( type === 'car' ) 
         //else view.setTarget(target);
@@ -802,7 +824,7 @@ view = {
 
     setFollow: function ( name ) {
 
-        currentFollow = this.getByName( name );
+        currentFollow = view.getByName( name );
         if( currentFollow !== null ) {
             isCamFollow = true;
         }
@@ -811,90 +833,37 @@ view = {
 
     setTarget: function ( target ) {
 
-        controls.target.copy( target );
-        controls.update();
+        controler.target.copy( target );
+        controler.update();
 
     },
 
-    autoCamera:function ( h, v, d, l, target ) {
+    /*autoCamera:function ( h, v, d, l, target ) {
 
         l = l || 1;
-        //if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
+        //if( target ) controler.target.set( target.x || 0, target.y || 0, target.z || 0 );
         //camera.position.copy( this.orbit( h, v, d ) );
-        camera.position.lerp( this.orbit( h, v, d ), l );
+        //camera.position.lerp( this.orbit( h, v, d ), l );
 
-        if( target ) this.setTarget( target );
-        //controls.update();
+        //if( target ) this.setTarget( target );
+        //controler.update();
 
-    },
+    },*/
 
-    moveCamera: function ( h, v, d, target ) {
-
-        /*l = l || 1;
-       // if( target ) controls.target.set( target.x || 0, target.y || 0, target.z || 0 );
-        camera.position.lerp( this.orbit( (h+180) * Math.torad, (v-90) * Math.torad, d ), l );
-        //controls.update();
-
-
-
-        if( target ) this.setTarget( target );*/
-
-        var dest = this.orbit( (h+180) * Math.torad, (v-90) * Math.torad, d );
-
-
-        new TWEEN.Tween( camera.position ).to( { x: dest.x, y: dest.y, z: dest.z }, 400 )
-                    .easing( TWEEN.Easing.Quadratic.Out )
-                    //.onUpdate( function(){ isMove = true; } )
-                    //.onComplete( function(){ current = rubrique; isMove = false; } )
-                    .start();
-
-
-        new TWEEN.Tween( controls.target ).to( { x: target[0], y: target[1], z: target[2] }, 400 )
-                    .easing( TWEEN.Easing.Quadratic.Out )
-                    .onUpdate( function(){ controls.update(); } )
-                    //.onComplete( function(){ current = rubrique; isMove = false; } )
-                    .start();
-        
-    },
-
-    orbit: function( h, v, d ) {
-
-        var offset = new THREE.Vector3();
-        
-        var phi = v;
-        var theta = h;
-        offset.x =  d * Math.sin(phi) * Math.sin(theta);
-        offset.y =  d * Math.cos(phi);
-        offset.z =  d * Math.sin(phi) * Math.cos(theta);
-
-        var p = new THREE.Vector3();
-        p.copy( controls.target ).add( offset );
-        /*
-        p.x = ( d * Math.sin(phi) * Math.cos(theta)) + controls.target.x;
-        p.y = ( d * Math.cos(phi)) + controls.target.y;
-        p.z = ( d * Math.sin(phi) * Math.sin(theta)) + controls.target.z;*/
-
-        //key[8] = theta;
-        
-        return p;
-
-    },
 
     setControle: function( b ){
 
-        if( controls.enableRotate === b ) return;
+        if( controler.enableRotate === b ) return;
         
-        controls.enableRotate = b;
-        controls.enableZoom = b;
-        controls.enablePan = b;
+        controler.enableRotate = b;
+        controler.enableZoom = b;
+        controler.enablePan = b;
 
     },
 
-
-
     resetCamera: function(){
 
-        _V.setControle( true );
+        view.setControle( true );
         currentFollow = null;
 
     },
@@ -904,16 +873,6 @@ view = {
         ammo.send('setDriveCar', { n:this.getByName(name).userData.id });
 
     },
-
-    toRad: function ( r ) {
-
-        var i = r.length;
-        while(i--) r[i] *= Math.torad;
-        return r;
-
-    },
-
-
 
     //--------------------------------------
     //
@@ -942,14 +901,14 @@ view = {
         }
 
         // rotation is in degree
-        o.rot = o.rot == undefined ? [0,0,0] : this.toRad(o.rot);
+        o.rot = o.rot == undefined ? [0,0,0] : Math.vectorad(o.rot);
         o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
 
-        if(o.rotA) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.toRad( o.rotA ) ) ).toArray();
-        if(o.rotB) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.toRad( o.rotB ) ) ).toArray();
+        if(o.rotA) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( Math.vectorad( o.rotA ) ) ).toArray();
+        if(o.rotB) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( Math.vectorad( o.rotB ) ) ).toArray();
 
-        if(o.angUpper) o.angUpper = this.toRad( o.angUpper );
-        if(o.angLower) o.angLower = this.toRad( o.angLower );
+        if(o.angUpper) o.angUpper = Math.vectorad( o.angUpper );
+        if(o.angLower) o.angLower = Math.vectorad( o.angLower );
 
         var mesh = null;
 
@@ -1012,7 +971,7 @@ view = {
 
         } else if( o.type === 'mesh' || o.type === 'convex' ){ 
             if(o.shape) {
-                o.v = _V.prepaGeometry( o.shape, o.type );
+                o.v = view.prepaGeometry( o.shape, o.type );
                 extraGeo.push( o.shape );
             }
             if(o.geometry){
@@ -1028,7 +987,7 @@ view = {
             if(o.geometry){
                 if(o.geoRot || o.geoScale) o.geometry = o.geometry.clone();
                 // rotation only geometry
-                if(o.geoRot){ o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler().fromArray(this.toRad(o.geoRot))));}
+                if(o.geoRot){ o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler().fromArray(Math.vectorad(o.geoRot))));}
 
             
                 // scale only geometry
@@ -1127,7 +1086,7 @@ view = {
         if(o.size.length == 2){ o.size[2] = o.size[0]; }
 
         o.pos = o.pos === undefined ? [0,0,0] : o.pos;
-        o.rot = o.rot == undefined ? [0,0,0] : this.toRad( o.rot );
+        o.rot = o.rot == undefined ? [0,0,0] : Math.vectorad( o.rot );
         o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
 
         var g = new THREE.CapsuleBufferGeometry( o.size[0], o.size[1]*0.5, 6 );
@@ -1211,7 +1170,7 @@ view = {
 
         //var masscenter = o.masscenter || [0,0.25,0];
 
-        this.toRad( rot );
+        Math.vectorad( rot );
 
         // chassis
         var mesh;
@@ -1303,7 +1262,7 @@ view = {
         if( o.mesh ) o.mesh = null;
         if( o.wheel ) o.wheel = null;
 
-        if ( o.type == 'mesh' || o.type == 'convex' ) o.v = _V.prepaGeometry( o.shape, o.type );
+        if ( o.type == 'mesh' || o.type == 'convex' ) o.v = view.prepaGeometry( o.shape, o.type );
 
         if( o.shape ) delete(o.shape);
         if( o.mesh ) delete(o.mesh);
@@ -1341,7 +1300,7 @@ view = {
 
         //console.log('start', g.getIndex().count);
 
-        _V.prepaGeometry( g );
+        view.prepaGeometry( g );
 
         extraGeo.push( g );
 
@@ -1386,7 +1345,7 @@ view = {
 
         g.translate( pos[0], pos[1], pos[2] );
 
-        _V.prepaGeometry(g);
+        view.prepaGeometry(g);
 
         o.v = g.realVertices;
 

@@ -1,0 +1,10 @@
+[  
+    "src/worker/ammo/world.js",
+    "src/worker/ammo/math.js",
+    "src/worker/ammo/character.js",
+    "src/worker/ammo/constraint.js",
+    "src/worker/ammo/rigidBody.js",
+    "src/worker/ammo/softBody.js",
+    "src/worker/ammo/terrain.js",
+    "src/worker/ammo/vehicle.js"
+]

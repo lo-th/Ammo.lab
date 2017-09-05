@@ -2,14 +2,51 @@ var pool = ( function () {
 
     'use strict';
 
-    var urls = [];
+    var results = {};
+    var urls = null;
     var callback = null;
-    var results = null;
+    
     var inLoading = false;
-
     var seaLoader = null;
+    var readers = null;
+    var URL = (window.URL || window.webkitURL);
+
+    var start = 0;
+    var end = 0;
 
     pool = {
+
+        load: function( Urls, Callback ){
+
+            urls = [];
+
+            start = ( typeof performance === 'undefined' ? Date : performance ).now();
+
+            if ( typeof Urls == 'string' || Urls instanceof String ) urls.push( Urls );// = [ Urls ];
+            else urls = urls.concat( Urls );
+
+            callback = Callback || function(){};
+
+            //results = {};
+
+            inLoading = true;
+
+            this.loadOne();
+
+        },
+
+        setAssetLoadTechnique: function( callback ) {
+
+            this.loading = callback;
+
+        },
+
+        reset: function (){
+
+            results = null;
+            callback = null;
+
+        },
 
         get: function ( name ){
 
@@ -47,29 +84,18 @@ var pool = ( function () {
 
         },
 
-        load: function( Urls, Callback ){
-
-            if ( typeof Urls == 'string' || Urls instanceof String ) urls.push( Urls );// = [ Urls ];
-            else urls = urls.concat( Urls );
-
-            callback = Callback || function(){};
-
-            results = {};
-
-            inLoading = true;
-
-            this.loadOne();
-
-        },
-
         next: function () {
 
             urls.shift();
             if( urls.length === 0 ){ 
+
                 inLoading = false;
+
+                end = ( typeof performance === 'undefined' ? Date : performance ).now() - start;
+                console.log( 'loading time v2:', Math.floor(end), 'ms' );
+
                 callback( results );
 
-                //console.log(results)
             }
             else this.loadOne();
 
@@ -78,83 +104,187 @@ var pool = ( function () {
         loadOne: function(){
 
             var link = urls[0];
-
             var name = link.substring( link.lastIndexOf('/')+1, link.lastIndexOf('.') );
             var type = link.substring( link.lastIndexOf('.')+1 );
-
-            if( type === 'jpg' || type === 'png' ) this.loadImage( link, name );
-            else this[ type + '_load' ]( link, name );
+            this.loading( link, name, type );
 
         },
 
-        loadImage: function ( url, name ) {
-
-            var img = new Image();
-
-            img.onload = function(){
-
-                results[name] = img;
-                this.next();
-
-            }.bind( this );
-
-            img.src = url;
+        progress: function ( loaded, total ) {
 
         },
 
-        setSeaLoader: function ( sea ) {
+        loading: function ( link, name, type ) {
 
-            seaLoader = sea;
+            var self = this;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', link, true );
+
+            switch( type ){
+
+                case 'sea': case 'z': case 'bvh': case 'BVH': xhr.responseType = "arraybuffer"; break;
+                case 'jpg': case 'png': xhr.responseType = 'blob'; break;
+
+            }
+            
+            //xhr.responseType = 'blob';
+            //xhr.onload = function() { self.load_blob( xhr.response, name, type ); }
+            //xhr.onload = function() { self.load_direct( xhr.response, name, type ); }
+
+            xhr.onprogress = function ( e ) {
+
+                if ( e.lengthComputable ) self.progress( e.loaded, e.total );
+
+            };
+
+            xhr.onreadystatechange = function () {
+
+                if ( xhr.readyState === 2 ) { //xhr.getResponseHeader("Content-Length");
+                } else if ( xhr.readyState === 3 ) { //  progress
+                } else if ( xhr.readyState === 4 ) {
+                    if ( xhr.status === 200 || xhr.status === 0 ) self.load_direct( xhr.response, name, type );
+                    else console.error( "Couldn't load ["+ name + "] [" + xhr.status + "]" );
+                }
+
+            };
+            
+            xhr.send( null );
+
+        },
+
+        //
+
+        load_direct: function ( response, name, type ) {
+
+            var self = this;
+
+            switch( type ){
+     
+                case 'sea':
+
+                    var lll = new THREE.SEA3D();
+
+                    lll.onComplete = function( e ) { 
+                        results[name] = lll.meshes;
+                        self.next();
+                    }
+
+                    lll.load( response );
+                    //lll.file.read( response );
+
+                break;
+                case 'jpg': case 'png':
+
+                    var img = new Image();
+                    img.onload = function(e) {
+                        URL.revokeObjectURL( img.src ); // Clean up after yourself.
+                        results[name] = img;
+                        self.next();
+                    };
+
+                    img.src = URL.createObjectURL( response );
+                    
+
+                break;
+                case 'z':
+
+                    results[name] = SEA3D.File.LZMAUncompress( response );
+                    self.next();
+
+                break;
+                case 'bvh': case 'BVH':
+
+                    results[name] = response;
+                    self.next();
+
+                break;
+
+                case 'glsl':
+
+                    results[name] = response;
+                    self.next();
+
+                break;
+
+                case 'json':
+
+                    results[name] = JSON.parse( response );
+                    self.next();
+
+                break;
+
+            }
 
         },
 
-        sea_load: function ( url, name ) {
+        ///  
 
-            var l = seaLoader || new THREE.SEA3D();
+        load_blob: function ( blob, name, type ) {
 
-            l.onComplete = function( e ) {
+            var self = this;
+            var reader = readers || new FileReader();
 
-                if( seaLoader === null ) results[name] = l.meshes;
-                this.next();
+            if( type === 'png' || type === 'jpg' ) reader.readAsDataURL( blob );
+            else if( type === 'json' || type === 'glsl' ) reader.readAsText( blob );
+            else reader.readAsArrayBuffer( blob );
 
-            }.bind( this );
+            reader.onload = function(e) {
 
-            l.load( url );
+                switch( type ){
+ 
+                    case 'sea':
 
-        },
+                        var lll = new THREE.SEA3D();
 
-        json_load: function ( url, name ) {
+                        lll.onComplete = function( e ) { 
+                            results[name] = lll.meshes;
+                            self.next(); 
+                        }
 
-            var xml = new XMLHttpRequest();
-            xml.overrideMimeType( "application/json" );
+                        lll.load( e.target.result );
+                        //lll.file.read( e.target.result );
 
-            xml.onload = function () {
+                    break;
+                    case 'jpg': case 'png':
 
-                results[name] = JSON.parse( xml.responseText );
-                this.next();
+                        results[name] = new Image();
+                        results[name].src = e.target.result;
+                        self.next();
 
-            }.bind( this );
+                    break;
+                    case 'z':
 
-            xml.open( 'GET', url, true );
-            xml.send( null );
+                        results[name] = SEA3D.File.LZMAUncompress( e.target.result );
+                        self.next();
 
-        },
+                    break;
+                    case 'bvh': case 'BVH':
 
-        glsl_load: function ( url, name ) {
+                        results[name] = e.target.result;
+                        self.next();
 
-            var xml = new XMLHttpRequest();
+                    break;
 
-            xml.onload = function () {
+                    case 'glsl':
 
-                results[name] = xml.responseText;
-                this.next();
+                        results[name] = e.target.result;
+                        self.next();
 
-            }.bind( this );
+                    break;
 
-            xml.open( 'GET', url, true );
-            xml.send( null );
+                    case 'json':
 
-        },
+                        results[name] = JSON.parse( e.target.result );
+                        self.next();
+
+                    break;
+
+                }
+
+            }
+
+        }
 
     };
 

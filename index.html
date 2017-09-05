@@ -11,10 +11,9 @@
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" href="css/lab.css">
 
-<script src="js/intro.js"></script>
-<script src="js/ext.js"></script>
-<script src="js/main.js"></script>
-<script src="js/ammo.js"></script>
+<script src="src/intro.js"></script>
+<script src="src/ext.js"></script>
+<script src="src/worker/ammo.js"></script>
 
 </head>
 
@@ -22,8 +21,11 @@
 <script>
 
 intro.init();
-extract.init(['z/code.z', 'z/three.z', 'z/sea3d.z', 'z/uil.z', 'z/lab.z', 'z/ammo3.z', 'z/crowd.z'], init, [0,0,0,0,0,1,1], intro.message );
-
+//extract.init(['z/code.z', 'z/three.z', 'z/sea3d.z', 'z/uil.z', 'z/lab.z', 'z/ammo.z', 'z/crowd.z'], init, [0,0,0,0,0,1,1], intro.message );
+extract.init(['z/lab.z', 'z/ammo.z', 'z/crowd.z'], initer, [0,1,1], intro.message );
+function initer(){
+	init()
+}
 </script>
 </body>
 </html>
