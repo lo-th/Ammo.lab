@@ -1,19 +1,28 @@
 function demo() {
 
-    cam ( 0, 20, 100 );
+    cam ([0, 20, 100]);
+    view.hideGrid();
+
+    set({
+        fps:60,
+        numStep:8,
+        gravity:[0,-10,0],
+    })
 
     // ammo terrain shape
 
     add ({ 
         type:'terrain', 
-        pos : [0,-5,0], // terrain position
-        size : [200,10,200], // terrain size in meter
-        div : [64,64], // number of subdivision
-        complexity : 30, // complexity of noise
-        flipEdge : false, // inverse the triangle
+        pos : [0,-10,0], // terrain position
+        size : [400,20,400], // terrain size in meter
+        sample : [256,256], // number of subdivision
+        frequency : [0.016,0.05,0.2], // frequency of noise
+        level : [1,0.2,0.05], // influence of octave
+        expo: 3,
+        flipEdge : true, // inverse the triangle
         hdt : 'PHY_FLOAT', // height data type PHY_FLOAT, PHY_UCHAR, PHY_SHORT
-        friction: 0.6, 
-        restitution: 0.0,
+        friction: 0.2, 
+        restitution: 0.2,
     });
 
     add ({ type:'sphere', size:[1], pos:[0,20,5], mass:0.2 });
@@ -25,6 +34,7 @@ function demo() {
     // ! \\ click on view and use key to controle car
 
     car ({ 
+        
         type:'box',
         name:'car',
         helper: true,
@@ -42,8 +52,12 @@ function demo() {
         deep:0.4, // wheels deep
         wPos:[1, 0, 1.7], // wheels position on chassis
 
+        w_roll: 0.1,
+        w_friction: 1000,
+
+
     });
 
-    follow ('car');
+    follow ( 'car' );
 
 };

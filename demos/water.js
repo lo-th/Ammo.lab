@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( 0, 10, 40 );
+    cam ({ azim:0, polar:10, distance:40 });
 
     // basic geometry body
 

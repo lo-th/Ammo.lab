@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( 0, 10, 40 );
+    cam ([ 0, 30, 40 ]);
 
     // basic geometry body
 

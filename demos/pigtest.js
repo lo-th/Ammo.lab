@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( 90, 20, 40 );
+    cam ({ azim:0, polar:20, distance:40 });
     load ( 'pig', afterLoad );
 
 }
@@ -32,7 +32,7 @@ function afterLoad () {
 
             type:'softTriMesh',
             shape:geo['pig'],
-            material:'pig',
+            
 
             pos:[x,y,0],
             size:[2,2,2],

@@ -1,6 +1,7 @@
 function demo() {
 
-    cam ( 90, 20, 60 );
+    cam ({ azim:0, polar:20, distance:60 });
+
 
     add({type:'plane', friction:0.6, restitution:0.1 }); // infinie plane
 

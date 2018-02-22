@@ -2,57 +2,62 @@
 <!-- saved from url=(0014)about:internet -->
 <html lang="en">
 <head>
-<title>Ammo Lab dev</title>
+<title>Ammo.lab.dev</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=11" />
 <meta http-equiv="Pragma" content="no-cache">
 
 <link rel="shortcut icon" href="favicon.ico">
-<link rel="stylesheet" href="css/lab.css">
+<link rel="stylesheet" href="../lab/css/lab.css">
 
-<script src="build/code.min.js"></script>
-<script src="src/libs/three.js"></script>
-<script src="src/libs/sea3d.js"></script>
-<script src="src/libs/uil.js"></script>
-<script src="src/libs/tween.js"></script>
+<!-- CODE -->
+<script src="../lab/src/libs/codemirror.js"></script>
+<script src="../lab/src/libs/codemirrorAdd/javascript.js"></script>
+<script src="../lab/src/libs/codemirrorAdd/matchbrackets.js"></script>
+<script src="../lab/src/libs/codemirrorAdd/active-line.js"></script>
+<script src="../lab/src/libs/codemirrorAdd/match-highlighter.js"></script>
+<script src="../lab/src/libs/esprima.js"></script>
 
-<script src="src/controls/OrbitControls.js"></script>
-<script src="src/geometries/CapsuleBufferGeometry.js"></script>
-<script src="src/geometries/ConvexGeometry.js"></script>
-<script src="src/geometries/Tubex.js"></script>
+<!-- LIBS -->
+<script src="../lab/src/libs/three.js"></script>
+<script src="../lab/src/libs/sea3d.js"></script>
+<script src="../lab/src/libs/tween.js"></script>
 
-<script src="src/shaders/ShaderShadow.js"></script>
-<script src="src/helpers/CarHelper.js"></script>
-<script src="src/objects/Terrain.js"></script>
-<script src="src/utils/ViewUtils.js"></script>
-<script src="src/Perlin.js"></script>
+<!-- LABS -->
+<script src="../lab/src/editor.js"></script>
+<script src="../lab/src/intro.js"></script>
+<script src="../lab/src/SimplexNoise.js"></script>
+<script src="../lab/src/math.js"></script>
+<script src="../lab/src/user.js"></script>
+<script src="../lab/src/pool.js"></script>
+<script src="../lab/src/loaders/BVHLoader.js"></script>
+<script src="../lab/src/controls/OrbitControls.js"></script>
+<script src="../lab/src/controls/OrbitControlsExtra.js"></script>
 
-<script src="src/user.js"></script>
-<script src="src/math.js"></script>
-<script src="src/pool.js"></script>
-<script src="src/gui.js"></script>
-<script src="src/tools.js"></script>
-<script src="src/editor.js"></script>
-<script src="src/view.js"></script>
+<script src="../lab/src/geometries/GeometryTools.js"></script>
+<script src="../lab/src/geometries/CapsuleBufferGeometry.js"></script>
+<script src="../lab/src/geometries/ConvexGeometry.js"></script>
+<script src="../lab/src/geometries/Tubular.js"></script>
 
-<script src="src/main.js"></script>
-<script src="src/worker/ammo.js"></script>
-<script src="src/worker/crowd.js"></script>
+<script src="../lab/src/objects/Planet.js"></script>
+<script src="../lab/src/objects/Terrain.js"></script>
+<script src="../lab/src/objects/Sky.js"></script>
+<script src="../lab/src/View.js"></script>
+
+<!-- MAIN -->
+<script src="js/View_add.js"></script>
+<script src="js/main.js"></script>
+<script src="js/ammo.init.js"></script>
+<script src="js/helpers/CarHelper.js"></script>
 
 </head>
 
 <body>
 <script>
 
-var extract = null;
-var intro = null;
-direct = true;
-//isWithCode = true;
 demoName = 'empty';
-
 window.onload = init;
-
 
 </script>
 </body>

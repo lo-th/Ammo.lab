@@ -1,10 +1,10 @@
 [  
-    "src/worker/ammo/world.js",
-    "src/worker/ammo/math.js",
-    "src/worker/ammo/character.js",
-    "src/worker/ammo/constraint.js",
-    "src/worker/ammo/rigidBody.js",
-    "src/worker/ammo/softBody.js",
-    "src/worker/ammo/terrain.js",
-    "src/worker/ammo/vehicle.js"
+    "src/ammo/world.js",
+    "src/ammo/math.js",
+    "src/ammo/character.js",
+    "src/ammo/constraint.js",
+    "src/ammo/rigidBody.js",
+    "src/ammo/softBody.js",
+    "src/ammo/terrain.js",
+    "src/ammo/vehicle.js"
 ]

@@ -1,9 +1,0 @@
-[  
-    "src/varCode.js",
-    "src/libs/codemirror.js",
-    "src/libs/codemirrorAdd/javascript.js",
-    "src/libs/codemirrorAdd/matchbrackets.js",
-    "src/libs/codemirrorAdd/active-line.js",
-    "src/libs/codemirrorAdd/match-highlighter.js",
-    "src/libs/esprima.js"
-]

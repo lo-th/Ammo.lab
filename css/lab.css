@@ -1,225 +1,5 @@
 
 /* -------------------- */
-/*         MAIN         */
-/* -------------------- */
-
-*{ 
-	padding:0; margin:0;
-	/*-o-user-select:none; -ms-user-select:none; -khtml-user-select:none; 
-	-webkit-user-select:none; -moz-user-select: none;*/ /*pointer-events:none; */
-	box-sizing:border-box; -moz-box-sizing:border-box; -webkit-box-sizing:border-box;
-}
-
-html, body {
-	font-family: "Lucida Console", Monaco, monospace;
-	font-size: 11px;
-    font-style: normal;
-    font-variant: normal;
-    font-weight: 400;
-    /*line-height: 23px;*/
-    height:100%;
-    background:#252525;
-    color:#dedede;
-    /*color:#d2cec8;text-shadow: 1px 1px 1px rgba(0,0,0,0.3);*/
-    overflow:hidden;
-    font-smooth: never;
-    -webkit-font-smoothing : none;
-    pointer-events:none;
-    /*text-shadow: 0.5px 0.5px 2px #000000;*/
-}
-
-
-@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}
-#octo-arm{pointer-events:none;}
-#octo-body{pointer-events:none;}
-#octo{cursor:pointer;pointer-events:auto;}
-
-.canvas3d { 
-    position: absolute; top:0; left:0; pointer-events:auto; width:100%; height:100%; 
-}
-
-.bigmenu {
-    position: absolute;
-    padding-top:40px;
-    background: rgba(0,0,0,0);
-    transition:background 0.3s ease;
-    border-bottom:  1px solid rgba(255, 255, 255, 0);
-    transition:border 0.3s ease;
-}
-
-.bigContent {
-    padding: 10px 40px;
-    width:100%;
-    display: block;
-}
-
-.menuButtonBig{
-
-    font-size: 11px;
-    font-weight: 500;
-    height: 30px;
-    padding: 4px;
-    padding-top: 10px;
-    background: none;
-    pointer-events:auto;
-    cursor: pointer;
-    /*background:#0d0d0d;*/
-    text-align: left;
-    display: inline-block;
-    width:110px;
-    transition:color 0.3s ease;
-
-}
-
-.menuButtonBig:hover{
-    color:#308AFF;
-}
-
-.bigButton {
-    
-    border: 1px solid #3f3f3f;
-    background: #252525;
-    color:#3998d6;
-    width:70px;
-    height:30px;
-    font-size: 16px;
-    font-weight: 500;
-    text-align: center;
-    pointer-events:auto;
-    line-height: 28px;
-    cursor:pointer;
-    display: inline-block;
-    margin-left: 40px;
-    margin-right: -20px;
-    transition:all 0.3s ease;
-    border-radius: 3px;
-}
-
-.debug {
-    font-size: 9px;
-    position:absolute;
-    padding-left: 40px;
-    bottom: 40px;
-}
-
-.title {
-    position:absolute;
-    font-size: 16px;
-    font-style: normal;
-    font-variant: normal;
-    font-weight: 500;
-
-    bottom: 55px;
-    padding-left: 40px;
-}
-
-.subtitle {
-    position:absolute;
-    left:10px;
-    bottom:10px;
-    width:300px;
-    height:20px;
-}
-
-.env{
-    position:absolute; 
-    bottom:10px; 
-    right:10px;
-    /*padding: 2px 2px;*/
-    border:2px solid #3f3f3f; 
-    width:68px; 
-    height:68px; 
-    background:none;
-    cursor:pointer;
-    pointer-events:auto;
-    /*opacity:0.7;*/
-}
-
-.env:hover{
-    border:2px solid #3998d6; 
-}
-
-.menuCode {
-    position:absolute;
-    top : 0px;
-    left: 0px;
-    width: 100%;
-    padding-left: 10px;
-    padding-top: 9px;
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 23px;
-    height: 40px;
-    background: none;
-    border-bottom:1px solid #3f3f3f;
-    overflow: hidden;
-}
-
-
-
-
-.info {
-    pointer-events:none; position:absolute;
-    left:10px;
-    top:40px;
-    width:200px;
-    height:200px;
-}
-
-.error {
-    pointer-events:none; position:absolute;
-    right:10px;
-    bottom:30px;
-    width:300px;
-    height:200px;
-    color:#FF6600;
-    text-align:right;
-}
-
-
-
-.separator {
-    position:absolute; background-color:none; pointer-events:auto; display:block; 
-    border-left:1px solid #3f3f3f; 
-    border-right:1px solid #3f3f3f;
-    left:calc(50% - 5px); top:0px; width:10px; height:100%;
-    color: rgba(255, 255, 255, 0.2);
-    cursor: e-resize;
-}
-
-.separator_mid {
-    position:absolute; background-color:none; pointer-events:none; display:block;
-    width:10px; height:20px; letter-spacing:-5px; padding-left: 0px; 
-    left:-1.25px; top:calc(50% - 10px); font-size: 14px;
-}
-
-/* EDITOR */
-
-.editor {
-	position:absolute;
-    background-color:none;
-    pointer-events:none;  /*border:1px solid #666; z-index:1;*/ 
-    top:0;
-    left:0;
-    width:50%;
-    height:100%;
-}
-
-.codeContent {
-    position:absolute;
-    background-color:none;
-    pointer-events:none;
-    display:block;
-    left:0px;
-    top:40px;
-    width:100%;
-    background:none;
-    padding-top:10px;
-    padding-left:10px;
-    height:calc(100% - 40px);
-}
-
-/* -------------------- */
 /*     CODE MIRROR      */
 /* -------------------- */
 
@@ -230,18 +10,18 @@ html, body {
    /*  overflow: scroll;*/
     height: 100%;
     font-family: "Lucida Console", Monaco, monospace;
-    font-smooth: never;
-    -webkit-font-smoothing : none;
+    /*font-smooth: never;
+    -webkit-font-smoothing : none;*/
     font-size: 11px;
     /*line-height: 123%;
     letter-spacing:-1px;
     padding-right: 20px;*/
-    background-color: none;
+    background: none;
     border:none;
-    font-style: normal;
+    /*font-style: normal;
     font-variant: normal;
     font-weight: 400;
-    /*line-height: 23px;
+    line-height: 23px;
     margin-left:10px;*/
     
     
@@ -409,15 +189,15 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
     display: inline-block;
     margin-bottom: -30px;
     /* Hack to make IE7 behave */
-    *zoom:1;
-    *display:inline;
+    /*zoom:1;
+    *display:inline;*/
 }
 .CodeMirror-gutter-wrapper { position: absolute; z-index: 4;  height: 100%; }
 .CodeMirror-gutter-elt { position: absolute; cursor: default; z-index: 4; }
 .CodeMirror-lines { cursor: text; min-height: 1px; /* prevents collapsing before first draw */ }
 .CodeMirror pre {
     /* Reset some styles that the rest of the page might have set */
-    -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;
+    border-radius: 0;
     border-width: 0;
     background: transparent;
     font-family: inherit;
@@ -452,7 +232,7 @@ div.CodeMirror-cursors { visibility: hidden; position: relative; z-index: 3; }
 }
 
 /* IE7 hack to prevent it from returning funny offsetTops on the spans */
-.CodeMirror span { *vertical-align: text-bottom; }
+.CodeMirror span { /**vertical-align: text-bottom;*/ }
 
 /* Used to force a border model for a node */
 .cm-force-border { padding-right: .1px; }
@@ -522,13 +302,11 @@ span.CodeMirror-selectedtext { background: none; }
 
 .cm-s-monokai ::-webkit-scrollbar-track:vertical{
     background: none;
-    /*background-color: #202020;
-    box-shadow: -12px 0px 12px -12px rgba(0, 0, 0, 0.3) inset;*/
+    /*box-shadow: -12px 0px 12px -12px rgba(0, 0, 0, 0.3) inset;*/
 }
 .cm-s-monokai ::-webkit-scrollbar-track:horizontal{
     background: none;
-    /*background-color: #202020;
-    box-shadow: 0px -12px 12px -12px rgba(0, 0, 0, 0.3) inset;*/
+    /*box-shadow: 0px -12px 12px -12px rgba(0, 0, 0, 0.3) inset;*/
 }
 
 /*.cm-s-monokai .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {

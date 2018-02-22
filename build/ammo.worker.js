@@ -28,7 +28,7 @@ var isSoft = true;
 
 var trans, pos, quat, posW, quatW, transW, gravity;
 var tmpTrans, tmpPos, tmpQuat;
-var tmpPos1, tmpPos2, tmpPos3, tmpPos4;
+var tmpPos1, tmpPos2, tmpPos3, tmpPos4, tmpZero;
 var tmpTrans1, tmpTrans2;
 
 // forces
@@ -45,17 +45,17 @@ var bodys, solids, softs, joints, cars, heros, carsInfo;
 var byName;
 
 var timeStep = 1/60;
-var timerStep = timeStep * 1000;
+//var timerStep = timeStep * 1000;
 
-var substep = 2;//4//3;// default is 1. 2 or more make simulation more accurate.
+var numStep = 2;//4//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 var tmpKey = [ 0,0,0,0,0,0,0,0 ];
 
-var pause = true;
+//var pause = true;
 
 //var timer = 0;
-var isBuffer, isDynamic;
+var isBuffer = false;
 
 
 
@@ -111,104 +111,46 @@ var GROUP = {
 }
 
 
-function initARRAY(){
 
-    aAr = new ArrayBuffer( ArMax * Float32Array.BYTES_PER_ELEMENT );
-    Ar = new Float32Array( aAr );
-
-   // console.log(aAr.byteLength)
-
-};
-
-
-
-
-/*function stepAdvanced () {
-
-    var time = Date.now();
-    var seconds = ( time - last_step ) * 0.001;
-    last_step = time;
-
-    var maxSubSteps = 1;
-    var fixedtimeStep = seconds;
-
-    timePassed += seconds;
-    //timeStep < maxSubSteps * fixedtimeStep
-
-    if ( timePassed >= fixedTime ) {
-        maxSubSteps = ~~ ( seconds * 60 ); //Math.ceil ( seconds / fixedTime );
-        fixedtimeStep = seconds / maxSubSteps;
-    }
-
-    world.stepSimulation( seconds, maxSubSteps, fixedtimeStep );
-
-}
-
-function stepDelta () {
-
-    var time = Date.now();
-    var seconds = ( time - last_step ) * 0.001;
-    last_step = time;
-
-    //console.log(seconds)
-
-    world.stepSimulation( seconds, 1, seconds );
-
-}*/
 
 self.onmessage = function ( e ) {
 
     var data = e.data;
     var m = data.m;
+    var o = data.o;
 
-    /*if( m === 'init' ) init( data );
-    if( m === 'step' ) step( data );
-    if( m === 'start' ) start();
-    if( m === 'reset' ) reset( data );
-
-    if( m === 'key' ) key = data.o.key;
-    if( m === 'setDriveCar' ) currentCar = data.o.n;
-    if( m === 'substep' ) substep = data.o.substep;
-    if( m === 'set' ) tmpset = data.o;
-
-    if( m === 'moveSoftBody' ) moveSoftBody( data.o );
-
-    if( m === 'add' ) add( data.o );
-    if( m === 'vehicle' ) addVehicle( data.o );
-    if( m === 'character' ) addCharacter( data.o );
-    if( m === 'terrain' ) terrainPostStep( data.o );
-    if( m === 'gravity' ) gravity( data.o );
-    if( m === 'anchor' ) anchor( data.o );
-    if( m === 'apply' ) apply( data.o );*/
-
-
-
+    // ------- buffer data
+    if( data.Ar ) Ar = data.Ar;
+    
     switch( m ){
 
         case 'init': init( data ); break;
         case 'step': step( data ); break;
         case 'start': start( data ); break;
         case 'reset': reset( data ); break;
+        case 'set': set( o ); break;
 
-        case 'key': tmpKey = data.o.key; break;
-        case 'setDriveCar': currentCar = data.o.n; break;
-        case 'substep': substep = data.o.substep; break;
+        case 'key': tmpKey = o.key; break;
+        case 'setDriveCar': currentCar = o.n; break;
         //case 'set': tmpset = data.o; break;
 
-        case 'moveSoftBody': moveSoftBody( data.o ); break;
+        case 'moveSoftBody': moveSoftBody( o ); break;
 
-        case 'heroRotation': setHeroRotation( data.o.id, data.o.angle ); break;
+        case 'heroRotation': setHeroRotation( o.id, o.angle ); break;
 
-        case 'add': add( data.o ); break;
-        case 'vehicle': addVehicle( data.o ); break;
-        case 'character': addCharacter( data.o ); break;
-        case 'terrain': terrainPostStep( data.o ); break;
-        case 'gravity': setGravity( data.o ); break;
-        case 'anchor': anchor( data.o ); break;
+        case 'add': add( o ); break;
+        case 'vehicle': addVehicle( o ); break;
+        case 'character': addCharacter( o ); break;
+        case 'terrain': terrainPostStep( o ); break;
+        case 'gravity': setGravity( o ); break;
+        case 'anchor': anchor( o ); break;
         //case 'apply': apply( data.o ); break;
 
-        case 'forces': tmpForce = data.o.r; break;
-        case 'matrix': tmpMatrix = data.o.r; break;
+        case 'force': tmpForce.push( o ); break;
+        case 'forceArray': tmpForce = o; break;
+
+        case 'matrix': tmpMatrix.push( o ); break;
+        case 'matrixArray': tmpMatrix = o; break;
 
     }
 
@@ -223,13 +165,9 @@ function preStep(){
 
 function step( o ){
 
-    if( pause ) return;
-
     // ------- pre step
 
     key = o.key;
-
-    //set();
 
     // update matrix
 
@@ -243,32 +181,14 @@ function step( o ){
 
     terrainUpdate();
 
-    // ------- buffer data
-
-    if( isBuffer ){
-
-        //if( isDynamic ) dynamicARRAY();
-        //else {
-            aAr = o.aAr;
-            Ar = new Float32Array( aAr );
-            /*Br = o.Br;
-            Cr = o.Cr;
-            Hr = o.Hr;
-            Jr = o.Jr;
-            Sr = o.Sr;*/
-        //}
-    }
-
     // ------- step
 
-    world.stepSimulation( timeStep, substep );
-    //world.stepSimulation( o.delay, substep, timeStep );
+    world.stepSimulation( timeStep, numStep );
+    //world.stepSimulation( o.delay, numStep, timeStep );
     //world.stepSimulation( dt, it, dt );
 
     drive( currentCar );
     move( 0 );
-
-    //[ hero, cars, joint, rigid, soft ]
 
     stepCharacter( Ar, ArPos[0] );
     stepVehicle( Ar, ArPos[1] );
@@ -278,38 +198,8 @@ function step( o ){
 
     stepConstraint( Ar, ArPos[4] );
 
-
-    /*stepCharacter( Hr, 0 );
-    stepVehicle( Cr, 0 );
-    stepConstraint( Jr, 0 );
-    stepRigidBody( Br, 0 );
-    stepSoftBody( Sr, 0 );*/
-
-
-    // ------- post step
-
-    //if( isBuffer ) self.postMessage({ m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
-    //else self.postMessage( { m:'step', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr } );
-
-
-    //if( isBuffer ) self.postMessage({ m:'step', Ar:Ar },[ Ar.buffer ]);
-    //else self.postMessage( { m:'step', Ar:Ar } );
-
-
-    //else 
-
-    //self.postMessage( { m:'step', Ar: JSON.stringify( Ar ) } );
-    if( isBuffer ) self.postMessage({ m:'step', aAr:aAr },[ aAr ]);
+    if( isBuffer ) self.postMessage({ m:'step', Ar:Ar },[ Ar.buffer ]);
     else self.postMessage( { m:'step', Ar:Ar } );
-
-    //self.postMessage( { m:'step', Ar:aAr } );
-
-
-    //else self.postMessage( { m:'step', Br:aBr, Cr:aCr, Hr:aHr, Jr:aJr, Sr:aSr } );
-
-    /*for(var i = 0; i < ArMax; i++) {
-        postMessage({ m:'step', result:Ar[i], n:i});
-    }*/
 
 };
 
@@ -323,11 +213,10 @@ function step( o ){
 function init ( o ) {
 
     isBuffer = o.isBuffer || false;
-    isDynamic = o.isDynamic || false;
 
-    if(o.timeStep !== undefined ) timeStep = o.timeStep;
-    timerStep = timeStep * 1000;
-    substep = o.substep || 2;
+    //timeStep = o.timeStep !== undefined ? o.timeStep : timeStep;
+    //timerStep = timeStep * 1000;
+    //numStep = o.numStep || 2;
 
     //
 
@@ -341,18 +230,7 @@ function init ( o ) {
 
     Ammo().then( function( Ammo ) { 
 
-        console.log('Ammo init') 
-
         initMath();
-
-        /*importScripts( 'ammo/world.js' );
-        importScripts( 'ammo/math.js' );
-        importScripts( 'ammo/character.js' );
-        importScripts( 'ammo/constraint.js' );
-        importScripts( 'ammo/rigidBody.js' );
-        importScripts( 'ammo/softBody.js' );
-        importScripts( 'ammo/terrain.js' );
-        importScripts( 'ammo/vehicle.js' );*/
 
         // active transform
 
@@ -379,6 +257,8 @@ function init ( o ) {
         tmpPos3 = new Ammo.btVector3();
         tmpPos4 = new Ammo.btVector3();
 
+        tmpZero = new Ammo.btVector3( 0,0,0 );
+
         // extra transform
 
         tmpTrans1 = new Ammo.btTransform();
@@ -400,23 +280,32 @@ function init ( o ) {
         // use for get object by name
         byName = {};
 
-        
+        self.postMessage( { m:'initEngine' } );
 
-        //
-
-        self.postMessage({ m:'init' });
     });
     
 };
 
+function set( o ){
+
+    o = o || {};
+
+
+    timeStep = o.timeStep !== undefined ? o.timeStep : 0.016;
+    numStep = o.numStep !== undefined ? o.numStep : 2;
+
+    // gravity
+    var g = o.gravity !== undefined ? o.gravity : [ 0, -9.81, 0 ];
+    gravity.fromArray( g );
+    world.setGravity( gravity );
+
+
+}
+
 function reset ( o ) {
 
-    //if( !isBuffer ) 
-    //clearInterval( timer );
-
-    pause = true;
-
     tmpForce = [];
+    tmpMatrix = [];
 
     clearJoint();
     clearRigidBody();
@@ -427,8 +316,6 @@ function reset ( o ) {
     // clear body name object
     byName = {};
 
-    
-
     if( o.full ){
 
         clearWorld();
@@ -438,24 +325,10 @@ function reset ( o ) {
 
     setGravity();
 
-    pause = false;
+    // create self tranfere array if no buffer
+    if( !isBuffer ) Ar = new Float32Array( ArMax );
 
-    if( isBuffer ){
-
-        //if( isDynamic ) dynamicARRAY();
-        //else 
-        initARRAY();
-        //self.postMessage({ m:'start', Br:Br, Cr:Cr, Hr:Hr, Jr:Jr, Sr:Sr },[ Br.buffer, Cr.buffer, Hr.buffer, Jr.buffer, Sr.buffer ]);
-
-        //self.postMessage({ m:'start', Ar:Ar },[ Ar.buffer ]);
-        self.postMessage({ m:'start', aAr:aAr },[ aAr ]);
-
-    } else {
-
-        initARRAY();
-        self.postMessage({ m:'start' });
-
-    }
+    self.postMessage({ m:'start' });
 
 };
 
@@ -554,70 +427,10 @@ function getByIdx( n ){
 }
 
 
-//--------------------------------------------------
-//
-//  FORCE APPLY
-//
-//--------------------------------------------------
+//---------------------
+// FORCES
+//---------------------
 
-function updateForce () {
-
-    var i = tmpForce.length, n;
-    while(i--){
-        //n = i*4;
-        applyForce( tmpForce[i][0], tmpForce[i][1], tmpForce[i][2], tmpForce[i][3] );
-    }
-
-    /*var i = tmpForce.length / 8, n;
-    while(i--){
-        n = i*8;
-        applyForce( tmpForce[n], tmpForce[n+1], [tmpForce[n+2], tmpForce[n+3], tmpForce[n+4]], [tmpForce[n+5], tmpForce[n+6], tmpForce[n+7]] );
-    }*/
-
-    tmpForce = [];
-
-    //while( tmpForce.length > 0 ) applyForce( tmpForce.pop() );
-
-}
-
-function applyForce ( name, type, v1, v2 ) {
-
-    //console.log(idx)
-
-    var b = getByName( name );
-    if( b === null ) b = getByIdx( name );
-
-
-    //if(idx === undefined ) return;
-    //var b = getByIdx( idx );
-
-    //console.log( r[0], b )
-
-    if( b === null ) return;
-
-
-
-    tmpPos1.fromArray( v1 );
-    tmpPos2.fromArray( v2 );
-
-    switch( type ){
-        case 'force' : case 0 : b.applyForce( tmpPos1, tmpPos2 ); break;// force , rel_pos 
-        case 'torque' : case 1 : b.applyTorque( tmpPos1 ); break;
-        case 'localTorque' : case 2 : b.applyLocalTorque( tmpPos1 ); break;
-        case 'centralForce' :case 3 :  b.applyCentralForce( tmpPos1 ); break;
-        case 'centralLocalForce' : case 4 : b.applyCentralLocalForce( tmpPos1 ); break;
-        case 'impulse' : case 5 : b.applyImpulse( tmpPos1, tmpPos2 ); break;// impulse , rel_pos 
-        case 'centralImpulse' : case 6 : b.applyCentralImpulse( tmpPos1 ); break;
-
-        // joint
-
-        case 'motor' : case 7 : b.enableAngularMotor( true, v1[0], v1[1] ); break; // bool, targetVelocity, maxMotorImpulse
-
-    }
-    
-
-}
-/*
 function updateForce () {
 
     while( tmpForce.length > 0 ) applyForce( tmpForce.pop() );
@@ -628,23 +441,22 @@ function applyForce ( r ) {
 
     var b = getByName( r[0] );
 
-    //console.log( r[0], b )
-
     if( b === null ) return;
 
-
+    var type = r[1] || 'force';
 
     if( r[2] !== undefined ) tmpPos1.fromArray( r[2] );
     if( r[3] !== undefined ) tmpPos2.fromArray( r[3] );
+    else tmpPos2.zero();
 
-    switch(r[1]){
+    switch( type ){
         case 'force' : case 0 : b.applyForce( tmpPos1, tmpPos2 ); break;// force , rel_pos 
         case 'torque' : case 1 : b.applyTorque( tmpPos1 ); break;
         case 'localTorque' : case 2 : b.applyLocalTorque( tmpPos1 ); break;
-        case 'centralForce' :case 3 :  b.applyCentralForce( tmpPos1 ); break;
-        case 'centralLocalForce' : case 4 : b.applyCentralLocalForce( tmpPos1 ); break;
+        case 'forceCentral' :case 3 :  b.applyCentralForce( tmpPos1 ); break;
+        case 'forceLocal' : case 4 : b.applyCentralLocalForce( tmpPos1 ); break;
         case 'impulse' : case 5 : b.applyImpulse( tmpPos1, tmpPos2 ); break;// impulse , rel_pos 
-        case 'centralImpulse' : case 6 : b.applyCentralImpulse( tmpPos1 ); break;
+        case 'impulseCentral' : case 6 : b.applyCentralImpulse( tmpPos1 ); break;
 
         // joint
 
@@ -653,14 +465,11 @@ function applyForce ( r ) {
     }
     
 
-}*/
+}
 
-
-//--------------------------------------------------
-//
-//  KINEMATICS MATRIX SET
-//
-//--------------------------------------------------
+//---------------------
+// MATRIX
+//---------------------
 
 function updateMatrix () {
 
@@ -672,14 +481,30 @@ function applyMatrix ( r ) {
 
     var b = getByName( r[0] );
 
-    if( b === null ) return;
+    if( b === undefined ) return;
+
+    var isK = b.isKinematic;
 
     tmpTrans.setIdentity();
 
     if( r[1] !== undefined ) { tmpPos.fromArray( r[1] ); tmpTrans.setOrigin( tmpPos ); }
     if( r[2] !== undefined ) { tmpQuat.fromArray( r[2] ); tmpTrans.setRotation( tmpQuat ); }
+    //else { tmpQuat.fromArray( [2] ); tmpTrans.setRotation( tmpQuat ); }
 
-    b.getMotionState().setWorldTransform( tmpTrans );
+    if(!isK){
+
+       // zero force
+       b.setAngularVelocity( tmpZero );
+       b.setLinearVelocity( tmpZero );
+
+    }
+
+    if(!isK){
+        b.setWorldTransform( tmpTrans );
+        b.activate();
+     } else{
+        b.getMotionState().setWorldTransform( tmpTrans );
+     }
 
 }
 
@@ -819,6 +644,13 @@ function initMath(){
     //  btVector3 extend
     //
     //--------------------------------------------------
+
+    Ammo.btVector3.prototype.zero = function( v ){
+
+        this.setValue( 0, 0, 0 );
+        return this;
+
+    };
 
     Ammo.btVector3.prototype.negate = function( v ){
 
@@ -1302,8 +1134,11 @@ function addJoint ( o ) {
     var collision = o.collision || false;
     if( collision ) noAllowCollision = false;
 
-    var body1 = getByName( o.body1 );
-    var body2 = getByName( o.body2 );
+    if(o.body1) o.b1 = o.body1;
+    if(o.body2) o.b2 = o.body2;
+
+    var b1 = getByName( o.b1 );
+    var b2 = getByName( o.b2 );
 
     tmpPos1.fromArray( o.pos1 || [0,0,0] );
     tmpPos2.fromArray( o.pos2 || [0,0,0] );
@@ -1321,14 +1156,14 @@ function addJoint ( o ) {
         tmpA.setOrigin( point1 );
         if(o.quatA) tmpA.setRotation( q4( o.quatA ) )
 
-        var frameInA = multiplyTransforms( body1.getWorldTransform(), tmpA );
+        var frameInA = multiplyTransforms( b1.getWorldTransform(), tmpA );
 
         var tmpB = new Ammo.btTransform();
         tmpB.setIdentity();
         tmpB.setOrigin( point2 );
         if(o.quatB) tmpB.setRotation( q4( o.quatB ) )
 
-        var frameInB = multiplyTransforms( body2.getWorldTransform(), tmpB );
+        var frameInB = multiplyTransforms( b2.getWorldTransform(), tmpB );
         */
 
         // frame A
@@ -1360,17 +1195,17 @@ function addJoint ( o ) {
     switch(o.type){
         case "joint_p2p":
             t = 1;
-            joint = new Ammo.btPoint2PointConstraint( body1, body2, tmpPos1, tmpPos2 );
+            joint = new Ammo.btPoint2PointConstraint( b1, b2, tmpPos1, tmpPos2 );
             if(o.strength) joint.get_m_setting().set_m_tau( o.strength );
             if(o.damping) joint.get_m_setting().set_m_damping( o.damping ); 
             if(o.impulse) joint.get_m_setting().set_m_impulseClamp( o.impulse );
         break;
-        case "joint_hinge": case "joint": t = 2; joint = new Ammo.btHingeConstraint( body1, body2, tmpPos1, tmpPos2, tmpPos3, tmpPos4, useA ); break;
-        case "joint_slider": t = 3; joint = new Ammo.btSliderConstraint( body1, body2, tmpTrans1, tmpTrans2, useA ); break;
-        case "joint_conetwist": t = 4; joint = new Ammo.btConeTwistConstraint( body1, body2, tmpTrans1, tmpTrans2 ); break;
-        case "joint_dof": t = 5; joint = new Ammo.btGeneric6DofConstraint( body1, body2, tmpTrans1, tmpTrans2, useA );  break;
-        case "joint_spring_dof": t = 6; joint = new Ammo.btGeneric6DofSpringConstraint( body1, body2, tmpTrans1, tmpTrans2, useA ); break;
-        //case "joint_gear": joint = new Ammo.btGearConstraint( body1, body2, point1, point2, o.ratio || 1); break;
+        case "joint_hinge": case "joint": t = 2; joint = new Ammo.btHingeConstraint( b1, b2, tmpPos1, tmpPos2, tmpPos3, tmpPos4, useA ); break;
+        case "joint_slider": t = 3; joint = new Ammo.btSliderConstraint( b1, b2, tmpTrans1, tmpTrans2, useA ); break;
+        case "joint_conetwist": t = 4; joint = new Ammo.btConeTwistConstraint( b1, b2, tmpTrans1, tmpTrans2 ); break;
+        case "joint_dof": t = 5; joint = new Ammo.btGeneric6DofConstraint( b1, b2, tmpTrans1, tmpTrans2, useA );  break;
+        case "joint_spring_dof": t = 6; joint = new Ammo.btGeneric6DofSpringConstraint( b1, b2, tmpTrans1, tmpTrans2, useA ); break;
+        //case "joint_gear": joint = new Ammo.btGearConstraint( b1, b2, point1, point2, o.ratio || 1); break;
     }
 
     // EXTRA SETTING
@@ -1412,14 +1247,10 @@ function addJoint ( o ) {
     joint.type = 0;
     if( o.debug ){
         joint.type = t
-        joint.bodyA = body1;
-        joint.bodyB = body2;
+        joint.bodyA = b1;
+        joint.bodyB = b2;
     }
     
-
-
-    
-
     world.addConstraint( joint, noAllowCollision );
 
     if( o.name ) byName[o.name] = joint;
@@ -1493,6 +1324,16 @@ function clearRigidBody () {
 };
 
 function addRigidBody ( o, extra ) {
+
+    var isKinematic = false;
+    
+    if(o.density!==undefined) o.mass = o.density;
+    if(o.kinematic){ 
+        o.flag = 2;
+        o.state = 4;
+        o.mass = 0;
+        isKinematic = true;
+    }
 
     o.mass = o.mass == undefined ? 0 : o.mass;
     o.size = o.size == undefined ? [1,1,1] : o.size;
@@ -1594,9 +1435,14 @@ function addRigidBody ( o, extra ) {
     rbInfo.set_m_friction( o.friction || 0.5 );
     rbInfo.set_m_restitution( o.restitution || 0 );
     var body = new Ammo.btRigidBody( rbInfo );
+    body.isKinematic = isKinematic;
 
+    if ( o.mass === 0 && !isKinematic){
+        body.setCollisionFlags(o.flag || 1); 
+        world.addCollisionObject( body, o.group || 1, o.mask || -1 );
+    } else {
 
-    if ( o.mass !== 0 ){
+       // body.isKinematic = isKinematic;
         body.setCollisionFlags( o.flag || 0 );
         world.addRigidBody( body, o.group || 1, o.mask || -1 );
 
@@ -1614,16 +1460,14 @@ function addRigidBody ( o, extra ) {
         AMMO.DISABLE_SIMULATION = 5;
         */
         body.setActivationState( o.state || 1 );
-    } else {
-        body.setCollisionFlags(o.flag || 1); 
-        world.addCollisionObject( body, o.group || 1, o.mask || -1 );
+        
     }
     
     if( o.name ) byName[ o.name ] = body;
     else if ( o.mass !== 0 ) byName[ bodys.length ] = body;
 
-    if ( o.mass !== 0 ) bodys.push( body );
-    else solids.push( body );
+    if ( o.mass === 0  && !isKinematic) solids.push( body );
+    else bodys.push( body );
 
 
     //console.log(body)
@@ -1861,7 +1705,7 @@ function terrainPostStep ( o ){
 
     var name = o.name;
     terrainList.push( name );
-    tmpData[ name ] = o.hdata;
+    tmpData[ name ] = o.heightData;
     terrainNeedUpdate = true;
 
 }
@@ -1875,6 +1719,12 @@ function terrainUpdate ( o ){
 
 }
 
+/*function updateTerrain ( o ) {
+
+        this.byName[ o.name ].setHeightData( o.heightData );
+
+}*/
+
 function addTerrain ( o ) {
 
     // Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
@@ -1882,7 +1732,7 @@ function addTerrain ( o ) {
 
     o.name = o.name == undefined ? 'terrain' : o.name;
     o.size = o.size == undefined ? [1,1,1] : o.size;
-    o.div = o.div == undefined ? [64,64] : o.div;
+    o.sample = o.sample == undefined ? [64,64] : o.sample;
     o.pos = o.pos == undefined ? [0,0,0] : o.pos;
     o.quat = o.quat == undefined ? [0,0,0,1] : o.quat;
     o.mass = o.mass == undefined ? 0 : o.mass;
@@ -1897,15 +1747,15 @@ function addTerrain ( o ) {
     //terrainData = Ammo._malloc( 4 * lng );
     //hdata = o.hdata;
 
-    tmpData[o.name] = o.hdata;
+    tmpData[o.name] = o.heightData;
 
     terrain_data(o.name);
 
     
 
-    var shape = new Ammo.btHeightfieldTerrainShape( o.div[0], o.div[1], terrainData[o.name], o.heightScale || 1, -o.size[1], o.size[1], upAxis, hdt, flipEdge ); 
+    var shape = new Ammo.btHeightfieldTerrainShape( o.sample[0], o.sample[1], terrainData[o.name], o.heightScale || 1, -o.size[1], o.size[1], upAxis, hdt, flipEdge ); 
 
-    tmpPos2.setValue( o.size[0]/o.div[0], 1, o.size[2]/o.div[1] );
+    tmpPos2.setValue( o.size[0]/o.sample[0], 1, o.size[2]/o.sample[1] );
     shape.setLocalScaling( tmpPos2 );
 
     if( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin );

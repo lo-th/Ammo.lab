@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( 0, 20, 30 );
+    cam ({ azim:0, polar:20, distance:30 });
     load ( 'mecanum', afterLoadGeometry );
 
 };

@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( 40, 20, 60, [0,30, 0] );
+    cam ({ azim:40, polar:20, distance:60, y:30 });
 
     // infinie plane
     add({type:'plane'});

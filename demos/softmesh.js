@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ( 90, 20, 40 );
+    cam ({ azim:90, polar:20, distance:40 });
     load ( 'pig', afterLoad );
 
 }
