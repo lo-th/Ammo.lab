@@ -2,6 +2,6 @@
 
 <p align="center">Advanced 3d physics lab<br>
 use last version of <a href="https://github.com/kripken/ammo.js">ammo.js</a> made by Kripken<br>
-for view i use three.js and sea3d on my <a href="https://github.com/lo-th/lab">lab libs</a><br>
+for view i use three.js and sea3d on my <a href="https://github.com/lo-th/lab">lab libs</a><br><br>
 Demo on worker with code editor<br>
 <a href="http://lo-th.github.io/Ammo.lab/">START</a><br></p>
