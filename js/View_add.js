@@ -407,10 +407,10 @@ View.prototype.add = function ( o ) {
         mesh.position.fromArray( o.pos );
         mesh.quaternion.fromArray( o.quat );
 
-        //mesh.receiveShadow = true;
-        //mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.castShadow = moveType !== 1 ? true : false;
 
-        if( moveType !== 1 ){ mesh.castShadow = true; mesh.receiveShadow = true; }
+        //if( moveType !== 1 ){ mesh.castShadow = true; mesh.receiveShadow = true; }
         
         //view.setName( o, mesh );
 

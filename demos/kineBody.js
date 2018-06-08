@@ -69,7 +69,9 @@ function initSkeleton () {
 
 
         d = 1;
-        p1.copy(bone.getWorldPosition());
+
+        bone.getWorldPosition(p1);
+        //p1.copy(bone.getWorldPosition());
 
         if( i===0 || i===1 || i===2 || i===4 ) w = 3.5;
         else w = 2;
@@ -82,7 +84,9 @@ function initSkeleton () {
 
         if( child !== null ){
 
-            p2.copy( child.getWorldPosition() );
+            child.getWorldPosition(p2);
+
+            //p2.copy( child.getWorldPosition() );
             d = Math.distanceVector( p1, p2 ) * scale;
 
         }
