@@ -54,6 +54,12 @@ function next(){
 
 }
 
+function unPause () {
+
+    ammo.start();
+
+}
+
 
 function ready () {
 

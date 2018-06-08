@@ -38,6 +38,8 @@ var ammo = ( function () {
     var worker, callback, blob;
     var isBuffer = false;
 
+    var isPause = false;
+
     var timestep = 1/60;
     var timerate = timestep * 1000;
     var substep = 2;//7;
@@ -124,6 +126,8 @@ var ammo = ( function () {
         },
 
         sendData: function ( stamp ){
+
+            if( view.pause ){ timer = null; return; }
 
             timer = requestAnimationFrame( ammo.sendData );
             time = stamp === undefined ? now() : stamp;
