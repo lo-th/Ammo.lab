@@ -255,22 +255,23 @@ View.prototype.softStep = function( AR, N ){
 
 View.prototype.add = function ( o ) {
 
-	var isCustomGeometry = false;
-    var isKinematic = false;
+	o.type = o.type === undefined ? 'box' : o.type;
 
+	var isCustomGeometry = false;
+    var isKinematic = o.kinematic !== undefined ? o.kinematic : false;
+
+    if( o.density !== undefined ) o.mass = o.density;
+    else o.density = o.mass;
+
+    o.mass = o.mass === undefined ? 0 : o.mass;
+    
     var moveType = 1;
     if( o.move !== undefined ) moveType = 0;// dynamic
-    if( o.density !== undefined ) moveType = 0;
-    if( o.kinematic !== undefined ) moveType = 2;
+    //if( o.density !== undefined ) moveType = 0;
+    if( o.mass !== 0 ) moveType = 0;
+    if( isKinematic ) moveType = 2;
 
-    if(o.density!==undefined) o.mass = o.density;
-
-    if(o.kinematic) isKinematic = true;
-    
-
-    o.mass = o.mass == undefined ? 0 : o.mass;
-    o.type = o.type == undefined ? 'box' : o.type;
-
+   
     // position
     o.pos = o.pos == undefined ? [0,0,0] : o.pos;
 
@@ -348,46 +349,47 @@ View.prototype.add = function ( o ) {
     
 
     var material;
-    if(o.material !== undefined) material = this.mat[o.material];
-    else material = o.mass ? this.mat.move : this.mat.statique;
+    if( o.material !== undefined ) material = this.mat[o.material];
+    else material = moveType !== 1 ? this.mat.move : this.mat.statique;
     
     if( o.type === 'capsule' ){
+
         var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
-        //g.applyMatrix(new THREE.Matrix4().makeRotationY(-Math.PI*0.5));
         mesh = new THREE.Mesh( g, material );
         this.extraGeo.push(mesh.geometry);
         isCustomGeometry = true;
 
-    } else if( o.type === 'mesh' || o.type === 'convex' ){ 
-        if(o.shape) {
+    } else if( o.type === 'mesh' || o.type === 'convex' ){
+
+        if( o.shape ) {
             o.v = this.prepaGeometry( o.shape, o.type );
             this.extraGeo.push( o.shape );
         }
-        if(o.geometry){
+        if( o.geometry ){
 
             mesh = new THREE.Mesh( o.geometry, material );
-            this.extraGeo.push(o.geometry);
+            this.extraGeo.push( o.geometry );
             
         } else {
             mesh = new THREE.Mesh( o.shape, material );
             //extraGeo.push(mesh.geometry);
         }
-    } else {
-        if(o.geometry){
-            if(o.geoRot || o.geoScale) o.geometry = o.geometry.clone();
-            // rotation only geometry
-            if(o.geoRot){ o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler().fromArray(Math.vectorad(o.geoRot))));}
 
-        
+    } else {
+
+        if(o.geometry){
+
+            if(o.geoRot || o.geoScale) o.geometry = o.geometry.clone();
+
+            // rotation only geometry
+            if(o.geoRot) o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler().fromArray(Math.vectorad(o.geoRot))));
+
             // scale only geometry
-            if(o.geoScale){ 
-                o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[0], o.geoScale[1], o.geoScale[2] ) );
-                //material = mat['back'];//material.clone();
-                //material.side = THREE.BackSide;
-            }
+            if(o.geoScale) o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[0], o.geoScale[1], o.geoScale[2] ) );
+            
         }
 
-        if(o.mass === 0 && o.type === 'box' ) mesh = new THREE.Mesh( o.geometry || this.geo['hardbox'], material );
+        if( moveType === 1 && o.type === 'box' ) mesh = new THREE.Mesh( o.geometry || this.geo['hardbox'], material );
         else mesh = new THREE.Mesh( o.geometry || this.geo[o.type], material );
 
         if( o.geometry ){
@@ -400,9 +402,11 @@ View.prototype.add = function ( o ) {
     }
 
 
-    if(mesh){
+    if( mesh ){
 
         if( !isCustomGeometry ) mesh.scale.fromArray( o.size );
+
+        mesh.name = o.name;
 
         mesh.position.fromArray( o.pos );
         mesh.quaternion.fromArray( o.quat );
@@ -410,12 +414,7 @@ View.prototype.add = function ( o ) {
         mesh.receiveShadow = true;
         mesh.castShadow = moveType !== 1 ? true : false;
 
-        //if( moveType !== 1 ){ mesh.castShadow = true; mesh.receiveShadow = true; }
-        
-        //view.setName( o, mesh );
-
         if( o.name === undefined ) o.name =  moveType !== 1 ? 'b'+ this.bodys.length : 'f'+ this.solids.length;
-        mesh.name = o.name;
 
         if( o.parent !== undefined ) o.parent.add( mesh );
         else this.scene.add( mesh );
@@ -431,22 +430,14 @@ View.prototype.add = function ( o ) {
     if( o.noPhy === undefined ){
 
         // push 
-        if(mesh){
-            if( o.mass===0 && !isKinematic ){
+        if( mesh ){
 
-               // mesh.idx = view.setIdx( solids.length, 'solids' );
-                //view.setName( o, mesh );
+        	// static
+            if( moveType === 1 && !isKinematic ) this.solids.push( mesh );
 
-                this.solids.push( mesh );
+            // dynamique
+            else this.bodys.push( mesh );
 
-            } else {
-
-                //mesh.idx = view.setIdx( bodys.length, 'bodys' );
-                //view.setName( o, mesh );
-
-                this.bodys.push( mesh );
-
-            };
         }
 
         // send to worker
@@ -641,8 +632,14 @@ View.prototype.vehicle = function ( o ) {
     while(i--){
         if(i==1 || i==2) w[i] = new THREE.Mesh( gw, this.mat.move );
         else w[i] = new THREE.Mesh( gwr, this.mat.move );
+
         if( needScale ) w[i].scale.set( deep, radius, radius );
-        else w[i].material = this.mat.move;//mat.cars;
+        //else w[i].material = this.mat.move;//mat.cars;
+
+        if( o.wheelMaterial !== undefined ){ 
+        	w[i].material = this.mat[ o.wheelMaterial ];
+        	//delete( o.wheelMaterial );
+        }
 
         w[i].castShadow = true;
         w[i].receiveShadow = true;

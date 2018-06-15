@@ -17,6 +17,9 @@ function afterLoad () {
 
     // load cars map
     view.addMap('cars.png', 'cars');
+    view.mat.cars.transparent = true;
+    view.mat.cars.side = THREE.DoubleSide;
+    view.mat.cars.shadowSide = false;
 
     for (var i = 0; i < 100; i++){
 

@@ -18,6 +18,9 @@ function afterLoad () {
 
     // load cars map
     view.addMap('cars.png', 'cars');
+    view.mat.cars.transparent = true;
+    view.mat.cars.side = THREE.DoubleSide;
+    view.mat.cars.shadowSide = false;
 
     // create cars
     for (var i = 0; i < CARS.length; i++){
@@ -51,10 +54,12 @@ var CARS = [
 
 function addVehicle (id, pos, type) {
 
+    var geo = view.geo;
+    var mat = view.mat;
+
     var o = CARS[id];
     o.type = type || 'box';
-    var geo = view.getGeo();
-    var mat = view.getMat();
+    
     o.pos = pos || [0,0,0];
     //o.pos[1] = o.size[1]*0.5;
 
@@ -75,6 +80,8 @@ function addVehicle (id, pos, type) {
     mesh.add( new THREE.Mesh( down, mat.cars ));
     if( inside ) mesh.add( new THREE.Mesh( inside, mat.move ));
 
+    o.wheelMaterial = 'cars';
+
     // The maximum length of the suspension (metres)
     o.s_length = 0.1;//o.radius;// * 0.5;
     //The maximum distance the suspension can be compressed in Cm 
@@ -90,9 +97,9 @@ function addVehicle (id, pos, type) {
     
     o.shape = shape;
     o.mesh = mesh;
-    o.wheel = geo['w00' + o.w ];
+    o.wheel = geo[ 'w00' + o.w ];
 
-    o.name = 'car_'+id;
+    o.name = 'car_'+ id;
 
     o.helper = true;
 
