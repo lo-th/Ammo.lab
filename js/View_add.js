@@ -406,7 +406,7 @@ View.prototype.add = function ( o ) {
 
         if( !isCustomGeometry ) mesh.scale.fromArray( o.size );
 
-        mesh.name = o.name;
+        
 
         mesh.position.fromArray( o.pos );
         mesh.quaternion.fromArray( o.quat );
@@ -415,6 +415,7 @@ View.prototype.add = function ( o ) {
         mesh.castShadow = moveType !== 1 ? true : false;
 
         if( o.name === undefined ) o.name =  moveType !== 1 ? 'b'+ this.bodys.length : 'f'+ this.solids.length;
+        mesh.name = o.name;
 
         if( o.parent !== undefined ) o.parent.add( mesh );
         else this.scene.add( mesh );

@@ -2,6 +2,14 @@ function demo() {
 
     cam ([ 0, 30, 40 ]);
 
+    set({
+
+        fps:60,
+        numStep:2,// more numStep = more accurate simulation default set to 2
+        gravity:[0,-10,0],
+
+    })
+
     // basic geometry body
 
     add({type:'plane'}); // infinie plane

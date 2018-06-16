@@ -299,7 +299,6 @@ function set( o ){
     gravity.fromArray( g );
     world.setGravity( gravity );
 
-
 }
 
 function reset ( o ) {
@@ -482,8 +481,9 @@ function applyMatrix ( r ) {
     var b = getByName( r[0] );
 
     if( b === undefined ) return;
+    if( b === null ) return;
 
-    var isK = b.isKinematic;
+    var isK = b.isKinematic || false;
 
     tmpTrans.setIdentity();
 
@@ -560,15 +560,29 @@ function addWorld ( o ) {
     ghostPairCallback = new Ammo.btGhostPairCallback();
     world.getPairCache().setInternalGhostPairCallback( ghostPairCallback );
     */
+    
     var dInfo = world.getDispatchInfo();
 
 
-    dInfo.set_m_allowedCcdPenetration(0.001);// default 0.0399
-    // dInfo.set_m_enableSPU(false);// true
-    //dInfo.get_m_enableSatConvex( false );
+    dInfo.set_m_allowedCcdPenetration( o.penetration || 0.04);// default 0.0399
 
-    //console.log(dInfo)
-    
+    //console.log(dInfo.get_m_convexConservativeDistanceThreshold())
+
+    /*
+
+    dInfo.set_m_convexConservativeDistanceThreshold() // 0
+    dInfo.set_m_dispatchFunc() // 1
+    dInfo.set_m_enableSPU() // true
+    dInfo.set_m_enableSatConvex() // false
+    dInfo.set_m_stepCount() // 0
+    dInfo.set_m_timeOfImpact() // 1
+    dInfo.set_m_timeStep() // 0
+    dInfo.set_m_useContinuous() // true
+    dInfo.set_m_useConvexConservativeDistanceUtil() // false
+    dInfo.set_m_useEpa() // true
+
+    */
+
 
     setGravity( o );
     
@@ -587,11 +601,10 @@ function setGravity ( o ) {
 
     if( isSoft ){
         worldInfo = world.getWorldInfo();
-
-        //console.log(worldInfo)
-        worldInfo.set_air_density( o.air || 1.2 );//1.275
         worldInfo.set_m_gravity( gravity );
-        setWater( o );
+
+        //worldInfo.set_air_density( o.air || 1.2 );//1.275
+        //setWater( o );
     }
 
 };
@@ -1327,12 +1340,14 @@ function addRigidBody ( o, extra ) {
 
     var isKinematic = false;
     
-    if(o.density!==undefined) o.mass = o.density;
-    if(o.kinematic){ 
+    if( o.density !== undefined ) o.mass = o.density;
+    if( o.kinematic ){ 
+
         o.flag = 2;
         o.state = 4;
-        o.mass = 0;
+        //o.mass = 0;
         isKinematic = true;
+
     }
 
     o.mass = o.mass == undefined ? 0 : o.mass;

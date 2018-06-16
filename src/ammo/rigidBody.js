@@ -59,12 +59,14 @@ function addRigidBody ( o, extra ) {
 
     var isKinematic = false;
     
-    if(o.density!==undefined) o.mass = o.density;
-    if(o.kinematic){ 
+    if( o.density !== undefined ) o.mass = o.density;
+    if( o.kinematic ){ 
+
         o.flag = 2;
         o.state = 4;
-        o.mass = 0;
+        //o.mass = 0;
         isKinematic = true;
+
     }
 
     o.mass = o.mass == undefined ? 0 : o.mass;
