@@ -142,13 +142,16 @@ function addRigidBody ( o, extra ) {
         break;
     }
 
-    if(o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin );
+    if( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin );
 
     if( extra == 'isShape' ) return shape;
     
     if( extra == 'isGhost' ){ 
         var ghost = new Ammo.btGhostObject();
         ghost.setCollisionShape( shape );
+        ghost.setCollisionFlags( o.flag || 1 ); 
+        //o.f = new Ammo.btGhostPairCallback();
+        //world.getPairCache().setInternalGhostPairCallback( o.f );
         return ghost;
     }
 
@@ -164,16 +167,29 @@ function addRigidBody ( o, extra ) {
     var motionState = new Ammo.btDefaultMotionState( tmpTrans );
 
     var rbInfo = new Ammo.btRigidBodyConstructionInfo( o.mass, motionState, shape, tmpPos1 );
-    o.friction = o.friction == undefined ? 0.5 : o.friction;
-    o.restitution = o.restitution == undefined ? 0 : o.restitution;
-    rbInfo.set_m_friction( o.friction || 0.5 );
-    rbInfo.set_m_restitution( o.restitution || 0 );
+
+    //console.log(rbInfo.get_m_friction(), rbInfo.get_m_restitution());
+
+    if( o.friction !== undefined ) rbInfo.set_m_friction( o.friction );
+    if( o.restitution !== undefined ) rbInfo.set_m_restitution( o.restitution );
+    //Damping is the proportion of velocity lost per second.
+    if( o.linear !== undefined ) rbInfo.set_m_linearDamping( o.linear );
+    if( o.angular !== undefined ) rbInfo.set_m_angularDamping( o.angular );
+    // revents rounded shapes, such as spheres, cylinders and capsules from rolling forever.
+    if( o.rolling !== undefined ) rbInfo.set_m_rollingFriction( o.rolling );
+    
     var body = new Ammo.btRigidBody( rbInfo );
     body.isKinematic = isKinematic;
 
+    if( o.name ) byName[ o.name ] = body;
+    else if ( o.mass !== 0 ) byName[ bodys.length ] = body;
+
     if ( o.mass === 0 && !isKinematic){
-        body.setCollisionFlags(o.flag || 1); 
+
+        body.setCollisionFlags( o.flag || 1 ); 
         world.addCollisionObject( body, o.group || 1, o.mask || -1 );
+        solids.push( body );
+
     } else {
 
        // body.isKinematic = isKinematic;
@@ -194,14 +210,14 @@ function addRigidBody ( o, extra ) {
         AMMO.DISABLE_SIMULATION = 5;
         */
         body.setActivationState( o.state || 1 );
+        bodys.push( body );
         
     }
     
-    if( o.name ) byName[ o.name ] = body;
-    else if ( o.mass !== 0 ) byName[ bodys.length ] = body;
+    
 
-    if ( o.mass === 0  && !isKinematic) solids.push( body );
-    else bodys.push( body );
+    //if ( o.mass === 0  && !isKinematic) solids.push( body );
+    //else bodys.push( body );
 
 
     //console.log(body)

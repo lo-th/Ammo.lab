@@ -40,7 +40,7 @@ var tmpMatrix = [];
 //var tmpset = null;
 
 // array
-var bodys, solids, softs, joints, cars, heros, carsInfo;
+var bodys, solids, softs, joints, cars, heros, carsInfo, contacts, contactGroups;
 // object
 var byName;
 
@@ -152,6 +152,10 @@ self.onmessage = function ( e ) {
         case 'matrix': tmpMatrix.push( o ); break;
         case 'matrixArray': tmpMatrix = o; break;
 
+        case 'setVehicle': setVehicle( o ); break;
+
+        case 'contact': addContactTest( o ); break;
+
     }
 
 };
@@ -190,16 +194,18 @@ function step( o ){
     drive( currentCar );
     move( 0 );
 
-    stepCharacter( Ar, ArPos[0] );
-    stepVehicle( Ar, ArPos[1] );
+    stepCharacter( ArPos[0] );
+    stepVehicle( ArPos[1] );
     
     stepRigidBody( Ar, ArPos[2] );
     stepSoftBody( Ar, ArPos[3] );
 
     stepConstraint( Ar, ArPos[4] );
 
-    if( isBuffer ) self.postMessage({ m:'step', Ar:Ar },[ Ar.buffer ]);
-    else self.postMessage( { m:'step', Ar:Ar } );
+    stepContact();
+
+    if( isBuffer ) self.postMessage({ m:'step', Ar:Ar, contacts:contacts },[ Ar.buffer ]);
+    else self.postMessage( { m:'step', Ar:Ar, contacts:contacts } );
 
 };
 
@@ -277,6 +283,9 @@ function init ( o ) {
         heros = [];
         solids = [];
 
+        contacts = [];
+        contactGroups = [];
+
         // use for get object by name
         byName = {};
 
@@ -302,6 +311,9 @@ function set( o ){
 }
 
 function reset ( o ) {
+
+    contacts = [];
+    contactGroups = [];
 
     tmpForce = [];
     tmpMatrix = [];
@@ -339,6 +351,47 @@ function wipe (obj) {
     }
 };
 
+//--------------------------------------------------
+//
+//  CONTACT
+//
+//--------------------------------------------------
+
+function addContactTest ( o ) {
+
+    var id = contactGroups.length;
+
+    var f = new Ammo.ConcreteContactResultCallback()
+
+    f.addSingleResult = function( cp, colObj0, partid0, index0, colObj1, partid1, index1 ) {
+        //var manifold = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
+        //if ( manifold.getDistance() < 0 ) 
+        //else contacts[id] = 0;
+        contacts[id] = 1;
+
+    }
+
+    contactGroups.push( [ o.b1, o.b2, f ] )
+    contacts.push(0);
+
+};
+
+function stepContact () {
+
+    var a, b, f;
+
+    contactGroups.forEach( function ( c, id ) {
+
+        contacts[ id ] = 0;
+        a = getByName( c[0] );
+        b = getByName( c[1] );
+        f = c[2];
+        
+        world.contactPairTest( a, b, f );
+
+    });
+
+};
 
 
 
@@ -361,10 +414,6 @@ function add ( o, extra ) {
     else addRigidBody( o, extra );
 
 };
-
-
-
-
 
 
 function anchor( o ){
@@ -563,8 +612,12 @@ function addWorld ( o ) {
     
     var dInfo = world.getDispatchInfo();
 
+    if( o.penetration !== undefined ) dInfo.set_m_allowedCcdPenetration( o.penetration );// default 0.0399
 
-    dInfo.set_m_allowedCcdPenetration( o.penetration || 0.04);// default 0.0399
+
+    //console.log(world)
+
+
 
     //console.log(dInfo.get_m_convexConservativeDistanceThreshold())
 
@@ -620,3 +673,5 @@ function setWater ( o ) {
     }
 
 };
+
+

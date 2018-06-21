@@ -10,6 +10,8 @@
 // transphere array for AMMO worker
 
 var Ar;
+var contacts = [];
+var contactCallback = [];
 
 var ArLng = [ 
     10 * 8, // hero
@@ -83,6 +85,7 @@ var ammo = ( function () {
 
             var data = e.data;
             if( data.Ar ) Ar = data.Ar;
+            if( data.contacts ) contacts = data.contacts;
 
             switch( data.m ){
                 case 'initEngine': ammo.initEngine(); break;
@@ -90,6 +93,20 @@ var ammo = ( function () {
                 case 'step': ammo.step(); break;
                 case 'ellipsoid': view.ellipsoidMesh( data.o ); break;
             }
+
+
+
+        },
+
+        updateContact: function () {
+
+            contactCallback.forEach( function ( callb, id ) {
+
+                callb( contacts[id] || 0 );
+
+            });
+
+
 
         },
 
@@ -121,6 +138,8 @@ var ammo = ( function () {
 
             view.needUpdate( true );
 
+            ammo.updateContact();
+
             stepNext = true;
             
         },
@@ -151,6 +170,8 @@ var ammo = ( function () {
 
         send: function ( m, o ) {
 
+            if( m === 'contact' ){ contactCallback.push(o.f); delete(o.f); }
+
             if( m === 'set' ){ 
                 o = o || {};
                 if( o.fps !== undefined ) o.timeStep = 1/o.fps;
@@ -167,6 +188,8 @@ var ammo = ( function () {
                window.cancelAnimationFrame( timer );
                timer = undefined;
             }
+
+            contactCallback = [];
             
             view.reset();
 

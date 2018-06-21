@@ -12,7 +12,7 @@ var demos = [
     'basic', 'terrain', 'terrainPlus', 'supermaket', 'car', 'collision', 'ragdoll',
     'kinematics', 'multyCars', 'cloth', 'rope', 'rope2', 'ellipsoid', 'drone', 'kineBody',
     'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove',
-    'character', 'mecanum', 'joints', 'empty', 'human', 'asteroid', 'point2point', 
+    'character', 'mecanum', 'joints', 'empty', 'human', 'asteroid', 'point2point', 'contact',
 ];
 
 demos.sort();
@@ -101,6 +101,8 @@ function substep ( substep ) { ammo.send( 'substep', {substep:substep} ) ; };
 
 function tell ( str ) { editor.tell( str ); };
 
+function ui ( option ) { editor.setOption( option ); };
+
 function load ( name, callback ) { view.loadObject( name, callback ); };
 
 function anchor ( o ) { ammo.send( 'anchor', o ); };
@@ -116,3 +118,5 @@ function matrix ( o ) { ammo.send('matrix', o ); };
 function matrixArray ( o ) { ammo.send('matrixArray', o ); };
 
 function set ( o ) { ammo.send( 'set', o ); };
+
+function contact ( o ) { return ammo.send( 'contact', o ); };

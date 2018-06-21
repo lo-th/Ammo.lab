@@ -598,8 +598,6 @@ View.prototype.vehicle = function ( o ) {
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
-    
-
     this.scene.add( mesh );
 
     //mesh.idx = view.setIdx( cars.length, 'cars' );
