@@ -70,6 +70,8 @@ function clearSoftBody () {
 
 function addSoftBody ( o ) {
 
+    var worldInfo = world.getWorldInfo();
+
     var gendiags = o.gendiags || true;
     //var fixed = o.fixed || 0;
 
@@ -81,6 +83,7 @@ function addSoftBody ( o ) {
     var body;
 
     switch( o.type ){
+
         case 'cloth':
             var mw = o.size[0] * 0.5;
             var mh = o.size[2] * 0.5;
@@ -92,8 +95,11 @@ function addSoftBody ( o ) {
             
             body = softBodyHelpers.CreatePatch( worldInfo, tmpPos1, tmpPos2, tmpPos3, tmpPos4, o.div[0], o.div[1], o.fixed || 0, gendiags  );
             body.softType = 1;
+
         break;
+
         case 'rope':
+
             tmpPos1.fromArray( o.start || [ -10, 0, 0 ] );
             tmpPos2.fromArray( o.end || [ 10, 0, 0 ] );
 
@@ -111,8 +117,11 @@ function addSoftBody ( o ) {
             //console.log(body.get_m_nodes().size())
             
             body.softType = 2;
+
         break;
+
         case 'ellipsoid':
+
             var center = o.center || [ 0, 0, 0]; // start
             var p1 = o.radius || [ 3, 3, 3]; // end
 
@@ -138,14 +147,18 @@ function addSoftBody ( o ) {
             o.a = a;
 
             self.postMessage({ m:'ellipsoid', o:o });
+
         break;
+
         case 'softConvex': // BUG !!
 
-            body = softBodyHelpers.CreateFromConvexHull( worldInfo, o.v, o.v.length/3, o.randomize || false );
+            var lng = o.v.length/3;
+            //console.log(lng)
+            body = softBodyHelpers.CreateFromConvexHull( worldInfo, o.v, lng, o.randomize || true );
             body.softType = 4;
 
             // force nodes
-            var i = o.v.length/3, n;
+            var i = lng, n;
             while(i--){
                 n = i*3;
                 tmpPos.fromArray( o.v, n );
@@ -154,45 +167,68 @@ function addSoftBody ( o ) {
             }
 
         break;
+
         case 'softTriMesh':
 
-            body = softBodyHelpers.CreateFromTriMesh( world.getWorldInfo(), o.v, o.i, o.ntri, o.randomize || true );
+            body = softBodyHelpers.CreateFromTriMesh( worldInfo, o.v, o.i, o.ntri, o.randomize || true );
             body.softType = 5;
 
         break;
     }
 
+
+
     var sb = body.get_m_cfg();
 
-    if( o.viterations !== undefined ) sb.set_viterations( o.viterations );//10
-    if( o.piterations !== undefined ) sb.set_piterations( o.piterations );//10
-    if( o.citerations !== undefined ) sb.set_citerations( o.citerations );//4
-    if( o.diterations !== undefined ) sb.set_diterations( o.diterations );//0
+    //console.log(sb.get_kVC())
+
+    if( o.viterations !== undefined ) sb.set_viterations( o.viterations );// Velocities solver iterations 10
+    if( o.piterations !== undefined ) sb.set_piterations( o.piterations );// Positions solver iterations 10
+    if( o.diterations !== undefined ) sb.set_diterations( o.diterations );// Drift solver iterations 0
+    if( o.citerations !== undefined ) sb.set_citerations( o.citerations );// Cluster solver iterations 4
 
     sb.set_collisions( 0x11 );
 
-    // Friction
-    if( o.friction !== undefined ) sb.set_kDF( o.friction );
-    // Damping
-    if( o.damping !== undefined ) sb.set_kDP( o.damping );
-    // Pressure
-    if( o.pressure !== undefined ) sb.set_kPR( o.pressure );
+    if( o.friction !== undefined ) sb.set_kDF( o.friction );// Dynamic friction coefficient [0,1]
+    if( o.damping !== undefined ) sb.set_kDP( o.damping );// Damping coefficient [0,1]
+    if( o.pressure !== undefined ) sb.set_kPR( o.pressure );// Pressure coefficient [-inf,+inf]
 
-    //if( o.kvc !== undefined ) sb.set_kVC(o.kvc);
+    if( o.drag !== undefined ) sb.set_kDG( o.drag );// Drag coefficient [0,+inf]
+    if( o.lift !== undefined ) sb.set_kLF( o.lift );// Lift coefficient [0,+inf]
 
-    if( o.stiffness !== undefined ){
-        var mat = body.get_m_materials().at( 0 );
-        mat.set_m_kLST( o.stiffness );
-        mat.set_m_kAST( o.stiffness );
-        mat.set_m_kVST( o.stiffness );
+    if( o.vc !== undefined ) sb.set_kVC( o.vc ); // Volume conversation coefficient [0,+inf] def:0
+    if( o.matching !== undefined ) sb.set_kMT( o.matching );// Pose matching coefficient [0,1]
+
+    if(o.hardness){
+        sb.set_kCHR( o.hardness )// Rigid contacts hardness [0,1]
+        sb.set_kKHR( o.hardness )// Kinetic contacts hardness [0,1]
+        sb.set_kSHR( o.hardness )// Soft contacts hardness [0,1]
+        sb.set_kAHR( o.hardness )// Anchors hardness [0,1] def:0.7
     }
+
+    /*
+    kSRHR_CL;               // Soft vs rigid hardness [0,1] (cluster only)
+    kSKHR_CL;               // Soft vs kinetic hardness [0,1] (cluster only)
+    kSSHR_CL;               // Soft vs soft hardness [0,1] (cluster only)
+    kSR_SPLT_CL;    // Soft vs rigid impulse split [0,1] (cluster only)
+    kSK_SPLT_CL;    // Soft vs rigid impulse split [0,1] (cluster only)
+    kSS_SPLT_CL;    // Soft vs rigid impulse split [0,1] (cluster only)
+    */
+
+
+
+    
     
 
+    if( o.stiffness !== undefined ){ // range (0,1)
+        var mat = body.get_m_materials().at( 0 );
+        mat.set_m_kLST( o.stiffness ); // linear 
+        mat.set_m_kAST( o.stiffness ); // angular
+        mat.set_m_kVST( o.stiffness ); // volume
+    }
     
     body.setTotalMass( o.mass, o.fromfaces || false );
     //body.setPose( true, true );
-
-    //console.log(body)
 
 
     if(o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin );
@@ -200,6 +236,8 @@ function addSoftBody ( o ) {
 
     // Soft-soft and soft-rigid collisions
     world.addSoftBody( body, o.group || 1, o.mask || -1 );
+
+    body.setActivationState( o.state || 1 );
 
     body.points = body.get_m_nodes().size();
 

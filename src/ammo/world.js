@@ -611,6 +611,8 @@ function setGravity ( o ) {
         worldInfo = world.getWorldInfo();
         worldInfo.set_m_gravity( gravity );
 
+       // console.log(worldInfo.get_m_maxDisplacement())
+
         //worldInfo.set_air_density( o.air || 1.2 );//1.275
         //setWater( o );
     }

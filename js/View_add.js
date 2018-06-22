@@ -214,7 +214,7 @@ View.prototype.softStep = function( AR, N ){
 
             }
 
-            if(t!==2) g.computeVertexNormals();
+            if( t !== 2 ) g.computeVertexNormals();
 
             if( isWithNormal ){
 
@@ -235,6 +235,7 @@ View.prototype.softStep = function( AR, N ){
                 }
 
                 g.attributes.normal.needsUpdate = true;
+
             }
 
             if( isWithColor ) g.attributes.color.needsUpdate = true;
@@ -245,6 +246,7 @@ View.prototype.softStep = function( AR, N ){
         }
 
         softPoints += b.points * 3;
+
     });
 
 };
@@ -745,16 +747,19 @@ View.prototype.softTriMesh = function ( o ) {
 
 View.prototype.softConvex = function ( o ) {
 
-    var g = o.shape;
+    var g = o.shape.clone();
     var pos = o.pos || [0,0,0];
 
     g.translate( pos[0], pos[1], pos[2] );
 
-    view.prepaGeometry(g);
+    view.prepaGeometry( g );
+
+    this.extraGeo.push( g );
 
     o.v = g.realVertices;
 
-    var mesh = new THREE.Mesh( g, this.mat.soft );
+    var material = o.material === undefined ? this.mat.soft : this.mat[o.material];
+    var mesh = new THREE.Mesh( g, material );
     
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -762,11 +767,16 @@ View.prototype.softConvex = function ( o ) {
     mesh.softType = 4;
     mesh.points = o.v.length / 3;
 
-    mesh.idx = view.setIdx( softs.length, 'softs' );
-    view.setName( o, mesh );
+    //mesh.idx = view.setIdx( softs.length, 'softs' );
+    //view.setName( o, mesh );
 
-    scene.add( mesh );
-    softs.push( mesh );
+    if( o.name ) this.byName[ o.name ] = mesh;
+
+    this.scene.add( mesh );
+    this.softs.push( mesh );
+
+    if( o.shape ) delete(o.shape);
+    if( o.material ) delete(o.material);
 
     // send to worker
     ammo.send( 'add', o );

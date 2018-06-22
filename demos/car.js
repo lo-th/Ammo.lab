@@ -28,7 +28,7 @@ var option = {
 
 function demo() {
 
-    view.hideGrid();
+    //view.hideGrid();
 
     set({
         fps:60,

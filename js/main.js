@@ -11,7 +11,7 @@
 var demos = [ 
     'basic', 'terrain', 'terrainPlus', 'supermaket', 'car', 'collision', 'ragdoll',
     'kinematics', 'multyCars', 'cloth', 'rope', 'rope2', 'drone', 'kineBody',
-    'soft_box', 'soft_basic', 'soft_pig', 'soft_human', 'soft_ball',
+    'soft_box', 'soft_basic', 'soft_pig', 'soft_human', 'soft_ball',// 'soft_convex',
     'character', 'mecanum', 'joints', 'empty',  'asteroid', 'point2point', 'contact','testmesh', 'meshmove',
 ];
 
