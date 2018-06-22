@@ -42,16 +42,14 @@ function afterLoad () {
             //citerations:4,
             //diterations:0,
 
-            kdf: 0.3,// friction
-            kdp: 0.01,// Damping
-            kpr: 100,// Pressure
-
-            // Stiffness
-            klst: 0.6,
-            kast: 0.6,
+            friction: 0.3,
+            damping: 0.01,
+            pressure: 100,
+            stiffness: 0.6,
 
             margin:0.05,
             fromfaces:true,
+            
         });
 
     }

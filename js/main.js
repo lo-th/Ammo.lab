@@ -10,9 +10,9 @@
 
 var demos = [ 
     'basic', 'terrain', 'terrainPlus', 'supermaket', 'car', 'collision', 'ragdoll',
-    'kinematics', 'multyCars', 'cloth', 'rope', 'rope2', 'ellipsoid', 'drone', 'kineBody',
-    'softmesh', 'softmeshbase', 'pigtest', 'testmesh', 'meshmove',
-    'character', 'mecanum', 'joints', 'empty', 'human', 'asteroid', 'point2point', 'contact',
+    'kinematics', 'multyCars', 'cloth', 'rope', 'rope2', 'drone', 'kineBody',
+    'soft_box', 'soft_basic', 'soft_pig', 'soft_human', 'soft_ball',
+    'character', 'mecanum', 'joints', 'empty',  'asteroid', 'point2point', 'contact','testmesh', 'meshmove',
 ];
 
 demos.sort();

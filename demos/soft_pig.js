@@ -46,14 +46,10 @@ function afterLoad () {
             citerations: 1,
             diterations: 2,
 
-            kdf: 0.6,// friction
-            kdp: 0.01,// Damping
-            kpr: 260,// Pressure
-            //kvc: 20,
-
-            // Stiffness
-            klst: 0.6,
-            kast: 0.6,
+            friction: 0.6,
+            dmping: 0.01,
+            pressure: 260,
+            stiffness: 0.6,
 
             margin:0.05,
             fromfaces:true,

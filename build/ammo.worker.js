@@ -1836,19 +1836,29 @@ function addSoftBody ( o ) {
     sb.set_collisions( 0x11 );
 
     // Friction
-    if( o.kdf !== undefined ) sb.set_kDF(o.kdf);
+    if( o.friction !== undefined ) sb.set_kDF(o.friction);
     // Damping
-    if( o.kdp !== undefined ) sb.set_kDP(o.kdp);
+    if( o.damping !== undefined ) sb.set_kDP(o.damping);
     // Pressure
-    if( o.kpr !== undefined ) sb.set_kPR(o.kpr);
+    if( o.pressure !== undefined ) sb.set_kPR( o.pressure );
 
-    if( o.kvc !== undefined ) sb.set_kVC(o.kvc);
+    //if( o.kvc !== undefined ) sb.set_kVC(o.kvc);
+
+    if( o.stiffness !== undefined ){
+        var mat = body.get_m_materials().at( 0 );
+        mat.set_m_kLST( o.stiffness );
+        mat.set_m_kAST( o.stiffness );
+        mat.set_m_kVST( o.stiffness );
+    }
+    
 
     
     // Stiffness
+    /*
     if( o.klst !== undefined ) body.get_m_materials().at(0).set_m_kLST(o.klst);
     if( o.kast !== undefined ) body.get_m_materials().at(0).set_m_kAST(o.kast);
     if( o.kvst !== undefined ) body.get_m_materials().at(0).set_m_kVST(o.kvst);
+    -*/
 
 
     body.setTotalMass( o.mass, o.fromfaces || false );
@@ -2361,7 +2371,7 @@ Vehicle.prototype = {
 
     get: function (){
 
-
+        self.postMessage({ m:'carData', o:this.data });
 
     },
 

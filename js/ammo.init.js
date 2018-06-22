@@ -106,8 +106,6 @@ var ammo = ( function () {
 
             });
 
-
-
         },
 
         initEngine: function () {

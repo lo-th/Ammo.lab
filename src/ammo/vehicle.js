@@ -371,7 +371,7 @@ Vehicle.prototype = {
 
     get: function (){
 
-
+        self.postMessage({ m:'carData', o:this.data });
 
     },
 

@@ -41,13 +41,10 @@ function afterLoad () {
         //citerations:4,
         //diterations:0,
 
-        kdf: 0.1,// friction
-        kdp: 0.01,// Damping
-        kpr: 250,// Pressure
-
-        // Stiffness
-        klst: 0.9,
-        kast: 0.9,
+        friction: 0.1,
+        damping: 0.01,
+        pressure: 250,
+        stiffness: 0.9,
 
         margin:0.05,
     });
@@ -70,15 +67,13 @@ function afterLoad () {
         //citerations:4,
         //diterations:0,
 
-        kdf: 0.1,// friction
-        kdp: 0.01,// Damping
-        kpr: 120,// Pressure
-
-        // Stiffness
-        klst: 0.9,
-        kast: 0.9,
+        friction: 0.1,
+        damping: 0.01,
+        pressure: 120,
+        stiffness: 0.9,
 
         margin:0.05,
+
     });
 
     

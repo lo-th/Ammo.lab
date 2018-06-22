@@ -19,7 +19,7 @@ function afterLoad () {
 
     var geo = view.getGeo();
 
-    var i = 6;
+    var i = 4;
 
 
 
@@ -46,20 +46,17 @@ function afterLoad () {
 
             viterations: 7,
             piterations: 1,
-            citerations: 1,
-            diterations: 0,
+            //citerations: 1,
+            //diterations: 0,
 
-            kdf: 0.4,// friction
-            kdp: 0.01,// Damping
-            kpr: 250,// Pressure
-            //kvc: 20,
-
-            // Stiffness
-            klst: 0.9,
-            kast: 0.9,
+            friction: 0.5,
+            damping: 0.1,
+            pressure: 500,
+            stiffness: 1,
 
             margin:0.1,
-            fromfaces:true,
+            fromfaces:false,
+
         });
 
     }

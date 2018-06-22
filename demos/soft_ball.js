@@ -17,16 +17,13 @@ function demo() {
         citerations:4,
         diterations:0,
         
-        kdf:1,
-        kdp:0.001,
-        kpr:2500,
-
-        // material setting ?
-        klst : 0.1,
-        kast : 0.1,
-        kvst : 0.1,
+        friction:1,
+        damping:0.001,
+        pressure:2500,
+        stiffness:0.05,
         
         margin:0.1,
+
     });
 
     add({ 
@@ -40,9 +37,10 @@ function demo() {
         citerations:4,
         diterations:0,
 
-        kdf:1,
-        kdp:0.001,
-        kpr:2500,
+        friction:1,
+        damping:0.001,
+        pressure:2500,
+        stiffness:0.05,
 
         margin:0.1,
     });
@@ -58,9 +56,10 @@ function demo() {
         citerations:4,
         diterations:0,
 
-        kdf:1,
-        kdp:0.001,
-        kpr:2500,
+        friction:1,
+        damping:0.001,
+        pressure:2500,
+        stiffness:0.05,
         
         margin:0.1,
     });
