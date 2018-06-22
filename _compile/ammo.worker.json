@@ -3,6 +3,7 @@
     "src/ammo/math.js",
     "src/ammo/character.js",
     "src/ammo/constraint.js",
+    "src/ammo/contact.js",
     "src/ammo/rigidBody.js",
     "src/ammo/softBody.js",
     "src/ammo/terrain.js",

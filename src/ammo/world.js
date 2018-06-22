@@ -154,7 +154,7 @@ self.onmessage = function ( e ) {
 
         case 'setVehicle': setVehicle( o ); break;
 
-        case 'contact': addContactTest( o ); break;
+        case 'contact': addContact( o ); break;
 
     }
 
@@ -312,12 +312,11 @@ function set( o ){
 
 function reset ( o ) {
 
-    contacts = [];
-    contactGroups = [];
 
     tmpForce = [];
     tmpMatrix = [];
 
+    clearContact();
     clearJoint();
     clearRigidBody();
     clearVehicle();
@@ -350,50 +349,6 @@ function wipe (obj) {
         if ( obj.hasOwnProperty( p ) ) delete obj[p];
     }
 };
-
-//--------------------------------------------------
-//
-//  CONTACT
-//
-//--------------------------------------------------
-
-function addContactTest ( o ) {
-
-    var id = contactGroups.length;
-
-    var f = new Ammo.ConcreteContactResultCallback()
-
-    f.addSingleResult = function( cp, colObj0, partid0, index0, colObj1, partid1, index1 ) {
-        //var manifold = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
-        //if ( manifold.getDistance() < 0 ) 
-        //else contacts[id] = 0;
-        contacts[id] = 1;
-
-    }
-
-    contactGroups.push( [ o.b1, o.b2, f ] )
-    contacts.push(0);
-
-};
-
-function stepContact () {
-
-    var a, b, f;
-
-    contactGroups.forEach( function ( c, id ) {
-
-        contacts[ id ] = 0;
-        a = getByName( c[0] );
-        b = getByName( c[1] );
-        f = c[2];
-        
-        world.contactPairTest( a, b, f );
-
-    });
-
-};
-
-
 
 //--------------------------------------------------
 //

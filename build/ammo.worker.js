@@ -154,7 +154,7 @@ self.onmessage = function ( e ) {
 
         case 'setVehicle': setVehicle( o ); break;
 
-        case 'contact': addContactTest( o ); break;
+        case 'contact': addContact( o ); break;
 
     }
 
@@ -312,12 +312,11 @@ function set( o ){
 
 function reset ( o ) {
 
-    contacts = [];
-    contactGroups = [];
 
     tmpForce = [];
     tmpMatrix = [];
 
+    clearContact();
     clearJoint();
     clearRigidBody();
     clearVehicle();
@@ -350,50 +349,6 @@ function wipe (obj) {
         if ( obj.hasOwnProperty( p ) ) delete obj[p];
     }
 };
-
-//--------------------------------------------------
-//
-//  CONTACT
-//
-//--------------------------------------------------
-
-function addContactTest ( o ) {
-
-    var id = contactGroups.length;
-
-    var f = new Ammo.ConcreteContactResultCallback()
-
-    f.addSingleResult = function( cp, colObj0, partid0, index0, colObj1, partid1, index1 ) {
-        //var manifold = Ammo.wrapPointer( cp, Ammo.btManifoldPoint );
-        //if ( manifold.getDistance() < 0 ) 
-        //else contacts[id] = 0;
-        contacts[id] = 1;
-
-    }
-
-    contactGroups.push( [ o.b1, o.b2, f ] )
-    contacts.push(0);
-
-};
-
-function stepContact () {
-
-    var a, b, f;
-
-    contactGroups.forEach( function ( c, id ) {
-
-        contacts[ id ] = 0;
-        a = getByName( c[0] );
-        b = getByName( c[1] );
-        f = c[2];
-        
-        world.contactPairTest( a, b, f );
-
-    });
-
-};
-
-
 
 //--------------------------------------------------
 //
@@ -1397,6 +1352,85 @@ function addJoint ( o ) {
 
 
 
+/**   _   _____ _   _   
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*    AMMO CONTACT
+*/
+
+function stepContact () {
+
+    var i = contactGroups.length;
+    while( i-- ) contactGroups[i].step();
+
+};
+
+function clearContact () {
+
+    while( contactGroups.length > 0) contactGroups.pop().clear();
+    contactGroups = [];
+    contacts = [];
+
+};
+
+function addContact ( o ) {
+
+    var id = contactGroups.length;
+    var c = new Contact( o, id );
+    if( c.valide ){
+        contactGroups.push( c );
+        contacts.push(0);
+    }
+
+};
+
+//--------------------------------------------------
+//
+//  CONTACT CLASS
+//
+//--------------------------------------------------
+
+function Contact ( o, id ) {
+
+    this.a = getByName( o.b1 );
+    this.b = o.b2 !== undefined ? getByName( o.b2 ) : null;
+
+    if( this.a !== null ){
+
+        this.id = id;
+        this.f = new Ammo.ConcreteContactResultCallback();
+        this.f.addSingleResult = function(){ contacts[id] = 1; }
+        this.valide = true;
+
+    } else {
+
+        this.valide = false;
+
+    }
+
+}
+
+Contact.prototype = {
+
+    step: function () {
+
+        contacts[ this.id ] = 0;
+        if( this.b !== null ) world.contactPairTest( this.a, this.b, this.f );
+        else world.contactTest( this.a, this.f );
+
+    },
+
+    clear: function () {
+
+        this.a = null;
+        this.b = null;
+        Ammo.destroy( this.f );
+
+    }
+
+}
 
 //--------------------------------------------------
 //
