@@ -14,38 +14,23 @@ function demo() {
 
     add({ type:'plane', name:'ground', restitution:0.8 }); // infinie plane
 
-    add({ type:'box', size:[2,2,2], pos:[0,30,0], mass:2, name:'boxy', restitution:0.8, material:'contactOff' });
+    add({ type:'box', size:[2,2,2], pos:[-5,30,0], mass:2, name:'boxy', restitution:0.8, material:'contactOff' });
+    add({ type:'sphere', size:[1], pos:[5,30,0], mass:2, name:'sphy', restitution:0.8, material:'contactOff' });
 
-    contact({ b1:'boxy', b2:'ground', f:onContact});
 
-    /*var i = 200, pos = [], s, d, rot = [0,0,90];
-    
-    while( i-- ) {
-
-        h = Math.rand(0.1,4);
-        d = Math.rand(0.1,1);
-
-        pos[0] = Math.rand(-5,5); 
-        pos[1] = Math.rand(2,20) + ( i*h );
-        pos[2] = Math.rand(-5,5);
-
-        switch( Math.randInt(0,4) ){
-
-            case 0 : add({ type:'sphere',   size:[d,d,d], pos:pos, mass:0.2 }); break;
-            case 1 : add({ type:'box',      size:[d,h,d], pos:pos, mass:0.2 }); break;
-            case 2 : add({ type:'cone',     size:[d,h,d], pos:pos, mass:0.2 }); break;
-            case 3 : add({ type:'capsule',  size:[d,h,d], rot:rot, pos:pos, mass:0.2 }); break;
-            case 4 : add({ type:'cylinder', size:[d,h,d], rot:rot, pos:pos, mass:0.2 }); break;
-
-        }
-    }*/
+    contact({ b1:'boxy', b2:'ground', f:onContact1});// contact pair test
+    contact({ b1:'sphy', f:onContact2});// contact single test
 
 };
 
-function onContact ( b ){
+function onContact1 ( b ){
 
     view.byName['boxy'].material = b ? view.mat.contactOn : view.mat.contactOff
 
-    //console.log( 'contact: ', b )
+}
 
+function onContact2 ( b ){
+
+    view.byName['sphy'].material = b ? view.mat.contactOn : view.mat.contactOff
+    
 }
