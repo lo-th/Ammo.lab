@@ -573,22 +573,29 @@ View.prototype.vehicle = function ( o ) {
 
     // chassis
     var mesh;
-    if( o.mesh ){ 
+    if( o.mesh ){
+
         mesh = o.mesh;
         var k = mesh.children.length;
             while(k--){
-                mesh.children[k].position.fromArray( o.masscenter ).negate();//.set( -masscenter[0], -masscenter[1], -masscenter[2] );
+                //mesh.children[k].position.fromArray( o.masscenter ).negate();//.set( -masscenter[0], -masscenter[1], -masscenter[2] );
                 //mesh.children[k].geometry.translate( masscenter[0], masscenter[1], masscenter[2] );
-                mesh.children[k].castShadow = true;
-                mesh.children[k].receiveShadow = true;
+                //mesh.children[k].castShadow = true;
+                //mesh.children[k].receiveShadow = true;
             }
     } else {
+
         var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
         g.translate( -o.masscenter[0], -o.masscenter[1], -o.masscenter[2] );
         this.extraGeo.push( g );
         mesh = new THREE.Mesh( g, this.mat.move );
+
     } 
     
+
+    if( o.debug && o.shape ){
+        mesh = new THREE.Mesh( o.shape, this.mat.debug )
+    }
 
     //mesh.scale.set( size[0], size[1], size[2] );
     mesh.position.set( pos[0], pos[1], pos[2] );
@@ -597,8 +604,8 @@ View.prototype.vehicle = function ( o ) {
     // copy rotation quaternion
     o.quat = mesh.quaternion.toArray();
 
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    //mesh.castShadow = true;
+    //mesh.receiveShadow = true;
 
     this.scene.add( mesh );
 
@@ -630,9 +637,32 @@ View.prototype.vehicle = function ( o ) {
     this.extraGeo.push( gwr );
 
     var i = o.nw || 4;
+
     while(i--){
-        if(i==1 || i==2) w[i] = new THREE.Mesh( gw, this.mat.move );
-        else w[i] = new THREE.Mesh( gwr, this.mat.move );
+
+        if(o.meshWheel){
+            w[i] = o.meshWheel.clone();
+            needScale = false;
+            if(i==1 || i==2){ 
+                w[i] = new THREE.Group();
+                var ww = o.meshWheel.clone()
+                ww.rotation.y = Math.Pi;
+                w[i].add(ww);
+            } else {
+                w[i] = o.meshWheel.clone();
+                var k = w[i].children.length; 
+                while( k-- ){
+                    if(w[i].children[k].name === 'h_pneu') w[i].children[k].rotation.y = Math.Pi;
+                }
+            }
+
+
+        } else {
+            if(i==1 || i==2) w[i] = new THREE.Mesh( gw, this.mat.move );
+            else w[i] = new THREE.Mesh( gwr, this.mat.move );
+        }
+
+        
 
         if( needScale ) w[i].scale.set( deep, radius, radius );
         //else w[i].material = this.mat.move;//mat.cars;
@@ -646,6 +676,7 @@ View.prototype.vehicle = function ( o ) {
         w[i].receiveShadow = true;
 
         this.scene.add( w[i] );
+
     }
 
     mesh.userData.w = w;
@@ -671,6 +702,7 @@ View.prototype.vehicle = function ( o ) {
 
     if( o.shape ) delete(o.shape);
     if( o.mesh ) delete(o.mesh);
+    if( o.meshWheel ) delete(o.meshWheel);
 
     // send to worker
     ammo.send( 'vehicle', o );

@@ -58,6 +58,10 @@ function addVehicle (id, pos, type) {
     var mat = view.mat;
 
     var o = CARS[id];
+
+    //o.debug = true;
+
+
     o.type = type || 'box';
     
     o.pos = pos || [0,0,0];

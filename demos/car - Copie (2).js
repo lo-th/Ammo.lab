@@ -1,7 +1,7 @@
 var option = {
 
     restart:false,
-    follow:false,
+    follow:true,
 
     gravity:-10,
 
@@ -14,11 +14,11 @@ var option = {
     linear: 0, 
     angular: 0,
     // suspension
-    s_stiffness: 50,//20,
+    s_stiffness: 20,
     s_compression: 2.3,
     s_damping: 2.4,//2.4
-    s_force: 6000,
     s_travel: 5,
+    s_force: 6000,
     s_length: 0.2,
     // wheel
     w_friction: 10.5,//1000,
@@ -28,35 +28,32 @@ var option = {
 
 function demo() {
 
-	cam ({ azim:0, polar:25, distance:5 });
+    //view.hideGrid();
 
-    // world setting
     set({
-
         fps:60,
-        numStep:2,// more numStep = more accurate simulation default set to 2
+        numStep:8,// more numStep = more accurate simulation default set to 2
         gravity:[ 0, option.gravity ,0 ],
-
     })
 
-    // infinie plan
-    add({ type:'plane', friction:0.6, restitution:0.1 });
-
-    // load 3d model
-    view.load ( ['hog.sea', 'track.sea'], afterLoad, true );
+    load ( 'track', afterLoad );
+    //load ( 'gaz', afterLoad );
 
 };
 
 function afterLoad () {
 
-	// top box
-	//add({ type:'box', size:[1,1,1], pos:[0,2,0], mass:1000 });
 
-	// bottom box
-	//add({ type:'box', size:[0.2,1,0.2], pos:[0,0.5,0] });
+    //view.testMesh(view.geo.gaz)
+    //view.testMesh(view.geo.boo)
 
-	// basic track
-    add({ type:'mesh', shape:view.getGeometry('track', 'track'), pos:[5,0,0], mass:0, friction:0.6, restitution:0.1 });
+
+
+    // infinie plan
+    add({ type:'plane', friction:0.6, restitution:0.1 });
+
+    // basic track
+    add({ type:'mesh', shape:view.geo.track, mass:0, friction:0.6, restitution:0.1 });
 
     // ammo car shape
 
@@ -64,45 +61,18 @@ function afterLoad () {
 
     // https://www.youtube.com/watch?v=vW1QrLhSdE4
 
-    var mesh = view.getMesh( 'hog', 'h_chassis' );
-    var wheel = view.getMesh( 'hog', 'h_wheel' );
-
-    var k = mesh.children.length;
-    while(k--){
-    	if(mesh.children[k].name==='h_glasses') mesh.children[k].material = view.mat.statique;
-    	else mesh.children[k].material = view.mat.move;
-
-    	mesh.children[k].castShadow = false;
-        mesh.children[k].receiveShadow = false;
-    }
-
-    k = wheel.children.length;
-    while(k--){
-    	wheel.children[k].material = view.mat.move;
-    }
-
-    mesh.material = view.mat.move;
-    wheel.material = view.mat.move;
-
     var o = option;
 
     car ({ 
 
-    	debug: false,
-
-        type:'convex',
-        shape: view.getGeometry( 'hog', 'h_shapeC' ),
-        mesh: mesh,
-        meshWheel: wheel,
-
-
+        type:'box',
         name:'car',
         helper: true,
-        pos:[0,0,0], // start position of car 
+        pos:[0,4,0], // start position of car 
         rot:[0,90,0], // start rotation of car
         size:[ 1.3, 0.4, 3.5 ], // chassis size
         //size:[ 1.2, 0.6, 3.8 ], // chassis size
-        masscenter:[ 0, 0, 0 ], // local center of mass (best is on chassis bottom)
+        masscenter:[ 0, -0.6, 0 ], // local center of mass (best is on chassis bottom)
 
         friction: o.friction,
         restitution: o.restitution,
@@ -111,7 +81,7 @@ function afterLoad () {
 
         radius:0.43,// wheels radius
         deep:0.3, // wheels deep only for three cylinder
-        wPos:[ 0.838, 0.43+0.2, 1.37 ], // wheels position on chassis
+        wPos:[ 0.838, 0, 1.37 ], // wheels position on chassis
 
         // car setting
 
@@ -126,9 +96,8 @@ function afterLoad () {
         s_damping: o.s_damping,//2.4, // The damping coefficient for when the suspension is expanding. default : 0.88 // 2.3
 
         s_stiffness: o.s_stiffness,// 10 = Offroad buggy, 50 = Sports car, 200 = F1 Car 
-        s_force: o.s_force, // Maximum suspension force
-        
         s_travel: o.s_travel, // The maximum distance the suspension can be compressed in meter
+        s_force: o.s_force, // Maximum suspension force
         s_length: o.s_length,//0.1, // The maximum length of the suspension in meter
 
         // wheel setting
@@ -145,7 +114,7 @@ function afterLoad () {
 
     });
 
-    follow (option.follow ? 'car':'none' );
+    follow (option.follow ? 'car':'none');
 
     // add option setting
     ui ({
@@ -171,7 +140,7 @@ function afterLoad () {
         s_compression: { min:0, max:5, precision:2, color:0xCC88FF },
         s_damping: { min:0, max:5, precision:2, color:0xCC88FF },
         s_travel: { min:0, max:5, precision:2, color:0xCC88FF },
-        s_force: { min:0, max:100000, precision:0, color:0xCC88FF },
+        s_force: { min:0, max:10000, precision:0, color:0xCC88FF },
         s_length: { min:0, max:1, precision:2, color:0xCC88FF },
 
         w_friction: { min:0, max:1000, precision:2, color:0xCCCC44 },

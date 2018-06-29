@@ -1649,6 +1649,7 @@ function addRigidBody ( o, extra ) {
         
     }
     
+    //console.log(body)
     
 
     //if ( o.mass === 0  && !isKinematic) solids.push( body );
