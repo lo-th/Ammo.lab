@@ -1,3 +1,6 @@
+
+// ! \\ go on view and use keyboard WSAD to controle car
+
 var option = {
 
     restart:false,
@@ -58,11 +61,7 @@ function afterLoad () {
 	// basic track
     add({ type:'mesh', shape:view.getGeometry('track', 'track'), pos:[5,0,0], mass:0, friction:0.6, restitution:0.1 });
 
-    // ammo car shape
 
-    // ! \\ go on view and use keyboard to controle car
-
-    // https://www.youtube.com/watch?v=vW1QrLhSdE4
 
     var mesh = view.getMesh( 'hog', 'h_chassis' );
     var wheel = view.getMesh( 'hog', 'h_wheel' );
@@ -91,7 +90,7 @@ function afterLoad () {
     	debug: false,
 
         type:'convex',
-        shape: view.getGeometry( 'hog', 'h_shapeC' ),
+        shape: view.getGeometry( 'hog', 'h_shape' ),
         mesh: mesh,
         meshWheel: wheel,
 
@@ -170,8 +169,8 @@ function afterLoad () {
         s_stiffness: { min:0, max:200, precision:0, color:0xCC88FF }, 
         s_compression: { min:0, max:5, precision:2, color:0xCC88FF },
         s_damping: { min:0, max:5, precision:2, color:0xCC88FF },
+        s_force: { min:0, max:50000, precision:0, color:0xCC88FF },
         s_travel: { min:0, max:5, precision:2, color:0xCC88FF },
-        s_force: { min:0, max:100000, precision:0, color:0xCC88FF },
         s_length: { min:0, max:1, precision:2, color:0xCC88FF },
 
         w_friction: { min:0, max:1000, precision:2, color:0xCCCC44 },
@@ -185,13 +184,10 @@ function applyOption () {
 
     
     option.reset = option.restart ? true : false;
-    
 
     gravity( [ 0, option.gravity, 0 ] );
     ammo.send( 'setVehicle', option );
 
     follow (option.follow ? 'car':'none');
 
-    
-    
 }
