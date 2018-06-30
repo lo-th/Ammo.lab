@@ -8,18 +8,18 @@ var option = {
 
     gravity:-10,
 
-    mass:600,
+    mass:1300,
     engine:1000,
-    acceleration:10,
+    acceleration:50,
     // car body physics
     friction: 0.6, 
     restitution: 0,
     linear: 0, 
     angular: 0,
     // suspension
-    s_stiffness: 50,//20,
+    s_stiffness: 50,
     s_compression: 2.3,
-    s_damping: 2.4,//2.4
+    s_damping: 2.4,
     s_force: 6000,
     s_travel: 5,
     s_length: 0.2,
@@ -121,7 +121,7 @@ function afterLoad () {
 
         name:'car',
         helper: true,
-        pos:[0,0,0], // start position of car 
+        pos:[0,1,0], // start position of car 
         rot:[0,90,0], // start rotation of car
         size:[ 1.3, 0.4, 3.5 ], // chassis size
         //size:[ 1.2, 0.6, 3.8 ], // chassis size

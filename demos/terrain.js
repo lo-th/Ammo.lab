@@ -8,9 +8,9 @@ var option = {
 
     gravity:-10,
 
-    mass:600,
+    mass:1300,
     engine:1000,
-    acceleration:10,
+    acceleration:50,
     // car body physics
     friction: 0.6, 
     restitution: 0,
@@ -44,8 +44,9 @@ function demo() {
 
     add ({ 
         type:'terrain', 
+        uv:50,
         pos : [0,-10,0], // terrain position
-        size : [400,20,400], // terrain size in meter
+        size : [500,20,500], // terrain size in meter
         sample : [256,256], // number of subdivision
         frequency : [0.016,0.05,0.2], // frequency of noise
         level : [1,0.2,0.05], // influence of octave
@@ -56,9 +57,11 @@ function demo() {
         restitution: 0.2,
     });
 
-    add ({ type:'sphere', size:[1], pos:[0,20,5], mass:0.2 });
-    add ({ type:'sphere', size:[1], pos:[5,20,5], mass:0.2 });
-    add ({ type:'sphere', size:[1], pos:[-5,20,-5], mass:0.2 });
+    var i = 10;
+    while(i--){
+        add ({ type:'sphere', size:[1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
+        add({ type:'box',      size:[1,1,1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
+    }
 
     // load 3d car model
     view.load ( ['hog.sea', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg'], afterLoad, true );
@@ -107,7 +110,7 @@ function afterLoad () {
 
     mesh.material = view.mat.move;
     wheel.material = view.mat.wheel;
-    
+
     mesh.receiveShadow = false;
     wheel.receiveShadow = false;
 
