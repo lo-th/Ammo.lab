@@ -9,7 +9,7 @@ var option = {
     gravity:-10,
 
     mass:1300,
-    engine:1000,
+    engine:1600,
     acceleration:50,
     // car body physics
     friction: 0.6, 
@@ -36,7 +36,7 @@ function demo() {
 
     set({
         fps:60,
-        numStep:8,
+        numStep:2,
         gravity:[0,-10,0],
     })
 
@@ -45,12 +45,12 @@ function demo() {
     add ({ 
         type:'terrain', 
         uv:50,
-        pos : [0,-10,0], // terrain position
-        size : [500,20,500], // terrain size in meter
-        sample : [256,256], // number of subdivision
+        pos : [ 0, -10, 0 ], // terrain position
+        size : [ 500, 20, 500 ], // terrain size in meter
+        sample : [ 512, 512 ], // number of subdivision
         frequency : [0.016,0.05,0.2], // frequency of noise
-        level : [1,0.2,0.05], // influence of octave
-        expo: 3,
+        level : [ 1, 0.2, 0.05 ], // influence of octave
+        expo: 5,
         flipEdge : true, // inverse the triangle
         hdt : 'PHY_FLOAT', // height data type PHY_FLOAT, PHY_UCHAR, PHY_SHORT
         friction: 0.6, 

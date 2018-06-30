@@ -9,7 +9,7 @@ var option = {
     gravity:-10,
 
     mass:1300,
-    engine:1000,
+    engine:1600,
     acceleration:50,
     // car body physics
     friction: 0.6, 
