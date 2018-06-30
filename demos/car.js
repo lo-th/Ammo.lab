@@ -46,7 +46,7 @@ function demo() {
     add({ type:'plane', friction:0.6, restitution:0.1 });
 
     // load 3d model
-    view.load ( ['hog.sea', 'track.sea'], afterLoad, true );
+    view.load ( ['hog.sea', 'track.sea', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg'], afterLoad, true );
 
 };
 
@@ -61,27 +61,53 @@ function afterLoad () {
 	// basic track
     add({ type:'mesh', shape:view.getGeometry('track', 'track'), pos:[5,0,0], mass:0, friction:0.6, restitution:0.1 });
 
+    // car material / texture
 
+    var txColor = view.getTexture('wheel_c')
+    var txNorm =  view.getTexture('wheel_n');
+
+    view.mat['wheel'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 1, 1 ), envMap:view.envmap, metalness:0.5, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+    view.mat['pneu'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 2, 2 ), envMap:view.envmap, metalness:0.5, roughness:0.7, shadowSide:false, envMapIntensity: 0.6 });
+
+    // car mesh
 
     var mesh = view.getMesh( 'hog', 'h_chassis' );
     var wheel = view.getMesh( 'hog', 'h_wheel' );
 
-    var k = mesh.children.length;
-    while(k--){
-    	if(mesh.children[k].name==='h_glasses') mesh.children[k].material = view.mat.statique;
-    	else mesh.children[k].material = view.mat.move;
+    var k = mesh.children.length, m;
 
-    	mesh.children[k].castShadow = false;
-        mesh.children[k].receiveShadow = false;
+    while(k--){
+
+        m = mesh.children[k];
+    	if( m.name === 'h_glasses' ) m.material = view.mat.statique;
+    	else m.material = view.mat.move;
+
+    	m.castShadow = false;
+        m.receiveShadow = false;
+
     }
 
     k = wheel.children.length;
+
     while(k--){
-    	wheel.children[k].material = view.mat.move;
+        m = wheel.children[k];
+        if( m.name === 'h_pneu' ) m.material = view.mat.pneu;
+        else m.material = view.mat.wheel;
+
+        m.castShadow = false;
+        m.receiveShadow = false;
+
     }
 
     mesh.material = view.mat.move;
-    wheel.material = view.mat.move;
+    wheel.material = view.mat.wheel;
+
+    mesh.receiveShadow = false;
+    wheel.receiveShadow = false;
+    mesh.castShadow = false;
+    wheel.castShadow = false;
+
+    // car physics
 
     var o = option;
 
