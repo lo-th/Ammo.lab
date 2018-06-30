@@ -104,8 +104,6 @@ function afterLoad () {
 
     mesh.receiveShadow = false;
     wheel.receiveShadow = false;
-    mesh.castShadow = false;
-    wheel.castShadow = false;
 
     // car physics
 
