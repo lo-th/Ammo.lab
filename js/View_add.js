@@ -598,14 +598,15 @@ View.prototype.vehicle = function ( o ) {
     var mesh;
     if( o.mesh ){
 
-        mesh = o.mesh;
-        var k = mesh.children.length;
+        mesh = new THREE.Group();//o.mesh;
+        mesh.add(o.mesh)
+        /*var k = mesh.children.length;
             while(k--){
                 //mesh.children[k].position.fromArray( o.masscenter ).negate();//.set( -masscenter[0], -masscenter[1], -masscenter[2] );
                 //mesh.children[k].geometry.translate( masscenter[0], masscenter[1], masscenter[2] );
                 //mesh.children[k].castShadow = true;
                 //mesh.children[k].receiveShadow = true;
-            }
+            }*/
     } else {
 
         var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
