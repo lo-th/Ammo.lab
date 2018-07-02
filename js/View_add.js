@@ -84,12 +84,35 @@ View.prototype.carsStep = function( AR, N ){
         //b.axe.position.copy( b.body.position );
         //b.axe.quaternion.copy( b.body.quaternion );
 
-        var j = b.userData.NumWheels, w;
+        var j = b.userData.NumWheels, w, k, v;
+
+        var decal = 0.2;
+        var ratio = 1/decal;
+
+        if( b.userData.isWithSusp ){
+            w = 8 * ( 4 + 1 );
+            k = j;
+            while(k--){
+                v = ( AR[n+w+k] )*ratio;
+
+                v = v > 1 ? 1 : v;
+                v = v < -1 ? -1 : v;
+
+                //if(k==0)console.log(v)
+                b.userData.s[k].setWeight( v>0 ? 'low' : 'top', v<0 ? v*-1 : v );
+
+                //b.userData.s[k].setWeight( 'top' , 1 );
+            }
+            
+        }
+
 
         if(b.userData.helper){
             if( j == 4 ){
                 w = 8 * ( 4 + 1 );
                 b.userData.helper.updateSuspension(AR[n+w+0], AR[n+w+1], AR[n+w+2], AR[n+w+3]);
+
+                
             }
         }
         
@@ -628,6 +651,10 @@ View.prototype.vehicle = function ( o ) {
     wPos = o.wPos || [1, -0.25, 1.6];
 
     var w = [];
+    var s = [];
+    var sus;
+    var isWithSusp = o.meshSusp == undefined ? false : true;
+
 
     var needScale = o.wheel == undefined ? true : false;
 
@@ -640,7 +667,21 @@ View.prototype.vehicle = function ( o ) {
 
     while(i--){
 
-        if(o.meshWheel){
+        if(o.meshSusp){
+
+            sus = o.meshSusp.clone(); 
+            mesh.add( sus );
+            sus.position.y = radius;
+            if(i==1 || i==2) sus.rotation.y = Math.Pi;
+            if(i==0 || i==1) sus.position.z = wPos[2];
+            else sus.position.z = -wPos[2];
+
+            s[i] = sus.children[0];
+
+        }
+
+        if( o.meshWheel ){
+
             w[i] = o.meshWheel.clone();
             needScale = false;
             if(i==1 || i==2){ 
@@ -680,6 +721,8 @@ View.prototype.vehicle = function ( o ) {
     }
 
     mesh.userData.w = w;
+    mesh.userData.s = s;
+    mesh.userData.isWithSusp = isWithSusp;
 
     if(o.helper){
         mesh.userData.helper = new THREE.CarHelper( wPos, o.masscenter, deep );
@@ -703,6 +746,7 @@ View.prototype.vehicle = function ( o ) {
     if( o.shape ) delete(o.shape);
     if( o.mesh ) delete(o.mesh);
     if( o.meshWheel ) delete(o.meshWheel);
+    if( o.meshSusp ) delete(o.meshSusp);
 
     // send to worker
     ammo.send( 'vehicle', o );

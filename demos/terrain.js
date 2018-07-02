@@ -64,7 +64,7 @@ function demo() {
     }
 
     // load 3d car model
-    view.load ( ['hog.sea', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg'], afterLoad, true );
+    view.load ( ['buggy.sea', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg', 'buggy/suspension.jpg'], afterLoad, true );
 
 };
 
@@ -72,16 +72,28 @@ function afterLoad () {
 
     // car material / texture
 
-    var txColor = view.getTexture('wheel_c')
+    var txColor = view.getTexture('wheel_c');
     var txNorm =  view.getTexture('wheel_n');
+    var txSusp = view.getTexture('suspension');
 
     view.mat['wheel'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 1, 1 ), envMap:view.envmap, metalness:0.5, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
     view.mat['pneu'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 2, 2 ), envMap:view.envmap, metalness:0.5, roughness:0.7, shadowSide:false, envMapIntensity: 0.6 });
+    view.mat['susp'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+    view.mat['suspM'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8, morphTargets:true });
 
     // car mesh
 
-    var mesh = view.getMesh( 'hog', 'h_chassis' );
-    var wheel = view.getMesh( 'hog', 'h_wheel' );
+    var mesh = view.getMesh( 'buggy', 'h_chassis' );
+    var wheel = view.getMesh( 'buggy', 'h_wheel' );
+    var susp = view.getMesh( 'buggy', 'h_susp_base' );
+
+    susp.material = view.mat.susp;
+    susp.receiveShadow = false;
+    susp.receiveShadow = false;
+
+    susp.children[0].material = view.mat.suspM;
+    susp.children[0].receiveShadow = false;
+    susp.children[0].receiveShadow = false;
 
     var k = mesh.children.length, m;
 
@@ -123,9 +135,10 @@ function afterLoad () {
         debug: false,
 
         type:'convex',
-        shape: view.getGeometry( 'hog', 'h_shape' ),
+        shape: view.getGeometry( 'buggy', 'h_shape' ),
         mesh: mesh,
         meshWheel: wheel,
+        meshSusp: susp,
 
 
         name:'car',
@@ -143,7 +156,7 @@ function afterLoad () {
 
         radius:0.43,// wheels radius
         deep:0.3, // wheels deep only for three cylinder
-        wPos:[ 0.838, 0.43+0.2, 1.37 ], // wheels position on chassis
+        wPos:[ 0.838, 0.43, 1.37 ], // wheels position on chassis
 
         // car setting
 
