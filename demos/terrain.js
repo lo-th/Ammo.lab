@@ -17,11 +17,11 @@ var option = {
     linear: 0, 
     angular: 0,
     // suspension
-    s_stiffness: 50,//20,
+    s_stiffness: 15,//20,
     s_compression: 2.3,
     s_damping: 2.4,//2.4
-    s_force: 6000,
-    s_travel: 5,
+    s_force: 16000,
+    s_travel: 0.4,
     s_length: 0.2,
     // wheel
     w_friction: 10.5,//1000,

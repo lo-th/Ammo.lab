@@ -17,11 +17,11 @@ var option = {
     linear: 0, 
     angular: 0,
     // suspension
-    s_stiffness: 50,
+    s_stiffness: 15,
     s_compression: 2.3,
     s_damping: 2.4,
-    s_force: 6000,
-    s_travel: 5,
+    s_force: 16000,
+    s_travel: 0.4,
     s_length: 0.2,
     // wheel
     w_friction: 10.5,//1000,
@@ -63,9 +63,9 @@ function afterLoad () {
 
     // car material / texture
 
-    var txColor = view.getTexture('wheel_c')
+    var txColor = view.getTexture('wheel_c');
     var txNorm =  view.getTexture('wheel_n');
-    var txSusp = view.getTexture('suspension')
+    var txSusp = view.getTexture('suspension');
 
     view.mat['wheel'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 1, 1 ), envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
     view.mat['pneu'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 2, 2 ), envMap:view.envmap, metalness:0.5, roughness:0.7, shadowSide:false, envMapIntensity: 0.6 });
