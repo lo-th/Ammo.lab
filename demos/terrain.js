@@ -212,12 +212,12 @@ function afterLoad () {
         linear: { min:0, max:1, precision:2, color:0x88FF88 },  
         angular: { min:0, max:1, precision:2, color:0x88FF88 },
 
-        s_stiffness: { min:0, max:200, precision:0, color:0xCC88FF }, 
-        s_compression: { min:0, max:5, precision:2, color:0xCC88FF },
-        s_damping: { min:0, max:5, precision:2, color:0xCC88FF },
-        s_force: { min:0, max:50000, precision:0, color:0xCC88FF },
-        s_travel: { min:0, max:5, precision:2, color:0xCC88FF },
-        s_length: { min:0, max:1, precision:2, color:0xCC88FF },
+        s_stiffness: { min:1, max:200, precision:0, color:0xCC88FF }, 
+        s_compression: { min:0.01, max:5, precision:2, color:0xCC88FF },
+        s_damping: { min:0.01, max:5, precision:2, color:0xCC88FF },
+        s_force: { min:1, max:50000, precision:0, color:0xCC88FF },
+        s_travel: { min:0.01, max:5, precision:2, color:0xCC88FF },
+        s_length: { min:0.01, max:1, precision:2, color:0xCC88FF },
 
         w_friction: { min:0, max:1000, precision:2, color:0xCCCC44 },
         w_roll: { min:0, max:1, precision:2, color:0xCCCC44 },
