@@ -45,46 +45,73 @@ function demo() {
     // infinie plan
     add({ type:'plane', friction:0.6, restitution:0.1 });
 
-    // load 3d model
-    view.load ( ['buggy.sea', 'track.sea', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg', 'buggy/suspension.jpg'], afterLoad, true );
+    // load buggy 3d model
+    view.load ( ['buggy.sea', 'track.sea', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg', 'buggy/suspension.jpg', 'buggy/body.jpg', 'buggy/extra.jpg', 'buggy/extra_n.jpg', 'buggy/pilote.jpg'], afterLoad, true );
 
 };
 
 function afterLoad () {
 
-	// top box
-	//add({ type:'box', size:[0.5,0.5,0.5], pos:[0,2,0], mass:1000 });
+    // top box
+    //add({ type:'box', size:[0.5,0.5,0.5], pos:[0,2,0], mass:1000 });
 
-	// bottom box
-	//add({ type:'box', size:[0.2,1,0.2], pos:[0,0.5,0] });
+    // bottom box
+    //add({ type:'box', size:[0.2,1,0.2], pos:[0,0.5,0] });
 
-	// basic track
+    // basic track
     add({ type:'mesh', shape:view.getGeometry('track', 'track'), pos:[5,0,0], mass:0, friction:0.6, restitution:0.1 });
+
+    makeBuggy()
+
+}
+
+function makeBuggy () {
 
     // car material / texture
 
     var txColor = view.getTexture('wheel_c');
     var txNorm =  view.getTexture('wheel_n');
     var txSusp = view.getTexture('suspension');
+    var txBody = view.getTexture('body');
+    var txExtra =  view.getTexture('extra');
+    var txExtraN = view.getTexture('extra_n');
+    var txPilote = view.getTexture('pilote');
+
+    view.mat['body'] = new THREE.MeshStandardMaterial({ map:txBody, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+    view.mat['extra'] = new THREE.MeshStandardMaterial({ map:txExtra, normalMap:txExtraN, normalScale:new THREE.Vector2( 1, 1 ), envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+    view.mat['pilote'] = new THREE.MeshStandardMaterial({ map:txPilote, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
 
     view.mat['wheel'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 1, 1 ), envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
     view.mat['pneu'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 2, 2 ), envMap:view.envmap, metalness:0.5, roughness:0.7, shadowSide:false, envMapIntensity: 0.6 });
     view.mat['susp'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
     view.mat['suspM'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8, morphTargets:true });
+    view.mat['brake'] = new THREE.MeshBasicMaterial({ color:0xdd3f03, transparent:true, opacity:0.1 });
 
     // car mesh
 
     var mesh = view.getMesh( 'buggy', 'h_chassis' );
     var wheel = view.getMesh( 'buggy', 'h_wheel' );
     var susp = view.getMesh( 'buggy', 'h_susp_base' );
+    var brake = view.getMesh( 'buggy', 'h_brake' );
+    var steeringWheel;
+
+    brake.material = view.mat.wheel;
+    brake.receiveShadow = false;
+    brake.castShadow = false;
+
+    brake.children[0].material = view.mat.brake;
+    brake.children[0].receiveShadow = false;
+    brake.children[0].castShadow = false;
+
+    //
 
     susp.material = view.mat.susp;
     susp.receiveShadow = false;
-    susp.receiveShadow = false;
+    susp.castShadow = false;
 
     susp.children[0].material = view.mat.suspM;
     susp.children[0].receiveShadow = false;
-    susp.children[0].receiveShadow = false;
+    susp.children[0].castShadow = false;
 
     var k = mesh.children.length, m;
 
@@ -92,7 +119,11 @@ function afterLoad () {
 
         m = mesh.children[k];
     	if( m.name === 'h_glasses' ) m.material = view.mat.statique;
-    	else m.material = view.mat.move;
+        else if( m.name === 'h_pilote' ) m.material = view.mat.pilote;
+        else if( m.name === 'h_steering_wheel' || m.name === 'h_sit_R' || m.name === 'h_sit_L' || m.name === 'h_extra' || m.name === 'h_pot' || m.name === 'h_license') m.material = view.mat.extra;
+    	else m.material = view.mat.body;
+
+        if( m.name === 'h_steering_wheel' ) steeringWheel = m;
 
     	m.castShadow = false;
         m.receiveShadow = false;
@@ -102,7 +133,6 @@ function afterLoad () {
     k = wheel.children.length;
 
     while(k--){
-
         m = wheel.children[k];
         if( m.name === 'h_pneu' ) m.material = view.mat.pneu;
         else m.material = view.mat.wheel;
@@ -112,10 +142,10 @@ function afterLoad () {
 
     }
 
-    mesh.material = view.mat.move;
-    wheel.material = view.mat.wheel;
-
+    mesh.material = view.mat.body;
     mesh.receiveShadow = false;
+
+    wheel.material = view.mat.wheel;
     wheel.receiveShadow = false;
 
     // car physics
@@ -131,6 +161,9 @@ function afterLoad () {
         mesh: mesh,
         meshWheel: wheel,
         meshSusp: susp,
+        meshBrake: brake,
+        meshSteeringWheel: steeringWheel,
+        extraWeels:true,
 
 
         name:'car',

@@ -78,30 +78,55 @@ View.prototype.carsStep = function( AR, N ){
         b.position.fromArray( AR, n + 1 );
         b.quaternion.fromArray( AR, n + 4 );
 
-        //b.position.set( Cr[n+1], Cr[n+2], Cr[n+3] );
-        //b.quaternion.set( Cr[n+4], Cr[n+5], Cr[n+6], Cr[n+7] );
-
-        //b.axe.position.copy( b.body.position );
-        //b.axe.quaternion.copy( b.body.quaternion );
 
         var j = b.userData.NumWheels, w, k, v;
-
+        var w = 8 * ( 4 + 1 );
         var decal = 0.2;
         var ratio = 1/decal;
+        var radius = b.userData.radius;
+        var steering = AR[n+8];
+
+        if( b.userData.steeringWheel ) {
+            b.userData.steeringWheel.rotation.y = - steering * 6;
+        }
+
+
+        if( b.userData.isWithBrake ){
+
+            k = j;
+
+            while(k--){
+                if(k===0)  b.userData.b[k].rotation.y = steering;
+                if(k===1)  b.userData.b[k].rotation.y = Math.Pi - steering;
+                b.userData.b[k].position.y = radius - AR[n+w+k];
+
+            }
+            
+        }
 
         if( b.userData.isWithSusp ){
-            w = 8 * ( 4 + 1 );
+
             k = j;
+
             while(k--){
+
                 v = ( AR[n+w+k] )*ratio;
 
                 v = v > 1 ? 1 : v;
                 v = v < -1 ? -1 : v;
 
-                //if(k==0)console.log(v)
-                b.userData.s[k].setWeight( v>0 ? 'low' : 'top', v<0 ? v*-1 : v );
+                if(v>0){
 
-                //b.userData.s[k].setWeight( 'top' , 1 );
+                    b.userData.s[k].setWeight( 'low', v );
+                    b.userData.s[k].setWeight( 'top', 0 );
+
+                } else {
+
+                    b.userData.s[k].setWeight( 'low', 0 );
+                    b.userData.s[k].setWeight( 'top', -v );
+
+                }
+
             }
             
         }
@@ -109,26 +134,23 @@ View.prototype.carsStep = function( AR, N ){
 
         if(b.userData.helper){
             if( j == 4 ){
-                w = 8 * ( 4 + 1 );
+                //w = 8 * ( 4 + 1 );
                 b.userData.helper.updateSuspension(AR[n+w+0], AR[n+w+1], AR[n+w+2], AR[n+w+3]);
 
-                
             }
         }
         
         while(j--){
 
             w = 8 * ( j + 1 );
-            //if( j == 1 ) steering = a[n+w];// for drive wheel
-            //if( j == 1 ) b.axe.position.x = Cr[n+w];
-            //if( j == 2 ) b.axe.position.y = Cr[n+w];
-            //if( j == 3 ) b.axe.position.z = Cr[n+w];
-
             b.userData.w[j].position.fromArray( AR, n + w + 1 );
             b.userData.w[j].quaternion.fromArray( AR, n + w + 4 );
 
-            //b.userData.w[j].position.set( Cr[n+w+1], Cr[n+w+2], Cr[n+w+3] );
-            //b.userData.w[j].quaternion.set( Cr[n+w+4], Cr[n+w+5], Cr[n+w+6], Cr[n+w+7] );
+            /*if( b.userData.isWithBrake ){
+                b.userData.b[j].position.fromArray( AR, n + w + 1 );
+                b.userData.b[j].quaternion.fromArray( AR, n + w + 4 );
+            }*/
+
         }
     });
 
@@ -643,6 +665,8 @@ View.prototype.vehicle = function ( o ) {
     mesh.userData.NumWheels = o.nw || 4;
     mesh.userData.type = 'car';
 
+    mesh.userData.steeringWheel = o.meshSteeringWheel || null;
+
     
 
     // wheels
@@ -653,8 +677,10 @@ View.prototype.vehicle = function ( o ) {
 
     var w = [];
     var s = [];
-    var sus;
-    var isWithSusp = o.meshSusp == undefined ? false : true;
+    var b = [];
+    var m;
+    var isWithSusp = o.meshSusp === undefined ? false : true;
+    var isWithBrake = o.meshBrake === undefined ? false : true;
 
 
     var needScale = o.wheel == undefined ? true : false;
@@ -668,16 +694,31 @@ View.prototype.vehicle = function ( o ) {
 
     while(i--){
 
+        if(o.meshBrake){
+
+            m = o.meshBrake.clone(); 
+           // this.scene.add( m );
+            mesh.add( m );
+            m.position.y = radius;
+            if(i==1 || i==2){ m.rotation.y = Math.Pi; m.position.x = wPos[0]; m.rotation.x = Math.Pi;}
+            else { m.position.x = -wPos[0]; }
+            if(i==0 || i==1) m.position.z = wPos[2];
+            else m.position.z = -wPos[2];
+
+            b[i] = m;//.children[0];
+
+        }
+
         if(o.meshSusp){
 
-            sus = o.meshSusp.clone(); 
-            mesh.add( sus );
-            sus.position.y = radius;
-            if(i==1 || i==2) sus.rotation.y = Math.Pi;
-            if(i==0 || i==1) sus.position.z = wPos[2];
-            else sus.position.z = -wPos[2];
+            m = o.meshSusp.clone(); 
+            mesh.add( m );
+            m.position.y = radius;
+            if(i==1 || i==2) m.rotation.y = Math.Pi;
+            if(i==0 || i==1) m.position.z = wPos[2];
+            else m.position.z = -wPos[2];
 
-            s[i] = sus.children[0];
+            s[i] = m.children[0];
 
         }
 
@@ -721,9 +762,20 @@ View.prototype.vehicle = function ( o ) {
 
     }
 
+    if(o.extraWeels){
+        var www = o.meshWheel.clone();
+        www.children[0].visible = false;
+        www.rotation.z = -Math.Pi * 0.5;
+        www.position.set( 0,1.25, -1.11 );
+        mesh.add( www );
+    }
+
+    mesh.userData.radius = radius;
     mesh.userData.w = w;
     mesh.userData.s = s;
+    mesh.userData.b = b;
     mesh.userData.isWithSusp = isWithSusp;
+    mesh.userData.isWithBrake = isWithBrake;
 
     if(o.helper){
         mesh.userData.helper = new THREE.CarHelper( wPos, o.masscenter, deep );
@@ -748,6 +800,8 @@ View.prototype.vehicle = function ( o ) {
     if( o.mesh ) delete(o.mesh);
     if( o.meshWheel ) delete(o.meshWheel);
     if( o.meshSusp ) delete(o.meshSusp);
+    if( o.meshBrake ) delete(o.meshBrake);
+    if( o.meshSteeringWheel ) delete(o.meshSteeringWheel);
 
     // send to worker
     ammo.send( 'vehicle', o );
