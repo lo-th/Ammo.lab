@@ -87,6 +87,8 @@ function makeBuggy () {
     var txExtraN = view.getTexture('extra_n');
     var txPilote = view.getTexture('pilote');
 
+    view.mat['glass'] = new THREE.MeshStandardMaterial({ color:0x3366ff, envMap:view.envmap, metalness:1, roughness:0.3, shadowSide:false, envMapIntensity: 1, transparent:true, opacity:0.2 });
+
     view.mat['body'] = new THREE.MeshStandardMaterial({ map:txBody, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
     view.mat['extra'] = new THREE.MeshStandardMaterial({ map:txExtra, normalMap:txExtraN, normalScale:new THREE.Vector2( 1, 1 ), envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
     view.mat['pilote'] = new THREE.MeshStandardMaterial({ map:txPilote, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
@@ -130,7 +132,7 @@ function makeBuggy () {
     while(k--){
 
         m = mesh.children[k];
-        if( m.name === 'h_glasses' ) m.material = view.mat.statique;
+        if( m.name === 'h_glasses' ) m.material = view.mat.glass;
         else if( m.name === 'h_pilote' ) m.material = view.mat.pilote;
         else if( m.name === 'h_steering_wheel' || m.name === 'h_sit_R' || m.name === 'h_sit_L' || m.name === 'h_extra' || m.name === 'h_pot' || m.name === 'h_license') m.material = view.mat.extra;
         else m.material = view.mat.body;

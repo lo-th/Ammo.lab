@@ -2272,6 +2272,8 @@ Vehicle.prototype = {
         this.car = new Ammo.btRaycastVehicle( tuning, this.body, vehicleRay );
         this.car.setCoordinateSystem( 0, 1, 2 );
 
+        //console.log( this.car , vehicleRay)
+
 
         // wheels
         var radius = o.radius || 0.4;
@@ -2301,6 +2303,7 @@ Vehicle.prototype = {
             this.car.setBrake( o.breaking || 100, i );
         
         };
+
 
         this.set( o );
 
@@ -2414,3 +2417,4 @@ Vehicle.prototype = {
 // google bullet maxSuspensionForce
 // https://github.com/jMonkeyEngine/jmonkeyengine/blob/master/jme3-examples/src/main/java/jme3test/bullet/TestFancyCar.java
 // https://github.com/david-sabata/UniversityRacer
+// http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
