@@ -28,6 +28,7 @@ var option = {
     w_roll: 0.1,
 
 }
+
 function demo() {
 
     cam ([0, 20, 100]);
@@ -96,6 +97,8 @@ function makeBuggy () {
     view.mat['suspM'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8, morphTargets:true });
     view.mat['brake'] = new THREE.MeshBasicMaterial({ color:0xdd3f03, transparent:true, opacity:0.1 });
 
+    view.mat['cshadow'] = new THREE.MeshBasicMaterial({ color:0xdd3f03, transparent:true, opacity:0, depthTest:false, depthWrite:false  });
+
     // car mesh
 
     var mesh = view.getMesh( 'buggy', 'h_chassis' );
@@ -137,6 +140,8 @@ function makeBuggy () {
         m.castShadow = false;
         m.receiveShadow = false;
 
+        if( m.name === 'h_shadow' ){  m.material = view.mat.cshadow; m.castShadow = true; m.receiveShadow = false; }
+
     }
 
     k = wheel.children.length;
@@ -153,9 +158,11 @@ function makeBuggy () {
 
     mesh.material = view.mat.body;
     mesh.receiveShadow = false;
+    mesh.castShadow = false;
 
     wheel.material = view.mat.wheel;
     wheel.receiveShadow = false;
+    wheel.castShadow = false;
 
     // car physics
 
@@ -224,7 +231,7 @@ function makeBuggy () {
 
     });
 
-    follow (option.follow ? 'car':'none', {distance:5, height:2} );
+    follow (option.follow ? 'car':'none' );
 
     // add option setting
     ui ({

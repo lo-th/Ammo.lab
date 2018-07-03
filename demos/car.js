@@ -52,6 +52,8 @@ function demo() {
 
 function afterLoad () {
 
+    add({ type:'box', size:[0.5,0.2,4], pos:[0,0.1,0] });
+
     // top box
     //add({ type:'box', size:[0.5,0.5,0.5], pos:[0,2,0], mass:1000 });
 
@@ -86,6 +88,8 @@ function makeBuggy () {
     view.mat['susp'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
     view.mat['suspM'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8, morphTargets:true });
     view.mat['brake'] = new THREE.MeshBasicMaterial({ color:0xdd3f03, transparent:true, opacity:0.1 });
+
+    view.mat['cshadow'] = new THREE.MeshBasicMaterial({ color:0xdd3f03, transparent:true, opacity:0, depthTest:false, depthWrite:false  });
 
     // car mesh
 
@@ -128,6 +132,8 @@ function makeBuggy () {
     	m.castShadow = false;
         m.receiveShadow = false;
 
+        if( m.name === 'h_shadow' ){  m.material = view.mat.cshadow; m.castShadow = true; m.receiveShadow = false; }
+
     }
 
     k = wheel.children.length;
@@ -144,9 +150,11 @@ function makeBuggy () {
 
     mesh.material = view.mat.body;
     mesh.receiveShadow = false;
+    mesh.castShadow = false;
 
     wheel.material = view.mat.wheel;
     wheel.receiveShadow = false;
+    wheel.castShadow = false;
 
     // car physics
 
