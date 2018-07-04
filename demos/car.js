@@ -6,6 +6,7 @@ var option = {
     restart:false,
     follow:false,
 
+    hour:9,
     gravity:-10,
 
     mass:1300,
@@ -29,11 +30,13 @@ var option = {
 
 }
 
+var hour = option.hour;
+
 function demo() {
 
 	cam ({ azim:0, polar:25, distance:5 });
 
-    view.addSky({hour:9});
+    view.addSky({hour:hour});
 
     // world setting
     set({
@@ -238,6 +241,8 @@ function makeBuggy () {
         restart: { type:'button', p:0 },
         follow: { type:'bool' },
 
+        hour: { min:0, max:23, precision:0, color:0xFFFF44 },
+
         gravity : { min:-20, max:20, color:0x8888FF },
 
         mass : { min:100, max:10000, precision:0, color:0xFF8844 },
@@ -264,6 +269,8 @@ function makeBuggy () {
 };
 
 function applyOption () {
+
+    if( hour !== option.hour ){ hour = option.hour; view.updateSky({hour:hour}); }
 
     
     option.reset = option.restart ? true : false;
