@@ -248,7 +248,7 @@ function makeBuggy () {
         restart: { type:'button', p:0 },
         follow: { type:'bool' },
 
-        hour: { min:0, max:23, precision:0, color:0xFFFF44 },
+        hour: { min:0, max:24, precision:2, color:0xFFFF44 },
 
         gravity : { min:-20, max:20, color:0x8888FF },
 
