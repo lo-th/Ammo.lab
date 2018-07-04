@@ -34,6 +34,7 @@ function demo() {
     cam ([0, 20, 100]);
 
     view.hideGrid();
+    view.addSky({hour:9});
 
     set({
         fps:60,
@@ -89,7 +90,7 @@ function makeBuggy () {
 
     view.mat['glass'] = new THREE.MeshStandardMaterial({ color:0x3366ff, envMap:view.envmap, metalness:1, roughness:0.3, shadowSide:false, envMapIntensity: 1, transparent:true, opacity:0.2 });
 
-    view.mat['body'] = new THREE.MeshStandardMaterial({ map:txBody, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+    view.mat['body'] = new THREE.MeshStandardMaterial({ map:txBody, envMap:view.envmap, metalness:0.8, roughness:0.2, shadowSide:false, envMapIntensity: 1 });
     view.mat['extra'] = new THREE.MeshStandardMaterial({ map:txExtra, normalMap:txExtraN, normalScale:new THREE.Vector2( 1, 1 ), envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
     view.mat['pilote'] = new THREE.MeshStandardMaterial({ map:txPilote, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
 
