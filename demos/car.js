@@ -84,16 +84,18 @@ function makeBuggy () {
     var txExtraN = view.getTexture('extra_n');
     var txPilote = view.getTexture('pilote');
 
-    view.mat['glass'] = new THREE.MeshStandardMaterial({ color:0x3366ff, envMap:view.envmap, metalness:1, roughness:0.3, shadowSide:false, envMapIntensity: 1, transparent:true, opacity:0.2 });
+    var env = view.envmap;
 
-    view.mat['body'] = new THREE.MeshStandardMaterial({ map:txBody, envMap:view.envmap, metalness:0.8, roughness:0.2, shadowSide:false, envMapIntensity: 1 });
-    view.mat['extra'] = new THREE.MeshStandardMaterial({ map:txExtra, normalMap:txExtraN, normalScale:new THREE.Vector2( 1, 1 ), envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
-    view.mat['pilote'] = new THREE.MeshStandardMaterial({ map:txPilote, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+    view.mat['glass'] = new THREE.MeshStandardMaterial({ color:0x3366ff, envMap:env, metalness:1, roughness:0.3, shadowSide:false, envMapIntensity: 1, transparent:true, opacity:0.2 });
 
-    view.mat['wheel'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 1, 1 ), envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
-    view.mat['pneu'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 2, 2 ), envMap:view.envmap, metalness:0.5, roughness:0.7, shadowSide:false, envMapIntensity: 0.6 });
-    view.mat['susp'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
-    view.mat['suspM'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:view.envmap, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8, morphTargets:true });
+    view.mat['body'] = new THREE.MeshStandardMaterial({ map:txBody, envMap:env, metalness:0.8, roughness:0.2, shadowSide:false, envMapIntensity: 1 });
+    view.mat['extra'] = new THREE.MeshStandardMaterial({ map:txExtra, normalMap:txExtraN, normalScale:new THREE.Vector2( 1, 1 ), envMap:env, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+    view.mat['pilote'] = new THREE.MeshStandardMaterial({ map:txPilote, envMap:env, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+
+    view.mat['wheel'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 1, 1 ), envMap:env, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+    view.mat['pneu'] = new THREE.MeshStandardMaterial({ map:txColor, normalMap:txNorm, normalScale:new THREE.Vector2( 2, 2 ), envMap:env, metalness:0.5, roughness:0.7, shadowSide:false, envMapIntensity: 0.6 });
+    view.mat['susp'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:env, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8 });
+    view.mat['suspM'] = new THREE.MeshStandardMaterial({ map:txSusp, envMap:env, metalness:0.6, roughness:0.4, shadowSide:false, envMapIntensity: 0.8, morphTargets:true });
     view.mat['brake'] = new THREE.MeshBasicMaterial({ color:0xdd3f03, transparent:true, opacity:0.1 });
 
     view.mat['cshadow'] = new THREE.MeshBasicMaterial({ color:0xdd3f03, transparent:true, opacity:0, depthTest:false, depthWrite:false  });

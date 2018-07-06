@@ -1156,7 +1156,7 @@ View.prototype.terrain = function ( o ) {
 
     o.offset = 0;
 
-    this.mat['terrain'] = mesh.material;
+    //this.mat['terrain'] = mesh.material;
 
     if( o.name ) this.byName[ o.name ] = mesh;
 
