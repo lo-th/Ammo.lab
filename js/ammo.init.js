@@ -94,8 +94,6 @@ var ammo = ( function () {
                 case 'ellipsoid': view.ellipsoidMesh( data.o ); break;
             }
 
-
-
         },
 
         updateContact: function () {
@@ -155,9 +153,12 @@ var ammo = ( function () {
                 then = time - ( delta % timerate );
 
                 if( stepNext ){
+
                     if( isBuffer ) worker.postMessage( { m:'step',  key:user.key, Ar:Ar }, [ Ar.buffer ] );
                     else worker.postMessage( { m:'step',  key:user.key } );
+                    
                     stepNext = false;
+
                 }
 
                 tell( 'three '+ view.getFps() + ' | ammo ' + fps );
