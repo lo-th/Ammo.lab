@@ -26,7 +26,7 @@ function afterLoad () {
 
     character({ name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5) ), scale:0.07, debug:false });
 
-    follow('bob', { rotation:180, height:1, acceleration: 0.05, speed:10, distance:3 } );
+    follow('bob', {  height:0.3, acceleration: 0.05, speed:10, distance:3 } );
 
 
 
