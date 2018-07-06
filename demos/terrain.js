@@ -237,7 +237,7 @@ function makeBuggy () {
 
     });
 
-    follow (option.follow ? 'car':'none', {distance:5, height:2} );
+    follow (option.follow ? 'car':'none', {distance:5} );
 
     // add option setting
     ui ({
@@ -282,6 +282,6 @@ function applyOption () {
     option.reset = option.restart ? true : false;
     gravity( [ 0, option.gravity, 0 ] );
     ammo.send( 'setVehicle', option );
-    follow (option.follow ? 'car':'none', {distance:5, height:2});
+    follow (option.follow ? 'car':'none', {distance:5});
 
 }
