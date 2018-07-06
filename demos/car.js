@@ -4,7 +4,7 @@
 var option = {
 
     restart:false,
-    follow:false,
+    follow:true,
 
     hour:9,
     gravity:-10,
