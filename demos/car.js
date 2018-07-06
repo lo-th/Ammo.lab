@@ -37,6 +37,7 @@ function demo() {
 	cam ({ azim:0, polar:25, distance:5 });
 
     view.addSky({hour:hour});
+    view.addJoystick();
 
     // world setting
     set({

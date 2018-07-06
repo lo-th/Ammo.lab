@@ -38,6 +38,7 @@ function demo() {
 
     view.hideGrid();
     view.addSky({hour:9});
+    view.addJoystick();
 
     set({
         fps:60,

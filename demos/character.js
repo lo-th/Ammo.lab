@@ -19,6 +19,7 @@ function demo() {
 function afterLoad () {
 
     //var m = view.getResult();
+    view.addJoystick();
 
     add({type:'plane'}); // infinie plane
 
