@@ -27,8 +27,6 @@ var isWasm = false;
 
 function init(){
 
-    user.init();
-
     view = new View();
 
     intro.init();
