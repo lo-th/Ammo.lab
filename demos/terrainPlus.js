@@ -8,6 +8,7 @@ function demo() {
     cam ([0, 30, 100]);
 
     view.hideGrid();
+    view.addJoystick();
 
     set ({});
 

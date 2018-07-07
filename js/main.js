@@ -47,7 +47,7 @@ function next(){
 
     intro.clear();
 
-    editor.init( launch, isWithCode, '#6888FF', 'Ammo.lab' );
+    editor.init( launch, isWithCode, '#308AFF', 'Ammo.lab' );
     ammo.start();
 
     ready();
