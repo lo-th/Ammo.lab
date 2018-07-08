@@ -7,9 +7,11 @@ function demo () {
 
 function afterLoad () {
 
+    view.addJoystick();
+
     set({
         fps:60,
-        numStep:8,
+        numStep:2,
         gravity:[0,-10,0],
     })
 
