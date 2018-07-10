@@ -35,7 +35,7 @@ var startY = 0;
 
 function demo() {
 
-    cam ([0, 20, 100]);
+    cam ([-90, 0, 10]);
 
     view.hideGrid();
     view.addFog({exp:0.0025});
@@ -87,7 +87,7 @@ function demo() {
 
 function afterLoad () {
 
-    startY = view.byName['ground'].getHeight(0,0); 
+    startY = view.byName['ground'].getHeight(0,0) + 1;
     makeBuggy();
 
 };

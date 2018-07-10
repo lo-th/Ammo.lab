@@ -38,11 +38,17 @@ function demo() {
         //heightScale:10,
     });
 
-    var i = 30;
+    var i = 30, x, y, z;
 
     while(i--){
-        add ({ type:'sphere', size:[1], pos:[Math.rand(-40,40),40,Math.rand(-40,40)], mass:10, friction: 0.5, state:4 });
-        add ({ type:'box', size:[2], pos:[Math.rand(-40,40),40,Math.rand(-40,40)], mass:10, friction: 0.5, state:4 });
+        x = Math.rand(-100,100);
+        z = Math.rand(-100,100);
+        y = view.byName['terra'].getHeight(x,z)+1;
+        add ({ type:'sphere', size:[1], pos:[x,y,z], mass:10, friction: 0.5, state:4 });
+        x = Math.rand(-100,100);
+        z = Math.rand(-100,100);
+        y = view.byName['terra'].getHeight(x,z)+1;
+        add ({ type:'box', size:[2], pos:[x,y,z], mass:10, friction: 0.5, state:4 });
     }
 
     view.update = update;
