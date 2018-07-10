@@ -7,10 +7,37 @@ function demo() {
 
 function afterLoadGeometry () {
 
+
+    view.hideGrid();
+    view.addJoystick();
+
+    set({
+        fps:60,
+        numStep:8,
+        gravity:[0,-10,0],
+    })
+
     //ammo.send('gravity', {g:[0,0,0]});
 
     // infinie plane
-    add({type:'plane'});
+   // add({type:'plane'});
+
+    // ammo terrain shape
+
+    add ({ 
+        type:'terrain', 
+        uv:50,
+        pos : [ 0, -10, 0 ], // terrain position
+        size : [ 1000, 10, 1000 ], // terrain size in meter
+        sample : [ 512, 512 ], // number of subdivision
+        frequency : [0.016,0.05,0.2], // frequency of noise
+        level : [ 1, 0.2, 0.05 ], // influence of octave
+        expo: 3,
+        flipEdge : true, // inverse the triangle
+        hdt : 'PHY_FLOAT', // height data type PHY_FLOAT, PHY_UCHAR, PHY_SHORT
+        friction: 1, 
+        restitution: 0.2,
+    });
 
     // load buggy map
     view.addMap('meca_chassis.jpg', 'meca1');
@@ -18,13 +45,42 @@ function afterLoadGeometry () {
     view.addMap('meca_tools.jpg', 'meca3');
 
     // mecanum buggy
-    meca();
+    buildMecanum();
+
+    follow ('chassis', {distance:20, theta:-90});
+
+    view.update = update;
 
 }
 
-// ! \\ set car speed and direction
+function update() {
 
-var speed = 5;
+    var d;
+    var ts = user.key[1] * acc;
+    var rs = user.key[0] * acc;
+     
+
+   // speed = user.key[0] * 5 + user.key[1] * 5;
+
+    var i = 4, r=[];
+    while(i--){
+        if(Math.abs(ts)>Math.abs(rs)){
+            s = ts;// translation
+            //if(i==0 || i==3) s*=-1; 
+        } else { 
+            s = rs;// rotation
+            if(i==1 || i==3) s*=-1; 
+        }
+        r.push( [ 'jh'+i, 'motor', [ s, 100] ] );
+    }
+
+    forceArray( r );
+
+};
+
+// ! \\ set car speed and direction
+var acc = 5;
+var speed = 0;
 var translation = false;
 var rotation = true;
 
@@ -54,13 +110,14 @@ var buggyGroup = 8;
 var buggyMask = -1;//1|2;
 var noCollision = 32;
 
-function meca () {
+function buildMecanum () {
 
     // body
 
     var bodyMass = 100;
 
     add({ 
+
         name:'chassis',
         type:'convex',
         shape:geo['meca_chassis_shape'],
@@ -76,9 +133,15 @@ function meca () {
         group:buggyGroup, 
         mask:buggyMask, 
 
+        friction: 0.6, 
+        restitution: 0.2,
+        //linear:0.5,
+        //angular:1,
+
+
     });
 
-    add({type:'box', name:'boyA', mass:10, pos:[0,15,0], size:[2] });
+    //add({type:'box', name:'boyA', mass:10, pos:[0,15,0], size:[2] });
 
     // wheelAxis
 
@@ -148,6 +211,8 @@ function wheelAxis ( n ) {
         state:4,
         group:buggyGroup, 
         mask:noCollision,
+        //linear:0.5,
+        angular:1,
     });
 
     add({ 
@@ -155,7 +220,8 @@ function wheelAxis ( n ) {
         type:'box',
 
         mass:massPadtop,
-        size:[3*size, 5*size, 63*size],
+        size:[10*size, 10*size, 63*size],
+        //size:[3*size, 5*size, 63*size],
 
         geometry:debug ? undefined : geo['meca_padtop'],
         material:debug ? undefined : 'meca3',
@@ -166,6 +232,8 @@ function wheelAxis ( n ) {
         state:4,
         group:buggyGroup, 
         mask:noCollision,  
+        //linear:0.5,
+        angular:1,
     });
 
     joint({
@@ -210,6 +278,7 @@ function wheelAxis ( n ) {
             state:4,
             group:buggyGroup, 
             mask:noCollision,
+            angular:1,
         });
 
         add({ 
@@ -229,6 +298,7 @@ function wheelAxis ( n ) {
             state:4,
             group:buggyGroup, 
             mask:buggyMask, 
+            angular:1,
         });
 
         joint({
@@ -386,6 +456,7 @@ function spring ( n ) {
     var springRestLen = -85*size;  
 
     joint({
+
         type:'joint_spring_dof',
         name:'jj'+n,
         body1:'bA'+n,
@@ -404,7 +475,9 @@ function spring ( n ) {
         // index means 0:translationX, 1:translationY, 2:translationZ
 
         enableSpring:[2,true],
-        damping:[2,4000],// period 1 sec for !kG body
+        damping:[2,40000],// period 1 sec for !kG body
+        //stiffness:[2,0.01],
+
         stiffness:[2,0.01],
         //feedback:true,
     });
@@ -473,6 +546,9 @@ function wheel ( n ) {
         state:4,
         group:buggyGroup, 
         mask:buggyMask, 
+
+        //linear:1,
+        //angular:1,
         
     });
 
@@ -515,6 +591,7 @@ function wheel ( n ) {
             shape:geo['meca_roller_shape'],
 
             mass:massRoller,
+            //friction:0.7,
             friction:0.7,
             size:[size],
             rot:axe,
@@ -532,6 +609,7 @@ function wheel ( n ) {
         })
 
         joint({
+
             name:'jr'+i,
             type:'joint_hinge',
             body1:'axe'+n,
@@ -562,6 +640,8 @@ function wheel ( n ) {
         axe2:[0,0,1],
         motor:[true, wSpeed, 100],
         collision:true,
+
+
     })
 
 

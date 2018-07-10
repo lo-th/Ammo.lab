@@ -92,6 +92,7 @@ var ammo = ( function () {
                 case 'start': ammo.start( data ); break;
                 case 'step': ammo.step(); break;
                 case 'ellipsoid': view.ellipsoidMesh( data.o ); break;
+                case 'terrain': view.completeTerrain( data.o.name ); break;
             }
 
         },

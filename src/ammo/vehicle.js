@@ -271,6 +271,11 @@ Vehicle.prototype = {
         
         };
 
+        if( o.name ){
+            byName[ o.name + '_body' ] = this.body;
+            byName[ o.name ] = this.car;
+        }
+
 
         this.set( o );
 

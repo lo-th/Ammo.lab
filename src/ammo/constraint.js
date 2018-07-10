@@ -124,7 +124,7 @@ function addJoint ( o ) {
 
     }
 
-    // use fixed frame A for linear llimits
+    // use fixed frame A for linear llimits useLinearReferenceFrameA
     var useA =  o.useA !== undefined ? o.useA : true;
 
     var joint = null;

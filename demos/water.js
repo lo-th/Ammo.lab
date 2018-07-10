@@ -1,55 +1,54 @@
 function demo() {
 
-    cam ({ azim:0, polar:10, distance:40 });
+    view.hideGrid();
 
-    // basic geometry body
+    cam ({azim:0, polar:30, distance:100});
 
-    water({ g:[0,-10,0], normal:[0,1,0], density:1000, offset:10 })
+    // world setting
+    set({
+        fps:60,
+        numStep:2,
+        gravity:[0,-10,0],
+    })
 
-    add({type:'plane', pos : [0,-10,0]}); // infinie plane
+    add ({ 
+        type:'terrain',
+        name:'water', 
+        water:true,
+        pos : [0,0,0], // terrain position
+        size : [200,20,200], // terrain size in meter
+        sample : [128,128], // number of subdivision
 
-    var geo = view.getGeo();
+        frequency : [0.016,0.08], // frequency of noise
+        level : [ 1, 0.2 ], // influence of octave
+        expo: 2,
 
-    add({ type:'box', size:[40,2,40], pos:[0,-9,0], rot:[0,0,0], mass:0, group:1 });
 
-    var i = 10;
+        //friction: 0.5, 
+        //bounce: 0.0,
+        //soft_cfm:0.000001
+        //toTri: true,
+    });
+
+    var l = 200, h = 20;
+    add({type:'box', pos:[l*0.5,h*0.5,0], size:[1,h, l+1]});
+    add({type:'box', pos:[-l*0.5,h*0.5,0], size:[1,h, l+1]});
+    add({type:'box', pos:[0,h*0.5,l*0.5], size:[l-1,h, 1]});
+    add({type:'box', pos:[0,h*0.5,-l*0.5], size:[l-1,h, 1]});
+
+    var i = 30;
 
     while(i--){
-
-        var y = 15+(i*15);
-        var x = 0;//-5+(i*2.5);
-        var r = Math.randInt(0,360)
-
-        add({ 
-            type:'softTriMesh',
-            //shape:geo['pig'],
-            //shape:geo['cubic'],
-            shape:geo['box'],
-
-            pos:[x,y,0],
-            size:[2,2,2],
-            rot:[0,r,0],
-
-            mass:0.2,
-            state:4,
-
-            /*viterations: 10,
-            piterations: 10,
-            citerations: 10,
-            diterations: 10,*/
-
-            kdf: 0.3,// friction
-            kdp: 0.01,// Damping
-            kpr: 100,// Pressure
-
-            // Stiffness
-            klst: 0.6,
-            kast: 0.6,
-
-            margin:0.05,
-            fromfaces:true,
-        });
-
+        add ({ type:'sphere', size:[5], pos:[Math.rand(-40,40),40+(i*40),Math.rand(-40,40)], mass:10, friction: 0.5, state:4 });
+        add ({ type:'box', size:[10], pos:[Math.rand(-40,40),40+(i*40),Math.rand(-40,40)], mass:10, friction: 0.5, state:4 });
     }
 
+    view.update = update;
+
 };
+
+function update () {
+
+    view.updateTerrain('water');
+
+}

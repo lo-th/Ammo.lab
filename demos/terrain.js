@@ -37,8 +37,11 @@ function demo() {
     cam ([0, 20, 100]);
 
     view.hideGrid();
+    view.addFog({exp:0.0025});
     view.addSky({hour:9});
+
     view.addJoystick();
+    //view.debug()
 
     set({
         fps:60,
@@ -49,19 +52,22 @@ function demo() {
     // ammo terrain shape
 
     add ({ 
-        type:'terrain', 
+        type:'terrain',
+        name:'ground',
         uv:50,
         pos : [ 0, -10, 0 ], // terrain position
-        size : [ 500, 20, 500 ], // terrain size in meter
+        size : [ 1200, 20, 1200 ], // terrain size in meter
         sample : [ 512, 512 ], // number of subdivision
         frequency : [0.016,0.05,0.2], // frequency of noise
         level : [ 1, 0.2, 0.05 ], // influence of octave
-        expo: 5,
-        flipEdge : true, // inverse the triangle
+        expo: 2,
+        //flipEdge : true, // inverse the triangle
         hdt : 'PHY_FLOAT', // height data type PHY_FLOAT, PHY_UCHAR, PHY_SHORT
         friction: 0.6, 
         restitution: 0.2,
     });
+
+
 
     var i = 10;
     while(i--){
@@ -71,6 +77,10 @@ function demo() {
 
     // load buggy 3d model
     view.load ( ['buggy.sea', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg', 'buggy/suspension.jpg', 'buggy/body.jpg', 'buggy/extra.jpg', 'buggy/extra_n.jpg', 'buggy/pilote.jpg'], afterLoad, true );
+
+
+    // infini terrain test
+    view.update = update;
 
 };
 
@@ -189,7 +199,7 @@ function makeBuggy () {
         extraWeels:true,
 
 
-        name:'car',
+        name:'buggy',
         helper: true,
         pos:[0,1,0], // start position of car 
         rot:[0,90,0], // start rotation of car
@@ -238,7 +248,7 @@ function makeBuggy () {
 
     });
 
-    follow (option.follow ? 'car':'none', {distance:5} );
+    follow (option.follow ? 'buggy':'none', {distance:5} );
 
     // add option setting
     ui ({
@@ -286,3 +296,38 @@ function applyOption () {
     follow (option.follow ? 'car':'none', {distance:5});
 
 }
+
+// infini terrain test
+
+function update () {
+
+    var d = view.distanceFromCenter();
+    if(d>300 && !view.controler.cam.isDecal&&!view.isTmove) decale();
+
+}
+
+function decale() {
+
+    var p = view.followGroup.position;
+    //var m = view.byName['buggy'];
+
+    matrix( [ 'buggy_body', [0,0,0], null, ['y', 'rot'] ] );
+
+
+    view.moveTerrainTo( 'ground', p.x, p.z );
+    view.controler.cam.isDecal = true;
+
+}
+/*
+function applyDecale() {
+
+    var p = view.followGroup.position;
+    //var m = view.byName['buggy'];
+
+    matrix( [ 'buggy_body', [p.x,0,p.z], null, ['x','y','z', 'rot'] ] );
+
+
+    //view.moveTerrainTo( 'ground', p.x, p.z );
+    view.controler.cam.isDecal = true;
+
+}*/

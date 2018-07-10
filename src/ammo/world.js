@@ -14,7 +14,7 @@
 
 var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
-var Ammo, start, terrains;
+var Ammo, start;
 
 //var Module = { TOTAL_MEMORY: 256*1024*1024 };
 //var Module = { TOTAL_MEMORY: 256*1024*1024 };
@@ -27,7 +27,7 @@ var isSoft = true;
 
 
 var trans, pos, quat, posW, quatW, transW, gravity;
-var tmpTrans, tmpPos, tmpQuat;
+var tmpTrans, tmpPos, tmpQuat, origineTrans;
 var tmpPos1, tmpPos2, tmpPos3, tmpPos4, tmpZero;
 var tmpTrans1, tmpTrans2;
 
@@ -40,7 +40,7 @@ var tmpMatrix = [];
 //var tmpset = null;
 
 // array
-var bodys, solids, softs, joints, cars, heros, carsInfo, contacts, contactGroups;
+var bodys, solids, softs, joints, cars, heros, terrains, carsInfo, contacts, contactGroups;
 // object
 var byName;
 
@@ -252,7 +252,9 @@ function init ( o ) {
 
         // tmp Transform
 
-        tmpTrans = new Ammo.btTransform()
+        origineTrans = new Ammo.btTransform();
+
+        tmpTrans = new Ammo.btTransform();
         tmpPos = new Ammo.btVector3();
         tmpQuat = new Ammo.btQuaternion();
 
@@ -281,6 +283,7 @@ function init ( o ) {
         cars = []; 
         carsInfo = [];
         heros = [];
+        terrains = [];
         solids = [];
 
         contacts = [];
@@ -320,6 +323,7 @@ function reset ( o ) {
     clearJoint();
     clearRigidBody();
     clearVehicle();
+    clearTerrain();
     clearCharacter();
     clearSoftBody();
 
@@ -482,6 +486,8 @@ function updateMatrix () {
 
 function applyMatrix ( r ) {
 
+    var isOr = false;
+
     var b = getByName( r[0] );
 
     if( b === undefined ) return;
@@ -489,13 +495,37 @@ function applyMatrix ( r ) {
 
     var isK = b.isKinematic || false;
 
+    if(r[3]){ // keep original position
+
+        b.getMotionState().getWorldTransform( origineTrans );
+        var or = [];
+        origineTrans.toArray( or );
+        var i = r[3].length, a;
+
+        isOr = true;
+
+        while(i--){
+
+            a = r[3][i];
+            if( a === 'x' ) r[1][0] = or[0]-r[1][0];
+            if( a === 'y' ) r[1][1] = or[1]-r[1][1];
+            if( a === 'z' ) r[1][2] = or[2]-r[1][2];
+            if( a === 'rot' ) r[2] = [ or[3], or[4], or[5], or[6] ];
+
+        }
+    }
+
+    
+
     tmpTrans.setIdentity();
 
     if( r[1] !== undefined ) { tmpPos.fromArray( r[1] ); tmpTrans.setOrigin( tmpPos ); }
     if( r[2] !== undefined ) { tmpQuat.fromArray( r[2] ); tmpTrans.setRotation( tmpQuat ); }
     //else { tmpQuat.fromArray( [2] ); tmpTrans.setRotation( tmpQuat ); }
 
-    if(!isK){
+    if(!isK && !isOr){
+
+       // console.log('ss')
 
        // zero force
        b.setAngularVelocity( tmpZero );
@@ -503,7 +533,7 @@ function applyMatrix ( r ) {
 
     }
 
-    if(!isK){
+    if(!isK ){
         b.setWorldTransform( tmpTrans );
         b.activate();
      } else{

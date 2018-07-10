@@ -14,7 +14,7 @@
 
 var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
-var Ammo, start, terrains;
+var Ammo, start;
 
 //var Module = { TOTAL_MEMORY: 256*1024*1024 };
 //var Module = { TOTAL_MEMORY: 256*1024*1024 };
@@ -27,7 +27,7 @@ var isSoft = true;
 
 
 var trans, pos, quat, posW, quatW, transW, gravity;
-var tmpTrans, tmpPos, tmpQuat;
+var tmpTrans, tmpPos, tmpQuat, origineTrans;
 var tmpPos1, tmpPos2, tmpPos3, tmpPos4, tmpZero;
 var tmpTrans1, tmpTrans2;
 
@@ -40,7 +40,7 @@ var tmpMatrix = [];
 //var tmpset = null;
 
 // array
-var bodys, solids, softs, joints, cars, heros, carsInfo, contacts, contactGroups;
+var bodys, solids, softs, joints, cars, heros, terrains, carsInfo, contacts, contactGroups;
 // object
 var byName;
 
@@ -252,7 +252,9 @@ function init ( o ) {
 
         // tmp Transform
 
-        tmpTrans = new Ammo.btTransform()
+        origineTrans = new Ammo.btTransform();
+
+        tmpTrans = new Ammo.btTransform();
         tmpPos = new Ammo.btVector3();
         tmpQuat = new Ammo.btQuaternion();
 
@@ -281,6 +283,7 @@ function init ( o ) {
         cars = []; 
         carsInfo = [];
         heros = [];
+        terrains = [];
         solids = [];
 
         contacts = [];
@@ -320,6 +323,7 @@ function reset ( o ) {
     clearJoint();
     clearRigidBody();
     clearVehicle();
+    clearTerrain();
     clearCharacter();
     clearSoftBody();
 
@@ -482,6 +486,8 @@ function updateMatrix () {
 
 function applyMatrix ( r ) {
 
+    var isOr = false;
+
     var b = getByName( r[0] );
 
     if( b === undefined ) return;
@@ -489,13 +495,37 @@ function applyMatrix ( r ) {
 
     var isK = b.isKinematic || false;
 
+    if(r[3]){ // keep original position
+
+        b.getMotionState().getWorldTransform( origineTrans );
+        var or = [];
+        origineTrans.toArray( or );
+        var i = r[3].length, a;
+
+        isOr = true;
+
+        while(i--){
+
+            a = r[3][i];
+            if( a === 'x' ) r[1][0] = or[0]-r[1][0];
+            if( a === 'y' ) r[1][1] = or[1]-r[1][1];
+            if( a === 'z' ) r[1][2] = or[2]-r[1][2];
+            if( a === 'rot' ) r[2] = [ or[3], or[4], or[5], or[6] ];
+
+        }
+    }
+
+    
+
     tmpTrans.setIdentity();
 
     if( r[1] !== undefined ) { tmpPos.fromArray( r[1] ); tmpTrans.setOrigin( tmpPos ); }
     if( r[2] !== undefined ) { tmpQuat.fromArray( r[2] ); tmpTrans.setRotation( tmpQuat ); }
     //else { tmpQuat.fromArray( [2] ); tmpTrans.setRotation( tmpQuat ); }
 
-    if(!isK){
+    if(!isK && !isOr){
+
+       // console.log('ss')
 
        // zero force
        b.setAngularVelocity( tmpZero );
@@ -503,7 +533,7 @@ function applyMatrix ( r ) {
 
     }
 
-    if(!isK){
+    if(!isK ){
         b.setWorldTransform( tmpTrans );
         b.activate();
      } else{
@@ -1274,7 +1304,7 @@ function addJoint ( o ) {
 
     }
 
-    // use fixed frame A for linear llimits
+    // use fixed frame A for linear llimits useLinearReferenceFrameA
     var useA =  o.useA !== undefined ? o.useA : true;
 
     var joint = null;
@@ -1915,100 +1945,122 @@ function addSoftBody ( o ) {
     o = null;
 
 };
+/**   _   _____ _   _   
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*    AMMO TERRAIN
+*/
 
-var tmpData = {};
-var terrainData = {};
-var terrainList = [];
-var terrainNeedUpdate = false;
-
-//--------------------------------------------------
-//
-//  AMMO TERRAIN
-//
-//--------------------------------------------------
 
 function terrainPostStep ( o ){
 
     var name = o.name;
-    terrainList.push( name );
-    tmpData[ name ] = o.heightData;
-    terrainNeedUpdate = true;
+    if( byName[ name ] ) byName[ name ].setData( o.heightData );
 
 }
 
 function terrainUpdate ( o ){
 
-    if( terrainNeedUpdate ){
-        while( terrainList.length ) terrain_data( terrainList.pop() );
-        terrainNeedUpdate = false;
-    }
+    var i = terrains.length;
+    while(i--) terrains[ i ].update();
 
 }
 
-/*function updateTerrain ( o ) {
-
-        this.byName[ o.name ].setHeightData( o.heightData );
-
-}*/
-
 function addTerrain ( o ) {
 
-    // Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
-    var upAxis = 1;
+    var terrain = new Terrain( o );
+    byName[ terrain.name ] = terrain;
+    terrains.push( terrain );
 
-    o.name = o.name == undefined ? 'terrain' : o.name;
-    o.size = o.size == undefined ? [1,1,1] : o.size;
-    o.sample = o.sample == undefined ? [64,64] : o.sample;
-    o.pos = o.pos == undefined ? [0,0,0] : o.pos;
-    o.quat = o.quat == undefined ? [0,0,0,1] : o.quat;
-    o.mass = o.mass == undefined ? 0 : o.mass;
+}
+
+function clearTerrain () {
+
+    while( terrains.length > 0) terrains.pop().clear();
+    terrains = [];
+
+};
+
+//--------------------------------------------------
+//
+//  TERRAIN CLASS
+//
+//--------------------------------------------------
+
+function Terrain ( o ) {
+
+    this.needsUpdate = false;
+    this.data = null;
+    this.tmpData = null;
+    this.dataHeap = null;
+
+    var name = o.name === undefined ? 'terrain' : o.name;
+    var size = o.size === undefined ? [1,1,1] : o.size;
+    var sample = o.sample === undefined ? [64,64] : o.sample;
+    var pos = o.pos === undefined ? [0,0,0] : o.pos;
+    var quat = o.quat === undefined ? [0,0,0,1] : o.quat;
+
+    var mass = o.mass === undefined ? 0 : o.mass;
+    var margin = o.margin === undefined ? 0.02 : o.margin;
+    var friction = o.friction === undefined ? 0.5 : o.friction;
+    var restitution = o.restitution === undefined ? 0 : o.restitution;
+
+    var flag = o.flag === undefined ? 1 : o.flag;
+    var group = o.group === undefined ? 1 : o.group;
+    var mask = o.mask === undefined ? -1 : o.mask;
+
+    // This parameter is not really used, since we are using PHY_FLOAT height data type and hence it is ignored
+    var heightScale =  o.heightScale === undefined ? 1 : o.heightScale;
+
+    // Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
+    var upAxis =  o.upAxis === undefined ? 1 : o.upAxis;
 
     // hdt, height data type. "PHY_FLOAT" is used. Possible values are "PHY_FLOAT", "PHY_UCHAR", "PHY_SHORT"
     var hdt = o.hdt || "PHY_FLOAT";
 
     // Set this to your needs (inverts the triangles)
-    var flipEdge =  o.flipEdge !== undefined ? o.flipEdge : true;
+    var flipEdge =  o.flipEdge !== undefined ? o.flipEdge : false;
 
     // Creates height data buffer in Ammo heap
-    //terrainData = Ammo._malloc( 4 * lng );
-    //hdata = o.hdata;
+    this.setData( o.heightData );
+    this.update();
 
-    tmpData[o.name] = o.heightData;
+    //var shape = new Ammo.btHeightfieldTerrainShape( sample[0], sample[1], terrainData[name], heightScale, -size[1], size[1], upAxis, hdt, flipEdge );
+    var shape = new Ammo.btHeightfieldTerrainShape( sample[0], sample[1], this.data, heightScale, -size[1], size[1], upAxis, hdt, flipEdge );
 
-    terrain_data(o.name);
+    //console.log(shape.getMargin())
 
-    
-
-    var shape = new Ammo.btHeightfieldTerrainShape( o.sample[0], o.sample[1], terrainData[o.name], o.heightScale || 1, -o.size[1], o.size[1], upAxis, hdt, flipEdge ); 
-
-    tmpPos2.setValue( o.size[0]/o.sample[0], 1, o.size[2]/o.sample[1] );
+    tmpPos2.setValue( size[0]/sample[0], 1, size[2]/sample[1] );
     shape.setLocalScaling( tmpPos2 );
 
-    if( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin );
+    shape.setMargin( margin );
 
-    tmpPos.fromArray(o.pos);
-    tmpQuat.fromArray(o.quat);
+    tmpPos.fromArray( pos );
+    tmpQuat.fromArray( quat );
 
     tmpTrans.setIdentity();
     tmpTrans.setOrigin( tmpPos );
     tmpTrans.setRotation( tmpQuat );
 
     tmpPos1.setValue( 0,0,0 );
-    //shape.calculateLocalInertia( o.mass, tmpPos1 );
+    //shape.calculateLocalInertia( mass, tmpPos1 );
     var motionState = new Ammo.btDefaultMotionState( tmpTrans );
 
-    var rbInfo = new Ammo.btRigidBodyConstructionInfo( o.mass, motionState, shape, tmpPos1 );
-    o.friction = o.friction == undefined ? 0.5 : o.friction;
-    o.restitution = o.restitution == undefined ? 0 : o.restitution;
-    rbInfo.set_m_friction( o.friction || 0.5 );
-    rbInfo.set_m_restitution( o.restitution || 0 );
+    var rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, shape, tmpPos1 );
+
+    rbInfo.set_m_friction( friction );
+    rbInfo.set_m_restitution( restitution );
+
     var body = new Ammo.btRigidBody( rbInfo );
+    body.setCollisionFlags( flag );
+    world.addCollisionObject( body, group, mask );
 
+    //solids.push( body );
 
-    body.setCollisionFlags(o.flag || 1);
-    world.addCollisionObject( body, o.group || 1, o.mask || -1 );
-
-    solids.push( body );
+    this.name = name;
+    this.body = body;
 
     Ammo.destroy( rbInfo );
 
@@ -2016,21 +2068,86 @@ function addTerrain ( o ) {
 
 }
 
+Terrain.prototype = {
 
-function terrain_data(name){
+    setData: function ( data ) {
+
+        this.tmpData = data;
+        this.nDataBytes = this.tmpData.length * this.tmpData.BYTES_PER_ELEMENT;
+        this.needsUpdate = true;
+
+    },
+
+    update: function () {
+
+        if( !this.needsUpdate ) return;
+
+        this.malloc();
+        //this.data = Malloc_Float( this.tmpData, this.data );
+        //console.log(this.data)
+        self.postMessage({ m:'terrain', o:{ name:this.name } });
+        this.needsUpdate = false;
+        this.tmpData = null;
+
+    },
+
+    clear: function (){
+
+        world.removeCollisionObject( this.body );
+        Ammo.destroy( this.body );
+        Ammo._free( this.dataHeap.byteOffset );
+        //Ammo.destroy( this.data );
+
+        this.body = null;
+        this.data = null;
+        this.tmpData = null;
+        this.dataHeap = null;
+
+    },
+
+    malloc: function (){
+
+        //var nDataBytes = this.tmpData.length * this.tmpData.BYTES_PER_ELEMENT;
+        if( this.data === null ) this.data = Ammo._malloc( this.nDataBytes );
+        this.dataHeap = new Uint8Array( Ammo.HEAPU8.buffer, this.data, this.nDataBytes );
+        this.dataHeap.set( new Uint8Array( this.tmpData.buffer ) );
+
+    },
+
+}
+/*
+function terrain_data ( name ){
 
     var d = tmpData[name];
+    terrainData[name] = Malloc_Float( d, terrainData[name] );
+
+    /*
     var i = d.length, n;
     // Creates height data buffer in Ammo heap
     if( terrainData[name] == null ) terrainData[name] = Ammo._malloc( 4 * i );
     // Copy the javascript height data array to the Ammo one.
-    
+
     while(i--){
-        n = i * 4;
+        n = (i * 4);
         Ammo.HEAPF32[ terrainData[name] + n >> 2 ] = d[i];
     }
+    */
+
+/*    self.postMessage({ m:'terrain', o:{ name:name } });
 
 };
+*/
+
+
+function Malloc_Float( f, q ) {
+
+    var nDataBytes = f.length * f.BYTES_PER_ELEMENT;
+    if( q === undefined ) q = Ammo._malloc( nDataBytes );
+    var dataHeap = new Uint8Array( Ammo.HEAPU8.buffer, q, nDataBytes );
+    dataHeap.set( new Uint8Array( f.buffer ) );
+    return q;
+
+}
 /**   _   _____ _   _   
 *    | | |_   _| |_| |
 *    | |_ _| | |  _  |
@@ -2303,6 +2420,11 @@ Vehicle.prototype = {
             this.car.setBrake( o.breaking || 100, i );
         
         };
+
+        if( o.name ){
+            byName[ o.name + '_body' ] = this.body;
+            byName[ o.name ] = this.car;
+        }
 
 
         this.set( o );

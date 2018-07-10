@@ -1,53 +1,34 @@
-/**   _   _____ _   _   
-*    | | |_   _| |_| |
-*    | |_ _| | |  _  |
-*    |___|_|_| |_| |_|
-*    @author lo.th / https://github.com/lo-th
-*    AMMO TERRAIN
-*/
 
+var tmpData = {};
+var terrainData = {};
+var terrainList = [];
+var terrainNeedUpdate = false;
+
+//--------------------------------------------------
+//
+//  AMMO TERRAIN
+//
+//--------------------------------------------------
 
 function terrainPostStep ( o ){
 
     var name = o.name;
-    if( byName[ name ] ) byName[ name ].setData( o.heightData );
+    terrainList.push( name );
+    tmpData[ name ] = o.heightData;
+    terrainNeedUpdate = true;
 
 }
 
 function terrainUpdate ( o ){
 
-    var i = terrains.length;
-    while(i--) terrains[ i ].update();
+    if( terrainNeedUpdate ){
+        while( terrainList.length ) terrain_data( terrainList.pop() );
+        terrainNeedUpdate = false;
+    }
 
 }
 
 function addTerrain ( o ) {
-
-    var terrain = new Terrain( o );
-    byName[ terrain.name ] = terrain;
-    terrains.push( terrain );
-
-}
-
-function clearTerrain () {
-
-    while( terrains.length > 0) terrains.pop().clear();
-    terrains = [];
-
-};
-
-//--------------------------------------------------
-//
-//  TERRAIN CLASS
-//
-//--------------------------------------------------
-
-function Terrain ( o ) {
-
-    this.needsUpdate = false;
-    this.data = null;
-    this.tmpData = null;
-    this.dataHeap = null;
 
     var name = o.name === undefined ? 'terrain' : o.name;
     var size = o.size === undefined ? [1,1,1] : o.size;
@@ -77,11 +58,11 @@ function Terrain ( o ) {
     var flipEdge =  o.flipEdge !== undefined ? o.flipEdge : false;
 
     // Creates height data buffer in Ammo heap
-    this.setData( o.heightData );
-    this.update();
+    tmpData[name] = o.heightData;
+    terrain_data( name );
 
     //var shape = new Ammo.btHeightfieldTerrainShape( sample[0], sample[1], terrainData[name], heightScale, -size[1], size[1], upAxis, hdt, flipEdge );
-    var shape = new Ammo.btHeightfieldTerrainShape( sample[0], sample[1], this.data, heightScale, -size[1], size[1], upAxis, hdt, flipEdge );
+    var shape = new Ammo.btHeightfieldTerrainShape( sample[0], sample[1], terrainData[name], heightScale, -size[1], size[1], upAxis, hdt, flipEdge );
 
     //console.log(shape.getMargin())
 
@@ -110,10 +91,7 @@ function Terrain ( o ) {
     body.setCollisionFlags( flag );
     world.addCollisionObject( body, group, mask );
 
-    //solids.push( body );
-
-    this.name = name;
-    this.body = body;
+    solids.push( body );
 
     Ammo.destroy( rbInfo );
 
@@ -121,54 +99,6 @@ function Terrain ( o ) {
 
 }
 
-Terrain.prototype = {
-
-    setData: function ( data ) {
-
-        this.tmpData = data;
-        this.nDataBytes = this.tmpData.length * this.tmpData.BYTES_PER_ELEMENT;
-        this.needsUpdate = true;
-
-    },
-
-    update: function () {
-
-        if( !this.needsUpdate ) return;
-
-        this.malloc();
-        //this.data = Malloc_Float( this.tmpData, this.data );
-        //console.log(this.data)
-        self.postMessage({ m:'terrain', o:{ name:this.name } });
-        this.needsUpdate = false;
-        this.tmpData = null;
-
-    },
-
-    clear: function (){
-
-        world.removeCollisionObject( this.body );
-        Ammo.destroy( this.body );
-        Ammo._free( this.dataHeap.byteOffset );
-        //Ammo.destroy( this.data );
-
-        this.body = null;
-        this.data = null;
-        this.tmpData = null;
-        this.dataHeap = null;
-
-    },
-
-    malloc: function (){
-
-        //var nDataBytes = this.tmpData.length * this.tmpData.BYTES_PER_ELEMENT;
-        if( this.data === null ) this.data = Ammo._malloc( this.nDataBytes );
-        this.dataHeap = new Uint8Array( Ammo.HEAPU8.buffer, this.data, this.nDataBytes );
-        this.dataHeap.set( new Uint8Array( this.tmpData.buffer ) );
-
-    },
-
-}
-/*
 function terrain_data ( name ){
 
     var d = tmpData[name];
@@ -186,10 +116,10 @@ function terrain_data ( name ){
     }
     */
 
-/*    self.postMessage({ m:'terrain', o:{ name:name } });
+    self.postMessage({ m:'terrain', o:{ name:name } });
 
 };
-*/
+
 
 
 function Malloc_Float( f, q ) {

@@ -352,7 +352,7 @@ View.prototype.add = function ( o ) {
     }
 
     if(o.type === 'plane'){
-        this.helper.position.set( o.pos[0], o.pos[1], o.pos[2] )
+        this.grid.position.set( o.pos[0], o.pos[1], o.pos[2] )
         ammo.send( 'add', o ); 
         return;
     }
@@ -403,7 +403,7 @@ View.prototype.add = function ( o ) {
 
         var g = new THREE.CapsuleBufferGeometry( o.size[0] , o.size[1]*0.5 );
         mesh = new THREE.Mesh( g, material );
-        this.extraGeo.push(mesh.geometry);
+        this.extraGeo.push( mesh.geometry );
         isCustomGeometry = true;
 
     } else if( o.type === 'mesh' || o.type === 'convex' ){
@@ -426,7 +426,7 @@ View.prototype.add = function ( o ) {
 
         if(o.geometry){
 
-            if(o.geoRot || o.geoScale) o.geometry = o.geometry.clone();
+            if( o.geoRot || o.geoScale ) o.geometry = o.geometry.clone();
 
             // rotation only geometry
             if(o.geoRot) o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler().fromArray(Math.vectorad(o.geoRot))));
@@ -436,13 +436,18 @@ View.prototype.add = function ( o ) {
             
         }
 
-        if( moveType === 1 && o.type === 'box' ) mesh = new THREE.Mesh( o.geometry || this.geo['hardbox'], material );
-        else mesh = new THREE.Mesh( o.geometry || this.geo[o.type], material );
+        if( moveType === 1 && o.type === 'box' ){ 
+            mesh = new THREE.Mesh( o.geometry || this.geo['hardbox'], material );
+            //mesh.add(new THREE.BoxHelper( mesh, 0x626362 ))
+
+        } else{ 
+            mesh = new THREE.Mesh( o.geometry || this.geo[o.type], material );
+        }
 
         if( o.geometry ){
-            this.extraGeo.push(o.geometry);
+            this.extraGeo.push( o.geometry );
             if(o.geoSize) mesh.scale.fromArray( o.geoSize );
-            if(!o.geoSize && o.size) mesh.scale.fromArray( o.size );
+            if( !o.geoSize && o.size ) mesh.scale.fromArray( o.size );
             isCustomGeometry = true;
         }
 
@@ -1140,11 +1145,17 @@ View.prototype.ellipsoidMesh = function ( o ) {
 
 View.prototype.terrain = function ( o ) {
 
-    o.sample = o.sample == undefined ? [64,64] : o.sample;
-    o.pos = o.pos == undefined ? [0,0,0] : o.pos;
-    o.complexity = o.complexity == undefined ? 30 : o.complexity;
+    o.name = o.name === undefined ? 'terrain' : o.name;
+
+    o.sample = o.sample === undefined ? [64,64] : o.sample;
+    o.pos = o.pos === undefined ? [0,0,0] : o.pos;
+    o.complexity = o.complexity === undefined ? 30 : o.complexity;
+
 
     var mesh = new Terrain( o );
+
+    mesh.physicsUpdate = function () { ammo.send( 'terrain', { name:this.name, heightData:this.heightData } ) }
+
 
     mesh.position.fromArray( o.pos );
 
@@ -1152,7 +1163,7 @@ View.prototype.terrain = function ( o ) {
     this.solids.push( mesh );
 
 
-    o.heightData = mesh.heightData32;
+    o.heightData = mesh.heightData;
 
     o.offset = 0;
 
@@ -1165,15 +1176,38 @@ View.prototype.terrain = function ( o ) {
 
 };
 
+View.prototype.completeTerrain = function ( name ){
 
-View.prototype.updateTerrain = function (name){
+    //console.log('terrain is create', name)
+    var t = this.byName[ name ];
+
+    if(t){
+        t.updateGeometry();
+        
+    }this.isTmove = false;
+
+};
+
+View.prototype.updateTerrain = function ( name ){
 
     var t = this.byName[ name ];
 
-    if(t.isWater){ t.local.y +=0.2; t.update() }
-    else t.easing();
+    if(t.isWater){ t.local.y += 0.25; t.local.z += 0.25; t.update( true ) }
+    else t.easing( true );
 
-    ammo.send( 'terrain', { name:name, heightData: t.heightData32 } );
+    //ammo.send( 'terrain', { name:name, heightData: t.heightData } );
+
+};
+
+View.prototype.moveTerrainTo = function ( name, x, z ){
+
+    this.isTmove = true;
+    var t = this.byName[ name ];
+    t.local.x += x || 0;
+    t.local.z += z || 0;
+    t.update( true );
+
+    //ammo.send( 'terrain', { name:name, heightData: t.heightData } );
 
 };
 

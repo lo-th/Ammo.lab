@@ -32,7 +32,7 @@ function afterLoad () {
     // ! \\ set the car we drive 0 to 13
     // use keyboard to controle car 
 
-    follow ('car_0', 180);
+    follow ('car_0');
     drive ('car_0');
 
 };
