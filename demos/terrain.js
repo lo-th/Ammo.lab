@@ -190,6 +190,7 @@ function makeBuggy () {
     car ({ 
 
         debug: false,
+        helper: false,
 
         type:'convex',
         shape: view.getGeometry( 'buggy', 'h_shape' ),
@@ -202,7 +203,7 @@ function makeBuggy () {
 
 
         name:'buggy',
-        helper: true,
+        
         pos:[0,startY,0], // start position of car 
         rot:[0,90,0], // start rotation of car
         size:[ 1.3, 0.4, 3.5 ], // chassis size
