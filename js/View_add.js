@@ -1152,24 +1152,24 @@ View.prototype.terrain = function ( o ) {
     o.complexity = o.complexity === undefined ? 30 : o.complexity;
 
 
-    var mesh = new Terrain( o );
+    var terrain = new Terrain( o );
 
-    mesh.physicsUpdate = function () { ammo.send( 'terrain', { name:this.name, heightData:this.heightData } ) }
-
-
-    mesh.position.fromArray( o.pos );
-
-    this.scene.add( mesh );
-    this.solids.push( mesh );
+    terrain.physicsUpdate = function () { ammo.send( 'terrain', { name:this.name, heightData:this.heightData } ) }
 
 
-    o.heightData = mesh.heightData;
+    
+
+    this.scene.add( terrain );
+    this.solids.push( terrain );
+
+
+    o.heightData = terrain.heightData;
 
     o.offset = 0;
 
     //this.mat['terrain'] = mesh.material;
 
-    if( o.name ) this.byName[ o.name ] = mesh;
+    this.byName[ o.name ] = terrain;
 
     // send to worker
     ammo.send( 'add', o );
@@ -1178,13 +1178,9 @@ View.prototype.terrain = function ( o ) {
 
 View.prototype.completeTerrain = function ( name ){
 
-    //console.log('terrain is create', name)
     var t = this.byName[ name ];
-
-    if(t){
-        t.updateGeometry();
-        
-    }this.isTmove = false;
+    if(t) t.updateGeometry(); 
+    this.isTmove = false;
 
 };
 

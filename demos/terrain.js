@@ -31,6 +31,7 @@ var option = {
 }
 
 var hour = option.hour;
+var startY = 0;
 
 function demo() {
 
@@ -86,6 +87,7 @@ function demo() {
 
 function afterLoad () {
 
+    startY = view.byName['ground'].getHeight(0,0); 
     makeBuggy();
 
 };
@@ -201,7 +203,7 @@ function makeBuggy () {
 
         name:'buggy',
         helper: true,
-        pos:[0,1,0], // start position of car 
+        pos:[0,startY,0], // start position of car 
         rot:[0,90,0], // start rotation of car
         size:[ 1.3, 0.4, 3.5 ], // chassis size
         //size:[ 1.2, 0.6, 3.8 ], // chassis size
@@ -318,16 +320,3 @@ function decale() {
     view.controler.cam.isDecal = true;
 
 }
-/*
-function applyDecale() {
-
-    var p = view.followGroup.position;
-    //var m = view.byName['buggy'];
-
-    matrix( [ 'buggy_body', [p.x,0,p.z], null, ['x','y','z', 'rot'] ] );
-
-
-    //view.moveTerrainTo( 'ground', p.x, p.z );
-    view.controler.cam.isDecal = true;
-
-}*/
