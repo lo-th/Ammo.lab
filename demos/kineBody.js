@@ -181,13 +181,12 @@ function addExtra () {
     m = 4;
 
     // basic box wall
-    add({type:'box', size:[w-(2*m), m, w-(2*m)], pos:[0,m*0.5, 0], friction:0.2, restitution:0.2 });
-    add({type:'box', size:[m,h,w-(2*m)], pos:[(w*0.5)-(m*0.5),h*0.5,0], friction:0.2, restitution:0.2 });
-    add({type:'box', size:[m,h,w-(2*m)], pos:[(-w*0.5)+(m*0.5),h*0.5,0], friction:0.2, restitution:0.2 });
-    add({type:'box', size:[w,h,m], pos:[0,h*0.5,(w*0.5)-(m*0.5)], friction:0.2, restitution:0.2 });
-    add({type:'box', size:[w,h,m], pos:[0,h*0.5,(-w*0.5)+(m*0.5)], friction:0.2, restitution:0.2 });
-
-    add({type:'box', size:[w-(2*m), m, w-(2*m)], pos:[0,h-(m*0.5), 0], friction:0.2, restitution:0.2 });
+    add({type:'box', size:[w, m, w], pos:[0,-m*0.5, 0], friction:0.2, restitution:0.2, material:'hide' });
+    add({type:'box', size:[m,h,w-(2*m)], pos:[(w*0.5)-(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:'hide'  });
+    add({type:'box', size:[m,h,w-(2*m)], pos:[(-w*0.5)+(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:'hide'  });
+    add({type:'box', size:[w,h,m], pos:[0,h*0.5,(w*0.5)-(m*0.5)], friction:0.2, restitution:0.2, material:'hide' });
+    add({type:'box', size:[w,h,m], pos:[0,h*0.5,(-w*0.5)+(m*0.5)], friction:0.2, restitution:0.2, material:'hide' });
+    add({type:'box', size:[w-(2*m), m, w-(2*m)], pos:[0,h-(m*0.5), 0], friction:0.2, restitution:0.2, material:'hide' });
 
    /* add({
         type:[ 'box', 'box', 'box', 'box', 'box' ],
@@ -197,7 +196,7 @@ function addExtra () {
     
     while( i-- ) {
 
-        w = Math.rand(3,6);
+        w = Math.rand(2,6);
         h = Math.rand(3,6);
         d = Math.rand(3,6);
         x = Math.rand(-12,12);
@@ -205,7 +204,7 @@ function addExtra () {
         y = Math.rand(4,30)//(60,100)
 
         //add( { type:'box', size:[w,h,d], pos:[x,y,z], move:true } );
-        add( { type:'sphere', size:[w*0.5], pos:[x,y,z], density:0.3, friction:0.2, restitution:0.2 } );
+        add( { type:'sphere', size:[w*0.5], pos:[x,y,z], density:0.3, friction:0.2, restitution:0.2, linear:0, angular:1  } );
 
     }
 
