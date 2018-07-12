@@ -19,7 +19,7 @@ function demo () {
         isBuffer:true,
         radius:10,
         height:6,
-        resolution:30,
+        resolution:20,
         frequency : [0.1,0.5], // frequency of noise
         level : [1,0.25], // influence of octave
         expo: 2,
@@ -30,14 +30,16 @@ function demo () {
         
     });
     
-    var s, x, y, z, h;
+    var sx, sy, sz, x, y, z;
     for(var i = 0; i<200; i++){
-        x = Math.rand(-100, 100);
-        y = Math.rand(-100, 100);
-        z = Math.rand(-100, 100);
-        s = Math.rand(0.5, 2);
-        h = Math.rand(0.5, 2);
-        add({ type:'box', size:[s,h,s], pos:[x,y,z], density:s, friction:0.5, restitution:0.6, name:'box'+i });
+        x = Math.rand(20, 100)*(Math.randInt(0, 1)? -1: 1);
+        y = Math.rand(20, 100)*(Math.randInt(0, 1)? -1: 1);
+        z = Math.rand(20, 100)*(Math.randInt(0, 1)? -1: 1);
+
+        sx = Math.rand(0.6, 2);
+        sy = Math.rand(0.6, 2);
+        sz = Math.rand(0.6, 2);
+        add({ type:'box', size:[sx,sy,sz], pos:[x,y,z], density:(sx+sy+sz)/3, friction:0.5, restitution:0.6, name:'box'+i });
     }
 
     view.update = update;

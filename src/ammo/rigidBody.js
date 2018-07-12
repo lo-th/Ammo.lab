@@ -60,6 +60,8 @@ function addRigidBody ( o, extra ) {
     var isKinematic = false;
     
     if( o.density !== undefined ) o.mass = o.density;
+    if( o.bounce !== undefined ) o.restitution = o.bounce;
+
     if( o.kinematic ){ 
 
         o.flag = 2;
@@ -69,10 +71,10 @@ function addRigidBody ( o, extra ) {
 
     }
 
-    o.mass = o.mass == undefined ? 0 : o.mass;
-    o.size = o.size == undefined ? [1,1,1] : o.size;
-    o.pos = o.pos == undefined ? [0,0,0] : o.pos;
-    o.quat = o.quat == undefined ? [0,0,0,1] : o.quat;
+    o.mass = o.mass === undefined ? 0 : o.mass;
+    o.size = o.size === undefined ? [1,1,1] : o.size;
+    o.pos = o.pos === undefined ? [0,0,0] : o.pos;
+    o.quat = o.quat === undefined ? [0,0,0,1] : o.quat;
 
     var shape = null;
     switch( o.type ){

@@ -311,6 +311,10 @@ function set( o ){
     gravity.fromArray( g );
     world.setGravity( gravity );
 
+    // penetration
+    var dInfo = world.getDispatchInfo();
+    if( o.penetration !== undefined ) dInfo.set_m_allowedCcdPenetration( o.penetration );// default 0.0399
+
 }
 
 function reset ( o ) {
