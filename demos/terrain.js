@@ -32,6 +32,9 @@ var option = {
 
 var hour = option.hour;
 var startY = 0;
+var buggyCar = null;
+var engineSound = 'engine2';
+var isStart = true;
 
 function demo() {
 
@@ -55,7 +58,7 @@ function demo() {
     add ({ 
         type:'terrain',
         name:'ground',
-        uv:50,
+        uv:150,
         pos : [ 0, -10, 0 ], // terrain position
         size : [ 1200, 20, 1200 ], // terrain size in meter
         sample : [ 512, 512 ], // number of subdivision
@@ -77,7 +80,7 @@ function demo() {
     }
 
     // load buggy 3d model
-    view.load ( ['buggy.sea', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg', 'buggy/suspension.jpg', 'buggy/body.jpg', 'buggy/extra.jpg', 'buggy/extra_n.jpg', 'buggy/pilote.jpg'], afterLoad, true );
+    view.load ( ['buggy.sea', engineSound+'.mp3', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg', 'buggy/suspension.jpg', 'buggy/body.jpg', 'buggy/extra.jpg', 'buggy/extra_n.jpg', 'buggy/pilote.jpg'], afterLoad, true, true );
 
 
     // infini terrain test
@@ -96,13 +99,13 @@ function makeBuggy () {
 
     // car material / texture
 
-    var txColor = view.getTexture('wheel_c');
-    var txNorm =  view.getTexture('wheel_n');
-    var txSusp = view.getTexture('suspension');
-    var txBody = view.getTexture('body');
-    var txExtra =  view.getTexture('extra');
-    var txExtraN = view.getTexture('extra_n');
-    var txPilote = view.getTexture('pilote');
+    var txColor = view.getTexture('wheel_c' );
+    var txNorm =  view.getTexture('wheel_n' );
+    var txSusp = view.getTexture('suspension' );
+    var txBody = view.getTexture('body' );
+    var txExtra =  view.getTexture('extra' );
+    var txExtraN = view.getTexture('extra_n' );
+    var txPilote = view.getTexture('pilote' );
 
     view.mat['glass'] = new THREE.MeshStandardMaterial({ color:0x3366ff, envMap:view.envmap, metalness:1, roughness:0.3, shadowSide:false, envMapIntensity: 1, transparent:true, opacity:0.2 });
 
@@ -287,6 +290,13 @@ function makeBuggy () {
 
     });
 
+    buggyCar = view.byName['buggy'];
+
+    // sound test
+    var enginAudio = view.addSound( engineSound )
+    buggyCar.add( enginAudio );
+    buggyCar.userData.sound = enginAudio;
+
 };
 
 function applyOption () {
@@ -300,22 +310,43 @@ function applyOption () {
 
 }
 
-// infini terrain test
-
 function update () {
+
+    // infini terrain test
 
     var d = view.distanceFromCenter();
     if(d>300 && !view.controler.cam.isDecal&&!view.isTmove) decale();
+
+    // sound
+
+    if( buggyCar===null ) return;
+    
+    var speed = buggyCar.userData.speed;
+    var sound = buggyCar.userData.sound;
+
+    var v = speed/10;
+    v = v<0?-v:v;
+    v = v<0.1?0:v
+
+    v = isStart ? 0 : v;
+
+    if( v === 0 ){ 
+        sound.stop();  
+    } else {    
+        sound.setPlaybackRate( v/10 );
+        sound.play() 
+    }
+
+    if(!isStart) return;
+    if( user.key[1]!==0 ) isStart = false;
 
 }
 
 function decale() {
 
     var p = view.followGroup.position;
-    //var m = view.byName['buggy'];
 
     matrix( [ 'buggy_body', [0,0,0], null, ['y', 'rot'] ] );
-
 
     view.moveTerrainTo( 'ground', p.x, p.z );
     view.controler.cam.isDecal = true;

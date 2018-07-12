@@ -31,10 +31,13 @@ var option = {
 }
 
 var hour = option.hour;
+var buggyCar = null;
+var engineSound = 'engine2';
+var isStart = true;
 
 function demo() {
 
-	cam ({ azim:0, polar:25, distance:5 });
+	cam ([-90, 0, 5]);
 
     view.addSky({hour:hour});
     view.addJoystick();
@@ -52,7 +55,7 @@ function demo() {
     add({ type:'plane', friction:0.6, restitution:0.1 });
 
     // load buggy 3d model
-    view.load ( ['buggy.sea', 'track.sea', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg', 'buggy/suspension.jpg', 'buggy/body.jpg', 'buggy/extra.jpg', 'buggy/extra_n.jpg', 'buggy/pilote.jpg'], afterLoad, true );
+    view.load ( ['buggy.sea', 'track.sea', engineSound+'.mp3', 'buggy/wheel_c.jpg', 'buggy/wheel_n.jpg', 'buggy/suspension.jpg', 'buggy/body.jpg', 'buggy/extra.jpg', 'buggy/extra_n.jpg', 'buggy/pilote.jpg'], afterLoad, true, true );
 
 };
 
@@ -71,19 +74,21 @@ function afterLoad () {
 
     makeBuggy()
 
+    view.update = update;
+
 }
 
 function makeBuggy () {
 
     // car material / texture
 
-    var txColor = view.getTexture('wheel_c');
-    var txNorm =  view.getTexture('wheel_n');
-    var txSusp = view.getTexture('suspension');
-    var txBody = view.getTexture('body');
-    var txExtra =  view.getTexture('extra');
-    var txExtraN = view.getTexture('extra_n');
-    var txPilote = view.getTexture('pilote');
+    var txColor = view.getTexture('wheel_c' );
+    var txNorm =  view.getTexture('wheel_n' );
+    var txSusp = view.getTexture('suspension' );
+    var txBody = view.getTexture('body' );
+    var txExtra =  view.getTexture('extra' );
+    var txExtraN = view.getTexture('extra_n' );
+    var txPilote = view.getTexture('pilote' );
 
     var env = view.envmap;
 
@@ -184,7 +189,7 @@ function makeBuggy () {
         extraWeels:true,
 
 
-        name:'car',
+        name:'buggy',
         helper: true,
         pos:[0,1,0], // start position of car 
         rot:[0,90,0], // start rotation of car
@@ -233,7 +238,7 @@ function makeBuggy () {
 
     });
 
-    follow (option.follow ? 'car':'none' );
+    follow (option.follow ? 'buggy':'none' );
 
     // add option setting
     ui ({
@@ -269,6 +274,13 @@ function makeBuggy () {
 
     });
 
+    buggyCar = view.byName['buggy'];
+
+    // sound test
+    var enginAudio = view.addSound( engineSound )
+    buggyCar.add( enginAudio );
+    buggyCar.userData.sound = enginAudio;
+
 };
 
 function applyOption () {
@@ -281,6 +293,33 @@ function applyOption () {
     gravity( [ 0, option.gravity, 0 ] );
     ammo.send( 'setVehicle', option );
 
-    follow (option.follow ? 'car':'none');
+    follow (option.follow ? 'buggy':'none');
+
+}
+
+function update () {
+
+    // sound
+
+    if( buggyCar===null ) return;
+
+    var speed = buggyCar.userData.speed;
+    var sound = buggyCar.userData.sound;
+
+    var v = speed/10;
+    v = v<0?-v:v;
+    v = v<0.1?0:v
+
+    v = isStart ? 0 : v;
+
+    if( v === 0 ){ 
+        sound.stop();  
+    } else {    
+        sound.setPlaybackRate( v/10 );
+        sound.play() 
+    }
+
+    if(!isStart) return;
+    if( user.key[1]!==0 ) isStart = false;
 
 }

@@ -162,7 +162,7 @@ var ammo = ( function () {
 
                 }
 
-                tell( 'three '+ view.getFps() + ' | ammo ' + fps );
+                tell( 'three '+ view.getFps() + ' / ammo ' + fps );
 
             }
 
