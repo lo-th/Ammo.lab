@@ -33,7 +33,7 @@ var option = {
 var hour = option.hour;
 var startY = 0;
 var buggyCar = null;
-var engineSound = 'engine2';
+var engineSound = 'engine4';
 var isStart = true;
 
 function demo() {
@@ -294,6 +294,7 @@ function makeBuggy () {
 
     // sound test
     var enginAudio = view.addSound( engineSound )
+    enginAudio.setLoop( true );
     buggyCar.add( enginAudio );
     buggyCar.userData.sound = enginAudio;
 
@@ -331,10 +332,10 @@ function update () {
     v = isStart ? 0 : v;
 
     if( v === 0 ){ 
-        sound.stop();  
+        if( sound.source ) sound.stop();
     } else {    
         sound.setPlaybackRate( v/10 );
-        sound.play() 
+        if( !sound.isPlaying ) sound.play();
     }
 
     if(!isStart) return;

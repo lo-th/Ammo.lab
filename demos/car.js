@@ -32,7 +32,7 @@ var option = {
 
 var hour = option.hour;
 var buggyCar = null;
-var engineSound = 'engine2';
+var engineSound = 'engine4';
 var isStart = true;
 
 function demo() {
@@ -277,7 +277,8 @@ function makeBuggy () {
     buggyCar = view.byName['buggy'];
 
     // sound test
-    var enginAudio = view.addSound( engineSound )
+    var enginAudio = view.addSound( engineSound );
+    enginAudio.setLoop( true );
     buggyCar.add( enginAudio );
     buggyCar.userData.sound = enginAudio;
 
@@ -301,25 +302,25 @@ function update () {
 
     // sound
 
-    if( buggyCar===null ) return;
+    if( buggyCar === null ) return;
 
     var speed = buggyCar.userData.speed;
     var sound = buggyCar.userData.sound;
 
     var v = speed/10;
     v = v<0?-v:v;
-    v = v<0.1?0:v
+    v = v<0.1?0:v;
 
     v = isStart ? 0 : v;
 
     if( v === 0 ){ 
-        sound.stop();  
+        if( sound.source ) sound.stop();
     } else {    
         sound.setPlaybackRate( v/10 );
-        sound.play() 
+        if( !sound.isPlaying ) sound.play();
     }
 
-    if(!isStart) return;
+    if( !isStart ) return;
     if( user.key[1]!==0 ) isStart = false;
 
 }

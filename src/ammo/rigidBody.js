@@ -170,18 +170,34 @@ function addRigidBody ( o, extra ) {
 
     var rbInfo = new Ammo.btRigidBodyConstructionInfo( o.mass, motionState, shape, tmpPos1 );
 
-    //console.log(rbInfo.get_m_friction(), rbInfo.get_m_restitution());
+    //console.log(rbInfo.get_m_friction(), rbInfo.get_m_restitution(), rbInfo.get_m_rollingFriction());
 
     if( o.friction !== undefined ) rbInfo.set_m_friction( o.friction );
     if( o.restitution !== undefined ) rbInfo.set_m_restitution( o.restitution );
     //Damping is the proportion of velocity lost per second.
     if( o.linear !== undefined ) rbInfo.set_m_linearDamping( o.linear );
     if( o.angular !== undefined ) rbInfo.set_m_angularDamping( o.angular );
-    // revents rounded shapes, such as spheres, cylinders and capsules from rolling forever.
+    // prevents rounded shapes, such as spheres, cylinders and capsules from rolling forever.
     if( o.rolling !== undefined ) rbInfo.set_m_rollingFriction( o.rolling );
+
     
     var body = new Ammo.btRigidBody( rbInfo );
     body.isKinematic = isKinematic;
+
+    //if( o.friction !== undefined ) body.setFriction( o.friction );
+    //if( o.restitution !== undefined ) body.setRestitution( o.restitution );
+    // prevents rounded shapes, such as spheres, cylinders and capsules from rolling forever.
+    //if( o.rolling !== undefined ){ 
+    //    body.setRollingFriction( o.rolling );
+        // missing function
+        //body.setAnisotropicFriction( shape.getAnisotropicRollingFrictionDirection(), 2 );
+    //}
+    //Damping is the proportion of velocity lost per second.
+    //if( o.linear !== undefined ) body.setLinearFactor( o.linear );
+    //if( o.angular !== undefined ) body.setAngularFactor( o.angular );
+
+    //console.log(body)
+    
 
     if( o.name ) byName[ o.name ] = body;
     else if ( o.mass !== 0 ) byName[ bodys.length ] = body;
