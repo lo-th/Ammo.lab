@@ -8,7 +8,9 @@ function demo() {
 function afterLoadGeometry () {
 
 
-    view.hideGrid();
+
+
+    //view.hideGrid();
     view.addJoystick();
 
     set({
@@ -20,11 +22,11 @@ function afterLoadGeometry () {
     //ammo.send('gravity', {g:[0,0,0]});
 
     // infinie plane
-   // add({type:'plane'});
+    add({type:'plane'});
 
     // ammo terrain shape
 
-    add ({ 
+    /*add ({ 
         type:'terrain', 
         uv:50,
         pos : [ 0, -10, 0 ], // terrain position
@@ -37,7 +39,9 @@ function afterLoadGeometry () {
         hdt : 'PHY_FLOAT', // height data type PHY_FLOAT, PHY_UCHAR, PHY_SHORT
         friction: 1, 
         restitution: 0.2,
-    });
+    });*/
+
+    //return
 
     // load buggy map
     view.addMap('meca_chassis.jpg', 'meca1');
