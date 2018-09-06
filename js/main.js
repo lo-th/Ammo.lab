@@ -58,7 +58,6 @@ function unPause () {
 
 }
 
-
 function ready () {
 
     var hash = location.hash.substr( 1 );
