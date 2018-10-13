@@ -106,7 +106,7 @@ function anchor ( o ) { ammo.send( 'anchor', o ); };
 
 function gravity ( a ) { ammo.send( 'gravity', {g:a} ); };
 
-function water ( o ) { ammo.send( 'gravity', o ); };
+//function water ( o ) { ammo.send( 'gravity', o ); };
 
 function force ( o ) { ammo.send('force', o ); };
 function forceArray ( o ) { ammo.send('forceArray', o ); };

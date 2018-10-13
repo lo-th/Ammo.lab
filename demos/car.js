@@ -46,7 +46,7 @@ function demo() {
     set({
 
         fps:60,
-        numStep:2,// more numStep = more accurate simulation default set to 2
+        substep:2,// more numStep = more accurate simulation default set to 2
         gravity:[ 0, option.gravity ,0 ],
 
     })

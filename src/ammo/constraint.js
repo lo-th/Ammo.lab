@@ -68,18 +68,14 @@ function clearJoint () {
 
 function addJoint ( o ) {
 
-    var noAllowCollision = true;
-    var collision = o.collision || false;
-    if( collision ) noAllowCollision = false;
-
-    if(o.body1) o.b1 = o.body1;
+	if(o.body1) o.b1 = o.body1;
     if(o.body2) o.b2 = o.body2;
 
     var b1 = getByName( o.b1 );
     var b2 = getByName( o.b2 );
 
-    tmpPos1.fromArray( o.pos1 || [0,0,0] );
-    tmpPos2.fromArray( o.pos2 || [0,0,0] );
+    tmpPos1.fromArray( o.pos1 || [0,0,0] ).multiplyScalar(invScale);
+    tmpPos2.fromArray( o.pos2 || [0,0,0] ).multiplyScalar(invScale);
     tmpPos3.fromArray( o.axe1 || [1,0,0] );
     tmpPos4.fromArray( o.axe2 || [1,0,0] );
 
@@ -180,6 +176,34 @@ function addJoint ( o ) {
     if(o.maxMotorImpulse) joint.setMaxMotorImpulse( o.maxMotorImpulse );
     if(o.motorTarget) joint.setMotorTarget( tmpQuat.fromArray( o.motorTarget ) );
 
+    // 6 DOF
+
+    if(o.springPosition){
+        for ( var i = 0; i < 3; i++ ) {
+
+            if( o.springPosition[ i ] !== 0 ) {
+
+                joint.enableSpring( i, true );
+                joint.setStiffness( i, o.springPosition[ i ] );
+
+            }
+
+        }
+    }
+
+    if(o.springRotation){
+        for ( var i = 0; i < 3; i++ ) {
+
+            if( o.springRotation[ i ] !== 0 ) {
+
+                joint.enableSpring( i + 3, true );
+                joint.setStiffness( i + 3, o.springRotation[ i ] );
+
+            }
+
+        }
+    }
+
 
     // debug test 
     joint.type = 0;
@@ -188,8 +212,9 @@ function addJoint ( o ) {
         joint.bodyA = b1;
         joint.bodyB = b2;
     }
-    
-    world.addConstraint( joint, noAllowCollision );
+
+    var collision = o.collision !== undefined ? o.collision : false;
+    world.addConstraint( joint, collision ? false : true );
 
     if( o.name ) byName[o.name] = joint;
 
@@ -200,6 +225,3 @@ function addJoint ( o ) {
     o = null;
 
 };
-
-
-

@@ -7,7 +7,9 @@ View.prototype.updateIntern = function(){
 
 }
 
-
+//--------------------------------------
+//   RIGIDBODY UPDATE
+//--------------------------------------
 
 View.prototype.bodyStep = function( AR, N ){
 
@@ -24,15 +26,22 @@ View.prototype.bodyStep = function( AR, N ){
             if( s > 50 && b.material.name == 'move' ) b.material = _this.mat.movehigh;
             else if( s < 50 && b.material.name == 'movehigh') b.material = _this.mat.move;
             
-            b.position.fromArray( AR, n + 1 );
-            b.quaternion.fromArray( AR, n + 4 );
+            
 
         } else {
             if ( b.material.name == 'move' || b.material.name == 'movehigh' ) b.material = _this.mat.sleep;
         }
+
+        b.position.fromArray( AR, n + 1 );
+        b.quaternion.fromArray( AR, n + 4 );
+
     });
 
 }
+
+//--------------------------------------
+//   CHARACTER UPDATE
+//--------------------------------------
 
 View.prototype.heroStep = function( AR, N ){
 
@@ -48,8 +57,6 @@ View.prototype.heroStep = function( AR, N ){
 
         if(b.skin){
 
-
-
             if( s === 0 ) b.skin.play( 0, 0.3 );
             else{ 
                 b.skin.play( 1, 0.3 );
@@ -64,6 +71,10 @@ View.prototype.heroStep = function( AR, N ){
     });
 
 };
+
+//--------------------------------------
+//   VEHICLE UPDATE
+//--------------------------------------
 
 View.prototype.carsStep = function( AR, N ){
 
@@ -156,11 +167,10 @@ View.prototype.carsStep = function( AR, N ){
 
 };
 
-View.prototype.getSofts = function(){
 
-    return this.softs;
-
-};
+//--------------------------------------
+//   SOFT UPDATE
+//--------------------------------------
 
 View.prototype.softStep = function( AR, N ){
 
@@ -295,6 +305,12 @@ View.prototype.softStep = function( AR, N ){
     });
 
 };
+
+/*View.prototype.getSofts = function(){
+
+    return this.softs;
+
+};*/
 
 //--------------------------------------
 //   RIGIDBODY

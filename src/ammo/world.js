@@ -16,9 +16,8 @@ var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
 var Ammo, start;
 
-//var Module = { TOTAL_MEMORY: 256*1024*1024 };
-//var Module = { TOTAL_MEMORY: 256*1024*1024 };
-//var isFirst = true;
+var worldscale = 1;
+var invScale = 1;
 
 var world = null;
 var worldInfo = null;
@@ -44,10 +43,10 @@ var bodys, solids, softs, joints, cars, heros, terrains, carsInfo, contacts, con
 // object
 var byName;
 
-var timeStep = 1/60;
-//var timerStep = timeStep * 1000;
+var timestep = 1/60;
+//var timerStep = timestep * 1000;
 
-var numStep = 2;//4//3;// default is 1. 2 or more make simulation more accurate.
+var substep = 2;//4//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 var tmpKey = [ 0,0,0,0,0,0,0,0 ];
@@ -139,6 +138,8 @@ self.onmessage = function ( e ) {
         case 'heroRotation': setHeroRotation( o.id, o.angle ); break;
 
         case 'add': add( o ); break;
+        case 'addMulty': addMulty( o ); break;
+
         case 'vehicle': addVehicle( o ); break;
         case 'character': addCharacter( o ); break;
         case 'terrain': terrainPostStep( o ); break;
@@ -187,8 +188,8 @@ function step( o ){
 
     // ------- step
 
-    world.stepSimulation( timeStep, numStep );
-    //world.stepSimulation( o.delay, numStep, timeStep );
+    world.stepSimulation( timestep, substep );
+    //world.stepSimulation( o.delay, substep, timestep );
     //world.stepSimulation( dt, it, dt );
 
     drive( currentCar );
@@ -220,9 +221,12 @@ function init ( o ) {
 
     isBuffer = o.isBuffer || false;
 
-    //timeStep = o.timeStep !== undefined ? o.timeStep : timeStep;
-    //timerStep = timeStep * 1000;
-    //numStep = o.numStep || 2;
+    // create tranfere array if buffer
+    if( !isBuffer ) Ar = new Float32Array( ArMax );
+
+    //timestep = o.timestep !== undefined ? o.timestep : timestep;
+    //timerStep = timestep * 1000;
+    //substep = o.substep || 2;
 
     //
 
@@ -275,7 +279,8 @@ function init ( o ) {
         // gravity
         gravity = new Ammo.btVector3();
 
-        addWorld();
+        addWorld( o.option );
+        set( o.option );
 
         bodys = []; // 0
         softs = []; // 1
@@ -302,20 +307,25 @@ function set( o ){
 
     o = o || {};
 
+    setWorldscale(  o.worldscale !== undefined ? o.worldscale : 1 );
 
-    timeStep = o.timeStep !== undefined ? o.timeStep : 0.016;
-    numStep = o.numStep !== undefined ? o.numStep : 2;
+    timestep = o.fps !== undefined ? 1/o.fps : 0.016;
+    substep = o.substep !== undefined ? o.substep : 2;
 
     // gravity
-    var g = o.gravity !== undefined ? o.gravity : [ 0, -9.81, 0 ];
-    gravity.fromArray( g );
-    world.setGravity( gravity );
+    setGravity( o );
 
     // penetration
-    var dInfo = world.getDispatchInfo();
-    if( o.penetration !== undefined ) dInfo.set_m_allowedCcdPenetration( o.penetration );// default 0.0399
+    if( o.penetration !== undefined ) world.getDispatchInfo().set_m_allowedCcdPenetration( o.penetration );// default 0.0399
 
 }
+
+function setWorldscale ( n ) {
+
+    worldscale = n;
+    invScale = 1/worldscale;
+
+};
 
 function reset ( o ) {
 
@@ -363,6 +373,18 @@ function wipe (obj) {
 //  ADD
 //
 //--------------------------------------------------
+
+function addMulty ( o ) {
+
+    for( var i = 0, lng = o.length; i < lng; i++ ){
+
+        add( o[i] );
+
+    }
+
+    o = [];
+
+};
 
 function add ( o, extra ) {
 
@@ -499,7 +521,7 @@ function applyMatrix ( r ) {
 
     var isK = b.isKinematic || false;
 
-    if(r[3]){ // keep original position
+    if( r[3] ){ // keep original position
 
         b.getMotionState().getWorldTransform( origineTrans );
         var or = [];
@@ -519,8 +541,6 @@ function applyMatrix ( r ) {
         }
     }
 
-    
-
     tmpTrans.setIdentity();
 
     if( r[1] !== undefined ) { tmpPos.fromArray( r[1] ); tmpTrans.setOrigin( tmpPos ); }
@@ -528,9 +548,6 @@ function applyMatrix ( r ) {
     //else { tmpQuat.fromArray( [2] ); tmpTrans.setRotation( tmpQuat ); }
 
     if(!isK && !isOr){
-
-       // console.log('ss')
-
        // zero force
        b.setAngularVelocity( tmpZero );
        b.setLinearVelocity( tmpZero );
@@ -540,9 +557,9 @@ function applyMatrix ( r ) {
     if(!isK ){
         b.setWorldTransform( tmpTrans );
         b.activate();
-     } else{
+    } else{
         b.getMotionState().setWorldTransform( tmpTrans );
-     }
+    }
 
 }
 
@@ -559,7 +576,7 @@ function clearWorld () {
 
     Ammo.destroy( world );
     Ammo.destroy( solver );
-    Ammo.destroy( solverSoft );
+    if( solverSoft !== null ) Ammo.destroy( solverSoft );
     Ammo.destroy( collision );
     Ammo.destroy( dispatcher );
     Ammo.destroy( broadphase );
@@ -572,7 +589,7 @@ function addWorld ( o ) {
 
     o = o || {};
 
-    if( world !== null ) return;
+    if( world !== null ){ console.error( 'World already existe !!' ); return; }
 
     isSoft = o.soft === undefined ? true : o.soft;
 
@@ -599,9 +616,9 @@ function addWorld ( o ) {
     world.getPairCache().setInternalGhostPairCallback( ghostPairCallback );
     */
     
-    var dInfo = world.getDispatchInfo();
+    //var dInfo = world.getDispatchInfo();
 
-    if( o.penetration !== undefined ) dInfo.set_m_allowedCcdPenetration( o.penetration );// default 0.0399
+    //if( o.penetration !== undefined ) dInfo.set_m_allowedCcdPenetration( o.penetration );// default 0.0399
 
 
     //console.log(world)
@@ -618,7 +635,7 @@ function addWorld ( o ) {
     dInfo.set_m_enableSatConvex() // false
     dInfo.set_m_stepCount() // 0
     dInfo.set_m_timeOfImpact() // 1
-    dInfo.set_m_timeStep() // 0
+    dInfo.set_m_timestep() // 0
     dInfo.set_m_useContinuous() // true
     dInfo.set_m_useConvexConservativeDistanceUtil() // false
     dInfo.set_m_useEpa() // true
@@ -626,7 +643,7 @@ function addWorld ( o ) {
     */
 
 
-    setGravity( o );
+    //setGravity( o );
     
 };
 
@@ -636,10 +653,8 @@ function setGravity ( o ) {
 
     if( world === null ) return;
 
-    gravity.fromArray( o.g || [0,-10, 0] );
+    gravity.fromArray( o.gravity !== undefined ? o.gravity : [ 0, -9.81, 0 ] );
     world.setGravity( gravity );
-
-
 
     if( isSoft ){
         worldInfo = world.getWorldInfo();

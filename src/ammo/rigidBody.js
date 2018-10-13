@@ -7,23 +7,20 @@
 
 function stepRigidBody( AR, N ) {
 
-    //if( !bodys.length ) return;
-
     bodys.forEach( function ( b, id ) {
 
-        var n = N + (id * 8);
+        var n = N + ( id * 8 );
         AR[n] = b.getLinearVelocity().length() * 9.8;//b.isActive() ? 1 : 0;
 
-        if ( AR[n] > 0 ) {
+        //if ( AR[n] > 0 ) {
 
             b.getMotionState().getWorldTransform( trans );
-            
-            trans.toArray( AR, n + 1 );
+            trans.toArray( AR, n + 1, worldscale );
 
             //trans.getOrigin().toArray( Br , n + 1 );
             //trans.getRotation().toArray( Br ,n + 4 );
 
-        }
+        //}
 
     });
 
@@ -75,6 +72,11 @@ function addRigidBody ( o, extra ) {
     o.size = o.size === undefined ? [1,1,1] : o.size;
     o.pos = o.pos === undefined ? [0,0,0] : o.pos;
     o.quat = o.quat === undefined ? [0,0,0,1] : o.quat;
+
+    if( worldscale !== 1 ) {
+        o.pos = vectomult( o.pos, invScale );
+        o.size = vectomult( o.size, invScale );
+    }
 
     var shape = null;
     switch( o.type ){
@@ -165,9 +167,10 @@ function addRigidBody ( o, extra ) {
     tmpTrans.setRotation( tmpQuat );
 
     tmpPos1.setValue( 0,0,0 );
-    shape.calculateLocalInertia( o.mass, tmpPos1 );
-    var motionState = new Ammo.btDefaultMotionState( tmpTrans );
+    //shape.calculateLocalInertia( o.mass, tmpPos1 );
+    if( o.mass !== 0 ) shape.calculateLocalInertia( o.mass, tmpPos1 );
 
+    var motionState = new Ammo.btDefaultMotionState( tmpTrans );
     var rbInfo = new Ammo.btRigidBodyConstructionInfo( o.mass, motionState, shape, tmpPos1 );
 
     //console.log(rbInfo.get_m_friction(), rbInfo.get_m_restitution(), rbInfo.get_m_rollingFriction());
@@ -212,6 +215,10 @@ function addRigidBody ( o, extra ) {
 
        // body.isKinematic = isKinematic;
         body.setCollisionFlags( o.flag || 0 );
+        body.setActivationState( o.state || 1 );
+
+        if( o.neverSleep ) body.setSleepingThresholds( 0, 0 );
+
         world.addRigidBody( body, o.group || 1, o.mask || -1 );
 
 
@@ -227,7 +234,7 @@ function addRigidBody ( o, extra ) {
         AMMO.DISABLE_DEACTIVATION = 4;
         AMMO.DISABLE_SIMULATION = 5;
         */
-        body.setActivationState( o.state || 1 );
+        
         bodys.push( body );
         
     }

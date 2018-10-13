@@ -15,7 +15,7 @@ function afterLoadGeometry () {
 
     set({
         fps:60,
-        numStep:8,
+        substep:8,
         gravity:[0,-10,0],
     })
 

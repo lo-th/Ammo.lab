@@ -13,17 +13,21 @@ var todeg = 57.295779513082320876;
 //  btTransform extend
 //
 //--------------------------------------------------
+function vectomult( r, scale ) {
+
+    return [ r[0]*scale, r[1]*scale, r[2]*scale ];
+
+};
+
 
 function initMath(){
 
-
-
-    Ammo.btTransform.prototype.toArray = function( array, offset ){
+    Ammo.btTransform.prototype.toArray = function( array, offset, scale ){
 
         //if ( offset === undefined ) offset = 0;
         offset = offset || 0;
 
-        this.getOrigin().toArray( array , offset );
+        this.getOrigin().toArray( array , offset, scale );
         this.getRotation().toArray( array , offset + 3 );
 
         //return array;
@@ -57,6 +61,13 @@ function initMath(){
 
     };
 
+    Ammo.btVector3.prototype.multiplyScalar = function( scale ){
+
+        this.setValue( this.x() * scale, this.y() * scale, this.z() * scale );
+        return this;
+
+    };
+
     Ammo.btVector3.prototype.fromArray = function( array, offset ){
 
         //if ( offset === undefined ) offset = 0;
@@ -68,15 +79,16 @@ function initMath(){
 
     };
 
-    Ammo.btVector3.prototype.toArray = function( array, offset ){
+    Ammo.btVector3.prototype.toArray = function( array, offset, scale ){
 
         //if ( array === undefined ) array = [];
         //if ( offset === undefined ) offset = 0;
+        scale = scale || 1;
         offset = offset || 0;
 
-        array[ offset ] = this.x();
-        array[ offset + 1 ] = this.y();
-        array[ offset + 2 ] = this.z();
+        array[ offset ] = this.x() * scale;
+        array[ offset + 1 ] = this.y() * scale;
+        array[ offset + 2 ] = this.z() * scale;
 
         //return array;
 

@@ -42,9 +42,8 @@ var ammo = ( function () {
 
     var isPause = false;
 
-    var timestep = 1/60;
-    var timerate = timestep * 1000;
-    var substep = 2;//7;
+    var timerate = (1/60) * 1000;
+
     var time = 0;
     var then = 0;
     var delta = 0;
@@ -60,11 +59,28 @@ var ammo = ( function () {
 
     ammo = {
 
-        init: function ( Callback, wasm ) {
+        init: function ( Callback, wasm, Option ) {
 
             isWasm = wasm !== undefined ? wasm : true;
+            Option = Option || {};
 
             callback = Callback;
+
+            var option = {
+
+                worldscale: Option.worldscale || 1,
+                gravity: Option.gravity || [0,-10,0],
+                fps: Option.fps || 60,
+
+                substep: Option.substep || 2,
+                broadphase: Option.broadphase || 2,
+                soft: Option.soft !== undefined ? Option.soft : true,
+
+                //penetration: Option.penetration || 0.0399,
+
+            };
+
+            if( option.fps !== undefined ) timerate = (1/option.fps) * 1000;
 
             worker = new Worker('./build/ammo.worker.min.js');
             worker.onmessage = this.message;
@@ -77,7 +93,8 @@ var ammo = ( function () {
             worker.postMessage( ab, [ab] );
             isBuffer = ab.byteLength ? false : true;
 
-            worker.postMessage( { m:'init', blob:blob, isBuffer:isBuffer, timestep:timestep, substep:substep, settings:[ ArLng, ArPos, ArMax ] });
+            // start physics worker
+            worker.postMessage( { m:'init', blob:blob, settings:[ ArLng, ArPos, ArMax ], isBuffer:isBuffer, option:option });
             
         },
 
@@ -174,8 +191,7 @@ var ammo = ( function () {
 
             if( m === 'set' ){ 
                 o = o || {};
-                if( o.fps !== undefined ) o.timeStep = 1/o.fps;
-                timerate = o.timeStep == undefined ? 0.016 * 1000 : o.timeStep * 1000;
+                if( o.fps !== undefined ) timerate = (1/o.fps) * 1000;
             }
 
             worker.postMessage( { m:m, o:o } );
@@ -195,7 +211,23 @@ var ammo = ( function () {
 
             worker.postMessage( { m:'reset', full:full });
 
-        }
+        },
+
+        stop: function () {
+
+            if ( timer ) {
+               window.cancelAnimationFrame( timer );
+               timer = undefined;
+            }
+
+        },
+
+        destroy: function (){
+
+            worker.terminate();
+            worker = undefined;
+
+        },
         
     }
 

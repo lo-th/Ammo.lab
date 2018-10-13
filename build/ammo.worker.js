@@ -16,9 +16,8 @@ var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
 var Ammo, start;
 
-//var Module = { TOTAL_MEMORY: 256*1024*1024 };
-//var Module = { TOTAL_MEMORY: 256*1024*1024 };
-//var isFirst = true;
+var worldscale = 1;
+var invScale = 1;
 
 var world = null;
 var worldInfo = null;
@@ -44,10 +43,10 @@ var bodys, solids, softs, joints, cars, heros, terrains, carsInfo, contacts, con
 // object
 var byName;
 
-var timeStep = 1/60;
-//var timerStep = timeStep * 1000;
+var timestep = 1/60;
+//var timerStep = timestep * 1000;
 
-var numStep = 2;//4//3;// default is 1. 2 or more make simulation more accurate.
+var substep = 2;//4//3;// default is 1. 2 or more make simulation more accurate.
 var ddt = 1;
 var key = [ 0,0,0,0,0,0,0,0 ];
 var tmpKey = [ 0,0,0,0,0,0,0,0 ];
@@ -139,6 +138,8 @@ self.onmessage = function ( e ) {
         case 'heroRotation': setHeroRotation( o.id, o.angle ); break;
 
         case 'add': add( o ); break;
+        case 'addMulty': addMulty( o ); break;
+
         case 'vehicle': addVehicle( o ); break;
         case 'character': addCharacter( o ); break;
         case 'terrain': terrainPostStep( o ); break;
@@ -187,8 +188,8 @@ function step( o ){
 
     // ------- step
 
-    world.stepSimulation( timeStep, numStep );
-    //world.stepSimulation( o.delay, numStep, timeStep );
+    world.stepSimulation( timestep, substep );
+    //world.stepSimulation( o.delay, substep, timestep );
     //world.stepSimulation( dt, it, dt );
 
     drive( currentCar );
@@ -220,9 +221,12 @@ function init ( o ) {
 
     isBuffer = o.isBuffer || false;
 
-    //timeStep = o.timeStep !== undefined ? o.timeStep : timeStep;
-    //timerStep = timeStep * 1000;
-    //numStep = o.numStep || 2;
+    // create tranfere array if buffer
+    if( !isBuffer ) Ar = new Float32Array( ArMax );
+
+    //timestep = o.timestep !== undefined ? o.timestep : timestep;
+    //timerStep = timestep * 1000;
+    //substep = o.substep || 2;
 
     //
 
@@ -275,7 +279,8 @@ function init ( o ) {
         // gravity
         gravity = new Ammo.btVector3();
 
-        addWorld();
+        addWorld( o.option );
+        set( o.option );
 
         bodys = []; // 0
         softs = []; // 1
@@ -302,20 +307,25 @@ function set( o ){
 
     o = o || {};
 
+    setWorldscale(  o.worldscale !== undefined ? o.worldscale : 1 );
 
-    timeStep = o.timeStep !== undefined ? o.timeStep : 0.016;
-    numStep = o.numStep !== undefined ? o.numStep : 2;
+    timestep = o.fps !== undefined ? 1/o.fps : 0.016;
+    substep = o.substep !== undefined ? o.substep : 2;
 
     // gravity
-    var g = o.gravity !== undefined ? o.gravity : [ 0, -9.81, 0 ];
-    gravity.fromArray( g );
-    world.setGravity( gravity );
+    setGravity( o );
 
     // penetration
-    var dInfo = world.getDispatchInfo();
-    if( o.penetration !== undefined ) dInfo.set_m_allowedCcdPenetration( o.penetration );// default 0.0399
+    if( o.penetration !== undefined ) world.getDispatchInfo().set_m_allowedCcdPenetration( o.penetration );// default 0.0399
 
 }
+
+function setWorldscale ( n ) {
+
+    worldscale = n;
+    invScale = 1/worldscale;
+
+};
 
 function reset ( o ) {
 
@@ -363,6 +373,18 @@ function wipe (obj) {
 //  ADD
 //
 //--------------------------------------------------
+
+function addMulty ( o ) {
+
+    for( var i = 0, lng = o.length; i < lng; i++ ){
+
+        add( o[i] );
+
+    }
+
+    o = [];
+
+};
 
 function add ( o, extra ) {
 
@@ -499,7 +521,7 @@ function applyMatrix ( r ) {
 
     var isK = b.isKinematic || false;
 
-    if(r[3]){ // keep original position
+    if( r[3] ){ // keep original position
 
         b.getMotionState().getWorldTransform( origineTrans );
         var or = [];
@@ -519,8 +541,6 @@ function applyMatrix ( r ) {
         }
     }
 
-    
-
     tmpTrans.setIdentity();
 
     if( r[1] !== undefined ) { tmpPos.fromArray( r[1] ); tmpTrans.setOrigin( tmpPos ); }
@@ -528,9 +548,6 @@ function applyMatrix ( r ) {
     //else { tmpQuat.fromArray( [2] ); tmpTrans.setRotation( tmpQuat ); }
 
     if(!isK && !isOr){
-
-       // console.log('ss')
-
        // zero force
        b.setAngularVelocity( tmpZero );
        b.setLinearVelocity( tmpZero );
@@ -540,9 +557,9 @@ function applyMatrix ( r ) {
     if(!isK ){
         b.setWorldTransform( tmpTrans );
         b.activate();
-     } else{
+    } else{
         b.getMotionState().setWorldTransform( tmpTrans );
-     }
+    }
 
 }
 
@@ -559,7 +576,7 @@ function clearWorld () {
 
     Ammo.destroy( world );
     Ammo.destroy( solver );
-    Ammo.destroy( solverSoft );
+    if( solverSoft !== null ) Ammo.destroy( solverSoft );
     Ammo.destroy( collision );
     Ammo.destroy( dispatcher );
     Ammo.destroy( broadphase );
@@ -572,7 +589,7 @@ function addWorld ( o ) {
 
     o = o || {};
 
-    if( world !== null ) return;
+    if( world !== null ){ console.error( 'World already existe !!' ); return; }
 
     isSoft = o.soft === undefined ? true : o.soft;
 
@@ -599,9 +616,9 @@ function addWorld ( o ) {
     world.getPairCache().setInternalGhostPairCallback( ghostPairCallback );
     */
     
-    var dInfo = world.getDispatchInfo();
+    //var dInfo = world.getDispatchInfo();
 
-    if( o.penetration !== undefined ) dInfo.set_m_allowedCcdPenetration( o.penetration );// default 0.0399
+    //if( o.penetration !== undefined ) dInfo.set_m_allowedCcdPenetration( o.penetration );// default 0.0399
 
 
     //console.log(world)
@@ -618,7 +635,7 @@ function addWorld ( o ) {
     dInfo.set_m_enableSatConvex() // false
     dInfo.set_m_stepCount() // 0
     dInfo.set_m_timeOfImpact() // 1
-    dInfo.set_m_timeStep() // 0
+    dInfo.set_m_timestep() // 0
     dInfo.set_m_useContinuous() // true
     dInfo.set_m_useConvexConservativeDistanceUtil() // false
     dInfo.set_m_useEpa() // true
@@ -626,7 +643,7 @@ function addWorld ( o ) {
     */
 
 
-    setGravity( o );
+    //setGravity( o );
     
 };
 
@@ -636,10 +653,8 @@ function setGravity ( o ) {
 
     if( world === null ) return;
 
-    gravity.fromArray( o.g || [0,-10, 0] );
+    gravity.fromArray( o.gravity !== undefined ? o.gravity : [ 0, -9.81, 0 ] );
     world.setGravity( gravity );
-
-
 
     if( isSoft ){
         worldInfo = world.getWorldInfo();
@@ -682,17 +697,21 @@ var todeg = 57.295779513082320876;
 //  btTransform extend
 //
 //--------------------------------------------------
+function vectomult( r, scale ) {
+
+    return [ r[0]*scale, r[1]*scale, r[2]*scale ];
+
+};
+
 
 function initMath(){
 
-
-
-    Ammo.btTransform.prototype.toArray = function( array, offset ){
+    Ammo.btTransform.prototype.toArray = function( array, offset, scale ){
 
         //if ( offset === undefined ) offset = 0;
         offset = offset || 0;
 
-        this.getOrigin().toArray( array , offset );
+        this.getOrigin().toArray( array , offset, scale );
         this.getRotation().toArray( array , offset + 3 );
 
         //return array;
@@ -726,6 +745,13 @@ function initMath(){
 
     };
 
+    Ammo.btVector3.prototype.multiplyScalar = function( scale ){
+
+        this.setValue( this.x() * scale, this.y() * scale, this.z() * scale );
+        return this;
+
+    };
+
     Ammo.btVector3.prototype.fromArray = function( array, offset ){
 
         //if ( offset === undefined ) offset = 0;
@@ -737,15 +763,16 @@ function initMath(){
 
     };
 
-    Ammo.btVector3.prototype.toArray = function( array, offset ){
+    Ammo.btVector3.prototype.toArray = function( array, offset, scale ){
 
         //if ( array === undefined ) array = [];
         //if ( offset === undefined ) offset = 0;
+        scale = scale || 1;
         offset = offset || 0;
 
-        array[ offset ] = this.x();
-        array[ offset + 1 ] = this.y();
-        array[ offset + 2 ] = this.z();
+        array[ offset ] = this.x() * scale;
+        array[ offset + 1 ] = this.y() * scale;
+        array[ offset + 2 ] = this.z() * scale;
 
         //return array;
 
@@ -1252,18 +1279,14 @@ function clearJoint () {
 
 function addJoint ( o ) {
 
-    var noAllowCollision = true;
-    var collision = o.collision || false;
-    if( collision ) noAllowCollision = false;
-
-    if(o.body1) o.b1 = o.body1;
+	if(o.body1) o.b1 = o.body1;
     if(o.body2) o.b2 = o.body2;
 
     var b1 = getByName( o.b1 );
     var b2 = getByName( o.b2 );
 
-    tmpPos1.fromArray( o.pos1 || [0,0,0] );
-    tmpPos2.fromArray( o.pos2 || [0,0,0] );
+    tmpPos1.fromArray( o.pos1 || [0,0,0] ).multiplyScalar(invScale);
+    tmpPos2.fromArray( o.pos2 || [0,0,0] ).multiplyScalar(invScale);
     tmpPos3.fromArray( o.axe1 || [1,0,0] );
     tmpPos4.fromArray( o.axe2 || [1,0,0] );
 
@@ -1364,6 +1387,34 @@ function addJoint ( o ) {
     if(o.maxMotorImpulse) joint.setMaxMotorImpulse( o.maxMotorImpulse );
     if(o.motorTarget) joint.setMotorTarget( tmpQuat.fromArray( o.motorTarget ) );
 
+    // 6 DOF
+
+    if(o.springPosition){
+        for ( var i = 0; i < 3; i++ ) {
+
+            if( o.springPosition[ i ] !== 0 ) {
+
+                joint.enableSpring( i, true );
+                joint.setStiffness( i, o.springPosition[ i ] );
+
+            }
+
+        }
+    }
+
+    if(o.springRotation){
+        for ( var i = 0; i < 3; i++ ) {
+
+            if( o.springRotation[ i ] !== 0 ) {
+
+                joint.enableSpring( i + 3, true );
+                joint.setStiffness( i + 3, o.springRotation[ i ] );
+
+            }
+
+        }
+    }
+
 
     // debug test 
     joint.type = 0;
@@ -1372,8 +1423,9 @@ function addJoint ( o ) {
         joint.bodyA = b1;
         joint.bodyB = b2;
     }
-    
-    world.addConstraint( joint, noAllowCollision );
+
+    var collision = o.collision !== undefined ? o.collision : false;
+    world.addConstraint( joint, collision ? false : true );
 
     if( o.name ) byName[o.name] = joint;
 
@@ -1384,10 +1436,6 @@ function addJoint ( o ) {
     o = null;
 
 };
-
-
-
-
 /**   _   _____ _   _   
 *    | | |_   _| |_| |
 *    | |_ _| | |  _  |
@@ -1476,23 +1524,20 @@ Contact.prototype = {
 
 function stepRigidBody( AR, N ) {
 
-    //if( !bodys.length ) return;
-
     bodys.forEach( function ( b, id ) {
 
-        var n = N + (id * 8);
+        var n = N + ( id * 8 );
         AR[n] = b.getLinearVelocity().length() * 9.8;//b.isActive() ? 1 : 0;
 
-        if ( AR[n] > 0 ) {
+        //if ( AR[n] > 0 ) {
 
             b.getMotionState().getWorldTransform( trans );
-            
-            trans.toArray( AR, n + 1 );
+            trans.toArray( AR, n + 1, worldscale );
 
             //trans.getOrigin().toArray( Br , n + 1 );
             //trans.getRotation().toArray( Br ,n + 4 );
 
-        }
+        //}
 
     });
 
@@ -1544,6 +1589,11 @@ function addRigidBody ( o, extra ) {
     o.size = o.size === undefined ? [1,1,1] : o.size;
     o.pos = o.pos === undefined ? [0,0,0] : o.pos;
     o.quat = o.quat === undefined ? [0,0,0,1] : o.quat;
+
+    if( worldscale !== 1 ) {
+        o.pos = vectomult( o.pos, invScale );
+        o.size = vectomult( o.size, invScale );
+    }
 
     var shape = null;
     switch( o.type ){
@@ -1634,9 +1684,10 @@ function addRigidBody ( o, extra ) {
     tmpTrans.setRotation( tmpQuat );
 
     tmpPos1.setValue( 0,0,0 );
-    shape.calculateLocalInertia( o.mass, tmpPos1 );
-    var motionState = new Ammo.btDefaultMotionState( tmpTrans );
+    //shape.calculateLocalInertia( o.mass, tmpPos1 );
+    if( o.mass !== 0 ) shape.calculateLocalInertia( o.mass, tmpPos1 );
 
+    var motionState = new Ammo.btDefaultMotionState( tmpTrans );
     var rbInfo = new Ammo.btRigidBodyConstructionInfo( o.mass, motionState, shape, tmpPos1 );
 
     //console.log(rbInfo.get_m_friction(), rbInfo.get_m_restitution(), rbInfo.get_m_rollingFriction());
@@ -1681,6 +1732,10 @@ function addRigidBody ( o, extra ) {
 
        // body.isKinematic = isKinematic;
         body.setCollisionFlags( o.flag || 0 );
+        body.setActivationState( o.state || 1 );
+
+        if( o.neverSleep ) body.setSleepingThresholds( 0, 0 );
+
         world.addRigidBody( body, o.group || 1, o.mask || -1 );
 
 
@@ -1696,7 +1751,7 @@ function addRigidBody ( o, extra ) {
         AMMO.DISABLE_DEACTIVATION = 4;
         AMMO.DISABLE_SIMULATION = 5;
         */
-        body.setActivationState( o.state || 1 );
+        
         bodys.push( body );
         
     }

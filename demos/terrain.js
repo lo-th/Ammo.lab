@@ -49,7 +49,7 @@ function demo() {
 
     set({
         fps:60,
-        numStep:2,
+        substep:2,
         gravity:[0,-10,0],
     })
 
