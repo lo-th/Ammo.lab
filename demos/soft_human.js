@@ -1,6 +1,6 @@
 function demo() {
 
-    substep( 1 )
+    //substep( 1 )
 
     cam ({ azim:0, polar:20, distance:40 });
     load ( 'avatar_low', afterLoad )
@@ -31,7 +31,7 @@ function afterLoad () {
         var t = Math.randInt(0,1)
 
         add({ 
-            type:'softTriMesh',
+            type:'softMesh',
             shape: t == 0 ? geo['woman']: geo['man'],
             material: 'avatar', 
             //shape:geo['cubic'],

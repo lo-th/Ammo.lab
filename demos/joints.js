@@ -1,61 +1,107 @@
+var option = {
+
+    type:[0,1,2,3,4,5],
+
+}
+
+var num = 20;
+
+
 function demo() {
 
-    cam ({ azim:40, polar:20, distance:60, y:30 });
+    ui ({
+
+        base: option,
+        function: applyOption,
+        type: { type:'button', p:0, h:40, radius:10 },
+
+    });
+
+    cam ({ theta:0, phi:0, distance:30, y:20 });
 
     // infinie plane
-    add({type:'plane'});
+    physic.add({type:'plane'});
 
-    var i, y, b1, b2;
-
-    for ( i = 0; i < 10; i++) {
-        y = 30 - (i*2.5);
-        if(i===0) add({type:'box', name:'base', mass:0, pos:[0,y,0], size:[2]});
-        else add({ type:'box', name:i, mass:0.1, pos:[0,y,0], size:[2]});
-    }
-
-    // joint full test
-
-    var quat = new THREE.Quaternion();
-    quat.setFromAxisAngle({x: 0, y: 1, z: 0}, Math.PI);
-
-    // DOF
-    /*
-
-    for ( i = 1; i < 10; i++) {
-
-        b1 = i === 1 ? 'base': i-1;
-        b2 = i;
-
-        add({ 
-            type:'joint_spring_dof', body1:b1, body2:b2, 
-            pos1:[-1.01,-1.01,-1.01], pos2:[1.01,1.01,1.01], 
-            quatA:quat.toArray(), quatB:quat.toArray(), collision:true 
-        });
-
-    } 
-    */
-
-    // CONE
-    
-    for ( i = 1; i < 10; i++) {
-
-        b1 = i === 1 ? 'base': i-1;
-        b2 = i;
-
-        add({ 
-            type:'joint_conetwist', body1:b1, body2:b2, 
-            pos1:[0,0,0], pos2:[2.1,0,0], 
-            quatA:quat.toArray(), quatB:quat.toArray(), 
-            collision:true, angularOnly:true, enableMotor:true, 
-            limit:[22, 22, 0],
-            maxMotorImpulse:100000000, 
-            motorTarget:quat.toArray()  
-        });
-   
-    }
-   
-
-
+    demoType( 1 );
 
     
 };
+
+function demoType ( n ) {
+
+    var x;
+    var mid = (num * 2.1) * 0.5;
+
+    for ( var i = 0; i < num; i++) {
+        x = (i*2) - mid;
+        physic.add({ type:'box', name:'box' + i, mass: 1, pos:[x,20,0], size:[2], kinematic: i === 0 ? true : false, neverSleep:true });
+    }
+
+    switch( n ){
+        case 0: 
+        for ( var i = 0; i < num-1; i++) {
+            physic.add({ type:'joint_p2p', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), pos1:[1,0,0], pos2:[-1,0,0], collision:false })
+        }
+        break;
+        case 1:
+        for ( var i = 0; i < num-1; i++) {
+            physic.add({ 
+                type:'joint_hinge', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1),
+                pos1:[1,0,0], pos2:[-1,0,0], 
+               // axe1:[1,0,0], axe2:[1,0,0], 
+                //axe1:[0,1,0], axe2:[0,1,0],
+                axe1:[0,0,1], axe2:[0,0,1],
+                limit:[-10,10,0.9,0.3, 1], 
+                collision:false,
+                useA:false,
+            })
+        }
+        break;
+        case 2:
+        for ( var i = 0; i < num-1; i++) {
+            physic.add({ type:'joint_conetwist', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), pos1:[1,0,0], pos2:[-1,0,0], axe1:[1,0,0], axe2:[1,0,0], limit:[0, 20, 20], collision:false })
+        }
+        break;
+        case 3:
+        for ( var i = 0; i < num-1; i++) {
+            physic.add({ type:'joint_slider', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), pos1:[1,0,0], pos2:[-1,0,0], axe1:[1,0,0], axe2:[1,0,0], limit:[0, 20, 20], collision:false })
+        }
+        break;
+        case 4:
+        for ( var i = 0; i < num-1; i++) {
+            physic.add({ 
+                type:'joint_dof', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), 
+                pos1:[1,0,0], pos2:[-1,0,0], 
+                axe1:[0, 0, 1], axe2:[0,0,1], 
+                linLower:[0, 0, 0], linUpper:[0, 0, 0], 
+                angLower:[-20, -20, -20], angUpper:[20, 20, 20], 
+                collision:false, 
+                local:true 
+            })
+        }
+        break;
+        case 5:
+        for ( var i = 0; i < num-1; i++) {
+            physic.add({ 
+                type:'joint_spring_dof', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), 
+                pos1:[1,0,0], pos2:[-1,0,0], 
+                axe1:[0,1,0], axe2:[1,0,0], 
+                linLower:[0, 0, 0], linUpper:[0, 0, 0], 
+                angLower:[-20, -20, -20], angUpper:[20, 20, 20],
+                collision:false, 
+                local:true 
+            })
+        }
+        break;
+
+    }
+}
+
+
+
+function applyOption () {
+
+    // note: object with same name is automaticly delete
+
+    demoType( option.type );
+}

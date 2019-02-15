@@ -9,27 +9,28 @@
 'use strict';
 
 var demos = [ 
-    'basic', 'terrain', 'terrainPlus', 'supermaket', 'car', 'collision', 'ragdoll',
-    'kinematics', 'multyCars', 'cloth', 'rope', 'rope2', 'drone', 'kineBody',
-    'soft_box', 'soft_basic', 'soft_pig', 'soft_human', 'soft_ball',// 'soft_convex',
-    'character', 'mecanum', 'joints', 'empty',  'asteroid', 'point2point', 'contact','testmesh', 'meshmove','water',
+    'basic', 'terrain', 'terrainPlus', 'supermaket', 'collision', 'ragdoll',
+    'car_advanced', 'car_basic','car_multy', 'car_Breakers',
+    'kinematics', 'kineBody',
+    'soft_cloth', 'soft_rope', 'soft_rope2', 'soft_box', 'soft_pig',// 'soft_basic', 'soft_ball',// 'soft_convex',
+    'character', 'joints', 'empty',  'asteroid', 'point2point', 'contact', 'testmesh', 'water',
+    'mecanum', 'drone', 'millions'
 ];
 
 demos.sort();
 
-var view, demo;
+var view, demo, physic;
 var demoName = 'basic';
 
 //////////////////////////////
 
 var isWithCode = false;
-var isWasm = false;
 
 function init(){
 
     view = new View();
 
-    intro.init();
+    //intro.init();
 
     view.init( initAmmo );
 
@@ -37,16 +38,25 @@ function init(){
 
 function initAmmo () {
 
-    ammo.init( next, isWasm );
+    physic = SHOT.engine;
+    physic.init( next );
     
 }
 
 function next(){
 
-    intro.clear();
+    //intro.clear();
+    physic.setView( view );
+    physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / physic ' + physic.getFps() );  }
+    physic.getKey = function () { return user.key;  }
 
     editor.init( launch, isWithCode, '#308AFF', 'Ammo.lab' );
-    ammo.start();
+
+    //physic.setView( view );
+    //physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / physic ' + physic.getFps() );  }
+    //physic.getKey = function () { return user.key;  }
+
+    physic.start();
 
     ready();
 
@@ -54,7 +64,7 @@ function next(){
 
 function unPause () {
 
-    ammo.start();
+    physic.start();
 
 }
 
@@ -74,46 +84,70 @@ function launch ( name ) {
 
     location.hash = name;
 
-    ammo.reset( full );
+    physic.reset( full );
 
     demo = new window['demo'];
 
 }
 
-function cam ( o ) { view.moveCam( o ); };
+function cam ( o ) { 
+    o = o || {};
+    o.x = o.x === undefined ? 0 : o.x;
+    o.y = o.y === undefined ? 0 : o.y;
+    o.z = o.z === undefined ? 0 : o.z;
+    view.moveCam( o ); 
+};
 
-function follow ( name, o ) { view.setFollow( name, o ); };
+function follow ( name, o ) { 
 
-function add ( o ) { return view.add( o ); };
+    var target = physic.byName( name );
+    if( target !== undefined ) view.getControls().initFollow( target, o );
+    else view.getControls().resetFollow();
 
-function joint ( o ) { o.type = o.type == undefined ? 'joint' : o.type; view.add( o ); };
-
-function character ( o ) { view.character( o ); };
-
-function car ( o ) { view.vehicle( o ); };
-
-function drive ( name ) { view.setDriveCar( name ); };
-
-function substep ( substep ) { ammo.send( 'substep', {substep:substep} ) ; };
-
-function tell ( str ) { editor.tell( str ); };
+};
 
 function ui ( option ) { editor.setOption( option ); };
 
+/*function add ( o ) { return physic.add( o ); };
+
+//function joint ( o ) { o.type = o.type == undefined ? 'joint' : o.type; physic.add( o ); };
+
+//function character ( o ) { view.character( o ); };
+//function car ( o ) { view.vehicle( o ); };
+
+function drive ( name ) { physic.post('setDrive', { name:name }); };
+function move ( name ) { physic.post('setMove', { name:name }); };
+function angle ( angle ) { physic.post('setAngle', { angle:angle }); };
+
+function substep ( substep ) { physic.post( 'substep', {substep:substep} ) ; };
+
+function tell ( str ) { editor.tell( str ); };
+
+
+
 function load ( name, callback ) { view.loadObject( name, callback ); };
 
-function anchor ( o ) { ammo.send( 'anchor', o ); };
+function anchor ( o ) { physic.post( 'addAnchor', o ); };
 
-function gravity ( a ) { ammo.send( 'gravity', {g:a} ); };
+function gravity ( a ) { physic.post( 'setGravity', {gravity:a} ); };
 
-//function water ( o ) { ammo.send( 'gravity', o ); };
+//function water ( o ) { physic.send( 'gravity', o ); };
 
-function force ( o ) { ammo.send('force', o ); };
-function forceArray ( o ) { ammo.send('forceArray', o ); };
+function force ( o ) { physic.post('setForces', [o] ); };
+function forceArray ( o ) { physic.post('setForces', o ); };
 
-function matrix ( o ) { ammo.send('matrix', o ); };
-function matrixArray ( o ) { ammo.send('matrixArray', o ); };
+function matrix ( o ) { physic.post('setMatrix', [o] ); };
+function matrixArray ( o ) { physic.post('setMatrix', o ); };
 
-function set ( o ) { ammo.send( 'set', o ); };
+function set ( o ) { physic.post( 'set', o ); };
 
-function contact ( o ) { return ammo.send( 'contact', o ); };
+//function addContact ( o ) { return physic.post( 'addContact', o ); };
+*/
+
+function remove ( o ) {
+
+    
+    physic.post( 'remove', o );
+   // view.removeList( o );
+
+};

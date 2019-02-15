@@ -42,20 +42,21 @@ function demo() {
 
     view.hideGrid();
     view.addFog({exp:0.0025});
-    view.addSky({hour:9});
+
+    view.addSky({ hour:9, hdr:true });
 
     view.addJoystick();
     //view.debug()
 
-    set({
+    physic.set({
         fps:60,
         substep:2,
         gravity:[0,-10,0],
     })
 
-    // ammo terrain shape
+    // physic terrain shape
 
-    add ({ 
+    physic.add ({ 
         type:'terrain',
         name:'ground',
         uv:150,
@@ -75,8 +76,8 @@ function demo() {
 
     var i = 10;
     while(i--){
-        add ({ type:'sphere', size:[1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
-        add({ type:'box',      size:[1,1,1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
+        physic.add ({ type:'sphere', size:[1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
+        physic.add ({ type:'box',      size:[1,1,1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
     }
 
     // load buggy 3d model
@@ -90,8 +91,11 @@ function demo() {
 
 function afterLoad () {
 
-    startY = view.byName['ground'].getHeight(0,0) + 1;
+    startY = physic.byName('ground').getHeight(0,0) + 1;
+
     makeBuggy();
+
+    physic.post('setDrive', { name:'buggy' });
 
 };
 
@@ -190,12 +194,15 @@ function makeBuggy () {
 
     var o = option;
 
-    car ({ 
+    physic.add ({ 
 
         debug: false,
         helper: false,
 
-        type:'convex',
+        type:'car',
+        name:'buggy',
+        shapeType:'convex',
+
         shape: view.getGeometry( 'buggy', 'h_shape' ),
         mesh: mesh,
         meshWheel: wheel,
@@ -205,7 +212,7 @@ function makeBuggy () {
         extraWeels:true,
 
 
-        name:'buggy',
+        
         
         pos:[0,startY,0], // start position of car 
         rot:[0,90,0], // start rotation of car
@@ -254,7 +261,9 @@ function makeBuggy () {
 
     });
 
-    follow (option.follow ? 'buggy':'none', {distance:5} );
+    //follow camera
+    if( option.follow ) view.getControls().initFollow( physic.byName( 'buggy' ), {distance:5} );
+    else view.getControls().resetFollow();
 
     // add option setting
     ui ({
@@ -290,7 +299,7 @@ function makeBuggy () {
 
     });
 
-    buggyCar = view.byName['buggy'];
+    buggyCar = physic.byName('buggy')//view.byName['buggy'];
 
     // sound test
     var enginAudio = view.addSound( engineSound )
@@ -306,8 +315,11 @@ function applyOption () {
 
     option.reset = option.restart ? true : false;
     gravity( [ 0, option.gravity, 0 ] );
-    ammo.send( 'setVehicle', option );
-    follow (option.follow ? 'car':'none', {distance:5});
+    physic.post( 'setVehicle', option );
+    //follow (option.follow ? 'car':'none', {distance:5});
+
+    if( option.follow) view.getControls().initFollow( physic.byName( 'buggy' ), {distance:5} );
+    else view.getControls().resetFollow();
 
 }
 
@@ -315,8 +327,10 @@ function update () {
 
     // infini terrain test
 
+    //view.getControls().follow();
+
     var d = view.distanceFromCenter();
-    if(d>300 && !view.controler.cam.isDecal&&!view.isTmove) decale();
+    if( d>300 && !view.controler.cam.isDecal && !view.isTmove) decale();
 
     // sound
 
@@ -347,9 +361,15 @@ function decale() {
 
     var p = view.followGroup.position;
 
-    matrix( [ 'buggy_body', [0,0,0], null, ['y', 'rot'] ] );
+    physic.matrix( [[ 'buggy_body', [0,0,0], null, false, ['y', 'rot'] ]] );
 
-    view.moveTerrainTo( 'ground', p.x, p.z );
+    var terrain = physic.byName('ground');
+    terrain.local.x += p.x;
+    terrain.local.z += p.z;
+    terrain.update( true );
+    terrain.needsUpdate = true;
+
+    //view.moveTerrainTo( 'ground', p.x, p.z );
     view.controler.cam.isDecal = true;
 
 }

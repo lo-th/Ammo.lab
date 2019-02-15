@@ -1,0 +1,147 @@
+/*global THREE*/
+
+export function geometryInfo ( g, type ) {
+
+    var verticesOnly = false;
+    var facesOnly = false;
+    var withColor = true;
+
+    if(type == 'mesh') facesOnly = true;
+    if(type == 'convex') verticesOnly = true;
+
+    var i, j, n, p, n2;
+
+    var tmpGeo = new THREE.Geometry().fromBufferGeometry( g );
+    tmpGeo.mergeVertices();
+
+    var totalVertices = g.attributes.position.array.length/3;
+    var numVertices = tmpGeo.vertices.length;
+    var numFaces = tmpGeo.faces.length;
+
+    g.realVertices = new Float32Array( numVertices * 3 );
+    g.realIndices = new ( numFaces * 3 > 65535 ? Uint32Array : Uint16Array )( numFaces * 3 );
+
+    if(withColor){
+        g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( totalVertices*3 ), 3 ) );
+        var cc = g.attributes.color.array;
+
+        i = totalVertices;
+        while(i--){
+            n = i * 3;
+            cc[ n ] = 1;
+            cc[ n + 1 ] = 1;
+            cc[ n + 2 ] = 1;
+        }
+    }
+
+    i = numVertices;
+    while(i--){
+        p = tmpGeo.vertices[ i ];
+        n = i * 3;
+        g.realVertices[ n ] = p.x;
+        g.realVertices[ n + 1 ] = p.y;
+        g.realVertices[ n + 2 ] = p.z;
+    }
+
+    if( verticesOnly ){ 
+        tmpGeo.dispose();
+        return g.realVertices;
+    }
+
+    i = numFaces;
+    while(i--){
+        p = tmpGeo.faces[ i ];
+        n = i * 3;
+        g.realIndices[ n ] = p.a;
+        g.realIndices[ n + 1 ] = p.b;
+        g.realIndices[ n + 2 ] = p.c;
+    }
+
+    tmpGeo.dispose();
+
+    //g.realIndices = g.getIndex();
+    //g.setIndex(g.realIndices);
+
+    if( facesOnly ){ 
+        var faces = [];
+        i = g.realIndices.length;
+        while(i--){
+            n = i * 3;
+            p = g.realIndices[i]*3;
+            faces[n] = g.realVertices[ p ];
+            faces[n+1] = g.realVertices[ p+1 ];
+            faces[n+2] = g.realVertices[ p+2 ];
+        }
+        return faces;
+    }
+
+    // find same point
+    var ar = [];
+    var pos = g.attributes.position.array;
+    i = numVertices;
+    while(i--){
+        n = i*3;
+        ar[i] = [];
+        j = totalVertices;
+        while(j--){
+            n2 = j*3;
+            if( pos[n2] == g.realVertices[n] && pos[n2+1] == g.realVertices[n+1] && pos[n2+2] == g.realVertices[n+2] ) ar[i].push(j);
+        }
+    }
+
+    // generate same point index
+    var pPoint = new ( numVertices > 65535 ? Uint32Array : Uint16Array )( numVertices );
+    var lPoint = new ( totalVertices > 65535 ? Uint32Array : Uint16Array )( totalVertices );
+
+    p = 0;
+    for(i=0; i<numVertices; i++){
+        n = ar[i].length;
+        pPoint[i] = p;
+        j = n;
+        while(j--){ lPoint[p+j] = ar[i][j]; }
+        p += n;
+    }
+
+    g.numFaces = numFaces;
+    g.numVertices = numVertices;
+    g.maxi = totalVertices;
+    g.pPoint = pPoint;
+    g.lPoint = lPoint;
+
+}
+
+
+function Capsule( Radius, Height, SRadius, H ) {
+
+    THREE.BufferGeometry.call( this );
+
+    this.type = 'CapsuleBufferGeometry';
+
+    var radius = Radius || 1;
+    var height = Height || 1;
+
+    var sRadius = SRadius || 12;
+    var sHeight = Math.floor(sRadius*0.5);// SHeight || 6;
+    var h = H || 1;
+    var o0 = Math.PI * 2;
+    var o1 = Math.PI * 0.5;
+    var g = new THREE.Geometry();
+    var m0 = new THREE.CylinderGeometry(radius, radius, height, sRadius, h, true);
+    var m1 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1);
+    var m2 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1);
+    var mtx0 = new THREE.Matrix4().makeTranslation(0,0,0);
+    if(SRadius===6) mtx0.makeRotationY(30*0.0174532925199432957);
+    var mtx1 = new THREE.Matrix4().makeTranslation(0, height*0.5,0);
+    var mtx2 = new THREE.Matrix4().makeTranslation(0, -height*0.5,0);
+    g.merge( m0, mtx0);
+    g.merge( m1, mtx1);
+    g.merge( m2, mtx2);
+    g.mergeVertices();
+
+    this.fromGeometry( g );
+
+}
+
+Capsule.prototype = Object.create( THREE.BufferGeometry.prototype );
+
+export { Capsule };

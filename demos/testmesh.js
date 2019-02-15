@@ -1,15 +1,15 @@
 function demo() {
 
-    cam ({ azim:-90, polar:20, distance:180 });
-    load ( 'bol', afterLoad );
+    view.moveCam({ azim:0, polar:30, distance:80, target:[0,0,0] });
+    view.loadObject( 'bol', afterLoad );
 
 }
 
 function afterLoad () {
 
-    add({
+    physic.add({
         type:'mesh',
-        shape:view.getGeo()['bol'],
+        shape:view.geo.bol,
         friction:0.4,
         mass:0,
         pos:[0, 1, -36]
@@ -17,8 +17,7 @@ function afterLoad () {
 
     var i = 60;
     while(i--){
-        add({ type:'sphere', size:[2], pos:[0, 40+(i*7), -40], mass:1});
+        physic.add({ type:'sphere', size:[2], pos:[0, 40+(i*7), -40], mass:1});
     }
-
 
 }

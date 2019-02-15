@@ -1,10 +1,11 @@
 function demo() {
 
-    cam ({ azim:0, polar:10, distance:40 });
+    view.moveCam({ theta:0, phi:10, distance:30, target:[0,3,0] });
 
-    add ({type:'plane', pos:[0,0,0], friction:0.6 });
+    physic.add ({type:'plane', pos:[0,0,0], friction:0.6 });
 
     var i, j, k, pos;
+    var geo = view.getGeo();
 
     var d = 1;// meter
     var s = 2;
@@ -17,10 +18,10 @@ function demo() {
     for(j = 0; j<z; j++){
     for(i = 0; i<x; i++){
         pos = [ i*d + decaleX, (k*d + d)-0.5, j*d + decaleZ ];
-        add ({ type:'box', size:[d,d,d], pos:pos, mass:1, friction:0.4, restitution:0.1, state:2 });
+        physic.add ({ type:'box', geometry:geo.dice, size:[d,d,d], pos:pos, mass:1, friction:0.4, restitution:0.1, state:2 });
     }}}
 
-    add({ type:'sphere', size:[s,s,s], pos:[0,100,0], mass:10, friction:0.3, restitution:0.3 });
+    physic.add({ type:'sphere', size:[s,s,s], pos:[0,100,0], mass:10, friction:0.3, restitution:0.3 });
     
 }
 

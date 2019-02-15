@@ -6,10 +6,11 @@ var tmpMatrix, tmpPos;
 
 function demo() {
 
-    cam ([ 0, 20, 30 ]);
-    set();
+    view.moveCam({ theta:0, phi:20, distance:30, target:[0,1,0] });
+    
+    physic.set();
 
-    load ( 'drone', afterLoadGeometry );
+    view.load ( 'drone.sea', afterLoadGeometry, true, true );
 
 };
 
@@ -20,22 +21,22 @@ function afterLoadGeometry () {
     view.addMap('drone.jpg', 'drone');
 
     // infinie plane
-    add({type:'plane'});
+    physic.add({type:'plane'});
 
     var geo = view.getGeo();
     var mat = view.getMat();
 
-    drone = add({ 
+    drone = physic.add({ 
         
         name:'drone',
         type:'convex',
-        shape:geo['drone_shape'],
+        shape:view.getGeometry( 'drone', 'drone_shape' ),//geo['drone_shape'],
 
         mass:10,
         pos:[0, 0, 0],
 
-        geometry:debug ? undefined : geo['drone_chassis'],
-        material:debug ? undefined : 'drone',
+        geometry:debug ? undefined : view.getGeometry( 'drone', 'drone_chassis' ),//geo['drone_chassis'],
+        material:debug ? undefined : view.mat.drone,
         state:4,
 
     });
@@ -48,11 +49,11 @@ function afterLoadGeometry () {
         sz = (i===0 || i===1) ? -1:1;
 
         rpos[i] = new THREE.Vector3(1.5*sx, 0.93, 1.5*sz);
-        rotor[i] = add({
+        rotor[i] = physic.add({
             parent: drone,
             pos:rpos[i].toArray(),
-            geometry: geo['drone_rotor'],
-            material:debug ? undefined : 'drone',
+            geometry: view.getGeometry( 'drone', 'drone_rotor' ),//geo['drone_rotor'],
+            material:debug ? undefined : view.mat.drone,
             noPhy:true,
 
         }) 
@@ -60,11 +61,11 @@ function afterLoadGeometry () {
          rpos[i].y = 0;
     }
 
-    add({
+    physic.add({
 
         parent: drone,
-        geometry: geo['drone_side'],
-        material:debug ? undefined : 'drone',
+        geometry: view.getGeometry( 'drone', 'drone_side' ),//geo['drone_side'],
+        material:debug ? undefined : view.mat.drone,
         noPhy:true,
 
     })
@@ -77,7 +78,7 @@ function afterLoadGeometry () {
     follow ('drone');
 
 
-    view.update = update;
+    physic.postUpdate = update;
 
 }
 
@@ -87,7 +88,7 @@ function update() {
     tmpPos.set( 0, 1, 0 );
     tmpPos.applyMatrix4( tmpMatrix );
 
-    force.y = 24.52;//0.435;
+    force.y = 25//24.52;//0.435;
     //var p = drone.position.clone();//.negate().normalize().multiplyScalar(9.8);
     var r = [];
     var p;
@@ -99,8 +100,7 @@ function update() {
         //r.push( [ 'drone', 'impulse',  force.toArray(), p.toArray() ] );
     }
 
-     //r.push( [ 'drone', 'centralForce', force.toArray() ] )
-
-    forceArray( r );
+    // apply forces to bodys
+    physic.forces( r );
 
 }

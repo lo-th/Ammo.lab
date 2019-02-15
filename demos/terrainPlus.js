@@ -1,3 +1,5 @@
+var terra;
+
 function demo() {
 
     /** 
@@ -5,22 +7,25 @@ function demo() {
       AWSD or QZSD rotate with camera
     */
 
-    cam ([0, 30, 100]);
+    view.hideGrid();
 
-    //view.hideGrid();
+    view.addSky({url:'photo.jpg', hdr:true });
+
+    view.moveCam({ theta:0, phi:30, distance:120, target:[0,0,0] });
+
     view.addJoystick();
 
-    set({
+    physic.set({
         fps:60,
         substep:2,
         gravity:[0,-10,0],
     })
 
-    add ({ 
+    physic.add ({ 
         type:'terrain',
         name:'terra', 
         pos : [0,0,0], // terrain position
-        size : [300,30,300], // terrain size in meter
+        size : [120,30,120], // terrain size in meter
         sample : [128,128], // number of subdivision
         //sample : [16,16], // number of subdivision
 
@@ -30,6 +35,14 @@ function demo() {
 
         friction: 0.5, 
         bounce: 0.0,
+
+        border:true,
+        bottom:true,
+
+        maxSpeed: 0.02,
+        //acc:0.001,
+        //dec:0.001,
+
         //flipEdge:false,
         //soft_cfm:0.000001
         //toTri: true,
@@ -40,31 +53,32 @@ function demo() {
 
     var i = 30, x, y, z;
 
+    terra = physic.byName('terra');
+
     while(i--){
-        x = Math.rand(-100,100);
-        z = Math.rand(-100,100);
-        y = view.byName['terra'].getHeight(x,z)+1;
-        add ({ type:'sphere', size:[1], pos:[x,y,z], mass:10, friction: 0.5, state:4 });
-        x = Math.rand(-100,100);
-        z = Math.rand(-100,100);
-        y = view.byName['terra'].getHeight(x,z)+1;
-        add ({ type:'box', size:[2], pos:[x,y,z], mass:10, friction: 0.5, state:4 });
+        x = Math.rand(-40,40);
+        z = Math.rand(-40,40);
+        y = terra.getHeight(x,z)+1;
+        physic.add ({ type:'sphere', size:[1], pos:[x,y,z], mass:10, friction: 0.5, state:4 });
+        x = Math.rand(-40,40);
+        z = Math.rand(-40,40);
+        y = terra.getHeight(x,z)+1;
+        physic.add ({ type:'box', size:[2], pos:[x,y,z], mass:10, friction: 0.5, state:4 });
     }
 
-    view.update = update;
+    physic.postUpdate = update;
 
 };
 
 function update () {
 
-    view.updateTerrain('terra');
+    terra.easing( true );
 
-    view.bodys.forEach( function ( b, id ) {
-
-        if( b.position.y < -20 ){
-            matrix( [ b.name, [ Math.rand(-40,40), Math.rand(40,60), Math.rand(-40,40)] ], [0,0,0,1] );
-        }
-
+    var r = [];
+    var bodys = physic.getBodys();
+    bodys.forEach( function ( b, id ) {
+        if( b.position.y < -2 ) r.push( [ b.name, [ Math.rand(-40,40), Math.rand(40,60), Math.rand(-40,40)] ] );
     });
+    physic.matrix( r );
 
 }

@@ -1,30 +1,29 @@
 function demo() {
 
-    cam ({ azim:0, polar:20, distance:30 });
-    load ( 'mecanum', afterLoadGeometry );
-
-};
-
-function afterLoadGeometry () {
-
-
-
-
-    //view.hideGrid();
-    view.addJoystick();
-
-    set({
+    physic.set({
         fps:60,
         substep:8,
         gravity:[0,-10,0],
     })
 
-    //ammo.send('gravity', {g:[0,0,0]});
+
+    view.moveCam({ theta:0, phi:20, distance:30, target:[0,2,0] });
+    view.load ( ['mecanum.sea'], afterLoadGeometry, true, true );
+
+};
+
+function afterLoadGeometry () {
+
+    //view.hideGrid();
+    view.addJoystick();
+
+    
+    //physic.send('gravity', {g:[0,0,0]});
 
     // infinie plane
-    add({type:'plane'});
+    physic.add({type:'plane'});
 
-    // ammo terrain shape
+    // physic terrain shape
 
     /*add ({ 
         type:'terrain', 
@@ -47,6 +46,8 @@ function afterLoadGeometry () {
     view.addMap('meca_chassis.jpg', 'meca1');
     view.addMap('meca_wheel.jpg', 'meca2');
     view.addMap('meca_tools.jpg', 'meca3');
+
+    //var cgh = view.getMesh( 'mecanum', 'meca_chassis_shape' )
 
     // mecanum buggy
     buildMecanum();
@@ -78,7 +79,8 @@ function update() {
         r.push( [ 'jh'+i, 'motor', [ s, 100] ] );
     }
 
-    forceArray( r );
+    // apply forces to bodys
+    physic.forces( r );
 
 };
 
@@ -120,18 +122,18 @@ function buildMecanum () {
 
     var bodyMass = 100;
 
-    add({ 
+    physic.add({ 
 
         name:'chassis',
         type:'convex',
-        shape:geo['meca_chassis_shape'],
+        shape:view.getGeometry( 'mecanum', 'meca_chassis_shape' ),//geo['meca_chassis_shape'],
 
         mass:bodyMass,
         size:[size],
         pos:[0, decalY, 0],
 
-        geometry:debug ? undefined : geo['meca_chassis'],
-        material:debug ? undefined : 'meca1',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_chassis' ),//geo['meca_chassis'],
+        material:debug ? undefined : view.mat.meca1,//'meca1',
         
         state:4,
         group:buggyGroup, 
@@ -145,17 +147,19 @@ function buildMecanum () {
 
     });
 
-    //add({type:'box', name:'boyA', mass:10, pos:[0,15,0], size:[2] });
+    //physic.add({type:'box', name:'boyA', mass:10, pos:[0,15,0], size:[2] });
 
     // wheelAxis
 
     var i = 4;
     while(i--){
+
         wheelAxis( i );
         // add suspensions
         spring ( i );
         // add wheels
         wheel( i );
+
     }
     
 
@@ -199,15 +203,15 @@ function wheelAxis ( n ) {
     var decal1 = [-31.5*side, -31.5*side].map(function(x) { return x * size; });
     var decal2 = [8*side, -5.957*side].map(function(x) { return x * size; });
 
-    add({ 
+    physic.add({ 
         name:'paddel'+n,
         type:'box', 
 
         mass:massPaddel,
         size:[28*size, 7*size, 80*size],
 
-        geometry:debug ? undefined : geo['meca_paddel'],
-        material:debug ? undefined : 'meca3',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_paddel' ),//geo['meca_paddel'],
+        material:debug ? undefined : view.mat.meca1,//'meca3',
         geoRot:gr,
         geoSize:[size],
         
@@ -219,7 +223,7 @@ function wheelAxis ( n ) {
         angular:1,
     });
 
-    add({ 
+    physic.add({ 
         name:'padtop'+n,
         type:'box',
 
@@ -227,8 +231,8 @@ function wheelAxis ( n ) {
         size:[10*size, 10*size, 63*size],
         //size:[3*size, 5*size, 63*size],
 
-        geometry:debug ? undefined : geo['meca_padtop'],
-        material:debug ? undefined : 'meca3',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_padtop' ),//geo['meca_padtop'],
+        material:debug ? undefined : view.mat.meca3,//'meca3',
         geoSize:[size],
         
         pos:pos1,
@@ -240,7 +244,7 @@ function wheelAxis ( n ) {
         angular:1,
     });
 
-    joint({
+    physic.add({
         name:'ax_1_'+n,
         type:'joint_hinge',
         body1:'chassis',
@@ -251,7 +255,7 @@ function wheelAxis ( n ) {
         axe2:[1,0,0],
     });
 
-    joint({
+    physic.add({
         name:'ax_2_'+n,
         type:'joint_hinge',
         body1:'chassis',
@@ -266,15 +270,15 @@ function wheelAxis ( n ) {
 
     if(steeringAxis[n]){
 
-        add({ 
+        physic.add({ 
             name:'axis'+n,
             type:'box',
 
             mass:massAxis*0.5,
             size:[23*size, 23*size, 23*size],
 
-            geometry:debug ? undefined : geo['meca_axis_av'],
-            material:debug ? undefined : 'meca3', 
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_av' ),//geo['meca_axis_av'],
+            material:debug ? undefined : view.mat.meca3,//'meca3', 
             geoRot:gr2,
             geoSize:[size],
             
@@ -285,7 +289,7 @@ function wheelAxis ( n ) {
             angular:1,
         });
 
-        add({ 
+        physic.add({ 
             name:'axis_s_'+n,
             type:'box', 
 
@@ -293,8 +297,8 @@ function wheelAxis ( n ) {
             friction:0.1,
             size:[23*size, 23*size, 23*size],
 
-            geometry:debug ? undefined : geo['meca_axis_av2'],
-            material:debug ? undefined : 'meca3',
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_av2' ),//geo['meca_axis_av2'],
+            material:debug ? undefined : view.mat.meca3,//'meca3',
             geoRot:gr2,
             geoSize:[size],
 
@@ -305,7 +309,7 @@ function wheelAxis ( n ) {
             angular:1,
         });
 
-        joint({
+        physic.add({
             name:'j_steering_'+n,
             type:'joint_hinge',
             body1:'axis'+n,
@@ -320,7 +324,7 @@ function wheelAxis ( n ) {
 
     } else {
 
-        add({ 
+        physic.add({ 
             name:'axis'+n,
             type:'box',
 
@@ -328,8 +332,8 @@ function wheelAxis ( n ) {
             friction:0.1,
             size:[23*size, 23*size, 23*size],
 
-            geometry:debug ? undefined : geo['meca_axis_ar'],
-            material:debug ? undefined : 'meca3', 
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_ar' ),//geo['meca_axis_ar'],
+            material:debug ? undefined : view.mat.meca3,//'meca3', 
             geoRot:gr2,
             geoSize:[size],
             
@@ -342,7 +346,7 @@ function wheelAxis ( n ) {
     }
 
 
-    joint({
+    physic.add({
         name:'ax_1e_'+n,
         type:'joint_hinge',
         body1:'axis'+n,
@@ -353,7 +357,7 @@ function wheelAxis ( n ) {
         axe2:[1,0,0],
     });
 
-    joint({
+    physic.add({
         name:'ax_2e_'+n,
         type:'joint_hinge',
         body1:'axis'+n,
@@ -394,15 +398,15 @@ function spring ( n ) {
 
     // object
 
-    add({ 
+    physic.add({ 
         name:'bA'+n,
         type:'box',
 
         mass:massTop,
         size:[17*size, 17*size, 17*size],
 
-        geometry:debug ? undefined : geo['meca_stop'],
-        material:debug ? undefined : 'meca3',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_stop' ),//geo['meca_stop'],
+        material:debug ? undefined : view.mat.meca3,//'meca3',
         geoSize:[size],
         geoRot:gr,
 
@@ -412,15 +416,15 @@ function spring ( n ) {
         mask:noCollision,
     });
 
-    add({ 
+    physic.add({ 
         name:'bB'+n,
         type:'box',
 
         mass:massLow,
         size:[10*size, 10*size, 10*size],
 
-        geometry:debug ? undefined : geo['meca_slow'],
-        material:debug ? undefined : 'meca3',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_slow' ),//geo['meca_slow'],
+        material:debug ? undefined : view.mat.meca3,//'meca3',
         geoSize:[size],
         geoRot:gr2,
 
@@ -432,7 +436,7 @@ function spring ( n ) {
 
     // joint
 
-    joint({
+    physic.add({
         name:'jj_1e_'+n,
         type:'joint_hinge',
         body1:'chassis',
@@ -443,7 +447,7 @@ function spring ( n ) {
         axe2:[1,0,0],
     });
 
-    joint({
+    physic.add({
         name:'jj_2e_'+n,
         type:'joint_hinge',
         body1:'paddel'+n,
@@ -459,7 +463,7 @@ function spring ( n ) {
     var springRange = 5*size;
     var springRestLen = -85*size;  
 
-    joint({
+    physic.add({
 
         type:'joint_spring_dof',
         name:'jj'+n,
@@ -522,14 +526,14 @@ function wheel ( n ) {
     if(rotation){ if(n==1 || n==3) wSpeed*=-1; }
 
 
-    add({ 
+    physic.add({ 
         name:'axe'+n,
         
         //type:'box',
         //size:[56*size, 56*size, 14*size],
 
         type:'convex',
-        shape:geo['meca_wheel_shape'],
+        shape:view.getGeometry( 'mecanum', 'meca_wheel_shape' ),//geo['meca_wheel_shape'],
         size:[size],
 
         mass:massWheel,
@@ -537,8 +541,8 @@ function wheel ( n ) {
         
         //rot:[0,0,90],
         //material:'tmp1',
-        geometry:debug ? undefined : geo['meca_wheel_'+ext],
-        material:debug ? undefined : 'meca2',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_wheel_' + ext ),//geo['meca_wheel_'+ext],
+        material:debug ? undefined : view.mat.meca2,//'meca2',
         //geoSize:[size],
         //geoRot:[0,R,0],
         //geoScale:GR,
@@ -589,10 +593,10 @@ function wheel ( n ) {
             if(i==7) { axe = [35.264, 30, -35.264 ];  axis = [0.783,-0.783,1]; }
         }
 
-        add({ 
+        physic.add({ 
             name:n+'_rr_'+i,
             type:'convex',
-            shape:geo['meca_roller_shape'],
+            shape:view.getGeometry( 'mecanum', 'meca_roller_shape' ),//geo['meca_roller_shape'],
 
             mass:massRoller,
             //friction:0.7,
@@ -601,8 +605,8 @@ function wheel ( n ) {
             rot:axe,
             pos:[x+ position[0], y+ position[1], z],
 
-            geometry:debug ? undefined : geo['meca_roller'],
-            material:debug ? undefined : 'meca2',
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_roller' ),//geo['meca_roller'],
+            material:debug ? undefined : view.mat.meca2,//'meca2',
             
             state:4,
             
@@ -612,9 +616,9 @@ function wheel ( n ) {
             
         })
 
-        joint({
+        physic.add({
 
-            name:'jr'+i,
+            name:'jr'+i+n,
             type:'joint_hinge',
             body1:'axe'+n,
             body2:n+'_rr_'+i,
@@ -633,7 +637,7 @@ function wheel ( n ) {
     var link = 'axis'+n;
     if(steeringAxis[n]) link = 'axis_s_'+n;
 
-    joint({
+    physic.add({
         name:'jh'+n,
         type:'joint_hinge',
         body1:link,

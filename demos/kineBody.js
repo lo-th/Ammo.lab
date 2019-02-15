@@ -14,9 +14,11 @@ var q = new THREE.Quaternion();
 
 function demo() {
 
-    cam ( [20, 40, 100, [0,20,0]] );
+    view.moveCam({ theta:20, phi:40, distance:100, pos:[0,20,0] });
 
-    set({});
+    view.addSky({ url:'photo.jpg', hdr:true });
+
+    physic.set();
 
     pool.load( 'assets/bvh/action.z', initAnimation );
 
@@ -137,12 +139,12 @@ function initSkeleton () {
             pos:p1.toArray(),
             kinematic: true,
             //density:0.3, 
-            material:'kinematic',
+            //material:'kinematic',
             friction:0.2, 
             restitution:0.2
         }
 
-        add( o );
+        physic.add( o );
 
     }
 
@@ -153,6 +155,7 @@ function initSkeleton () {
 
     // extra loop
     view.update = update;
+    physic.postUpdate = update2;
 
 }
 
@@ -181,12 +184,12 @@ function addExtra () {
     m = 4;
 
     // basic box wall
-    add({type:'box', size:[w, m, w], pos:[0,-m*0.5, 0], friction:0.2, restitution:0.2, material:'hide' });
-    add({type:'box', size:[m,h,w-(2*m)], pos:[(w*0.5)-(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:'hide'  });
-    add({type:'box', size:[m,h,w-(2*m)], pos:[(-w*0.5)+(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:'hide'  });
-    add({type:'box', size:[w,h,m], pos:[0,h*0.5,(w*0.5)-(m*0.5)], friction:0.2, restitution:0.2, material:'hide' });
-    add({type:'box', size:[w,h,m], pos:[0,h*0.5,(-w*0.5)+(m*0.5)], friction:0.2, restitution:0.2, material:'hide' });
-    add({type:'box', size:[w-(2*m), m, w-(2*m)], pos:[0,h-(m*0.5), 0], friction:0.2, restitution:0.2, material:'hide' });
+    physic.add({type:'box', size:[w, m, w], pos:[0,-m*0.5, 0], friction:0.2, restitution:0.2, material:'hide' });
+    physic.add({type:'box', size:[m,h,w-(2*m)], pos:[(w*0.5)-(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:'hide'  });
+    physic.add({type:'box', size:[m,h,w-(2*m)], pos:[(-w*0.5)+(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:'hide'  });
+    physic.add({type:'box', size:[w,h,m], pos:[0,h*0.5,(w*0.5)-(m*0.5)], friction:0.2, restitution:0.2, material:'hide' });
+    physic.add({type:'box', size:[w,h,m], pos:[0,h*0.5,(-w*0.5)+(m*0.5)], friction:0.2, restitution:0.2, material:'hide' });
+    physic.add({type:'box', size:[w-(2*m), m, w-(2*m)], pos:[0,h-(m*0.5), 0], friction:0.2, restitution:0.2, material:'hide' });
 
    /* add({
         type:[ 'box', 'box', 'box', 'box', 'box' ],
@@ -204,7 +207,7 @@ function addExtra () {
         y = Math.rand(4,30)//(60,100)
 
         //add( { type:'box', size:[w,h,d], pos:[x,y,z], move:true } );
-        add( { type:'sphere', size:[w*0.5], pos:[x,y,z], density:0.3, friction:0.2, restitution:0.2, linear:0, angular:1  } );
+        physic.add( { type:'sphere', size:[w*0.5], pos:[x,y,z], density:0.3, friction:0.2, restitution:0.2, linear:0, angular:1  } );
 
     }
 
@@ -215,7 +218,7 @@ function updateSkeleton () {
 
     var r = [];
 
-    var bodys = view.getBody();
+    var bodys = physic.getBodys();
 
     matrixWorldInv.getInverse( boneContainer.matrixWorld ); 
 
@@ -246,19 +249,24 @@ function updateSkeleton () {
 
         // apply to physics body
         r.push( [ name, p.toArray(), q.toArray() ] );
-        //matrix( [ name, p.toArray(), q.toArray() ] );
 
     }
 
-    matrixArray( r );
+    // applu new matrix to body
+    physic.matrix( r );
 
 }
 
 function update () {
 
     if ( mixer ) mixer.update( 0.003 );
+    //if ( loaded ) updateSkeleton();
+
+}
+
+function update2 () {
+
+    //if ( mixer ) mixer.update( 0.003 );
     if ( loaded ) updateSkeleton();
-
-
 
 }

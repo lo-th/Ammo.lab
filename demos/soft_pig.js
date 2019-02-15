@@ -1,22 +1,19 @@
 function demo() {
 
-    cam ({ azim:0, polar:20, distance:40 });
-    load ( 'pig', afterLoad );
+    view.moveCam({ theta:90, phi:20, distance:40, targrt:[0,1,0] });
+    view.load ( 'pig.sea', afterLoad, true );
 
 }
 
 function afterLoad () {
 
-    add({type:'plane' }); // infinie plane
+    physic.add({ type:'plane' }); // infinie plane
 
-    //add({ type:'box', size:[40,2,40], pos:[0,2.5,0], rot:[0,0,0], mass:0, group:1 });
-    
-    //add({ type:'box', size:[40,10,1], pos:[0,4.6,0], rot:[45,0,0], mass:0 });
-    //add({ type:'box', size:[40,2,40], pos:[0,1,-10], rot:[0,0,0], mass:0 });
+    physic.add({ type:'box', size:[40,2,40], pos:[0,-1,0], rot:[0,0,0], mass:0 });
 
-    add({ type:'cylinder', size:[2,10,2], rot:[0,0,90], pos:[0,0,0], mass:0 });
-    add({ type:'cylinder', size:[2,10,2], rot:[0,0,90], pos:[0,0,4], mass:0 });
-    add({ type:'cylinder', size:[2,10,2], rot:[0,0,90], pos:[0,0,-4], mass:0 });
+    physic.add({ type:'cylinder', size:[2,10,2], rot:[0,1,90], pos:[0,0,0], mass:0 });
+    physic.add({ type:'cylinder', size:[2,10,2], rot:[0,1,90], pos:[0,0,4], mass:0 });
+    physic.add({ type:'cylinder', size:[2,10,2], rot:[0,1,90], pos:[0,0,-4], mass:0 });
 
     var geo = view.getGeo();
 
@@ -25,16 +22,14 @@ function afterLoad () {
     while(i--){
 
         var y = 15+(i*15);
-        var x = 0;//-5+(i*2.5);
         var r = Math.randInt(0,360);
 
-        add({
+        physic.add({
 
-            type:'softTriMesh',
-            shape:geo['pig'],
+            type:'softMesh',
+            shape:view.getGeometry( 'pig', 'pig' ),
             
-
-            pos:[x,y,0],
+            pos:[0,y,0],
             size:[2,2,2],
             rot:[0,r,0],
 
@@ -53,21 +48,9 @@ function afterLoad () {
 
             margin:0.05,
             fromfaces:true,
+
         });
 
     }
 
 }
-
-/*function update () {
-
-    var softs = view.getSofts();
-
-    softs.forEach( function( b, id ) {
-
-        if( id===1 ) ammo.send( 'moveSoftBody', {id:id } ) ;
-
-        //console.log(b.position.y)
-    });
-
-}*/

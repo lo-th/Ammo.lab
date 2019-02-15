@@ -1,10 +1,81 @@
 {
-  "name": "ammo.lab",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts":{
-    "build": "cd _compile && python build.py --include ammo.worker --output ../build/ammo.worker.js && python build.py --include ammo.worker --minify --output ../build/ammo.worker.min.js"
+  "name": "gun",
+  "version": "0.0.1",
+  "description": "JavaScript 3D physics worker",
+  "main": "build/gun.js",
+  "repository": "lo-th/Ammo.lab",
+  "jsnext:main": "build/gun.module.js",
+  "module": "build/gun.module.js",
+  "files": [
+    "package.json",
+    "LICENSE",
+    "README.md",
+    "build/gun.js",
+    "build/gun.min.js",
+    "build/gun.module.js",
+    "src"
+  ],
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "test"
   },
-  "author": "lth <3dflashlo@gmail.com>",
-  "license": "MIT"
+  "eslintConfig": {
+    "extends": "mdcs",
+    "plugins": [
+      "html"
+    ]
+  },
+  "scripts": {
+    "build": "npm run build_gun && npm run build_shot",
+    "build_gun": "rollup -c rollup.config.js --environment BUILD:gun",
+    "build_shot": "rollup -c rollup.config.js --environment BUILD:shot",
+    "build_closure_gun": "rollup -c rollup.config.js --environment BUILD:gun && java -jar node_modules/google-closure-compiler-java/compiler.jar --warning_level=VERBOSE --jscomp_off=globalThis --jscomp_off=checkTypes --externs src/externs_gun.js --language_in=ECMASCRIPT5_STRICT --js build/gun.js --js_output_file build/gun.min.js",
+    "build_closure_shot": "rollup -c rollup.config.js --environment BUILD:shot && java -jar node_modules/google-closure-compiler-java/compiler.jar --warning_level=VERBOSE --jscomp_off=globalThis --jscomp_off=checkTypes --externs src/externs_shot.js --language_in=ECMASCRIPT5_STRICT --js build/shot.js --js_output_file build/shot.min.js",
+    "min": "npm run build_closure_gun && npm run build_closure_shot",
+    "dev_gun": "rollup -c -w rollup.config.js --environment BUILD:gun",
+    "dev_shot": "rollup -c -w rollup.config.js --environment BUILD:shot",
+    "dev": "npm run dev_gun && npm run dev_shot",
+    "devs": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"http-server -c-1 -p 8080\"",
+    "start": "npm run dev",
+    "auto": "eslint --fix src/ammo",
+    "lint": "eslint src",
+    "travis": "npm run lint && npm test"
+  },
+  "keywords": [
+    "gun",
+    "gun.js",
+    "3d",
+    "physics"
+  ],
+  "author": "lth",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lo-th/Ammo.lab/issues"
+  },
+  "homepage": "http://lo-th.github.io/Ammo.lab/",
+  "devDependencies": {
+    "concurrently": "^4.1.0",
+    "eslint": "^5.11.1",
+    "eslint-config-mdcs": "^4.2.3",
+    "eslint-plugin-html": "^5.0.0",
+    "google-closure-compiler": "20181210.0.0",
+    "http-server": "^0.11.1",
+    "qunit": "^2.9.1",
+    "rollup": "^1.0.0"
+  },
+  "jspm": {
+    "files": [
+      "package.json",
+      "LICENSE",
+      "README.md",
+      "build/gun.js",
+      "build/gun.min.js",
+      "build/gun.module.js",
+      "build/shot.js",
+      "build/shot.min.js",
+      "build/shot.module.js"
+    ],
+    "directories": {}
+  }
 }

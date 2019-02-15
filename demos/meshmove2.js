@@ -1,6 +1,6 @@
 function demo() {
 
-    cam ({ azim:30, polar:40, distance:30 });
+    cam ({ theta:30, phi:40, distance:30 });;
     load ( 'bot', afterLoad );
     
 };

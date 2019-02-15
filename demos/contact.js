@@ -1,9 +1,9 @@
 
 function demo() {
 
-    cam ([ 0, 30, 40 ]);
+    view.moveCam({ theta:0, phi:30, distance:40, target:[0,2,0] });
 
-    set({
+    physic.set({
 
         fps:60,
         substep:2,// more substep = more accurate simulation default set to 2
@@ -13,7 +13,7 @@ function demo() {
 
     // basic geometry body
 
-    add({ type:'plane', name:'ground', restitution:0.8 }); // infinie plane
+    physic.add({ type:'plane', name:'ground', restitution:0.8 }); // infinie plane
 
     // load buggy 3d model
     view.load ( ['ping_pong.mp3'], afterLoad, true, true );
@@ -25,8 +25,8 @@ function demo() {
 
 function afterLoad () {
 
-    var m1 = add({ type:'box', size:[2,2,2], pos:[-5,30,0], mass:2, name:'boxy', restitution:0.8, material:'contactOff' });
-    var m2 = add({ type:'sphere', size:[1], pos:[5,30,0], mass:2, name:'sphy', restitution:0.8, material:'contactOff' });
+    var m1 = physic.add({ type:'box', name:'boxy', size:[2,2,2], pos:[-5,30,0], mass:2, restitution:0.8, material:'contactOff' });
+    var m2 = physic.add({ type:'sphere', name:'sphy', size:[1], pos:[5,30,0], mass:2, restitution:0.8, material:'contactOff' });
 
     var s1 = view.addSound('ping_pong');
     var s2 = view.addSound('ping_pong');
@@ -39,15 +39,15 @@ function afterLoad () {
     m1.userData.oldpos = m1.position.clone();
     m2.userData.oldpos = m2.position.clone();
 
-
-    contact({ b1:'boxy', b2:'ground', f:onContact1});// contact pair test
-    contact({ b1:'sphy', f:onContact2});// contact single test
+    // add collision test
+    physic.add({ type:'collision', b1:'boxy', b2:'ground', callback:onContact1 });// contact pair test
+    physic.add({ type:'collision', b1:'sphy', callback:onContact2 });// contact single test
 
 }
 
 function onContact1 ( b ){
 
-    var m = view.byName['boxy'];
+    var m = physic.byName('boxy');
     var audio = m.userData.sound;
     var pos = m.userData.oldpos;
 
@@ -61,7 +61,7 @@ function onContact1 ( b ){
 
 function onContact2 ( b ){
 
-    var m = view.byName['sphy'];
+    var m = physic.byName('sphy');
     var audio = m.userData.sound;
     var pos = m.userData.oldpos;
 

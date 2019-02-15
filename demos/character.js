@@ -1,7 +1,7 @@
 function demo() {
 
     //cam ( 0, 10, 10 );
-    load ( ['track', 'heros'], afterLoad );
+    view.load ( ['track.sea', 'heros.sea'], afterLoad, true, true );
 
 }
 
@@ -21,13 +21,17 @@ function afterLoad () {
     //var m = view.getResult();
     view.addJoystick();
 
-    add({type:'plane'}); // infinie plane
+    physic.add({type:'plane'}); // infinie plane
 
-    add({ type:'mesh', shape:view.getGeo()['track'], density:0, friction:0.6, restitution:0.1 });
+    physic.add({ type:'mesh', shape:view.getGeometry('track', 'track'), density:0, friction:0.6, restitution:0.1 });
 
-    character({ name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5) ), scale:0.07, debug:false });
+    //physic.add({ type:'character', name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5) ), scale:0.07, debug:false });
+    physic.add({ type:'character', name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5)), scale:0.07, debug:false });
+
 
     follow('bob', {  height:0.3, acceleration: 0.05, speed:10, distance:3 } );
+
+    physic.move('bob');
 
 
 
@@ -36,7 +40,7 @@ function afterLoad () {
         x = Math.rand(-50, 50);
         z = Math.rand(-50, 50);
         s = Math.rand(0.5, 5);
-        add({ type:'box', size:[s,s,s], pos:[x,s*0.5,z], mass:s});
+        physic.add({ type:'box', size:[s,s,s], pos:[x,s*0.5,z], mass:s});
     }
 
 };

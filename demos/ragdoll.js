@@ -1,9 +1,11 @@
 function demo () {
 
-    cam ({ azim:0, polar:10, distance:10 });
+    view.moveCam({ theta:0, phi:10, distance:8, target:[0,1,0] });
+
+    physic.set();
 
     // infinie plane
-    add({type:'plane', group:1});
+    physic.add({type:'plane', group:1});
 
     for(var i = 0; i<20; i++){
 
@@ -26,43 +28,47 @@ function ragdoll (id, x, y, z) {
 
     // body
 
-    add({type:type, size:[0.2,0.1,0.15], pos:[p.x,p.y-0.2,p.z], mass:mass,  name:'pelvis'+id });
-    add({type:type, size:[0.2,0.1,0.15], pos:[p.x,p.y-0.1,p.z], mass:mass,  name:'spine1_'+id });
-    add({type:type, size:[0.2,0.1,0.15], pos:[p.x,p.y,p.z], mass:mass, name:'spine2_'+id, noSleep:true });
-    add({type:type, size:[0.2,0.1,0.15], pos:[p.x,p.y+0.1,p.z], mass:mass,  name:'spine3_'+id });
-    add({type:"sphere", size:[0.1,0.1,0.1], pos:[p.x,p.y+0.3,p.z], mass:mass,  name:'head'+id });
+    physic.addGroup([
 
-    joint({type:"joint", b1:'pelvis'+id, b2:'spine1_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20], collision:collision, spring:spring });
-    joint({type:"joint", b1:'spine1_'+id, b2:'spine2_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20], collision:collision, spring:spring });
-    joint({type:"joint", b1:'spine2_'+id, b2:'spine3_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20], collision:collision, spring:spring });
-    joint({type:"joint", b1:'spine3_'+id, b2:'head'+id,   pos1:[0,0.05,0], pos2:[0,-0.1,0], limit:[2,20], collision:collision, spring:spring });
+        { type:type, size:[0.2,0.1,0.15], pos:[p.x,p.y-0.2,p.z], mass:mass,  name:'pelvis'+id },
+        { type:type, size:[0.2,0.1,0.15], pos:[p.x,p.y-0.1,p.z], mass:mass,  name:'spine1_'+id },
+        { type:type, size:[0.2,0.1,0.15], pos:[p.x,p.y,p.z], mass:mass, name:'spine2_'+id, noSleep:true },
+        { type:type, size:[0.2,0.1,0.15], pos:[p.x,p.y+0.1,p.z], mass:mass,  name:'spine3_'+id },
+        { type:"sphere", size:[0.1,0.1,0.1], pos:[p.x,p.y+0.3,p.z], mass:mass,  name:'head'+id },
 
-    //arm
+        { type:"joint", b1:'pelvis'+id, b2:'spine1_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20], collision:collision, spring:spring },
+        { type:"joint", b1:'spine1_'+id, b2:'spine2_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20], collision:collision, spring:spring },
+        { type:"joint", b1:'spine2_'+id, b2:'spine3_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20], collision:collision, spring:spring },
+        { type:"joint", b1:'spine3_'+id, b2:'head'+id,  pos1:[0,0.05,0], pos2:[0,-0.1,0], limit:[2,20], collision:collision, spring:spring },
 
-    add({type:type, size:[0.2,0.1,0.1], pos:[p.x-0.2,p.y+0.08,p.z], rot:[0,0,20], mass:mass,  name:'L_arm'+id });
-    add({type:type, size:[0.2,0.08,0.08], pos:[p.x-0.4,p.y,p.z], rot:[0,0,20], mass:mass,  name:'LF_arm'+id });
+        //arm
 
-    add({type:type, size:[0.2,0.1,0.1], pos:[p.x+0.2,p.y+0.08,p.z], rot:[0,0,-20], mass:mass,  name:'R_arm'+id });
-    add({type:type, size:[0.2,0.08,0.08], pos:[p.x+0.4,p.y,p.z], rot:[0,0,-20], mass:mass,  name:'RF_arm'+id });
+        { type:type, size:[0.2,0.1,0.1], pos:[p.x-0.2,p.y+0.08,p.z], rot:[0,0,20], mass:mass,  name:'L_arm'+id },
+        { type:type, size:[0.2,0.08,0.08], pos:[p.x-0.4,p.y,p.z], rot:[0,0,20], mass:mass,  name:'LF_arm'+id },
 
-    joint({type:"joint", b1:'spine3_'+id, b2:'L_arm'+id, pos1:[-0.1,0,0], pos2:[0.1,0,0], axe1:[0,1,1], axe2:[0,1,1], collision:collision});
-    joint({type:"joint", b1:'spine3_'+id, b2:'R_arm'+id, pos1:[0.1,0,0], pos2:[-0.1,0,0], axe1:[0,1,1], axe2:[0,1,1], collision:collision});
+        { type:type, size:[0.2,0.1,0.1], pos:[p.x+0.2,p.y+0.08,p.z], rot:[0,0,-20], mass:mass,  name:'R_arm'+id },
+        { type:type, size:[0.2,0.08,0.08], pos:[p.x+0.4,p.y,p.z], rot:[0,0,-20], mass:mass,  name:'RF_arm'+id },
 
-    joint({type:"joint", b1:'L_arm'+id, b2:'LF_arm'+id, pos1:[-0.1,0,0], pos2:[0.1,0,0], axe1:[0,1,0], axe2:[0,1,0], collision:collision});
-    joint({type:"joint", b1:'R_arm'+id, b2:'RF_arm'+id, pos1:[0.1,0,0], pos2:[-0.1,0,0], axe1:[0,1,0], axe2:[0,1,0], collision:collision});
+        { type:"joint", b1:'spine3_'+id, b2:'L_arm'+id, pos1:[-0.1,0,0], pos2:[0.1,0,0], axe1:[0,1,1], axe2:[0,1,1], collision:collision },
+        { type:"joint", b1:'spine3_'+id, b2:'R_arm'+id, pos1:[0.1,0,0], pos2:[-0.1,0,0], axe1:[0,1,1], axe2:[0,1,1], collision:collision },
 
-    // leg
+        { type:"joint", b1:'L_arm'+id, b2:'LF_arm'+id, pos1:[-0.1,0,0], pos2:[0.1,0,0], axe1:[0,1,0], axe2:[0,1,0], collision:collision },
+        { type:"joint", b1:'R_arm'+id, b2:'RF_arm'+id, pos1:[0.1,0,0], pos2:[-0.1,0,0], axe1:[0,1,0], axe2:[0,1,0], collision:collision },
 
-    add({type:type, size:[0.1,0.2,0.1], pos:[p.x-0.06,p.y-0.4,p.z], rot:[0,0,-20], mass:mass, name:'L_leg'+id });
-    add({type:type, size:[0.08,0.2,0.08], pos:[p.x-0.15,p.y-0.7,p.z], rot:[0,0,-20], mass:mass, name:'LF_leg'+id });
+        // leg
 
-    add({type:type, size:[0.1,0.2,0.1], pos:[p.x+0.06,p.y-0.4,p.z], rot:[0,0,20], mass:mass, name:'R_leg'+id });
-    add({type:type, size:[0.08,0.2,0.08], pos:[p.x+0.15,p.y-0.7,p.z], rot:[0,0,20], mass:mass, name:'RF_leg'+id });
+        { type:type, size:[0.1,0.2,0.1], pos:[p.x-0.06,p.y-0.4,p.z], rot:[0,0,-20], mass:mass, name:'L_leg'+id },
+        { type:type, size:[0.08,0.2,0.08], pos:[p.x-0.15,p.y-0.7,p.z], rot:[0,0,-20], mass:mass, name:'LF_leg'+id },
 
-    joint({type:"joint", b1:'pelvis'+id, b2:'L_leg'+id, pos1:[-0.06,-0.05,0], pos2:[0,0.1,0], limit:[2,60], collision:collision }); 
-    joint({type:"joint", b1:'pelvis'+id, b2:'R_leg'+id, pos1:[0.06,-0.05,0], pos2:[0,0.1,0], limit:[2,60], collision:collision });
+        { type:type, size:[0.1,0.2,0.1], pos:[p.x+0.06,p.y-0.4,p.z], rot:[0,0,20], mass:mass, name:'R_leg'+id },
+        { type:type, size:[0.08,0.2,0.08], pos:[p.x+0.15,p.y-0.7,p.z], rot:[0,0,20], mass:mass, name:'RF_leg'+id },
 
-    joint({type:"joint", b1:'L_leg'+id, b2:'LF_leg'+id, pos1:[0,-0.1,0], pos2:[0,0.1,0], axe1:[1,0,0], axe2:[1,0,0], limit:[2,60], collision:collision});
-    joint({type:"joint", b1:'R_leg'+id, b2:'RF_leg'+id, pos1:[0,-0.1,0], pos2:[0,0.1,0], axe1:[1,0,0], axe2:[1,0,0], limit:[2,60], collision:collision});
+        { type:"joint", b1:'pelvis'+id, b2:'L_leg'+id, pos1:[-0.06,-0.05,0], pos2:[0,0.1,0], limit:[2,60], collision:collision },
+        { type:"joint", b1:'pelvis'+id, b2:'R_leg'+id, pos1:[0.06,-0.05,0], pos2:[0,0.1,0], limit:[2,60], collision:collision },
+
+        { type:"joint", b1:'L_leg'+id, b2:'LF_leg'+id, pos1:[0,-0.1,0], pos2:[0,0.1,0], axe1:[1,0,0], axe2:[1,0,0], limit:[2,60], collision:collision },
+        { type:"joint", b1:'R_leg'+id, b2:'RF_leg'+id, pos1:[0,-0.1,0], pos2:[0,0.1,0], axe1:[1,0,0], axe2:[1,0,0], limit:[2,60], collision:collision },
+
+    ]);
 
 };
