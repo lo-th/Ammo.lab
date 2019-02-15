@@ -1,7 +1,6 @@
 // ball 65 gramme caoutchouc Diameter  50 //: 40, 50, 70, 83 mm
  
-//machine Ryo-Catteau 
-// STRESA Mixing system
+// machine Ryo-Catteau STRESA Mixing system
 // 1 metre diam
 // 2 sets of pales turning opposite side.
 
@@ -14,7 +13,6 @@ function demo() {
     view.hideGrid();
 
     //view.addSky({url:'photo.jpg', hdr:true });
-
 
     view.moveCam({ theta:-30, phi:0, distance:160, target:[0,-20,0] });
 
@@ -33,12 +31,6 @@ function demo() {
 };
 
 function afterLoadGeometry () {
-
-	// load ball map
-    view.addMap('loto.png', 'loto');
-
-    // infinie plane
-    //physic.add({type:'plane', group:1});
 
     var friction = 0.5;
     var bounce = 0.0;
@@ -125,14 +117,7 @@ function afterLoadGeometry () {
         restitution: 0,
     });
 
-    // side wall
-    /*physic.add({type:'box', group:1, size:[100,20,1], pos:[0,10,50.5] });
-    physic.add({type:'box', group:1, size:[100,20,1], pos:[0,10,-50.5] });
-    physic.add({type:'box', group:1, size:[1,20,100], pos:[50.5,10,0] });
-    physic.add({type:'box', group:1, size:[1,20,100], pos:[-50.5,10,0] });
-
-    physic.add({ type:'cylinder', name:'bob', size:[2,4,2], pos:[0,2,0], mass:10, flag:2, kinematic: true, friction:0.01 });
-    */
+    // add balls
     
     var i, x, y, c, l, tmpMat, j = 0;
     for( i = 0; i < 50; i++){
@@ -146,12 +131,10 @@ function afterLoadGeometry () {
         x = -27 + (j*6);
         y = 75 - (l*5.);
 
-    	//x = -27 + (c*6);
-    	//y = 60 + (j*5.2);
         physic.add({ 
         	name:i+i,
         	type:'sphere', 
-        	material: tmpMat,// view.mat.loto,
+        	material: tmpMat,
         	geometry:view.getGeometry( 'million', 'ball' ),
         	size:[2.5], pos:[x, y, -11.6], mass:0.65, state:4, 
         	friction: 0.5, 
@@ -168,11 +151,9 @@ function afterLoadGeometry () {
 	        type:'mesh',
 	        shape:view.getGeometry( 'million', 'L_close' ),
 	        mass:0,
-	        //geometry: view.getGeometry( 'million', '' ),
 	        material:'hide',
 	        friction: friction, 
-	        restitution: bounce,
-	       // kinematic: true,
+	        restitution: bounce
 	    });
 
     	physic.postUpdate = update; 
