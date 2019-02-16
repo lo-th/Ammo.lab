@@ -14,6 +14,7 @@ export var root = {
 	extraGeo: [], // array of extra geometry to delete
 
 	container: null,// THREE scene or group
+	tmpMat: [], // tmp materials
 	mat: {}, // materials object
 	geo: {}, // geometrys object
 

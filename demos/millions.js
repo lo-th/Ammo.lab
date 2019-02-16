@@ -12,7 +12,7 @@ function demo() {
 
     view.hideGrid();
 
-    //view.addSky({url:'photo.jpg', hdr:true });
+    view.addSky({url:'photo.jpg', hdr:true });
 
     view.moveCam({ theta:-15, phi:0, distance:160, target:[34,-16,0] });
 
@@ -155,6 +155,9 @@ function addBall () {
     	tmpMat = view.mat.move.clone();
     	tmpMat.name = 'loto'+i;
     	tmpMat.map = createTexture( i+1 );
+
+        physic.addMat( tmpMat );
+
         l = Math.floor(i/10);
         x = -27 + (j*6);
         y = 75 - (l*5.);
@@ -178,6 +181,9 @@ function addBall () {
         tmpMat = view.mat.move.clone();
         tmpMat.name = 'loto'+i;
         tmpMat.map = createTexture( i+1, true );
+
+        physic.addMat( tmpMat );
+
         l = Math.floor(i/6);
         x = 70 + (j*6);
         y = 25 - (l*5);
@@ -202,13 +208,9 @@ function startSimulation () {
     setTimeout( function(){ 
 
         physic.add({ 
-            name:'close',
-            type:'mesh',
+            name:'close', type:'mesh', mass:0, material:'static',//, material:'hide',
             shape:view.getGeometry( 'million', 'L_close' ),
-            mass:0,
-            material:'hide',
-            friction: 0.5, 
-            restitution: 0.0
+            friction: 0.5, restitution: 0.0
         });
 
         physic.postUpdate = update; 

@@ -165,6 +165,7 @@
 		extraGeo: [], // array of extra geometry to delete
 
 		container: null,// THREE scene or group
+		tmpMat: [], // tmp materials
 		mat: {}, // materials object
 		geo: {}, // geometrys object
 
@@ -2739,15 +2740,18 @@
 	               timer = undefined;
 	            }
 
-	            //contactCallback = [];
+	            // remove all mesh
+	            exports.engine.clear();
+
+	            // remove tmp material
+	            while ( root.tmpMat.length > 0 ) root.tmpMat.pop().dispose();
 
 	            exports.engine.postUpdate = function (){};
-
-	            exports.engine.clear();
 	            
 	            if( refView ) refView.reset();
 
-	            worker.postMessage( { m:'reset', o:{ full:full } });
+	            // clear physic object;
+	            exports.engine.post( 'reset', { full:full } );
 
 	        },
 
@@ -2770,6 +2774,21 @@
 
 
 	        ////////////////////////////
+
+	        addMat : function ( m ) { root.tmpMat.push( m ); },
+
+	        updateTmpMat : function ( envmap, hdr ) {
+	            var i = root.tmpMat.length, m;
+	            while( i-- ){
+	                m = root.tmpMat[i];
+	                if( m.envMap !== undefined ){
+	                    if( m.type === 'MeshStandardMaterial' ) m.envMap = envmap;
+	                    else m.envMap =  hdr ? null : envmap;
+	                    m.needsUpdate = true;
+	                }
+	            }
+	        },
+
 
 	        drive: function ( name ) { this.post('setDrive', { name:name } ); },
 	        move: function ( name ) { this.post('setMove', { name:name } ); },

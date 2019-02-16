@@ -29,9 +29,6 @@ var isWithCode = false;
 function init(){
 
     view = new View();
-
-    //intro.init();
-
     view.init( initAmmo );
 
 }
@@ -49,6 +46,9 @@ function next(){
     physic.setView( view );
     physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / physic ' + physic.getFps() );  }
     physic.getKey = function () { return user.key;  }
+
+    // for update envmap
+    view.extraUpdateMat = physic.updateTmpMat;
 
     editor.init( launch, isWithCode, '#308AFF', 'Ammo.lab' );
 
@@ -108,46 +108,11 @@ function follow ( name, o ) {
 
 function ui ( option ) { editor.setOption( option ); };
 
-/*function add ( o ) { return physic.add( o ); };
 
-//function joint ( o ) { o.type = o.type == undefined ? 'joint' : o.type; physic.add( o ); };
-
-//function character ( o ) { view.character( o ); };
-//function car ( o ) { view.vehicle( o ); };
-
-function drive ( name ) { physic.post('setDrive', { name:name }); };
-function move ( name ) { physic.post('setMove', { name:name }); };
-function angle ( angle ) { physic.post('setAngle', { angle:angle }); };
-
-function substep ( substep ) { physic.post( 'substep', {substep:substep} ) ; };
-
-function tell ( str ) { editor.tell( str ); };
-
-
-
-function load ( name, callback ) { view.loadObject( name, callback ); };
-
-function anchor ( o ) { physic.post( 'addAnchor', o ); };
-
-function gravity ( a ) { physic.post( 'setGravity', {gravity:a} ); };
-
-//function water ( o ) { physic.send( 'gravity', o ); };
-
-function force ( o ) { physic.post('setForces', [o] ); };
-function forceArray ( o ) { physic.post('setForces', o ); };
-
-function matrix ( o ) { physic.post('setMatrix', [o] ); };
-function matrixArray ( o ) { physic.post('setMatrix', o ); };
-
-function set ( o ) { physic.post( 'set', o ); };
-
-//function addContact ( o ) { return physic.post( 'addContact', o ); };
-*/
-
-function remove ( o ) {
+/*function remove ( o ) {
 
     
     physic.post( 'remove', o );
    // view.removeList( o );
 
-};
+};*/
