@@ -1,6 +1,5 @@
 
 // this demo is about randomness and accuracy
-// if you win euromillion with this send me one million ;)
 
 // ball 65 gramme caoutchouc Diameter  50 mm
 // STRESA Mixing system  1 metre diam
@@ -21,7 +20,7 @@ function demo() {
     physic.set({
 
         fps:60,
-        substep:2,// more substep = more accurate simulation default set to 2
+        substep:2,// more substep = more accurate default set to 2
         gravity:[0,-9.8,0],
         worldscale:10,
 
