@@ -1,7 +1,9 @@
-// ball 65 gramme caoutchouc Diameter  50 //: 40, 50, 70, 83 mm
- 
-// machine Ryo-Catteau STRESA Mixing system
-// 1 metre diam
+
+// this demo is about randomness and accuracy
+// if you win euromillion with this send me one million ;)
+
+// ball 65 gramme caoutchouc Diameter  50 mm
+// STRESA Mixing system  1 metre diam
 // 2 sets of pales turning opposite side.
 
 var r = 0;
