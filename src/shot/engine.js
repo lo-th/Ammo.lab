@@ -168,10 +168,11 @@ export var engine = ( function () {
                 case 'initEngine': engine.initEngine(); break;
                 case 'start': engine.start( data ); break;
                 case 'step': engine.step(); break;
-                //case 'ellipsoid': if( refView ) refView.ellipsoidMesh( data.o ); break;
+                //
                 //case 'terrain': terrains.upGeo( data.o.name ); break;
 
                 case 'moveSolid': engine.moveSolid( data.o ); break;
+                case 'ellipsoid': engine.ellipsoidMesh( data.o ); break;
             }
 
         },
@@ -320,6 +321,12 @@ export var engine = ( function () {
         ////////////////////////////
 
         addMat : function ( m ) { root.tmpMat.push( m ); },
+
+        ellipsoidMesh: function ( o ) {
+
+            softBody.createEllipsoid( o );
+
+        },
 
         updateTmpMat : function ( envmap, hdr ) {
             var i = root.tmpMat.length, m;

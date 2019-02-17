@@ -1464,7 +1464,7 @@
 
 					break;
 
-				case 'softEllips': case 'ellipsoid':
+				case 'softEllips':
 
 					//var center = o.center || [ 0, 0, 0]; // start
 					//var p1 = o.radius || [ 3, 3, 3]; // end
@@ -1599,6 +1599,9 @@
 			//if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin );
 
 			body.name = name;
+			body.isSoft = true;
+
+			//console.log( body, sb )
 
 			this.softs.push( body );
 

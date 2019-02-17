@@ -216,7 +216,7 @@ function startSimulation () {
 
         physic.postUpdate = update; 
 
-    }, 2000 );
+    }, 6000 );
 
     setTimeout( wantBall, 8000 );
 
@@ -240,10 +240,10 @@ function haveBall ( name ) {
 	ball.push(name);
 
 	if(ball.length<5){
-		setTimeout( wantBall, 4000 );
+		setTimeout( wantBall, 6000 );
 	} else if(ball.length<7){
         yellow = true;
-        setTimeout( wantBall, 4000 );
+        setTimeout( wantBall, 6000 );
     } else {
 		console.log( ball );
 	}

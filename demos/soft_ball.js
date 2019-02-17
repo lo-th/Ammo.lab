@@ -1,13 +1,15 @@
 function demo() {
 
-    cam ({ theta:120, phi:30, distance:40 });
+    view.moveCam({ theta:120, phi:30, distance:40, target:[0,2,0] });
 
-    add({type:'plane' }); // infinie plane
-    add({ type:'box', size:[40,10,1], pos:[0,4.6,15], rot:[45,0,0], mass:0 });
-    add({ type:'box', size:[40,2,40], pos:[0,-1,0], rot:[0,0,0], mass:0 });
+    physic.set();
 
-    add({ 
-        type:'ellipsoid',
+    physic.add({type:'plane' }); // infinie plane
+    physic.add({ type:'box', size:[40,10,1], pos:[0,4.6,15], rot:[45,0,0], mass:0 });
+    physic.add({ type:'box', size:[40,2,40], pos:[0,-1,0], rot:[0,0,0], mass:0 });
+
+    physic.add({ 
+        type:'softEllips',
         center:[0, 20, 15],
         radius:[3, 5, 3],
         vertices:512,
@@ -26,8 +28,8 @@ function demo() {
 
     });
 
-    add({ 
-        type:'ellipsoid',
+    physic.add({ 
+        type:'softEllips',
         center:[10, 20, 15],
         radius:[3, 3, 3],
         vertices:128,
@@ -45,8 +47,8 @@ function demo() {
         margin:0.1,
     });
 
-    add({ 
-        type:'ellipsoid',
+    physic.add({ 
+        type:'softEllips',
         center:[-10, 20, 15],
         radius:[2, 1, 2],
         vertices:64,

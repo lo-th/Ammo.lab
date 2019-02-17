@@ -188,21 +188,38 @@ Object.assign( SoftBody.prototype, {
 			case 'softCloth': tmp = softCloth( o ); break;
 			case 'softRope': tmp = softRope( o ); break;
 
-			//case 'ellipsoid': tmp = ellipsoid( o ); break;
+			case 'softEllips':// tmp = ellipsoid( o ); 
+                root.post( 'add', o );
+                return;
+            break;
 		}
 
 		mesh = tmp.mesh;
 		o = tmp.o;
 
 		mesh.name = name;
+        mesh.isSoft = true;
 
 
 	    root.container.add( mesh );
         this.softs.push( mesh );
 		map.set( name, mesh );
+
 		root.post( 'add', o );
 
 	},
+
+    createEllipsoid: function ( o ) {
+
+        var mesh = ellipsoid( o );
+        //o = tmp.o;
+
+        mesh.name = o.name;
+        root.container.add( mesh );
+        this.softs.push( mesh );
+        map.set( o.name, mesh );
+
+    },
 
 	/////
 
@@ -390,8 +407,8 @@ function ellipsoid( o ) {
     root.send( 'add', o );
 
 };
-
-function ellipsoidMesh( o ) {
+*/
+export  function ellipsoid( o ) {
 
     var max = o.lng;
     var points = [];
@@ -401,8 +418,11 @@ function ellipsoidMesh( o ) {
     // create temp convex geometry and convert to buffergeometry
     for( i = 0; i<max; i++ ){
         n = i*3;
-        points.push(new THREE.Vector3(ar[n], ar[n+1], ar[n+2]));
+        points.push( new THREE.Vector3(ar[n], ar[n+1], ar[n+2]));
     }
+
+
+
     var gt = new THREE.ConvexGeometry( points );
 
     
@@ -410,7 +430,8 @@ function ellipsoidMesh( o ) {
     var vertices = new Float32Array( max * 3 );
     var order = new Float32Array( max );
     //var normals = new Float32Array( max * 3 );
-    //var uvs  = new Float32Array( max * 2 );
+
+    
 
     
 
@@ -449,34 +470,46 @@ function ellipsoidMesh( o ) {
         indices[n+2] = face.c;
     }
 
+
+    //gt.computeVertexNormals();
+    //gt.computeFaceNormals();
+
+
     //console.log(gtt.vertices.length)
-    var g = new THREE.BufferGeometry();
+    var g = new THREE.BufferGeometry()//.fromDirectGeometry( gt );
+
     g.setIndex( new THREE.BufferAttribute( indices, 1 ) );
-    g.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+    g.addAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
     g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
     g.addAttribute('order', new THREE.BufferAttribute( order, 1 ));
     
     //g.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
-    //g.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+
+    if(gt.uvs){
+        var uvs = new Float32Array( gt.uvs.length * 2 );
+        g.addAttribute( 'uv', new BufferAttribute( uvs, 2 ).copyVector2sArray( gt.uvs ), 2 ) ;
+    }
+    
 
     g.computeVertexNormals();
 
-    this.extraGeo.push( g );
+    root.extraGeo.push( g );
 
 
     gt.dispose();
 
 
     //g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
-    var mesh = new THREE.Mesh( g, this.mat.soft );
+    var mesh = new THREE.Mesh( g, root.mat.soft );
 
     //mesh.idx = view.setIdx( softs.length, 'softs' );
 
-    this.byName[ o.name ] = mesh;
+    //this.byName[ o.name ] = mesh;
 
     //this.setName( o, mesh );
 
     mesh.softType = 3;
+    mesh.isSoft = true;
     mesh.points = g.attributes.position.array.length / 3;
 
     //console.log( mesh.points )
@@ -484,7 +517,9 @@ function ellipsoidMesh( o ) {
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
-    this.scene.add( mesh );
-    this.softs.push( mesh );
+    return mesh;
 
-};*/
+    //this.scene.add( mesh );
+    //this.softs.push( mesh );
+
+};

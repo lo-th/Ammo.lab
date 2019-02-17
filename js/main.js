@@ -12,7 +12,7 @@ var demos = [
     'basic', 'terrain', 'terrainPlus', 'supermaket', 'collision', 'ragdoll',
     'car_advanced', 'car_basic','car_multy', 'car_Breakers',
     'kinematics', 'kineBody',
-    'soft_cloth', 'soft_rope', 'soft_rope2', 'soft_box', 'soft_pig',// 'soft_basic', 'soft_ball',// 'soft_convex',
+    'soft_cloth', 'soft_rope', 'soft_rope2', 'soft_box', 'soft_pig', 'soft_ball',// 'soft_basic', // 'soft_convex',
     'character', 'joints', 'empty',  'asteroid', 'point2point', 'contact', 'testmesh', 'water',
     'mecanum', 'drone', 'millions'
 ];
