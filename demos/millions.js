@@ -88,7 +88,7 @@ function makeBigMAchine () {
     });
 
     physic.add({ 
-        name:'block', type:'box', mass:0, material:'hide',
+        name:'block', type:'box', mass:0, material:'static',
         size:[10,2,10], pos:[0,-48.7,0],
         friction: 0, restitution: 0,
     });
@@ -139,7 +139,7 @@ function makeLittleMAchine () {
     });
 
     physic.add({ 
-        name:'block2', type:'box', mass:0, material:'hide',
+        name:'block2', type:'box', mass:0, material:'static',
         size:[10,2,10], pos:[85,-48.7,0],
         friction: 0, restitution: 0,
     });
@@ -225,17 +225,17 @@ function startSimulation () {
 var yellow = false;
 
 function wantBall () {
-    
-	if( yellow ) physic.matrix( [['block2', [ 85, -48.7, -10 ] ]] );
-    else physic.matrix( [['block', [ 0, -48.7, -10 ] ]] );
+
+    if( yellow ) physic.matrix( [{ name:'block2', pos:[ 85, -48.7, -10 ] }] );
+    else physic.matrix( [{ name:'block', pos:[ 0, -48.7, -10 ] }] );
 	game = 'wantBall';
 
 }
 
 function haveBall ( name ) {
 
-	if( yellow ) physic.matrix( [['block2', [ 85, -48.7, 0 ] ]] );
-    else physic.matrix( [['block', [ 0, -48.7, 0 ] ]] );
+	if( yellow ) physic.matrix( [{ name:'block2', pos:[ 85, -48.7, 0 ] }] );
+    else physic.matrix( [{ name:'block', pos:[ 0, -48.7, 0 ] }] );
 	game = 'haveBall';
 	ball.push(name);
 
@@ -257,10 +257,10 @@ function update () {
 
     physic.matrix([
 
-        ['pale1', [0,0,0], [0,0,r+45], true ],
-        ['pale2', [0,0,0], [0,0,-r], true ],
-        ['pale3', [85,-18,0], [0,0,r+45], true ],
-        ['pale4', [85,-18,0], [0,0,-r], true ],
+        { name:'pale1', pos:[0,0,0],    rot:[0,0,r+45], noVelocity:true },
+        { name:'pale2', pos:[0,0,0],    rot:[0,0,-r],   noVelocity:true },
+        { name:'pale3', pos:[85,-18,0], rot:[0,0,r+45], noVelocity:true },
+        { name:'pale4', pos:[85,-18,0], rot:[0,0,-r],   noVelocity:true },
 
     ]);
 

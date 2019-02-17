@@ -426,6 +426,8 @@ export var engine = ( function () {
 
 		setForces: function ( o ) {
 
+			//if( o.constructor !== Array ) tmpForces.push(o);
+			//else 
 			tmpForces = tmpForces.concat( o );
 
 		},
@@ -436,20 +438,20 @@ export var engine = ( function () {
 
 		},
 
-		applyForces: function ( r ) {
+		applyForces: function ( o ) {
 
-			if ( ! map.has( r[ 0 ] ) ) return;
-			var b = map.get( r[ 0 ] );
+			if ( ! map.has( o.name ) ) return;
+			var b = map.get( o.name );
 
-			var type = r[ 1 ] || 'force';
+			//var type = r[ 1 ] || 'force';
 			var p1 = math.vector3();
 			var p2 = math.vector3();
 
-			if ( r[ 2 ] !== undefined ) p1.fromArray( r[ 2 ] );
-			if ( r[ 3 ] !== undefined ) p2.fromArray( r[ 3 ] );
+			if ( o.direction !== undefined ) p1.fromArray( math.vectomult( o.direction, root.invScale ) );
+			if ( o.distance  !== undefined ) p2.fromArray( math.vectomult( o.distance, root.invScale )  );
 			else p2.zero();
 
-			switch ( type ) {
+			switch ( o.type ) {
 
 				case 'force' : case 0 : b.applyForce( p1, p2 ); break;// force , rel_pos
 				case 'torque' : case 1 : b.applyTorque( p1 ); break;
@@ -459,9 +461,9 @@ export var engine = ( function () {
 				case 'impulse' : case 5 : b.applyImpulse( p1, p2 ); break;// impulse , rel_pos
 				case 'impulseCentral' : case 6 : b.applyCentralImpulse( p1 ); break;
 
-					// joint
+				// joint
 
-				case 'motor' : case 7 : b.enableAngularMotor( true, r[ 2 ][ 0 ], r[ 2 ][ 1 ] ); break; // bool, targetVelocity, maxMotorImpulse
+				case 'motor' : case 7 : b.enableAngularMotor( o.enable || true , o.targetVelocity, o.maxMotor ); break; // bool, targetVelocity float, maxMotorImpulse float
 
 			}
 
@@ -486,83 +488,50 @@ export var engine = ( function () {
 
 		},
 
-		applyMatrix: function ( r ) {
+		applyMatrix: function ( o ) {
 
-			if ( ! map.has( r[ 0 ] ) ) return;
-			var b = map.get( r[ 0 ] );
+			if ( ! map.has( o.name ) ) return;
+			var b = map.get( o.name );
 
-			var isOr = false;
-			var isK = b.isKinematic || false;
+			var t = math.transform();
 
-			if ( r[ 4 ] ) { // keep original position
+			if ( o.keepX || o.keepY || o.keepZ || o.keepRot ) { // keep original position
 
-				var tr = math.transform();
-
-				b.getMotionState().getWorldTransform( tr );
-				var or = [];
-				tr.toArray( or );
-				tr.free();
-				var i = r[ 4 ].length, a;
-
-				isOr = true;
-
-				while ( i -- ) {
-
-					a = r[ 4 ][ i ];
-					if ( a === 'x' ) r[ 1 ][ 0 ] = or[ 0 ] - r[ 1 ][ 0 ];
-					if ( a === 'y' ) r[ 1 ][ 1 ] = or[ 1 ] - r[ 1 ][ 1 ];
-					if ( a === 'z' ) r[ 1 ][ 2 ] = or[ 2 ] - r[ 1 ][ 2 ];
-					if ( a === 'rot' ) r[ 2 ] = [ or[ 3 ], or[ 4 ], or[ 5 ], or[ 6 ] ];
-
-				}
+				b.getMotionState().getWorldTransform( t );
+				var r = [];
+				t.toArray( r );
+				
+				if ( o.keepX === undefined ) o.pos[ 0 ] = r[ 0 ] - o.pos[ 0 ];
+				if ( o.keepY === undefined ) o.pos[ 1 ] = r[ 1 ] - o.pos[ 1 ];
+				if ( o.keepZ === undefined ) o.pos[ 2 ] = r[ 2 ] - o.pos[ 2 ];
+				if ( o.keepRot === undefined ) o.quat = [ r[ 3 ], r[ 4 ], r[ 5 ], r[ 6 ] ];
 
 			}
 
-			var t = math.transform().identity();
+			t.identity();
 
 			// position and rotation
-			if ( r[ 1 ] !== undefined ) {
+			if ( o.pos !== undefined ) {
 
-				r[ 1 ] = math.vectomult( r[ 1 ], root.invScale );
-
-				if ( r[ 2 ] !== undefined ){ 
-					if( r[2].length === 3 ){
-						// is euler degree
-						r[2] = math.eulerToQuadArray( r[2], true );
-					}
-					r[ 1 ] = r[ 1 ].concat( r[ 2 ] );
-				}
-
-				t.fromArray( r[ 1 ] );
+				o.pos = math.vectomult( o.pos, root.invScale );
+				if ( o.rot !== undefined ) o.quat =  math.eulerToQuadArray( o.rot, true );// is euler degree
+				if ( o.quat !== undefined ) o.pos = o.pos.concat( o.quat );
+				t.fromArray( o.pos );
 
 			}
 
-			if(r[3]){
+			if( o.noVelocity ){
 				b.setAngularVelocity( zero );
 				b.setLinearVelocity( zero );
 			}
 
 
-			//else { tmpQuat.fromArray( [2] ); tmpTrans.setRotation( tmpQuat ); }
 
-			if ( ! isK && ! isOr ) {//
+			if( b.isKinematic ) b.getMotionState().setWorldTransform( t );
+			else b.setWorldTransform( t );
+			if( b.isBody ) b.activate();
 
-				// zero force
-				b.setAngularVelocity( zero );
-				b.setLinearVelocity( zero );
-
-			}
-
-			if ( ! isK ) {
-
-				b.setWorldTransform( t );
-				b.activate();
-
-			} else {
-
-				b.getMotionState().setWorldTransform( t );
-
-			}
+			if( b.isSolid ) self.postMessage( { m: 'moveSolid', o:{ name:o.name, pos: math.vectomult( o.pos, root.scale ), quat: o.quat } } );
 
 			t.free();
 
@@ -674,9 +643,8 @@ export var engine = ( function () {
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
 
-			if ( b.isBody || b.isSolid ) rigidBody.remove( name );
+			if ( b.isBody || b.isSolid || b.isKinematic ) rigidBody.remove( name );
 			if ( b.isJoint ) constraint.remove( name );
-
 
 
 		},

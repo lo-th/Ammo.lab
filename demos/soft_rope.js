@@ -49,7 +49,7 @@ function update () {
     bodys.forEach( function ( b, id ) {
 
         if( b.position.y < -3 ){
-            r.push( [ b.name, [ Math.rand(-30,30), 50, Math.rand(-10,10)] ] );
+            r.push( { name:b.name, pos:[ Math.rand(-30,30), 50, Math.rand(-10,10)], noVelocity:true } );
         }
 
     });

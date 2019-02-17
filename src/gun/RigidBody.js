@@ -275,7 +275,7 @@ Object.assign( RigidBody.prototype, {
 
 		var body = new Ammo.btRigidBody( rbInfo );
 
-		body.isKinematic = isKinematic;
+		//body.isKinematic = isKinematic;
 		body.name = name;
 
 		// TODO  body.setCenterOfMassTransform()
@@ -298,7 +298,9 @@ Object.assign( RigidBody.prototype, {
 
 			root.world.addRigidBody( body, o.group || 1, o.mask || - 1 );
 
-			body.isBody = true;
+			if( isKinematic ) body.isKinematic = true;
+			else body.isBody = true;
+
 			this.bodys.push( body );
 
 		}

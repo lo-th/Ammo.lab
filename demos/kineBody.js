@@ -248,7 +248,7 @@ function updateSkeleton () {
         m.decompose( p, q, s );
 
         // apply to physics body
-        r.push( [ name, p.toArray(), q.toArray() ] );
+        r.push( { name:name, pos:p.toArray(), quat:q.toArray() } );
 
     }
 

@@ -170,6 +170,8 @@ export var engine = ( function () {
                 case 'step': engine.step(); break;
                 //case 'ellipsoid': if( refView ) refView.ellipsoidMesh( data.o ); break;
                 //case 'terrain': terrains.upGeo( data.o.name ); break;
+
+                case 'moveSolid': engine.moveSolid( data.o ); break;
             }
 
         },
@@ -337,9 +339,18 @@ export var engine = ( function () {
 
 
         forces: function ( o ) { this.post('setForces', o ); },
-        matrix: function ( o ) { this.post('setMatrix', o ); },
         option: function ( o ) { this.post('setOption', o ); },
         remove: function ( o ) { this.post('setRemove', o ); },
+        matrix: function ( o ) { this.post('setMatrix', o ); },//if( o.constructor !== Array ) o = [ o ]; 
+
+        moveSolid: function ( o ) {
+
+            if ( ! map.has( o.name ) ) return;
+            var b = map.get( o.name );
+            if( o.pos !== undefined ) b.position.fromArray( o.pos );
+            if( o.quat !== undefined ) b.quaternion.fromArray( o.quat );
+
+        },
 
         getBodys: function () {
 

@@ -45,7 +45,7 @@ function update () {
     bodys.forEach( function ( b, id ) {
 
         if( b.position.y < -20 ){
-            r.push( [ b.name, [ Math.rand(-20,20), 100, Math.rand(-20,20)] ] );
+            r.push( { name:b.name, pos: [ Math.rand(-20,20), 100, Math.rand(-20,20)], noVelocity:true } );
         }
 
     });

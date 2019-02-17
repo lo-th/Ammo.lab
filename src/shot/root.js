@@ -18,8 +18,19 @@ export var root = {
 	mat: {}, // materials object
 	geo: {}, // geometrys object
 
+	torad: 0.0174532925199432957,
+
 };
 
 // ROW map
 
 export var map = new Map();
+
+
+export function vectorad( r ) {
+
+    var i = r.length;
+    while(i--) r[i] *= root.torad;
+    return r;
+
+};

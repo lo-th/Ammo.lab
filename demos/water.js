@@ -72,7 +72,7 @@ function update () {
     var r = [];
     var bodys = physic.getBodys();
     bodys.forEach( function ( b, id ) {
-        if( b.position.y < -2 ) r.push( [ b.name, [ Math.rand(-40,40), Math.rand(40,60), Math.rand(-40,40)] ] );
+        if( b.position.y < -2 ) r.push( { name:b.name, pos:[ Math.rand(-40,40), Math.rand(40,60), Math.rand(-40,40)], noVelocity:true } );
     });
     physic.matrix( r );
 

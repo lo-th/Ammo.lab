@@ -70,7 +70,7 @@ function update() {
     bodys.forEach( function( b, id ) {
 
         p = b.position.clone().negate().normalize().multiplyScalar(9.8);
-        r.push( [ b.name, 'force', p.toArray() ] );
+        r.push( { name:b.name, type:'force', direction:p.toArray() } );
 
     });
 

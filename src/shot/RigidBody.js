@@ -1,13 +1,12 @@
 /*global THREE*/
 import { Capsule, geometryInfo } from './Geometry.js';
-import { root, map } from './root.js';
+import { root, map, vectorad } from './root.js';
 
 function RigidBody() {
 
 	this.ID = 0;
 	this.solids = [];
 	this.bodys = [];
-	this.torad = 0.0174532925199432957;
 
 }
 
@@ -83,14 +82,6 @@ Object.assign( RigidBody.prototype, {
 
 	},
 
-	vectorad: function ( r ) {
-
-	    var i = r.length;
-	    while(i--) r[i] *= this.torad;
-	    return r;
-
-	},
-
 	add: function ( o, extra ) {
 
 		o.name = o.name !== undefined ? o.name : 'body' + this.ID ++;
@@ -124,14 +115,14 @@ Object.assign( RigidBody.prototype, {
 	    }
 
 	    // rotation is in degree
-	    o.rot = o.rot === undefined ? [0,0,0] : this.vectorad(o.rot);
+	    o.rot = o.rot === undefined ? [0,0,0] : vectorad(o.rot);
 	    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
 
-	    if( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.vectorad( o.rotA ) ) ).toArray();
-	    if( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.vectorad( o.rotB ) ) ).toArray();
+	    if( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotA ) ) ).toArray();
+	    if( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotB ) ) ).toArray();
 
-	    if( o.angUpper ) o.angUpper = this.vectorad( o.angUpper );
-	    if( o.angLower ) o.angLower = this.vectorad( o.angLower );
+	    if( o.angUpper ) o.angUpper = vectorad( o.angUpper );
+	    if( o.angLower ) o.angLower = vectorad( o.angLower );
 
 	    var mesh = null;
 
@@ -186,7 +177,7 @@ Object.assign( RigidBody.prototype, {
 
 	            if( o.geoRot || o.geoScale ) o.geometry = o.geometry.clone();
 	            // rotation only geometry
-	            if( o.geoRot ) o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray(this.vectorad(o.geoRot))));
+	            if( o.geoRot ) o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( vectorad(o.geoRot))));
 	            // scale only geometry
 	            if( o.geoScale ) o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[0], o.geoScale[1], o.geoScale[2] ) );
 	            

@@ -361,7 +361,7 @@ function decale() {
 
     var p = view.followGroup.position;
 
-    physic.matrix( [[ 'buggy_body', [0,0,0], null, false, ['y', 'rot'] ]] );
+    physic.matrix( { name:'buggy_body', pos:[0,0,0], keepY:true, keepRot:true } );
 
     var terrain = physic.byName('ground');
     terrain.local.x += p.x;

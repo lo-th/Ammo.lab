@@ -76,7 +76,9 @@ function update() {
             s = rs;// rotation
             if(i==1 || i==3) s*=-1; 
         }
-        r.push( [ 'jh'+i, 'motor', [ s, 100] ] );
+        //r.push( [ 'jh'+i, 'motor', [ s, 100] ] );
+        r.push( { name:'jh'+i, type:'motor',  targetVelocity:s, maxMotor:100 } );
+        
     }
 
     // apply forces to bodys

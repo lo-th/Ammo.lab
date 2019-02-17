@@ -169,11 +169,22 @@
 		mat: {}, // materials object
 		geo: {}, // geometrys object
 
+		torad: 0.0174532925199432957,
+
 	};
 
 	// ROW map
 
 	var map = new Map();
+
+
+	function vectorad( r ) {
+
+	    var i = r.length;
+	    while(i--) r[i] *= root.torad;
+	    return r;
+
+	}
 
 	/*global THREE*/
 
@@ -182,7 +193,6 @@
 		this.ID = 0;
 		this.solids = [];
 		this.bodys = [];
-		this.torad = 0.0174532925199432957;
 
 	}
 
@@ -258,14 +268,6 @@
 
 		},
 
-		vectorad: function ( r ) {
-
-		    var i = r.length;
-		    while(i--) r[i] *= this.torad;
-		    return r;
-
-		},
-
 		add: function ( o, extra ) {
 
 			o.name = o.name !== undefined ? o.name : 'body' + this.ID ++;
@@ -299,14 +301,14 @@
 		    }
 
 		    // rotation is in degree
-		    o.rot = o.rot === undefined ? [0,0,0] : this.vectorad(o.rot);
+		    o.rot = o.rot === undefined ? [0,0,0] : vectorad(o.rot);
 		    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
 
-		    if( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.vectorad( o.rotA ) ) ).toArray();
-		    if( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( this.vectorad( o.rotB ) ) ).toArray();
+		    if( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotA ) ) ).toArray();
+		    if( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotB ) ) ).toArray();
 
-		    if( o.angUpper ) o.angUpper = this.vectorad( o.angUpper );
-		    if( o.angLower ) o.angLower = this.vectorad( o.angLower );
+		    if( o.angUpper ) o.angUpper = vectorad( o.angUpper );
+		    if( o.angLower ) o.angLower = vectorad( o.angLower );
 
 		    var mesh = null;
 
@@ -361,7 +363,7 @@
 
 		            if( o.geoRot || o.geoScale ) o.geometry = o.geometry.clone();
 		            // rotation only geometry
-		            if( o.geoRot ) o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray(this.vectorad(o.geoRot))));
+		            if( o.geoRot ) o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( vectorad(o.geoRot))));
 		            // scale only geometry
 		            if( o.geoScale ) o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[0], o.geoScale[1], o.geoScale[2] ) );
 		            
@@ -2628,6 +2630,8 @@
 	                case 'step': exports.engine.step(); break;
 	                //case 'ellipsoid': if( refView ) refView.ellipsoidMesh( data.o ); break;
 	                //case 'terrain': terrains.upGeo( data.o.name ); break;
+
+	                case 'moveSolid': exports.engine.moveSolid( data.o ); break;
 	            }
 
 	        },
@@ -2795,9 +2799,18 @@
 
 
 	        forces: function ( o ) { this.post('setForces', o ); },
-	        matrix: function ( o ) { this.post('setMatrix', o ); },
 	        option: function ( o ) { this.post('setOption', o ); },
 	        remove: function ( o ) { this.post('setRemove', o ); },
+	        matrix: function ( o ) { this.post('setMatrix', o ); },//if( o.constructor !== Array ) o = [ o ]; 
+
+	        moveSolid: function ( o ) {
+
+	            if ( ! map.has( o.name ) ) return;
+	            var b = map.get( o.name );
+	            if( o.pos !== undefined ) b.position.fromArray( o.pos );
+	            if( o.quat !== undefined ) b.quaternion.fromArray( o.quat );
+
+	        },
 
 	        getBodys: function () {
 

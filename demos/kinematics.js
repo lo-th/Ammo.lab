@@ -28,6 +28,6 @@ function demo () {
 
 function rayMove ( m ) {
 
-    physic.matrix( [[ 'bob', [ m.position.x, m.position.y+2, m.position.z ], m.quaternion.toArray() ]]  )
+    physic.matrix( [{ name:'bob', pos:[ m.position.x, m.position.y+2, m.position.z ], quat:m.quaternion.toArray() }] );
 
 };

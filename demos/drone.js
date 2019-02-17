@@ -96,7 +96,7 @@ function update() {
     for( var i=0; i<4; i++ ){
         rotor[i].rotation.y += 0.0174533 * 30;//0.523599;
         p = tmpPos.clone().add(rpos[i]);
-        r.push( [ 'drone', 'force',  force.toArray(), p.toArray() ] );
+        r.push( { name:'drone', type:'force', direction:force.toArray(), distance:p.toArray() } );
         //r.push( [ 'drone', 'impulse',  force.toArray(), p.toArray() ] );
     }
 

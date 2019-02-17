@@ -163,7 +163,7 @@ function applyOption () {
     option.reset = option.restart ? true : false;
 
     if( option.reset ){
-        physic.matrix( [[ 'car_body', [0,4,0], [0,90,0] ]] );
+        physic.matrix( [{ name:'car_body', pos:[0,4,0], rot:[0,90,0] }] );
         option.reset = false;
     }
     
