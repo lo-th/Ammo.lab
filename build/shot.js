@@ -907,7 +907,7 @@
 
 	    if(gt.uvs){
 	        var uvs = new Float32Array( gt.uvs.length * 2 );
-	        g.addAttribute( 'uv', new BufferAttribute( uvs, 2 ).copyVector2sArray( gt.uvs ), 2 ) ;
+	        g.addAttribute( 'uv', new  THREE.BufferAttribute( uvs, 2 ).copyVector2sArray( gt.uvs ), 2 ) ;
 	    }
 	    
 
