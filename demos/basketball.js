@@ -41,6 +41,9 @@ function afterLoadGeometry () {
 
     view.addMap('basket.png', 'basket');
     view.addMap('net.png', 'net');
+    view.addMap('basketball.jpg', 'bball');
+
+
 
     view.mat.net.side = THREE.DoubleSide;
     view.mat.net.transparent = true;
@@ -93,7 +96,7 @@ function afterLoadGeometry () {
 
     // ball
 
-    physic.add({ type:'sphere', name:'ball', size:[12.4], pos:[0,400,0], mass:6.24, friction: friction, restitution:bounce });
+    physic.add({ type:'sphere', name:'ball', size:[12.4], pos:[0,400,0], mass:6.24, friction: friction, restitution:bounce, material:view.mat.bball });
 
     // net
 
