@@ -1,39 +1,43 @@
 function demo() {
 
-    cam ({ azim:90, polar:20, distance:40 });
-    load ( 'test', afterLoad );
+    view.moveCam({ theta:90, phi:20, distance:40, target:[0,2,0] });
+
+    physic.set();
+
+    view.load ( ['test2.sea'], afterLoad, true );
+
+    //load ( 'test', afterLoad );
 
 }
 
 function afterLoad () {
 
-    add({type:'plane'}); // infinie plane
-    //add({ type:'box', size:[40,10,1], pos:[0,4.6,0], rot:[45,0,0], mass:0 });
-    //add({ type:'box', size:[40,2,40], pos:[0,1,-10], rot:[0,0,0], mass:0 });
+    physic.add({type:'plane'}); // infinie plane
+    physic.add({ type:'box', size:[40,10,1], pos:[0,4.6,0], rot:[45,0,0], mass:0 });
+    physic.add({ type:'box', size:[40,2,40], pos:[0,1,-10], rot:[0,0,0], mass:0 });
 
-    var geo = view.getGeo();
+    var geo = view.getGeometry( 'test2', 'ball2' )//view.getGeo();
 
-    add({ 
+    physic.add({ 
+
         type:'softConvex',
-        shape:geo['m6'],
+        shape:geo,
 
-        pos:[0,5,0],
+        pos:[0,10,0],
 
         mass:2,
         state:4,
 
-        viterations: 10,
-        piterations: 10,
-        //citerations:4,
-        //diterations:0,
-
-        kdf: 0.1,// friction
-        kdp: 0.01,// Damping
-        kpr: 200,// Pressure
-
-        // Stiffness
-        klst: 0.5,
-        kast: 0.5,
+        viterations: 10,// Velocities solver iterations 10
+        piterations: 5,// Positions solver iterations 10
+       /* citerations: 4,// Cluster solver iterations 4
+        diterations: 0,// Drift solver iterations 0
+       
+        friction: 0.1,// Dynamic friction coefficient [0,1]
+        restitution: 1,
+        damping: 0.3,// Damping coefficient [0,1]
+        pressure: 0,// Pressure coefficient [-inf,+inf]
+*/
 
         margin:0.05,
     });

@@ -109,6 +109,13 @@ function LandScape( name, o ) {
 	this.tmpData = null;
 	this.dataHeap = null;
 
+	if ( root.scale !== 1 ) {
+
+		o.pos = math.vectomult( o.pos, root.invScale );
+		o.size = math.vectomult( o.size, root.invScale );
+
+	}
+
 	var size = o.size === undefined ? [ 1, 1, 1 ] : o.size;
 	var sample = o.sample === undefined ? [ 64, 64 ] : o.sample;
 	var pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;

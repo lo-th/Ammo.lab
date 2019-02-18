@@ -1446,10 +1446,10 @@ Object.assign( SoftBody.prototype, {
 				var mw = o.size[ 0 ] * 0.5;
 				var mh = o.size[ 2 ] * 0.5;
 
-				p1.fromArray( [ - mw, 0, - mh ] );
-				p2.fromArray( [ mw, 0, - mh ] );
-				p3.fromArray( [ - mw, 0, mh ] );
-				p4.fromArray( [ mw, 0, mh ] );
+				p1.fromArray( [ - mw, 0, - mh ], 0, root.invScale );
+				p2.fromArray( [ mw, 0, - mh ], 0, root.invScale );
+				p3.fromArray( [ - mw, 0, mh ], 0, root.invScale );
+				p4.fromArray( [ mw, 0, mh ], 0, root.invScale );
 
 				body = softBodyHelpers.CreatePatch( worldInfo, p1, p2, p3, p4, o.div[ 0 ], o.div[ 1 ], o.fixed || 0, gendiags );
 				body.softType = 1;
@@ -1458,8 +1458,8 @@ Object.assign( SoftBody.prototype, {
 
 			case 'softRope':
 
-				p1.fromArray( o.start || [ - 10, 0, 0 ] );
-				p2.fromArray( o.end || [ 10, 0, 0 ] );
+				p1.fromArray( o.start || [ - 10, 0, 0 ], 0, root.invScale );
+				p2.fromArray( o.end || [ 10, 0, 0 ], 0, root.invScale );
 
 				var nseg = o.numSegment || 10;
 				nseg -= 2;
@@ -1482,8 +1482,8 @@ Object.assign( SoftBody.prototype, {
 				//var center = o.center || [ 0, 0, 0]; // start
 				//var p1 = o.radius || [ 3, 3, 3]; // end
 
-				p1.fromArray( o.center || [ 0, 0, 0 ] );
-				p2.fromArray( o.radius || [ 3, 3, 3 ] );
+				p1.fromArray( o.center || [ 0, 0, 0 ], 0, root.invScale );
+				p2.fromArray( o.radius || [ 3, 3, 3 ], 0, root.invScale );
 
 				body = softBodyHelpers.CreateEllipsoid( worldInfo, p1, p2, o.vertices || 128 );
 				body.softType = 3;
@@ -1509,31 +1509,58 @@ Object.assign( SoftBody.prototype, {
 
 				break;
 
-			case 'softConvex': // BUG !!
+			/*case 'softConvex': // BUG !!
+
+			    //var j = o.v.length;
+			    //while( j-- ) { o.v[ j ] *= root.invScale; }
 
 				var lng = o.v.length / 3;
-				//console.log(lng)
-				body = softBodyHelpers.CreateFromConvexHull( worldInfo, o.v, lng, o.randomize || true );
-				body.softType = 4;
-
-				// force nodes
-				var i = lng, n;
-				while ( i -- ) {
+				var arr = [];
+				var i = 0, n;
+				
+				for ( i = 0; i<lng; i++ ) {
 
 					n = i * 3;
-					p1.fromArray( o.v, n );
+					p1.fromArray( o.v, n, root.invScale );
+					arr.push( p1.clone() );
+					//body.get_m_nodes().at( i ).set_m_x( p1 );
+					//body.get_m_nodes().at( i ).set_m_x(new Ammo.btVector3(o.v[n], o.v[n+1], o.v[n+2]));
+
+				}
+
+				
+
+
+
+				body = softBodyHelpers.CreateFromConvexHull( worldInfo, arr, lng, o.randomize || false );
+				//body = softBodyHelpers.CreateFromConvexHull( worldInfo, arr, lng, o.randomize || true );
+				//body.generateBendingConstraints( 2 );
+				body.softType = 4;
+
+
+				
+				// free node
+				i = lng;
+				//while ( i -- ) arr[i].free();
+				// force nodes
+				//var i = lng, n;
+				for ( i = 0; i<lng; i++ ) {
+
+					n = i * 3;
+					p1.fromArray( o.v, n, root.invScale );
 					body.get_m_nodes().at( i ).set_m_x( p1 );
 					//body.get_m_nodes().at( i ).set_m_x(new Ammo.btVector3(o.v[n], o.v[n+1], o.v[n+2]));
 
 				}
 
-				break;
+				//console.log( body.get_m_nodes().size(), lng )
 
-			case 'softMesh':
+				break;*/
 
-			    for(var i=0; i<o.v.length; i++) {
-			    	o.v[i] *= root.invScale;//math.vectomult( o.v[i], root.invScale )
-			    }
+			case 'softMesh': case 'softConvex':
+
+			    var j = o.v.length;
+			    while( j-- ) { o.v[ j ] *= root.invScale; }
 
 			    //console.log(o.v)
 
@@ -1601,6 +1628,10 @@ Object.assign( SoftBody.prototype, {
 
 		body.setTotalMass( o.mass || 0, o.fromfaces || false );
 		//body.setPose( true, true );
+		if( o.restitution !== undefined ) body.setRestitution( o.restitution );
+		if( o.rolling !== undefined ) body.setRollingFriction( o.rolling );
+
+		if( o.flag !== undefined ) body.setCollisionFlags( o.flag );
 
 
 		if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin*root.invScale );
@@ -1742,6 +1773,13 @@ function LandScape( name, o ) {
 	this.data = null;
 	this.tmpData = null;
 	this.dataHeap = null;
+
+	if ( root.scale !== 1 ) {
+
+		o.pos = math.vectomult( o.pos, root.invScale );
+		o.size = math.vectomult( o.size, root.invScale );
+
+	}
 
 	var size = o.size === undefined ? [ 1, 1, 1 ] : o.size;
 	var sample = o.sample === undefined ? [ 64, 64 ] : o.sample;

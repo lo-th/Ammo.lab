@@ -6,12 +6,12 @@ export function geometryInfo ( g, type ) {
     var facesOnly = false;
     var withColor = true;
 
-    if(type == 'mesh') facesOnly = true;
-    if(type == 'convex') verticesOnly = true;
+    if(type == 'mesh' || type == 'convex') facesOnly = true;
+    //if(type == 'convex') verticesOnly = true;
 
     var i, j, n, p, n2;
 
-    var tmpGeo = new THREE.Geometry().fromBufferGeometry( g );
+    var tmpGeo = g.isBufferGeometry ? new THREE.Geometry().fromBufferGeometry( g ) : g;
     tmpGeo.mergeVertices();
 
     var totalVertices = g.attributes.position.array.length/3;

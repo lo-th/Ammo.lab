@@ -7,16 +7,14 @@
 	/*global THREE*/
 
 	function geometryInfo ( g, type ) {
-
-	    var verticesOnly = false;
 	    var facesOnly = false;
 
-	    if(type == 'mesh') facesOnly = true;
-	    if(type == 'convex') verticesOnly = true;
+	    if(type == 'mesh' || type == 'convex') facesOnly = true;
+	    //if(type == 'convex') verticesOnly = true;
 
 	    var i, j, n, p, n2;
 
-	    var tmpGeo = new THREE.Geometry().fromBufferGeometry( g );
+	    var tmpGeo = g.isBufferGeometry ? new THREE.Geometry().fromBufferGeometry( g ) : g;
 	    tmpGeo.mergeVertices();
 
 	    var totalVertices = g.attributes.position.array.length/3;
@@ -46,11 +44,6 @@
 	        g.realVertices[ n ] = p.x;
 	        g.realVertices[ n + 1 ] = p.y;
 	        g.realVertices[ n + 2 ] = p.z;
-	    }
-
-	    if( verticesOnly ){ 
-	        tmpGeo.dispose();
-	        return g.realVertices;
 	    }
 
 	    i = numFaces;
@@ -380,6 +373,8 @@
 
 		    }
 
+		    if(o.type ==='highsphere') o.type = 'sphere';
+
 
 		    if( mesh ){
 
@@ -627,7 +622,7 @@
 
 			switch( o.type ) {
 				case 'softMesh': case 'softTriMesh': tmp = softMesh( o, material ); break;
-				case 'softConvex': tmp = softConvex( o, material ); break;
+				case 'softConvex': tmp = softMesh( o, material ); break;
 				case 'softCloth': tmp = softCloth( o, material ); break;
 				case 'softRope': tmp = softRope( o, material ); break;
 
@@ -718,12 +713,16 @@
 	//   SOFT CONVEX
 	//--------------------------------------
 
-	function softConvex( o, material ) {
+	/*export function softConvex( o, material ) {
 
 	    var g = o.shape.clone();
 	    var pos = o.pos || [0,0,0];
+	    var size = o.size || [1,1,1];
+	    var rot = o.rot || [0,0,0];
 
 	    g.translate( pos[0], pos[1], pos[2] );
+	    g.scale( size[0], size[1], size[2] );
+	    // g.applyMatrix( new THREE.Matrix4().makeRotationY(rot[1] *= Math.torad ));
 
 	    geometryInfo( g );
 
@@ -753,7 +752,8 @@
 
 	    return { mesh: mesh, o: o };
 
-	}
+	};*/
+
 
 	function softCloth ( o, material ) {
 

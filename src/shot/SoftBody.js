@@ -198,7 +198,7 @@ Object.assign( SoftBody.prototype, {
 
 		switch( o.type ) {
 			case 'softMesh': case 'softTriMesh': tmp = softMesh( o, material ); break;
-			case 'softConvex': tmp = softConvex( o, material ); break;
+			case 'softConvex': tmp = softMesh( o, material ); break;
 			case 'softCloth': tmp = softCloth( o, material ); break;
 			case 'softRope': tmp = softRope( o, material ); break;
 
@@ -293,12 +293,16 @@ export function softMesh( o, material ) {
 //   SOFT CONVEX
 //--------------------------------------
 
-export function softConvex( o, material ) {
+/*export function softConvex( o, material ) {
 
     var g = o.shape.clone();
     var pos = o.pos || [0,0,0];
+    var size = o.size || [1,1,1];
+    var rot = o.rot || [0,0,0];
 
     g.translate( pos[0], pos[1], pos[2] );
+    g.scale( size[0], size[1], size[2] );
+    // g.applyMatrix( new THREE.Matrix4().makeRotationY(rot[1] *= Math.torad ));
 
     geometryInfo( g );
 
@@ -328,7 +332,7 @@ export function softConvex( o, material ) {
 
     return { mesh: mesh, o: o };
 
-};
+};*/
 
 
 export function softCloth ( o, material ) {

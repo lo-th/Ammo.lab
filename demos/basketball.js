@@ -96,15 +96,45 @@ function afterLoadGeometry () {
 
     // ball
 
-    physic.add({ type:'sphere', name:'ball', size:[12.4], pos:[0,400,0], mass:6.24, friction: friction, restitution:bounce, material:view.mat.bball });
+    physic.add({ type:'highsphere', name:'ball',  size:[12.4], pos:[0,400,0], mass:6.24, friction: friction, restitution:bounce, material:view.mat.bball });
 
     // net
+
+    var customGeomtry = true;
+    var netGeometry;
+
+    if( customGeomtry ){
+
+        var netGeometry = new THREE.CylinderBufferGeometry( 22.5, 22.5, -38, 12, 5, true );
+        netGeometry.translate(0,-19,0);
+        var v = netGeometry.attributes.position.array;
+        var lng = v.length/3;
+
+        for( var i = 0; i<lng; i++ ) {
+            n = i*3;
+            y = Math.floor( v[n+1] );
+            if(y === -8 ) { v[n] *= 0.75; v[n+2] *= 0.75; }
+            if(y === -16 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
+            if(y === -23 ) { v[n] *= 0.4; v[n+2] *= 0.4; }
+            if(y === -31 ) { v[n] *= 0.42; v[n+2] *= 0.42; }
+            if(y === -38 ) { v[n] *= 0.54; v[n+2] *= 0.54; }
+        }
+
+        netGeometry.attributes.position.needsUpdate = true;
+
+    } else {
+
+        netGeometry = view.getGeometry( 'basket', 'B_net' );
+
+    }
+
+    //
 
     physic.add({
 
         name: 'net',
         type:'softMesh',
-        shape:view.getGeometry( 'basket', 'B_net' ),
+        shape:netGeometry,
         material: debug ? debugMat : view.mat.net,
         
         pos:[0,305,0],

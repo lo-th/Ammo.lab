@@ -194,6 +194,8 @@ Object.assign( RigidBody.prototype, {
 
 	    }
 
+	    if(o.type ==='highsphere') o.type = 'sphere';
+
 
 	    if( mesh ){
 
