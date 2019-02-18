@@ -14,7 +14,7 @@ var demos = [
     'kinematics', 'kineBody',
     'soft_cloth', 'soft_rope', 'soft_rope2', 'soft_box', 'soft_pig', 'soft_ball',// 'soft_basic', // 'soft_convex',
     'character', 'joints', 'empty',  'asteroid', 'point2point', 'contact', 'testmesh', 'water',
-    'mecanum', 'drone', 'millions'
+    'mecanum', 'drone', 'millions', 'basketball'
 ];
 
 demos.sort();

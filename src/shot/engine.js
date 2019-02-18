@@ -341,6 +341,8 @@ export var engine = ( function () {
         },
 
 
+
+
         drive: function ( name ) { this.post('setDrive', { name:name } ); },
         move: function ( name ) { this.post('setMove', { name:name } ); },
 
@@ -349,6 +351,8 @@ export var engine = ( function () {
         option: function ( o ) { this.post('setOption', o ); },
         remove: function ( o ) { this.post('setRemove', o ); },
         matrix: function ( o ) { this.post('setMatrix', o ); },//if( o.constructor !== Array ) o = [ o ]; 
+
+        anchor: function ( o ) { this.post('addAnchor', o ); },
 
         moveSolid: function ( o ) {
 

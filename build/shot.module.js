@@ -603,13 +603,27 @@ Object.assign( SoftBody.prototype, {
 		// delete old if same name
 		this.remove( name );
 
+         // material
+
+        var material;
+        if( o.material !== undefined ){ 
+
+            if( o.material.constructor === String ) material = root.mat[o.material];
+            else material = o.material;
+        
+        } else { 
+
+            material = root.mat.soft;
+
+        }
+
 		var tmp, mesh;
 
 		switch( o.type ) {
-			case 'softMesh': case 'softTriMesh': tmp = softMesh( o ); break;
-			case 'softConvex': tmp = softConvex( o ); break;
-			case 'softCloth': tmp = softCloth( o ); break;
-			case 'softRope': tmp = softRope( o ); break;
+			case 'softMesh': case 'softTriMesh': tmp = softMesh( o, material ); break;
+			case 'softConvex': tmp = softConvex( o, material ); break;
+			case 'softCloth': tmp = softCloth( o, material ); break;
+			case 'softRope': tmp = softRope( o, material ); break;
 
 			case 'softEllips':// tmp = ellipsoid( o ); 
                 root.post( 'add', o );
@@ -656,7 +670,7 @@ Object.assign( SoftBody.prototype, {
 //   SOFT TRIMESH
 //--------------------------------------
 
-function softMesh( o ) {
+function softMesh( o, material ) {
 
     var g = o.shape.clone();
     var pos = o.pos || [0,0,0];
@@ -679,7 +693,7 @@ function softMesh( o ) {
     o.i = g.realIndices;
     o.ntri = g.numFaces;
 
-    var material = o.material === undefined ? root.mat.soft : root.mat[o.material];
+    //var material = o.material === undefined ? root.mat.soft : root.mat[o.material];
     var mesh = new THREE.Mesh( g, material );
 
     mesh.castShadow = true;
@@ -698,7 +712,7 @@ function softMesh( o ) {
 //   SOFT CONVEX
 //--------------------------------------
 
-function softConvex( o ) {
+function softConvex( o, material ) {
 
     var g = o.shape.clone();
     var pos = o.pos || [0,0,0];
@@ -711,7 +725,7 @@ function softConvex( o ) {
 
     o.v = g.realVertices;
 
-    var material = o.material === undefined ? root.mat.soft : root.mat[o.material];
+    //var material = o.material === undefined ? root.mat.soft : root.mat[o.material];
     var mesh = new THREE.Mesh( g, material );
     
     mesh.castShadow = true;
@@ -735,7 +749,7 @@ function softConvex( o ) {
 
 }
 
-function softCloth ( o ) {
+function softCloth ( o, material ) {
 
     var div = o.div || [16,16];
     var size = o.size || [100,0,100];
@@ -750,7 +764,7 @@ function softCloth ( o ) {
 
     //var numVerts = g.attributes.position.array.length / 3;
 
-    var mesh = new THREE.Mesh( g, root.mat.soft );
+    var mesh = new THREE.Mesh( g, material );
 
     //mesh.idx = view.setIdx( softs.length, 'softs' );
 
@@ -779,7 +793,7 @@ function softCloth ( o ) {
 //   ROPE
 //--------------------------------------
 
-function softRope ( o ) {
+function softRope ( o, material ) {
 
     //var max = o.numSegment || 10;
     //var start = o.start || [0,0,0];
@@ -800,7 +814,7 @@ function softRope ( o ) {
 
     var g = new THREE.Tubular( o, o.numSeg || 10, o.radius || 0.2, o.numRad || 6, false );
 
-    var mesh = new THREE.Mesh( g, root.mat.soft );
+    var mesh = new THREE.Mesh( g, material );
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -2830,6 +2844,8 @@ var engine = ( function () {
         },
 
 
+
+
         drive: function ( name ) { this.post('setDrive', { name:name } ); },
         move: function ( name ) { this.post('setMove', { name:name } ); },
 
@@ -2838,6 +2854,8 @@ var engine = ( function () {
         option: function ( o ) { this.post('setOption', o ); },
         remove: function ( o ) { this.post('setRemove', o ); },
         matrix: function ( o ) { this.post('setMatrix', o ); },//if( o.constructor !== Array ) o = [ o ]; 
+
+        anchor: function ( o ) { this.post('addAnchor', o ); },
 
         moveSolid: function ( o ) {
 

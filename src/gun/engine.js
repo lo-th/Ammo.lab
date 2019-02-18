@@ -291,7 +291,10 @@ export var engine = ( function () {
 		addAnchor: function ( o ) {
 
 			if ( ! map.has( o.soft ) || ! map.has( o.body ) ) return;
-			map.get( o.soft ).appendAnchor( o.pos, map.get( o.body ), false, o.influence || 0.5 );
+			var collision = o.collision || false;
+			//p1.fromArray(o.pos);
+			map.get( o.soft ).appendAnchor( o.node, map.get( o.body ), collision ? false : true, o.influence || 1 );
+			//p1.free();
 
 		},
 

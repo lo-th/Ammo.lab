@@ -31,13 +31,34 @@ Object.assign( SoftBody.prototype, {
 			while ( j -- ) {
 
 				n = softPoints + ( j * 3 );
-				s.at( j ).get_m_x().toArray( AR, n );
+				s.at( j ).get_m_x().toArray( AR, n, root.scale );
 
 			}
 
 			softPoints += s.size() * 3;
 
 		} );
+
+	},
+
+	getNodes: function ( b ) {
+
+		var list = [];
+
+		var s = b.get_m_nodes(), n, r; // get vertrices list
+		var lng = s.size();
+
+		for ( var j=0; j<lng; j++ ) {
+
+			n = ( j * 3 );
+			r = s.at( j ).get_m_x().toArray();
+			if(r[1]>300) list.push( j )
+			//list.push( r );
+			
+
+		}
+
+		return list;
 
 	},
 
@@ -203,6 +224,12 @@ Object.assign( SoftBody.prototype, {
 
 			case 'softMesh':
 
+			    for(var i=0; i<o.v.length; i++) {
+			    	o.v[i] *= root.invScale;//math.vectomult( o.v[i], root.invScale )
+			    }
+
+			    //console.log(o.v)
+
 				body = softBodyHelpers.CreateFromTriMesh( worldInfo, o.v, o.i, o.ntri, o.randomize || true );
 				body.softType = 5;
 
@@ -265,18 +292,18 @@ Object.assign( SoftBody.prototype, {
 
 		}
 
-		body.setTotalMass( o.mass, o.fromfaces || false );
+		body.setTotalMass( o.mass || 0, o.fromfaces || false );
 		//body.setPose( true, true );
 
 
-		if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin );
+		if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin*root.invScale );
 		
 
 
 		// Soft-soft and soft-rigid collisions
 		root.world.addSoftBody( body, o.group || 1, o.mask || - 1 );
 
-		body.setActivationState( o.state || 1 );
+		body.setActivationState( o.state || 4 );
 
 		body.points = body.get_m_nodes().size();
 
@@ -286,7 +313,7 @@ Object.assign( SoftBody.prototype, {
 		body.name = name;
 		body.isSoft = true;
 
-		//console.log( body, sb )
+		//console.log( body, this.getNodes( body ) )
 
 		this.softs.push( body );
 

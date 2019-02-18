@@ -236,7 +236,7 @@ Object.assign( RigidBody.prototype, {
 
 		}
 
-		if ( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin );
+		if ( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin*root.invScale );
 
 		//console.log(shape.getMargin())
 

@@ -940,7 +940,7 @@
 
 			}
 
-			if ( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin );
+			if ( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin*root.invScale );
 
 			//console.log(shape.getMargin())
 
@@ -1346,13 +1346,32 @@
 				while ( j -- ) {
 
 					n = softPoints + ( j * 3 );
-					s.at( j ).get_m_x().toArray( AR, n );
+					s.at( j ).get_m_x().toArray( AR, n, root.scale );
 
 				}
 
 				softPoints += s.size() * 3;
 
 			} );
+
+		},
+
+		getNodes: function ( b ) {
+
+			var list = [];
+
+			var s = b.get_m_nodes(), r; // get vertrices list
+			var lng = s.size();
+
+			for ( var j=0; j<lng; j++ ) {
+				r = s.at( j ).get_m_x().toArray();
+				if(r[1]>300) list.push( j );
+				//list.push( r );
+				
+
+			}
+
+			return list;
 
 		},
 
@@ -1518,6 +1537,12 @@
 
 				case 'softMesh':
 
+				    for(var i=0; i<o.v.length; i++) {
+				    	o.v[i] *= root.invScale;//math.vectomult( o.v[i], root.invScale )
+				    }
+
+				    //console.log(o.v)
+
 					body = softBodyHelpers.CreateFromTriMesh( worldInfo, o.v, o.i, o.ntri, o.randomize || true );
 					body.softType = 5;
 
@@ -1580,18 +1605,18 @@
 
 			}
 
-			body.setTotalMass( o.mass, o.fromfaces || false );
+			body.setTotalMass( o.mass || 0, o.fromfaces || false );
 			//body.setPose( true, true );
 
 
-			if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin );
+			if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin*root.invScale );
 			
 
 
 			// Soft-soft and soft-rigid collisions
 			root.world.addSoftBody( body, o.group || 1, o.mask || - 1 );
 
-			body.setActivationState( o.state || 1 );
+			body.setActivationState( o.state || 4 );
 
 			body.points = body.get_m_nodes().size();
 
@@ -1601,7 +1626,7 @@
 			body.name = name;
 			body.isSoft = true;
 
-			//console.log( body, sb )
+			//console.log( body, this.getNodes( body ) )
 
 			this.softs.push( body );
 
@@ -3064,7 +3089,10 @@
 			addAnchor: function ( o ) {
 
 				if ( ! map.has( o.soft ) || ! map.has( o.body ) ) return;
-				map.get( o.soft ).appendAnchor( o.pos, map.get( o.body ), false, o.influence || 0.5 );
+				var collision = o.collision || false;
+				//p1.fromArray(o.pos);
+				map.get( o.soft ).appendAnchor( o.node, map.get( o.body ), collision ? false : true, o.influence || 1 );
+				//p1.free();
 
 			},
 
