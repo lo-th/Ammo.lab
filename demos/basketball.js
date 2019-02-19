@@ -54,6 +54,7 @@ function afterLoadGeometry () {
     netMat.normalMap = view.makeTexture( 'net256.png', { repeat:[12,1], flip:false });
 
     view.mat.basket.transparent = true;
+    view.mat.basket.depthWrite = false;
 
     physic.addMat( debugMat );
     physic.addMat( basic );
@@ -118,7 +119,7 @@ function afterLoadGeometry () {
         var v = netGeometry.attributes.position.array;
         var lng = v.length/3;
 
-        for( var i = 0; i<lng; i++ ) {
+        for( var i = 0; i < lng; i++ ) {
             n = i*3;
             y = Math.floor( v[n+1] );
             if(y === -7 ) { v[n] *= 0.92; v[n+2] *= 0.92; }
@@ -126,8 +127,6 @@ function afterLoadGeometry () {
             if(y === -21 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
             if(y === -28 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
             if(y === -35 ) { v[n] *= 0.54; v[n+2] *= 0.54; }
-
-            //if(y>-1) console.log('r', i)
         }
 
         netGeometry.attributes.position.needsUpdate = true;
@@ -176,7 +175,7 @@ function afterLoadGeometry () {
 
     });
 
-
+    // get final vertrices
     var n, topPoint = [];
     var v = physic.byName('net').geometry.realVertices;
     var lng = v.length/3;
