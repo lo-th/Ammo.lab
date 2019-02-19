@@ -63,6 +63,7 @@ export function geometryInfo ( g, type ) {
     //g.setIndex(g.realIndices);
 
     if( facesOnly ){ 
+
         var faces = [];
         i = g.realIndices.length;
         while(i--){

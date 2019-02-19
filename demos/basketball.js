@@ -40,16 +40,19 @@ function afterLoadGeometry () {
     circle.metalness = 0.8;
 
     view.addMap('basket.png', 'basket');
-    view.addMap('net.png', 'net');
+    //view.addMap('net.png', 'net');
     view.addMap('basketball.jpg', 'bball');
 
+    var netMat = view.mat.move.clone();
+    netMat.color.setHex( 0xffffff);
+    netMat.side = THREE.DoubleSide;
+    netMat.depthWrite = false;
+    netMat.transparent = true;
+    netMat.roughness = 0.9;
+    netMat.metalness = 0.1;
+    netMat.map = view.makeTexture( 'net256.png', { repeat:[12,1], flip:false });
+    netMat.normalMap = view.makeTexture( 'net256.png', { repeat:[12,1], flip:false });
 
-
-    view.mat.net.side = THREE.DoubleSide;
-    view.mat.net.transparent = true;
-    view.mat.net.alphaTest = 0.1;
-    view.mat.net.roughness = 0.9;
-    view.mat.net.metalness = 0.1;
     view.mat.basket.transparent = true;
 
     physic.addMat( debugMat );
@@ -101,26 +104,35 @@ function afterLoadGeometry () {
     // net
 
     var customGeomtry = true;
+    var max = 24;
     var netGeometry;
+
+    var tmpGeometry = new THREE.CylinderGeometry( 22.5, 22.5, -35, max, 5, true );
+    tmpGeometry.mergeVertices();
 
     if( customGeomtry ){
 
-        var netGeometry = new THREE.CylinderBufferGeometry( 22.5, 22.5, -38, 12, 5, true );
-        netGeometry.translate(0,-19,0);
+        var netGeometry = new THREE.BufferGeometry().fromGeometry( tmpGeometry );
+        netGeometry.translate(0,-17.5,0);
+        netGeometry.rotateY( Math.PI );
         var v = netGeometry.attributes.position.array;
         var lng = v.length/3;
 
         for( var i = 0; i<lng; i++ ) {
             n = i*3;
             y = Math.floor( v[n+1] );
-            if(y === -8 ) { v[n] *= 0.75; v[n+2] *= 0.75; }
-            if(y === -16 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
-            if(y === -23 ) { v[n] *= 0.4; v[n+2] *= 0.4; }
-            if(y === -31 ) { v[n] *= 0.42; v[n+2] *= 0.42; }
-            if(y === -38 ) { v[n] *= 0.54; v[n+2] *= 0.54; }
+            if(y === -7 ) { v[n] *= 0.92; v[n+2] *= 0.92; }
+            if(y === -14 ) { v[n] *= 0.72; v[n+2] *= 0.72; }
+            if(y === -21 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
+            if(y === -28 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
+            if(y === -35 ) { v[n] *= 0.54; v[n+2] *= 0.54; }
+
+            //if(y>-1) console.log('r', i)
         }
 
         netGeometry.attributes.position.needsUpdate = true;
+
+        tmpGeometry.dispose();
 
     } else {
 
@@ -134,10 +146,10 @@ function afterLoadGeometry () {
 
         name: 'net',
         type:'softMesh',
-        shape:netGeometry,
-        material: debug ? debugMat : view.mat.net,
+        shape: netGeometry,
+        material: debug ? debugMat : netMat,
         
-        pos:[0,305,0],
+        pos:[0,305.5,0],
 
         mass:1,
         state:4,
@@ -164,21 +176,20 @@ function afterLoadGeometry () {
 
     });
 
+
+    var n, topPoint = [];
+    var v = physic.byName('net').geometry.realVertices;
+    var lng = v.length/3;
+    for( var i = 0; i<lng; i++ ){
+        n = i * 3;
+        if( v[n+1] > 305 ) topPoint.push( i );
+    }
+
+
     // attach to circle
-    physic.anchor({ node:60, soft:'net', body:'circle' });
-    physic.anchor({ node:61, soft:'net', body:'circle' });
-    physic.anchor({ node:62, soft:'net', body:'circle' });
-    physic.anchor({ node:63, soft:'net', body:'circle' });
-    physic.anchor({ node:64, soft:'net', body:'circle' });
-    physic.anchor({ node:65, soft:'net', body:'circle' });
-    physic.anchor({ node:66, soft:'net', body:'circle' });
-    physic.anchor({ node:67, soft:'net', body:'circle' });
-    physic.anchor({ node:68, soft:'net', body:'circle' });
-    physic.anchor({ node:69, soft:'net', body:'circle' });
-    physic.anchor({ node:70, soft:'net', body:'circle' });
-    physic.anchor({ node:71, soft:'net', body:'circle' });
-
-
+    for( var i = 0, l = topPoint.length; i<l; i++ ){
+        physic.anchor({ node:topPoint[i], soft:'net', body:'circle' });
+    }
 
     physic.postUpdate = update;
 
