@@ -936,7 +936,7 @@
 
 			    	}
 
-			    	console.log( shape );
+			    	//console.log( shape )
 
 			    	tr.free();
 

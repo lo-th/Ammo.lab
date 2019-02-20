@@ -232,7 +232,7 @@ Object.assign( RigidBody.prototype, {
 
 		    	}
 
-		    	console.log( shape )
+		    	//console.log( shape )
 
 		    	tr.free();
 
