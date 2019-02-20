@@ -63,10 +63,7 @@ function afterLoadGeometry () {
         material: mat.metal,
     });*/
 
-   var shapes = [
-        {type:'box', pos:[0,0,2.7], size:[11.6, 2 , 5.4 ]}
-    ]
-
+    var shapes = [ {type:'box', pos:[0,0,2.7], size:[11.6, 2 , 5.4 ]} ];
     var r = 360 / 24;
     var ra = (Math.PI*2) / 24;
     var x, z, a, radius = 22.3;
@@ -90,9 +87,8 @@ function afterLoadGeometry () {
         material: mat.metal,
     });
 
-    physic.add({ type:'joint_hinge', name:'joint', b1:'base', b2:'circle', pos1:[0,0,8.5], pos2:[0,0,0], axe1:[1,0,0], axe2:[1,0,0], collision:false, limit:[-5,5,0.9,0.3, 0.1], useA:true })
-
-
+    // pivot joint
+    physic.add({ type:'joint_hinge', name:'joint', b1:'base', b2:'circle', pos1:[0,0,8.5], pos2:[0,0,0], axe1:[1,0,0], axe2:[1,0,0], collision:false, limit:[-5,5, 0.9, 0.3, 0.1 ], useA:true })
 
     // ball
 

@@ -1,3 +1,7 @@
+
+
+
+
 function demo() {
 
     physic.set({
@@ -14,14 +18,9 @@ function demo() {
 
 function afterLoadGeometry () {
 
-    //view.hideGrid();
     view.addJoystick();
-
     
-    //physic.send('gravity', {g:[0,0,0]});
-
-    // infinie plane
-    physic.add({type:'plane'});
+    physic.add({type:'plane'});// infinie plane
 
     // physic terrain shape
 
@@ -42,20 +41,44 @@ function afterLoadGeometry () {
 
     //return
 
-    // load buggy map
-    view.addMap('meca_chassis.jpg', 'meca1');
-    view.addMap('meca_wheel.jpg', 'meca2');
-    view.addMap('meca_tools.jpg', 'meca3');
-
-    //var cgh = view.getMesh( 'mecanum', 'meca_chassis_shape' )
+    // make meca material
+    initMaterials();
 
     // mecanum buggy
     buildMecanum();
 
-    follow ('chassis', {distance:20, theta:-90});
+    //follow ('chassis', {distance:20, theta:-90});
 
     view.update = update;
 
+}
+
+function initMaterials () {
+
+    // note: material is not recreated on code edit
+
+    mat['meca1'] = view.material({
+        name:'meca1',
+        roughness: 0.4,
+        metalness: 0.6,
+        map: view.texture( 'meca_chassis.jpg' ),
+    });
+
+    mat['meca2'] = view.material({
+        name:'meca2',
+        roughness: 0.7,
+        metalness: 0.3,
+        map: view.texture( 'meca_wheel.jpg' ),
+        normalMap: view.texture( 'meca_wheel_n.jpg' )
+    });
+
+    mat['meca3'] = view.material({
+        name:'meca3',
+        roughness: 0.2,
+        metalness: 0.8,
+        map: view.texture( 'meca_tools.jpg' ),
+    });
+    
 }
 
 function update() {
@@ -86,6 +109,7 @@ function update() {
 
 };
 
+var mat = {};
 // ! \\ set car speed and direction
 var acc = 5;
 var speed = 0;
@@ -128,14 +152,14 @@ function buildMecanum () {
 
         name:'chassis',
         type:'convex',
-        shape:view.getGeometry( 'mecanum', 'meca_chassis_shape' ),//geo['meca_chassis_shape'],
+        shape:view.getGeometry( 'mecanum', 'meca_chassis_shape' ),
 
         mass:bodyMass,
         size:[size],
         pos:[0, decalY, 0],
 
-        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_chassis' ),//geo['meca_chassis'],
-        material:debug ? undefined : view.mat.meca1,//'meca1',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_chassis' ),
+        material:debug ? undefined : mat.meca1,
         
         state:4,
         group:buggyGroup, 
@@ -212,8 +236,8 @@ function wheelAxis ( n ) {
         mass:massPaddel,
         size:[28*size, 7*size, 80*size],
 
-        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_paddel' ),//geo['meca_paddel'],
-        material:debug ? undefined : view.mat.meca1,//'meca3',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_paddel' ),
+        material:debug ? undefined : mat.meca3,
         geoRot:gr,
         geoSize:[size],
         
@@ -233,8 +257,8 @@ function wheelAxis ( n ) {
         size:[10*size, 10*size, 63*size],
         //size:[3*size, 5*size, 63*size],
 
-        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_padtop' ),//geo['meca_padtop'],
-        material:debug ? undefined : view.mat.meca3,//'meca3',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_padtop' ),
+        material:debug ? undefined : mat.meca3,
         geoSize:[size],
         
         pos:pos1,
@@ -279,8 +303,8 @@ function wheelAxis ( n ) {
             mass:massAxis*0.5,
             size:[23*size, 23*size, 23*size],
 
-            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_av' ),//geo['meca_axis_av'],
-            material:debug ? undefined : view.mat.meca3,//'meca3', 
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_av' ),
+            material:debug ? undefined : mat.meca3,
             geoRot:gr2,
             geoSize:[size],
             
@@ -299,8 +323,8 @@ function wheelAxis ( n ) {
             friction:0.1,
             size:[23*size, 23*size, 23*size],
 
-            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_av2' ),//geo['meca_axis_av2'],
-            material:debug ? undefined : view.mat.meca3,//'meca3',
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_av2' ),
+            material:debug ? undefined : mat.meca3,
             geoRot:gr2,
             geoSize:[size],
 
@@ -334,8 +358,8 @@ function wheelAxis ( n ) {
             friction:0.1,
             size:[23*size, 23*size, 23*size],
 
-            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_ar' ),//geo['meca_axis_ar'],
-            material:debug ? undefined : view.mat.meca3,//'meca3', 
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_ar' ),
+            material:debug ? undefined : mat.meca3,
             geoRot:gr2,
             geoSize:[size],
             
@@ -407,8 +431,8 @@ function spring ( n ) {
         mass:massTop,
         size:[17*size, 17*size, 17*size],
 
-        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_stop' ),//geo['meca_stop'],
-        material:debug ? undefined : view.mat.meca3,//'meca3',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_stop' ),
+        material:debug ? undefined : mat.meca3,
         geoSize:[size],
         geoRot:gr,
 
@@ -425,8 +449,8 @@ function spring ( n ) {
         mass:massLow,
         size:[10*size, 10*size, 10*size],
 
-        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_slow' ),//geo['meca_slow'],
-        material:debug ? undefined : view.mat.meca3,//'meca3',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_slow' ),
+        material:debug ? undefined : mat.meca3,
         geoSize:[size],
         geoRot:gr2,
 
@@ -535,7 +559,7 @@ function wheel ( n ) {
         //size:[56*size, 56*size, 14*size],
 
         type:'convex',
-        shape:view.getGeometry( 'mecanum', 'meca_wheel_shape' ),//geo['meca_wheel_shape'],
+        shape:view.getGeometry( 'mecanum', 'meca_wheel_shape' ),
         size:[size],
 
         mass:massWheel,
@@ -543,8 +567,8 @@ function wheel ( n ) {
         
         //rot:[0,0,90],
         //material:'tmp1',
-        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_wheel_' + ext ),//geo['meca_wheel_'+ext],
-        material:debug ? undefined : view.mat.meca2,//'meca2',
+        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_wheel_' + ext ),
+        material:debug ? undefined : mat.meca2,
         //geoSize:[size],
         //geoRot:[0,R,0],
         //geoScale:GR,
@@ -598,7 +622,7 @@ function wheel ( n ) {
         physic.add({ 
             name:n+'_rr_'+i,
             type:'convex',
-            shape:view.getGeometry( 'mecanum', 'meca_roller_shape' ),//geo['meca_roller_shape'],
+            shape:view.getGeometry( 'mecanum', 'meca_roller_shape' ),
 
             mass:massRoller,
             //friction:0.7,
@@ -607,8 +631,8 @@ function wheel ( n ) {
             rot:axe,
             pos:[x+ position[0], y+ position[1], z],
 
-            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_roller' ),//geo['meca_roller'],
-            material:debug ? undefined : view.mat.meca2,//'meca2',
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_roller' ),
+            material:debug ? undefined : mat.meca2,
             
             state:4,
             
