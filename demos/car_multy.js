@@ -1,3 +1,5 @@
+var carMat;
+
 function demo () {
 
     view.moveCam({ theta:0, phi:10, distance:30, target:[0,1,0] });
@@ -19,11 +21,14 @@ function afterLoad () {
     // infinie plane
     physic.add({type:'plane'});
 
-    // load cars map
-    view.addMap('cars.png', 'cars');
-    view.mat.cars.transparent = true;
-    //view.mat.cars.side = THREE.DoubleSide;
-    //view.mat.cars.shadowSide = false;
+    carMat = view.material({
+        name:'extra',
+        roughness: 0.4,
+        metalness: 0.6,
+        map: view.texture( 'cars.png' ),
+        transparent:true,
+        side: THREE.DoubleSide,
+    });
 
     // create cars
     var g = [];
@@ -71,22 +76,15 @@ function vehicle (id, pos, shapeType) {
 
     var yy = shape.boundingBox.min.y;
 
-    //console.log(shape.boundingBox.min.y)
     
-    //var mesh = new THREE.Group();//view.mergeGeometry([chassis, down]);
 
-    o.material = view.mat.cars;
+    o.material = carMat;
 
-    //mesh.add( new THREE.Mesh( shape, mat.cars ));
-
-    //mesh.add( new THREE.Mesh( chassis, material ));
-    //mesh.add( new THREE.Mesh( down, material ));
-    //if( inside ) mesh.add( new THREE.Mesh( inside, view.mat.move ));
 
     if( inside ) o.geometry = view.mergeGeometry([chassis, down, inside]);
     else o.geometry = view.mergeGeometry([chassis, down]);
 
-    o.wheelMaterial = view.mat.cars;//view.getMat().cars;
+    o.wheelMaterial = carMat;//view.getMat().cars;
 
     // The maximum length of the suspension (metres)
     o.s_length = 0.1;//o.radius;// * 0.5;

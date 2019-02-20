@@ -674,8 +674,7 @@ function wheel ( n ) {
         axe2:[0,0,1],
         motor:[true, wSpeed, 100],
         collision:true,
-
-
+        
     })
 
 

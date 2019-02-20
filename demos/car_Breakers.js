@@ -35,10 +35,15 @@ function afterLoad () {
     physic.add({type:'box', pos:[0,5,-10], size:[19,10, 1], material:'hide'});
 
     // load cars map
-    view.addMap('cars.png', 'cars');
-    view.mat.cars.transparent = true;
-    /*view.mat.cars.side = THREE.DoubleSide;
-    view.mat.cars.shadowSide = false;*/
+
+    var carMat = view.material({
+        name:'extra',
+        roughness: 0.4,
+        metalness: 0.6,
+        map: view.texture( 'cars.png' ),
+        transparent:true,
+        side: THREE.DoubleSide,
+    });
 
     for (var i = 0; i < 200; i++){
 
@@ -80,7 +85,7 @@ function afterLoad () {
             size:[0.5],
             pos:[Math.rand(-5,5), 10+(i*2), Math.rand(-5,5)],
             rot:[r, 0,0],
-            material:view.mat.cars
+            material:carMat,
 
         });
     }
