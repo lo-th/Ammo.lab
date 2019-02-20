@@ -198,7 +198,9 @@ export var engine = ( function () {
             // create tranfere array if buffer
             if( isBuffer ) root.Ar = new Float32Array( root.ArMax );
 
-            if ( !timer ) timer = requestAnimationFrame( engine.sendData );
+            engine.sendData( 0 );
+
+            //if ( !timer ) timer = requestAnimationFrame( engine.sendData );
            
         },
 
@@ -280,6 +282,8 @@ export var engine = ( function () {
 
         reset: function( full ) {
 
+            console.log('reset', full);
+
             if ( timer ) {
                window.cancelAnimationFrame( timer );
                timer = undefined;
@@ -293,7 +297,7 @@ export var engine = ( function () {
 
             engine.postUpdate = function (){};
             
-            if( refView ) refView.reset();
+            if( refView ) refView.reset( full );
 
             // clear physic object;
             engine.post( 'reset', { full:full } );
@@ -454,6 +458,7 @@ export var engine = ( function () {
                 sphere:     new THREE.SphereBufferGeometry( 1, 16, 12 ),
                 highsphere: new THREE.SphereBufferGeometry( 1, 32, 24 ),
                 cylinder:   new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
+                hardcylinder: new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
             };
 
             geo.circle.rotateX( -PI90 );

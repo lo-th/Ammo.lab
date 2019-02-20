@@ -289,7 +289,7 @@ Object.assign( RigidBody.prototype, {
 	    }
 
 	    // rotation is in degree
-	    o.rot = o.rot === undefined ? [0,0,0] : vectorad(o.rot);
+	    o.rot = o.rot === undefined ? [0,0,0] : vectorad( o.rot );
 	    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
 
 	    if( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotA ) ) ).toArray();
@@ -324,8 +324,47 @@ Object.assign( RigidBody.prototype, {
 	    }
 
 	    // geometry
-	    
-	    if ( o.type === 'mesh' || o.type === 'convex' ){
+
+	    if( o.type === 'compound') {
+
+	    	var m, g;
+		    for( var i = 0; i < o.shapes.length; i++ ){
+
+	    		g = o.shapes[i];
+	    		g.size = g.size === undefined ? [ 1, 1, 1 ] : g.size;
+	    		if( g.size.length === 1 ){ g.size[1] = g.size[0]; }
+	            if( g.size.length === 2 ){ g.size[2] = g.size[0]; }
+	            g.pos = g.pos === undefined ? [ 0, 0, 0 ] : g.pos;
+	    		g.rot = g.rot === undefined ? [0,0,0] : vectorad( g.rot );
+                g.quat = g.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( g.rot ) ).toArray() : g.quat;
+
+	    	}
+
+	    	mesh = o.geometry ? new THREE.Mesh( o.geometry, material ) : new THREE.Group();
+
+	    	if( o.geometry )  root.extraGeo.push( o.geometry );
+	    	 
+	    	if( !o.geometry || o.debug ){
+
+	    		//mesh = new THREE.Group();
+	    		mesh.material = material;// TODO fix
+		    	var m, g;
+		    	for( var i = 0; i < o.shapes.length; i++ ){
+
+		    		g = o.shapes[i];
+		    		if( g.type === 'box' ) g.type = 'hardbox';
+		    		if( g.type === 'cylinder' ) g.type = 'hardcylinder';
+		    		m = new THREE.Mesh( g.type === 'capsule' ? new Capsule( o.size[0] , o.size[1]*0.5 ) : root.geo[g.type], o.debug ? root.mat.debug : material );
+		    		m.scale.fromArray( g.size );
+		    		m.position.fromArray( g.pos );
+	                m.quaternion.fromArray( g.quat );
+
+		    		mesh.add( m );
+
+		    	}
+	    	}
+
+	    } else if ( o.type === 'mesh' || o.type === 'convex' ){
 
 	        if( o.shape ) {
 	            o.v = geometryInfo( o.shape, o.type );
@@ -2704,7 +2743,9 @@ var engine = ( function () {
             // create tranfere array if buffer
             if( isBuffer ) root.Ar = new Float32Array( root.ArMax );
 
-            if ( !timer ) timer = requestAnimationFrame( engine.sendData );
+            engine.sendData( 0 );
+
+            //if ( !timer ) timer = requestAnimationFrame( engine.sendData );
            
         },
 
@@ -2786,6 +2827,8 @@ var engine = ( function () {
 
         reset: function( full ) {
 
+            console.log('reset', full);
+
             if ( timer ) {
                window.cancelAnimationFrame( timer );
                timer = undefined;
@@ -2799,7 +2842,7 @@ var engine = ( function () {
 
             engine.postUpdate = function (){};
             
-            if( refView ) refView.reset();
+            if( refView ) refView.reset( full );
 
             // clear physic object;
             engine.post( 'reset', { full:full } );
@@ -2959,6 +3002,7 @@ var engine = ( function () {
                 sphere:     new THREE.SphereBufferGeometry( 1, 16, 12 ),
                 highsphere: new THREE.SphereBufferGeometry( 1, 32, 24 ),
                 cylinder:   new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
+                hardcylinder: new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
             };
 
             geo.circle.rotateX( -PI90 );

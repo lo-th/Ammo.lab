@@ -190,8 +190,53 @@ Object.assign( RigidBody.prototype, {
 				break;
 
 			case 'compound':
+
 				shape = new Ammo.btCompoundShape();
-				break;
+				var m, g, s, tr = math.transform();
+
+		    	for( var i = 0; i < o.shapes.length; i++ ){
+
+		    		g = o.shapes[i];
+
+		    		if ( root.scale !== 1 ) {
+
+						g.pos = math.vectomult( g.pos, root.invScale );
+						g.size = math.vectomult( g.size, root.invScale );
+
+					}
+
+					// apply position and rotation
+		            tr.identity().fromArray( g.pos.concat( g.quat ) );
+
+		    		switch ( g.type ) {
+		    			case 'box': case 'hardbox':
+							p4.setValue( g.size[ 0 ] * 0.5, g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
+							s = new Ammo.btBoxShape( p4 );
+						break;
+						case 'sphere':
+							s = new Ammo.btSphereShape( g.size[ 0 ] );
+						break;
+						case 'cylinder': case 'hardcylinder':
+							p4.setValue( g.size[ 0 ], g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
+							s = new Ammo.btCylinderShape( p4 );
+						break;
+						case 'cone':
+							s = new Ammo.btConeShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
+						break;
+						case 'capsule':
+							s = new Ammo.btCapsuleShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
+						break;
+		    		}
+
+		    		shape.addChildShape( tr, s );
+
+		    	}
+
+		    	console.log( shape )
+
+		    	tr.free();
+
+			break;
 
 			case 'mesh':
 				var mTriMesh = new Ammo.btTriangleMesh();

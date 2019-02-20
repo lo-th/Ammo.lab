@@ -14,7 +14,8 @@ var demos = [
     'kinematics', 'kineBody',
     'soft_cloth', 'soft_rope', 'soft_rope2', 'soft_box', 'soft_pig', 'soft_ball', 'soft_convex',// 'soft_basic', // ,
     'character', 'joints', 'empty',  'asteroid', 'point2point', 'contact', 'testmesh', 'water',
-    'mecanum', 'drone', 'millions', 'basketball'
+    'mecanum', 'drone', 'millions', 'basketball',
+    'compound',
 ];
 
 demos.sort();
@@ -76,16 +77,9 @@ function ready () {
 
 }
 
-function launch ( name ) {
-
-    var full = true;
-    var hash = location.hash.substr( 1 );
-    if( hash === name ) full = false;
-
-    location.hash = name;
+function launch ( name, full ) {
 
     physic.reset( full );
-
     demo = new window['demo'];
 
 }

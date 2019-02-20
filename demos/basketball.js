@@ -1,11 +1,13 @@
 
-var debug =  false;
+var debug = false;
+var mat = {};
+var ball;
 
 function demo() {
 
     view.hideGrid();
 
-    view.addSky({url:'photo.jpg', hdr:true });
+    view.addSky({ url:'photo.jpg', hdr:true });
 
     view.moveCam({ theta:-20, phi:0, distance:150, target:[0,305,0] });
 
@@ -16,7 +18,6 @@ function demo() {
         gravity:[0,-9.8,0],
         worldscale:10,
 
-
     })
 
     view.load ( ['basket.sea'], afterLoadGeometry, true, true );
@@ -25,43 +26,10 @@ function demo() {
 
 function afterLoadGeometry () {
 
-    var debugMat = view.mat.move.clone();
-    debugMat.color.setHex( 0x111111);
-    debugMat.wireframe = true;
-
-    var basic = view.mat.move.clone();
-    basic.color.setHex( 0x111111);
-    basic.roughness = 0.4;
-    basic.metalness = 0.6;
-
-    var circle = view.mat.move.clone();
-    circle.color.setHex( 0xbd2b1c);
-    circle.roughness = 0.2;
-    circle.metalness = 0.8;
-
-    view.addMap('basket.png', 'basket');
-    //view.addMap('net.png', 'net');
-    view.addMap('basketball.jpg', 'bball');
-
-    var netMat = view.mat.move.clone();
-    netMat.color.setHex( 0xffffff);
-    netMat.side = THREE.DoubleSide;
-    netMat.depthWrite = false;
-    netMat.transparent = true;
-    netMat.roughness = 0.9;
-    netMat.metalness = 0.1;
-    netMat.map = view.makeTexture( 'net256.png', { repeat:[12,1], flip:false });
-    netMat.normalMap = view.makeTexture( 'net256.png', { repeat:[12,1], flip:false });
-
-    view.mat.basket.transparent = true;
-    view.mat.basket.depthWrite = false;
-
-    physic.addMat( debugMat );
-    physic.addMat( basic );
-    physic.addMat( circle );
+    initMaterials();
 
     var bounce = 0.6;
-    var friction = 0.5
+    var friction = 0.5;
 
     physic.add({ type:'plane', friction:0.5, restitution:bounce }); // infinie plane
 
@@ -69,14 +37,14 @@ function afterLoadGeometry () {
         name:'foot', type:'mesh', mass:0,
         shape:view.getGeometry( 'basket', 'B_foot' ),
         friction: friction, restitution: bounce,
-        material: basic,
+        material: mat.base,
     });
 
     physic.add({ 
         name:'panel', type:'mesh', mass:0,
         shape:view.getGeometry( 'basket', 'B_panel' ),
         friction: friction, restitution: bounce,
-        material:view.mat.basket,
+        material:mat.panel,
     });
 
     physic.add({ 
@@ -84,25 +52,58 @@ function afterLoadGeometry () {
         shape:view.getGeometry( 'basket', 'B_base' ),
         pos:[0,305,-37.5],
         friction: friction, restitution: bounce,
-        material:circle,
+        material: mat.metal,
     });
 
-    physic.add({ 
-        name:'circle', type:'mesh', mass:0,
+    /*physic.add({ 
+        name:'circle', type:'mesh', mass:10,
         shape:view.getGeometry( 'basket', 'B_circle' ),
         pos:[0,305,-28],
         friction: friction, restitution: bounce,
-        material:circle,
+        material: mat.metal,
+    });*/
+
+   var shapes = [
+        {type:'box', pos:[0,0,2.7], size:[11.6, 2 , 5.4 ]}
+    ]
+
+    var r = 360 / 24;
+    var ra = (Math.PI*2) / 24;
+    var x, z, a, radius = 22.3;
+
+    for(var i = 0; i < 24; i++ ){
+
+        a = (ra*i) + (ra*0.5);
+        x = 0 + (radius * Math.cos( a ));
+        z = 28 + (radius * Math.sin( a ));
+        shapes.push(  {type:'cylinder', pos:[x,0,z], size:[1, 5.87, 1 ], rot:[0,90-((r*i) + (r*0.5)),90 ] } )
+
+    }
+
+    physic.add({ 
+        name:'circle', type:'compound', mass:10,
+        geometry:view.getGeometry( 'basket', 'B_circle' ),
+        shapes:shapes,
+        debug:false,
+        pos:[0,305,-28],
+        friction: friction, restitution: bounce,
+        material: mat.metal,
     });
 
+    physic.add({ type:'joint_hinge', name:'joint', b1:'base', b2:'circle', pos1:[0,0,8.5], pos2:[0,0,0], axe1:[1,0,0], axe2:[1,0,0], collision:false, limit:[-5,5,0.9,0.3, 0.1], useA:true })
 
 
 
     // ball
 
-    physic.add({ type:'highsphere', name:'ball',  size:[12.4], pos:[0,400,0], mass:6.24, friction: friction, restitution:bounce, material:view.mat.bball });
+    ball = physic.add({ 
+        name:'ball', type:'highsphere', mass:6.24, 
+        size:[12.4], pos:[0,400,0], 
+        friction: friction, restitution:bounce, 
+        material: mat.bball 
+    });
 
-    // net
+    // net geometry
 
     var customGeomtry = true;
     var max = 24;
@@ -113,7 +114,7 @@ function afterLoadGeometry () {
 
     if( customGeomtry ){
 
-        var netGeometry = new THREE.BufferGeometry().fromGeometry( tmpGeometry );
+        netGeometry = new THREE.BufferGeometry().fromGeometry( tmpGeometry );
         netGeometry.translate(0,-17.5,0);
         netGeometry.rotateY( Math.PI );
         var v = netGeometry.attributes.position.array;
@@ -146,19 +147,19 @@ function afterLoadGeometry () {
         name: 'net',
         type:'softMesh',
         shape: netGeometry,
-        material: debug ? debugMat : netMat,
+        material: debug ? mat.debugMat : mat.net,
         
         pos:[0,305.5,0],
 
         mass:1,
         state:4,
 
-        viterations: 10,// Velocities solver iterations 10
-        piterations: 5,// Positions solver iterations 10
-        citerations: 4,// Cluster solver iterations 4
+        viterations: 30,// Velocities solver iterations 10
+        piterations: 30,// Positions solver iterations 10
+        citerations: 10,// Cluster solver iterations 4
         diterations: 0,// Drift solver iterations 0
        
-        friction: 0.5,// Dynamic friction coefficient [0,1]
+        friction: 0.3,// Dynamic friction coefficient [0,1]
         damping: 0.3,// Damping coefficient [0,1]
         pressure: 0,// Pressure coefficient [-inf,+inf]
 
@@ -192,24 +193,67 @@ function afterLoadGeometry () {
 
     physic.postUpdate = update;
 
-
 }
 
 function update () {
 
-    var r = [];
-    // get list of rigidbody
-    var bodys = physic.getBodys();
+    //var ball = physic.byName('ball');
+    if( ball.position.y < 80 ) physic.matrix( [ { name:'ball', pos: [ Math.rand(-20,20), 360, Math.rand(-20,20)], noVelocity:true } ] );
 
-    bodys.forEach( function ( b, id ) {
+}
 
-        if( b.name==='ball' && b.position.y < 80 ){
-            r.push( { name:b.name, pos: [ Math.rand(-20,20), 360, Math.rand(-20,20)], noVelocity:true } );
-        }
+function initMaterials () {
 
+    // note: material is not recreated on code edit
+
+    mat['debugMat'] = view.material({
+        name:'debugMat',
+        color: 0x000000,
+        wireframe:true
+    }, 'Basic' );
+
+    mat['base'] = view.material({
+        name:'base',
+        color: 0x111111,
+        roughness: 0.4,
+        metalness: 0.6,
     });
 
-    // apply new matrix to bodys
-    physic.matrix( r );
+    mat['metal'] = view.material({
+        name:'metal',
+        color: 0xbd2b1c,
+        roughness: 0.2,
+        metalness: 0.8,
+    });
+
+    mat['panel'] = view.material({
+        name:'panel',
+        roughness: 0.5,
+        metalness: 0.6,
+        map: view.texture( 'basket.png', { flip:false }),
+        transparent: true,
+        depthWrite: false,
+    });
+
+    mat['bball'] = view.material({
+        name:'bball',
+        roughness: 0.4,
+        metalness: 0.7,
+        map: view.texture( 'bball.jpg', { repeat:[2,1], flip:false }),
+        bumpMap: view.texture( 'bball_b.jpg', { repeat:[2,1], flip:false }),
+        bumpScale: 0.5,
+    });
+
+    mat['net'] = view.material({
+        name:'net',
+        roughness: 0.9,
+        metalness: 0.2,
+        map: view.texture( 'net256.png', { repeat:[12,1], flip:false }),
+        bumpMap: view.texture( 'net256_n.png', { repeat:[12,1], flip:false }),
+        transparent: true,
+        depthWrite: false,
+        alphaTest: 0.1,
+        side: THREE.DoubleSide,
+    });
 
 }

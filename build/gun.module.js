@@ -888,8 +888,53 @@ Object.assign( RigidBody.prototype, {
 				break;
 
 			case 'compound':
+
 				shape = new Ammo.btCompoundShape();
-				break;
+				var g, s, tr = math.transform();
+
+		    	for( var i = 0; i < o.shapes.length; i++ ){
+
+		    		g = o.shapes[i];
+
+		    		if ( root.scale !== 1 ) {
+
+						g.pos = math.vectomult( g.pos, root.invScale );
+						g.size = math.vectomult( g.size, root.invScale );
+
+					}
+
+					// apply position and rotation
+		            tr.identity().fromArray( g.pos.concat( g.quat ) );
+
+		    		switch ( g.type ) {
+		    			case 'box': case 'hardbox':
+							p4.setValue( g.size[ 0 ] * 0.5, g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
+							s = new Ammo.btBoxShape( p4 );
+						break;
+						case 'sphere':
+							s = new Ammo.btSphereShape( g.size[ 0 ] );
+						break;
+						case 'cylinder': case 'hardcylinder':
+							p4.setValue( g.size[ 0 ], g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
+							s = new Ammo.btCylinderShape( p4 );
+						break;
+						case 'cone':
+							s = new Ammo.btConeShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
+						break;
+						case 'capsule':
+							s = new Ammo.btCapsuleShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
+						break;
+		    		}
+
+		    		shape.addChildShape( tr, s );
+
+		    	}
+
+		    	console.log( shape );
+
+		    	tr.free();
+
+			break;
 
 			case 'mesh':
 				var mTriMesh = new Ammo.btTriangleMesh();
@@ -2921,7 +2966,7 @@ var engine = ( function () {
 	var isSoft = false;
 	//var gravity = null;
 
-	var solver, solverSoft, collision, dispatcher, broadphase;
+	var solver, solverSoft, collisionConfig, dispatcher, broadphase;
 
 	var tmpForces = [];
 	var tmpMatrix = [];
@@ -3085,6 +3130,16 @@ var engine = ( function () {
 				engine.createWorld( o.option );
 				engine.set( o.option );
 
+				rigidBody = new RigidBody();
+				constraint = new Constraint();
+				softBody = new SoftBody();
+				terrains = new Terrain();
+				vehicles = new Vehicle();
+				character = new Character();
+				collision = new Collision();
+
+				vehicles.addExtra = rigidBody.add;
+
 				self.postMessage( { m: 'initEngine' } );
 
 			} );
@@ -3165,8 +3220,8 @@ var engine = ( function () {
 
 			solver = new Ammo.btSequentialImpulseConstraintSolver();
 			solverSoft = isSoft ? new Ammo.btDefaultSoftBodySolver() : null;
-			collision = isSoft ? new Ammo.btSoftBodyRigidBodyCollisionConfiguration() : new Ammo.btDefaultCollisionConfiguration();
-			dispatcher = new Ammo.btCollisionDispatcher( collision );
+			collisionConfig = isSoft ? new Ammo.btSoftBodyRigidBodyCollisionConfiguration() : new Ammo.btDefaultCollisionConfiguration();
+			dispatcher = new Ammo.btCollisionDispatcher( collisionConfig );
 
 			switch ( o.broadphase === undefined ? 2 : o.broadphase ) {
 
@@ -3176,17 +3231,7 @@ var engine = ( function () {
 
 			}
 
-			root.world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collision, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
-
-			rigidBody = new RigidBody();
-			constraint = new Constraint();
-			softBody = new SoftBody();
-			terrains = new Terrain();
-			vehicles = new Vehicle();
-			character = new Character();
-			collision = new Collision();
-
-			vehicles.addExtra = rigidBody.add;
+			root.world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collisionConfig, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfig );
 
 		},
 
@@ -3195,9 +3240,10 @@ var engine = ( function () {
 			Ammo.destroy( root.world );
 			Ammo.destroy( solver );
 			if ( solverSoft !== null ) Ammo.destroy( solverSoft );
-			Ammo.destroy( collision );
+			Ammo.destroy( collisionConfig );
 			Ammo.destroy( dispatcher );
 			Ammo.destroy( broadphase );
+			
 			root.world = null;
 
 		},

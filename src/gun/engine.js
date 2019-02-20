@@ -91,7 +91,7 @@ export var engine = ( function () {
 	var isSoft = false;
 	//var gravity = null;
 
-	var solver, solverSoft, collision, dispatcher, broadphase;
+	var solver, solverSoft, collisionConfig, dispatcher, broadphase;
 
 	var tmpForces = [];
 	var tmpMatrix = [];
@@ -255,6 +255,16 @@ export var engine = ( function () {
 				engine.createWorld( o.option );
 				engine.set( o.option );
 
+				rigidBody = new RigidBody();
+				constraint = new Constraint();
+				softBody = new SoftBody();
+				terrains = new Terrain();
+				vehicles = new Vehicle();
+				character = new Character();
+				collision = new Collision();
+
+				vehicles.addExtra = rigidBody.add;
+
 				self.postMessage( { m: 'initEngine' } );
 
 			} );
@@ -335,8 +345,8 @@ export var engine = ( function () {
 
 			solver = new Ammo.btSequentialImpulseConstraintSolver();
 			solverSoft = isSoft ? new Ammo.btDefaultSoftBodySolver() : null;
-			collision = isSoft ? new Ammo.btSoftBodyRigidBodyCollisionConfiguration() : new Ammo.btDefaultCollisionConfiguration();
-			dispatcher = new Ammo.btCollisionDispatcher( collision );
+			collisionConfig = isSoft ? new Ammo.btSoftBodyRigidBodyCollisionConfiguration() : new Ammo.btDefaultCollisionConfiguration();
+			dispatcher = new Ammo.btCollisionDispatcher( collisionConfig );
 
 			switch ( o.broadphase === undefined ? 2 : o.broadphase ) {
 
@@ -346,17 +356,7 @@ export var engine = ( function () {
 
 			}
 
-			root.world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collision, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collision );
-
-			rigidBody = new RigidBody();
-			constraint = new Constraint();
-			softBody = new SoftBody();
-			terrains = new Terrain();
-			vehicles = new Vehicle();
-			character = new Character();
-			collision = new Collision();
-
-			vehicles.addExtra = rigidBody.add;
+			root.world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collisionConfig, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfig );
 
 		},
 
@@ -365,9 +365,10 @@ export var engine = ( function () {
 			Ammo.destroy( root.world );
 			Ammo.destroy( solver );
 			if ( solverSoft !== null ) Ammo.destroy( solverSoft );
-			Ammo.destroy( collision );
+			Ammo.destroy( collisionConfig );
 			Ammo.destroy( dispatcher );
 			Ammo.destroy( broadphase );
+			
 			root.world = null;
 
 		},
