@@ -84,7 +84,7 @@ function afterLoadGeometry () {
         name:'circle', type:'compound', mass:10,
         geometry:view.getGeometry( 'basket', 'B_circle' ),
         shapes:shapes,
-        debug:false,
+        debug:true,
         pos:[0,305,-28],
         friction: friction, restitution: bounce,
         material: mat.metal,
