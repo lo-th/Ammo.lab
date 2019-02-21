@@ -153,11 +153,12 @@ function addBall () {
     var i, x, y, l, tmpMat, j = 0;
     for( i = 0; i < 50; i++){
 
-    	tmpMat = view.mat.move.clone();
-    	tmpMat.name = 'loto'+i;
-    	tmpMat.map = createTexture( i+1 );
-
-        physic.addMat( tmpMat );
+        tmpMat = view.material({
+            name:'loto'+i,
+            roughness: 0.4,
+            metalness: 0.6,
+            map: createTexture( i+1 )
+        });
 
         l = Math.floor(i/10);
         x = -27 + (j*6);
@@ -179,11 +180,12 @@ function addBall () {
     j = 0;
     for( i = 0; i < 12; i++){
 
-        tmpMat = view.mat.move.clone();
-        tmpMat.name = 'loto'+i;
-        tmpMat.map = createTexture( i+1, true );
-
-        physic.addMat( tmpMat );
+        tmpMat = view.material({
+            name:'lotox'+i,
+            roughness: 0.4,
+            metalness: 0.6,
+            map: createTexture( i+1, true )
+        });
 
         l = Math.floor(i/6);
         x = 70 + (j*6);

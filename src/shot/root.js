@@ -1,6 +1,6 @@
 // ROOT reference of engine
 
-export var REVISION = '001';
+export var REVISION = '002';
 
 export var root = {
 

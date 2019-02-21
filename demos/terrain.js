@@ -35,6 +35,7 @@ var startY = 0;
 var buggyCar = null;
 var engineSound = 'engine4';
 var isStart = true;
+var mat = {};
 
 function demo() {
 

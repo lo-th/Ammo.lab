@@ -50,6 +50,8 @@ function RigidBody() {
 	this.bodys = [];
 
 	this.trans = new Ammo.btTransform();
+	this.zero = new Ammo.btVector3();
+	this.zero.set( 0, 0, 0 );
 
 }
 
@@ -131,14 +133,6 @@ Object.assign( RigidBody.prototype, {
 		var p3 = math.vector3();
 		var p4 = math.vector3();
 		var trans = math.transform();
-
-
-		
-
-		
-
-
-
 
 		if ( isKinematic ) {
 
@@ -318,7 +312,13 @@ Object.assign( RigidBody.prototype, {
 		if ( o.rolling !== undefined ) rbInfo.set_m_rollingFriction( o.rolling );
 
 
+
+
 		var body = new Ammo.btRigidBody( rbInfo );
+
+		body.isRigidBody = true;
+
+		//console.log(body)
 
 		//body.isKinematic = isKinematic;
 		body.name = name;
@@ -350,12 +350,17 @@ Object.assign( RigidBody.prototype, {
 
 		}
 
+		
+
 		map.set( name, body );
 
 		//console.log(body)
 
 
-		Ammo.destroy( rbInfo );
+		Ammo.destroy( rbInfo )
+
+
+		this.applyOption( body, o );
 
 		trans.free();
 		p1.free();
@@ -365,7 +370,45 @@ Object.assign( RigidBody.prototype, {
 
 		o = null;
 
-	}
+	},
+
+	applyOption: function ( b, o ) {
+
+		var p1 = math.vector3();
+
+		if ( o.flag !== undefined ) b.setCollisionFlags( o.flag );
+		if ( o.state !== undefined ) b.setActivationState( o.state );
+		// change group and mask collision
+		if ( o.group !== undefined ) b.getBroadphaseProxy().set_m_collisionFilterGroup( o.group );
+		if ( o.mask !== undefined ) b.getBroadphaseProxy().set_m_collisionFilterMask( o.mask );
+
+		if ( o.friction !== undefined ) b.setFriction( o.friction );
+		if ( o.restitution !== undefined ) b.setRestitution( o.restitution );
+		if ( o.damping !== undefined ) b.setDamping( o.damping[ 0 ], o.damping[ 1 ] );
+		if ( o.rollingFriction !== undefined ) b.setRollingFriction( o.rollingFriction );
+		if ( o.sleeping !== undefined ) b.setSleepingThresholds( o.sleeping[ 0 ], o.sleeping[ 1 ] );
+
+
+        // TODO try this setting
+		if ( o.linearVelocity !== undefined ) b.setLinearVelocity( p1.fromArray( o.linearVelocity ) );
+		if ( o.angularVelocity !== undefined ) b.setAngularVelocity( p1.fromArray( o.angularVelocity ) );
+		if ( o.linearFactor !== undefined ) b.setLinearFactor( p1.fromArray( o.linearFactor ) );
+		if ( o.angularFactor !== undefined ) b.setAngularFactor( p1.fromArray( o.angularFactor ) );
+		//if ( o.linearFactor !== undefined ) b.setLinearFactor( o.linearFactor );
+		//if ( o.angularFactor !== undefined ) b.setAngularFactor( o.angularFactor );
+
+		if ( o.anisotropic !== undefined ) b.setAnisotropicFriction( o.anisotropic[ 0 ], o.anisotropic[ 1 ] );
+		if ( o.massProps !== undefined ) b.setMassProps( o.massProps[ 0 ], o.massProps[ 1 ] );
+
+		if ( o.gravity !== undefined ) {
+
+			if ( o.gravity ) b.setGravity( root.gravity ); else b.setGravity( this.zero );
+
+		}
+
+		p1.free();
+
+	},
 
 } );
 

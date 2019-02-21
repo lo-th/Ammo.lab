@@ -139,7 +139,7 @@ Capsule.prototype = Object.create( THREE.BufferGeometry.prototype );
 
 // ROOT reference of engine
 
-var REVISION = '001';
+var REVISION = '002';
 
 var root = {
 
@@ -2827,7 +2827,7 @@ var engine = ( function () {
 
         reset: function( full ) {
 
-            console.log('reset', full);
+            //console.log('reset', full);
 
             if ( timer ) {
                window.cancelAnimationFrame( timer );

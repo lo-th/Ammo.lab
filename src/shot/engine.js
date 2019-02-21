@@ -282,7 +282,7 @@ export var engine = ( function () {
 
         reset: function( full ) {
 
-            console.log('reset', full);
+            //console.log('reset', full);
 
             if ( timer ) {
                window.cancelAnimationFrame( timer );

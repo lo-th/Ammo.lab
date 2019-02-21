@@ -348,6 +348,8 @@ export var engine = ( function () {
 			collisionConfig = isSoft ? new Ammo.btSoftBodyRigidBodyCollisionConfiguration() : new Ammo.btDefaultCollisionConfiguration();
 			dispatcher = new Ammo.btCollisionDispatcher( collisionConfig );
 
+
+
 			switch ( o.broadphase === undefined ? 2 : o.broadphase ) {
 
 				//case 0: broadphase = new Ammo.btSimpleBroadphase(); break;
@@ -358,6 +360,11 @@ export var engine = ( function () {
 
 			root.world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collisionConfig, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfig );
 
+			/*
+			root.world.getSolverInfo().set_m_splitImpulsePenetrationThreshold(0);
+			root.world.getSolverInfo().set_m_splitImpulse( true );
+			*/
+			
 		},
 
 		clearWorld: function () {
@@ -595,7 +602,9 @@ export var engine = ( function () {
 			if ( ! map.has( o.name ) ) return;
 			var b = map.get( o.name );
 
-			if ( o.flag !== undefined ) b.setCollisionFlags( o.flag );
+			if( b.isRigidBody ) rigidBody.applyOption( b, o );
+
+			/*if ( o.flag !== undefined ) b.setCollisionFlags( o.flag );
 			if ( o.state !== undefined ) b.setMotionState( o.state );
 
 			if ( o.friction !== undefined ) b.setFriction( o.friction );
@@ -606,8 +615,8 @@ export var engine = ( function () {
 			if ( o.linearVelocity !== undefined ) b.setLinearVelocity( o.linearVelocity );
 			if ( o.angularVelocity !== undefined ) b.setAngularVelocity( o.angularVelocity );
 
-			if ( o.linearFactor !== undefined ) b.setLinearFactor( o.linearFactor );
-			if ( o.angularFactor !== undefined ) b.setAngularFactor( o.angularFactor );
+			if ( o.linearFactor !== undefined ) b.setLinearFactor( o.linearFactor );// btVector3
+			if ( o.angularFactor !== undefined ) b.setAngularFactor( o.angularFactor );// btVector3
 
 			if ( o.anisotropic !== undefined ) b.setAnisotropicFriction( o.anisotropic[ 0 ], o.anisotropic[ 1 ] );
 			if ( o.sleeping !== undefined ) b.setSleepingThresholds( o.sleeping[ 0 ], o.sleeping[ 1 ] );
@@ -621,7 +630,7 @@ export var engine = ( function () {
 
 			// change group and mask collision
 			if ( o.group !== undefined ) b.getBroadphaseProxy().set_m_collisionFilterGroup( o.group );
-			if ( o.mask !== undefined ) b.getBroadphaseProxy().set_m_collisionFilterMask( o.mask );
+			if ( o.mask !== undefined ) b.getBroadphaseProxy().set_m_collisionFilterMask( o.mask );*/
 
 
 		},

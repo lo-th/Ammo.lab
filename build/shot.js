@@ -145,7 +145,7 @@
 
 	// ROOT reference of engine
 
-	var REVISION = '001';
+	var REVISION = '002';
 
 	var root = {
 
@@ -2833,7 +2833,7 @@
 
 	        reset: function( full ) {
 
-	            console.log('reset', full);
+	            //console.log('reset', full);
 
 	            if ( timer ) {
 	               window.cancelAnimationFrame( timer );
