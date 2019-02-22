@@ -161,21 +161,21 @@ Object.assign( RigidBody.prototype, {
 				shape = new Ammo.btStaticPlaneShape( p4, 0 );
 				break;
 
-			case 'box': case 'hardbox':
+			case 'box': case 'hardbox': case 'realbox': case 'realhardbox':
 				p4.setValue( o.size[ 0 ] * 0.5, o.size[ 1 ] * 0.5, o.size[ 2 ] * 0.5 );
 				shape = new Ammo.btBoxShape( p4 );
 				break;
 
-			case 'sphere':
+			case 'sphere': case 'realsphere':
 				shape = new Ammo.btSphereShape( o.size[ 0 ] );
 				break;
 
-			case 'cylinder':
+			case 'cylinder': case 'realcylinder':
 				p4.setValue( o.size[ 0 ], o.size[ 1 ] * 0.5, o.size[ 2 ] * 0.5 );
 				shape = new Ammo.btCylinderShape( p4 );
 				break;
 
-			case 'cone':
+			case 'cone': case 'realcone':
 				shape = new Ammo.btConeShape( o.size[ 0 ], o.size[ 1 ] * 0.5 );
 				break;
 
@@ -275,7 +275,7 @@ Object.assign( RigidBody.prototype, {
 
 		}
 
-		if ( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin*root.invScale );
+		if ( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin * root.invScale );
 
 		//console.log(shape.getMargin())
 
@@ -350,12 +350,22 @@ Object.assign( RigidBody.prototype, {
 
 		}
 
+		// BREAKABLE
+
+		body.breakable = o.breakable !== undefined ? o.breakable : false;
+
+		if( body.breakable ){
+
+			// breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
+			body.breakOption = o.breakOption !== undefined ? o.breakOption : [ 250, 1, 2, 1 ];
+
+		}
+
+	
+
 		
 
 		map.set( name, body );
-
-		//console.log(body)
-
 
 		Ammo.destroy( rbInfo )
 

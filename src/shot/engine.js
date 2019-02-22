@@ -5,6 +5,7 @@ import { Terrain } from './Terrain.js';
 import { Vehicle } from './Vehicle.js';
 import { Character } from './Character.js';
 import { Collision } from './Collision.js';
+import { ConvexObjectBreaker } from './ConvexObjectBreaker.js';
 import { LZMAdecompact } from './lzma.js';
 import { root, map, REVISION } from './root.js';
 
@@ -37,6 +38,11 @@ export var engine = ( function () {
     var PI90 = 1.570796326794896;
 
     var rigidBody, softBody, constraint, terrains, vehicles, character, collision;
+
+    var convexBreaker = null;
+
+
+    var needUpdate = false;
 
     var option = {
 
@@ -131,7 +137,7 @@ export var engine = ( function () {
             Counts = Counts || {}
 
             var counts = {
-                maxBody: Counts.maxBody || 1000,
+                maxBody: Counts.maxBody || 1400,
                 maxContact: Counts.maxContact || 200,
                 maxCharacter: Counts.maxCharacter || 10, 
                 maxCar: Counts.maxCar || 14,
@@ -173,6 +179,8 @@ export var engine = ( function () {
 
                 case 'moveSolid': engine.moveSolid( data.o ); break;
                 case 'ellipsoid': engine.ellipsoidMesh( data.o ); break;
+
+                case 'makeBreak': engine.makeBreak( data.o ); break;
             }
 
         },
@@ -206,16 +214,28 @@ export var engine = ( function () {
 
         postUpdate: function () {},
 
+        update: function () {
+
+            engine.postUpdate();
+
+            terrains.step();
+            rigidBody.step( root.Ar, root.ArPos[ 0 ] );
+            collision.step( root.Ar, root.ArPos[ 1 ] );
+            character.step( root.Ar, root.ArPos[ 2 ] );
+            vehicles.step( root.Ar, root.ArPos[ 3 ] );
+            softBody.step( root.Ar, root.ArPos[ 4 ] );
+
+        },
+
         step: function () {
 
             if ( t.now - 1000 > t.tmp ){ t.tmp = t.now; t.fps = t.n; t.n = 0; }; t.n++; // FPS
 
             // TODO
             
-            engine.postUpdate();
-            engine.steps();
             if( refView ) refView.needUpdate( true );
-            //engine.updateContact();
+            //else 
+            engine.update();
 
             stepNext = true;
             
@@ -358,6 +378,8 @@ export var engine = ( function () {
 
         anchor: function ( o ) { this.post('addAnchor', o ); },
 
+        break: function ( o ) { this.post('addBreakable', o ); },
+
         moveSolid: function ( o ) {
 
             if ( ! map.has( o.name ) ) return;
@@ -379,6 +401,12 @@ export var engine = ( function () {
 
         },
 
+        removeRigidBody: function (name){
+
+            rigidBody.remove(name)
+
+        },
+
         initObject: function () {
 
             rigidBody = new RigidBody();
@@ -395,16 +423,7 @@ export var engine = ( function () {
 
         },
 
-        steps: function () {
-
-            terrains.step();
-            rigidBody.step( root.Ar, root.ArPos[ 0 ] );
-            collision.step( root.Ar, root.ArPos[ 1 ] );
-            character.step( root.Ar, root.ArPos[ 2 ] );
-            vehicles.step( root.Ar, root.ArPos[ 3 ] );
-            softBody.step( root.Ar, root.ArPos[ 4 ] );
-
-        },
+        
 
         clear: function ( o ) {
 
@@ -440,7 +459,12 @@ export var engine = ( function () {
             else if( type === 'character' ) character.add( o );
             else if( type === 'collision' ) collision.add( o );
             else if( type === 'car' ) vehicles.add( o );
-            else return rigidBody.add( o );
+            else {
+                if( o.breakable ){
+                    if( type==='hardbox' || type==='box' || type==='sphere' || type==='cylinder' || type==='cone' ) o.type = 'real'+o.type;
+                }
+                return rigidBody.add( o );
+            }
 
         },
 
@@ -489,6 +513,57 @@ export var engine = ( function () {
 
             return root.container;
 
+        },
+
+        // BREAKABLE
+
+        makeBreak: function ( o ) {
+
+            var name = o.name;
+            if ( ! map.has( name ) ) return;
+
+            if( convexBreaker === null ) convexBreaker = new ConvexObjectBreaker();
+
+            var mesh = map.get( name );
+            // breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
+            var breakOption = o.breakOption;
+            
+            var debris = convexBreaker.subdivideByImpact( mesh, o.pos, o.normal , breakOption[1], breakOption[2] ); // , 1.5 ??
+            // remove one level
+            breakOption[3] -= 1;
+            // remove original object
+            this.removeRigidBody( name );
+
+            var i = debris.length;
+            while( i-- ) this.addDebris( name, i, debris[ i ], breakOption );
+
+        },
+
+        addDebris: function ( name, id, mesh, breakOption ) {
+
+            var o = {
+                name: name+'_debris'+ id,
+                material: mesh.material,
+                type:'convex',
+                shape: mesh.geometry,
+                //size: mesh.scale.toArray(),
+                pos: mesh.position.toArray(),
+                quat: mesh.quaternion.toArray(),
+                mass: mesh.userData.mass,
+                linearVelocity:mesh.userData.velocity.toArray(),
+                angularVelocity:mesh.userData.angularVelocity.toArray(),
+            };
+
+            // if levelOfSubdivision > 0 make debris breakable !!
+            if( breakOption[3] > 0 ){
+
+                o.breakable = true;
+                o.breakOption = breakOption;
+
+            }
+
+            this.add( o );
+            
         },
         
     }

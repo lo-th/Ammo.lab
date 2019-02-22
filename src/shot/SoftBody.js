@@ -1,5 +1,5 @@
 /*global THREE*/
-import { geometryInfo } from './Geometry.js';
+import { geometryInfo, ConvexGeometry } from './Geometry.js';
 import { root, map } from './root.js';
 
 function SoftBody() {
@@ -443,7 +443,7 @@ export  function ellipsoid( o ) {
 
 
 
-    var gt = new THREE.ConvexGeometry( points );
+    var gt = new ConvexGeometry( points );
 
     
     var indices = new Uint32Array( gt.faces.length * 3 );

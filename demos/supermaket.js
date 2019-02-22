@@ -2,6 +2,8 @@ function demo() {
 
     view.moveCam({ theta:0, phi:10, distance:30, target:[0,3,0] });
 
+    physic.set();
+    
     physic.add ({type:'plane', pos:[0,0,0], friction:0.6 });
 
     var i, j, k, pos;

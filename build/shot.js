@@ -4,7 +4,1221 @@
 	(global = global || self, factory(global.SHOT = {}));
 }(this, function (exports) { 'use strict';
 
+	/**
+	 * @author Mugen87 / https://github.com/Mugen87
+	 *
+	 * Ported from: https://github.com/maurizzzio/quickhull3d/ by Mauricio Poppe (https://github.com/maurizzzio)
+	 *
+	 */
+
+
+	var Visible = 0;
+	var Deleted = 1;
+
+	function QuickHull() {
+
+		this.tolerance = - 1;
+
+		this.faces = []; // the generated faces of the convex hull
+		this.newFaces = []; // this array holds the faces that are generated within a single iteration
+
+		// the vertex lists work as follows:
+		//
+		// let 'a' and 'b' be 'Face' instances
+		// let 'v' be points wrapped as instance of 'Vertex'
+		//
+		//     [v, v, ..., v, v, v, ...]
+		//      ^             ^
+		//      |             |
+		//  a.outside     b.outside
+		//
+		this.assigned = new VertexList();
+		this.unassigned = new VertexList();
+
+		this.vertices = []; 	// vertices of the hull (internal representation of given geometry data)
+
+	}
+
+	Object.assign( QuickHull.prototype, {
+
+		setFromPoints: function ( points ) {
+
+			if ( Array.isArray( points ) !== true ) {
+
+				console.error( 'THREE.QuickHull: Points parameter is not an array.' );
+
+			}
+
+			if ( points.length < 4 ) {
+
+				console.error( 'THREE.QuickHull: The algorithm needs at least four points.' );
+
+			}
+
+			this.makeEmpty();
+
+			for ( var i = 0, l = points.length; i < l; i ++ ) {
+
+				this.vertices.push( new VertexNode( points[ i ] ) );
+
+			}
+
+			this.compute();
+
+			return this;
+
+		},
+
+		setFromObject: function ( object ) {
+
+			var points = [];
+
+			object.updateMatrixWorld( true );
+
+			object.traverse( function ( node ) {
+
+				var i, l, point;
+
+				var geometry = node.geometry;
+
+				if ( geometry !== undefined ) {
+
+					if ( geometry.isGeometry ) {
+
+						var vertices = geometry.vertices;
+
+						for ( i = 0, l = vertices.length; i < l; i ++ ) {
+
+							point = vertices[ i ].clone();
+							point.applyMatrix4( node.matrixWorld );
+
+							points.push( point );
+
+						}
+
+					} else if ( geometry.isBufferGeometry ) {
+
+						var attribute = geometry.attributes.position;
+
+						if ( attribute !== undefined ) {
+
+							for ( i = 0, l = attribute.count; i < l; i ++ ) {
+
+								point = new THREE.Vector3();
+
+								point.fromBufferAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
+
+								points.push( point );
+
+							}
+
+						}
+
+					}
+
+				}
+
+			} );
+
+			return this.setFromPoints( points );
+
+		},
+
+		makeEmpty: function () {
+
+			this.faces = [];
+			this.vertices = [];
+
+			return this;
+
+		},
+
+		// Adds a vertex to the 'assigned' list of vertices and assigns it to the given face
+
+		addVertexToFace: function ( vertex, face ) {
+
+			vertex.face = face;
+
+			if ( face.outside === null ) {
+
+				this.assigned.append( vertex );
+
+			} else {
+
+				this.assigned.insertBefore( face.outside, vertex );
+
+			}
+
+			face.outside = vertex;
+
+			return this;
+
+		},
+
+		// Removes a vertex from the 'assigned' list of vertices and from the given face
+
+		removeVertexFromFace: function ( vertex, face ) {
+
+			if ( vertex === face.outside ) {
+
+				// fix face.outside link
+
+				if ( vertex.next !== null && vertex.next.face === face ) {
+
+					// face has at least 2 outside vertices, move the 'outside' reference
+
+					face.outside = vertex.next;
+
+				} else {
+
+					// vertex was the only outside vertex that face had
+
+					face.outside = null;
+
+				}
+
+			}
+
+			this.assigned.remove( vertex );
+
+			return this;
+
+		},
+
+		// Removes all the visible vertices that a given face is able to see which are stored in the 'assigned' vertext list
+
+		removeAllVerticesFromFace: function ( face ) {
+
+			if ( face.outside !== null ) {
+
+				// reference to the first and last vertex of this face
+
+				var start = face.outside;
+				var end = face.outside;
+
+				while ( end.next !== null && end.next.face === face ) {
+
+					end = end.next;
+
+				}
+
+				this.assigned.removeSubList( start, end );
+
+				// fix references
+
+				start.prev = end.next = null;
+				face.outside = null;
+
+				return start;
+
+			}
+
+		},
+
+		// Removes all the visible vertices that 'face' is able to see
+
+		deleteFaceVertices: function ( face, absorbingFace ) {
+
+			var faceVertices = this.removeAllVerticesFromFace( face );
+
+			if ( faceVertices !== undefined ) {
+
+				if ( absorbingFace === undefined ) {
+
+					// mark the vertices to be reassigned to some other face
+
+					this.unassigned.appendChain( faceVertices );
+
+
+				} else {
+
+					// if there's an absorbing face try to assign as many vertices as possible to it
+
+					var vertex = faceVertices;
+
+					do {
+
+						// we need to buffer the subsequent vertex at this point because the 'vertex.next' reference
+						// will be changed by upcoming method calls
+
+						var nextVertex = vertex.next;
+
+						var distance = absorbingFace.distanceToPoint( vertex.point );
+
+						// check if 'vertex' is able to see 'absorbingFace'
+
+						if ( distance > this.tolerance ) {
+
+							this.addVertexToFace( vertex, absorbingFace );
+
+						} else {
+
+							this.unassigned.append( vertex );
+
+						}
+
+						// now assign next vertex
+
+						vertex = nextVertex;
+
+					} while ( vertex !== null );
+
+				}
+
+			}
+
+			return this;
+
+		},
+
+		// Reassigns as many vertices as possible from the unassigned list to the new faces
+
+		resolveUnassignedPoints: function ( newFaces ) {
+
+			if ( this.unassigned.isEmpty() === false ) {
+
+				var vertex = this.unassigned.first();
+
+				do {
+
+					// buffer 'next' reference, see .deleteFaceVertices()
+
+					var nextVertex = vertex.next;
+
+					var maxDistance = this.tolerance;
+
+					var maxFace = null;
+
+					for ( var i = 0; i < newFaces.length; i ++ ) {
+
+						var face = newFaces[ i ];
+
+						if ( face.mark === Visible ) {
+
+							var distance = face.distanceToPoint( vertex.point );
+
+							if ( distance > maxDistance ) {
+
+								maxDistance = distance;
+								maxFace = face;
+
+							}
+
+							if ( maxDistance > 1000 * this.tolerance ) break;
+
+						}
+
+					}
+
+					// 'maxFace' can be null e.g. if there are identical vertices
+
+					if ( maxFace !== null ) {
+
+						this.addVertexToFace( vertex, maxFace );
+
+					}
+
+					vertex = nextVertex;
+
+				} while ( vertex !== null );
+
+			}
+
+			return this;
+
+		},
+
+		// Computes the extremes of a simplex which will be the initial hull
+
+		computeExtremes: function () {
+
+			var min = new THREE.Vector3();
+			var max = new THREE.Vector3();
+
+			var minVertices = [];
+			var maxVertices = [];
+
+			var i, l, j;
+
+			// initially assume that the first vertex is the min/max
+
+			for ( i = 0; i < 3; i ++ ) {
+
+				minVertices[ i ] = maxVertices[ i ] = this.vertices[ 0 ];
+
+			}
+
+			min.copy( this.vertices[ 0 ].point );
+			max.copy( this.vertices[ 0 ].point );
+
+			// compute the min/max vertex on all six directions
+
+			for ( i = 0, l = this.vertices.length; i < l; i ++ ) {
+
+				var vertex = this.vertices[ i ];
+				var point = vertex.point;
+
+				// update the min coordinates
+
+				for ( j = 0; j < 3; j ++ ) {
+
+					if ( point.getComponent( j ) < min.getComponent( j ) ) {
+
+						min.setComponent( j, point.getComponent( j ) );
+						minVertices[ j ] = vertex;
+
+					}
+
+				}
+
+				// update the max coordinates
+
+				for ( j = 0; j < 3; j ++ ) {
+
+					if ( point.getComponent( j ) > max.getComponent( j ) ) {
+
+						max.setComponent( j, point.getComponent( j ) );
+						maxVertices[ j ] = vertex;
+
+					}
+
+				}
+
+			}
+
+			// use min/max vectors to compute an optimal epsilon
+
+			this.tolerance = 3 * Number.EPSILON * (
+				Math.max( Math.abs( min.x ), Math.abs( max.x ) ) +
+				Math.max( Math.abs( min.y ), Math.abs( max.y ) ) +
+				Math.max( Math.abs( min.z ), Math.abs( max.z ) )
+			);
+
+			return { min: minVertices, max: maxVertices };
+
+		},
+
+		// Computes the initial simplex assigning to its faces all the points
+		// that are candidates to form part of the hull
+
+		computeInitialHull: function () {
+
+			var line3, plane, closestPoint;
+
+			return function computeInitialHull() {
+
+				if ( line3 === undefined ) {
+
+					line3 = new THREE.Line3();
+					plane = new THREE.Plane();
+					closestPoint = new THREE.Vector3();
+
+				}
+
+				var vertex, vertices = this.vertices;
+				var extremes = this.computeExtremes();
+				var min = extremes.min;
+				var max = extremes.max;
+
+				var v0, v1, v2, v3;
+				var i, l, j;
+
+				// 1. Find the two vertices 'v0' and 'v1' with the greatest 1d separation
+				// (max.x - min.x)
+				// (max.y - min.y)
+				// (max.z - min.z)
+
+				var distance, maxDistance = 0;
+				var index = 0;
+
+				for ( i = 0; i < 3; i ++ ) {
+
+					distance = max[ i ].point.getComponent( i ) - min[ i ].point.getComponent( i );
+
+					if ( distance > maxDistance ) {
+
+						maxDistance = distance;
+						index = i;
+
+					}
+
+				}
+
+				v0 = min[ index ];
+				v1 = max[ index ];
+
+				// 2. The next vertex 'v2' is the one farthest to the line formed by 'v0' and 'v1'
+
+				maxDistance = 0;
+				line3.set( v0.point, v1.point );
+
+				for ( i = 0, l = this.vertices.length; i < l; i ++ ) {
+
+					vertex = vertices[ i ];
+
+					if ( vertex !== v0 && vertex !== v1 ) {
+
+						line3.closestPointToPoint( vertex.point, true, closestPoint );
+
+						distance = closestPoint.distanceToSquared( vertex.point );
+
+						if ( distance > maxDistance ) {
+
+							maxDistance = distance;
+							v2 = vertex;
+
+						}
+
+					}
+
+				}
+
+				// TODO resolve bug
+				if(!v2){ console.log('bug v2'); return;}
+
+				// 3. The next vertex 'v3' is the one farthest to the plane 'v0', 'v1', 'v2'
+
+				maxDistance = - 1;
+				plane.setFromCoplanarPoints( v0.point, v1.point, v2.point );
+
+				for ( i = 0, l = this.vertices.length; i < l; i ++ ) {
+
+					vertex = vertices[ i ];
+
+					if ( vertex !== v0 && vertex !== v1 && vertex !== v2 ) {
+
+						distance = Math.abs( plane.distanceToPoint( vertex.point ) );
+
+						if ( distance > maxDistance ) {
+
+							maxDistance = distance;
+							v3 = vertex;
+
+						}
+
+					}
+
+				}
+
+				var faces = [];
+
+				if ( plane.distanceToPoint( v3.point ) < 0 ) {
+
+					// the face is not able to see the point so 'plane.normal' is pointing outside the tetrahedron
+
+					faces.push(
+						Face.create( v0, v1, v2 ),
+						Face.create( v3, v1, v0 ),
+						Face.create( v3, v2, v1 ),
+						Face.create( v3, v0, v2 )
+					);
+
+					// set the twin edge
+
+					for ( i = 0; i < 3; i ++ ) {
+
+						j = ( i + 1 ) % 3;
+
+						// join face[ i ] i > 0, with the first face
+
+						faces[ i + 1 ].getEdge( 2 ).setTwin( faces[ 0 ].getEdge( j ) );
+
+						// join face[ i ] with face[ i + 1 ], 1 <= i <= 3
+
+						faces[ i + 1 ].getEdge( 1 ).setTwin( faces[ j + 1 ].getEdge( 0 ) );
+
+					}
+
+				} else {
+
+					// the face is able to see the point so 'plane.normal' is pointing inside the tetrahedron
+
+					faces.push(
+						Face.create( v0, v2, v1 ),
+						Face.create( v3, v0, v1 ),
+						Face.create( v3, v1, v2 ),
+						Face.create( v3, v2, v0 )
+					);
+
+					// set the twin edge
+
+					for ( i = 0; i < 3; i ++ ) {
+
+						j = ( i + 1 ) % 3;
+
+						// join face[ i ] i > 0, with the first face
+
+						faces[ i + 1 ].getEdge( 2 ).setTwin( faces[ 0 ].getEdge( ( 3 - i ) % 3 ) );
+
+						// join face[ i ] with face[ i + 1 ]
+
+						faces[ i + 1 ].getEdge( 0 ).setTwin( faces[ j + 1 ].getEdge( 1 ) );
+
+					}
+
+				}
+
+				// the initial hull is the tetrahedron
+
+				for ( i = 0; i < 4; i ++ ) {
+
+					this.faces.push( faces[ i ] );
+
+				}
+
+				// initial assignment of vertices to the faces of the tetrahedron
+
+				for ( i = 0, l = vertices.length; i < l; i ++ ) {
+
+					vertex = vertices[ i ];
+
+					if ( vertex !== v0 && vertex !== v1 && vertex !== v2 && vertex !== v3 ) {
+
+						maxDistance = this.tolerance;
+						var maxFace = null;
+
+						for ( j = 0; j < 4; j ++ ) {
+
+							distance = this.faces[ j ].distanceToPoint( vertex.point );
+
+							if ( distance > maxDistance ) {
+
+								maxDistance = distance;
+								maxFace = this.faces[ j ];
+
+							}
+
+						}
+
+						if ( maxFace !== null ) {
+
+							this.addVertexToFace( vertex, maxFace );
+
+						}
+
+					}
+
+				}
+
+				return this;
+
+			};
+
+		}(),
+
+		// Removes inactive faces
+
+		reindexFaces: function () {
+
+			var activeFaces = [];
+
+			for ( var i = 0; i < this.faces.length; i ++ ) {
+
+				var face = this.faces[ i ];
+
+				if ( face.mark === Visible ) {
+
+					activeFaces.push( face );
+
+				}
+
+			}
+
+			this.faces = activeFaces;
+
+			return this;
+
+		},
+
+		// Finds the next vertex to create faces with the current hull
+
+		nextVertexToAdd: function () {
+
+			// if the 'assigned' list of vertices is empty, no vertices are left. return with 'undefined'
+
+			if ( this.assigned.isEmpty() === false ) {
+
+				var eyeVertex, maxDistance = 0;
+
+				// grap the first available face and start with the first visible vertex of that face
+
+				var eyeFace = this.assigned.first().face;
+				var vertex = eyeFace.outside;
+
+				// now calculate the farthest vertex that face can see
+
+				do {
+
+					var distance = eyeFace.distanceToPoint( vertex.point );
+
+					if ( distance > maxDistance ) {
+
+						maxDistance = distance;
+						eyeVertex = vertex;
+
+					}
+
+					vertex = vertex.next;
+
+				} while ( vertex !== null && vertex.face === eyeFace );
+
+				return eyeVertex;
+
+			}
+
+		},
+
+		// Computes a chain of half edges in CCW order called the 'horizon'.
+		// For an edge to be part of the horizon it must join a face that can see
+		// 'eyePoint' and a face that cannot see 'eyePoint'.
+
+		computeHorizon: function ( eyePoint, crossEdge, face, horizon ) {
+
+			// moves face's vertices to the 'unassigned' vertex list
+
+			this.deleteFaceVertices( face );
+
+			face.mark = Deleted;
+
+			var edge;
+
+			if ( crossEdge === null ) {
+
+				edge = crossEdge = face.getEdge( 0 );
+
+			} else {
+
+				// start from the next edge since 'crossEdge' was already analyzed
+				// (actually 'crossEdge.twin' was the edge who called this method recursively)
+
+				edge = crossEdge.next;
+
+			}
+
+			do {
+
+				var twinEdge = edge.twin;
+				var oppositeFace = twinEdge.face;
+
+				if ( oppositeFace.mark === Visible ) {
+
+					if ( oppositeFace.distanceToPoint( eyePoint ) > this.tolerance ) {
+
+						// the opposite face can see the vertex, so proceed with next edge
+
+						this.computeHorizon( eyePoint, twinEdge, oppositeFace, horizon );
+
+					} else {
+
+						// the opposite face can't see the vertex, so this edge is part of the horizon
+
+						horizon.push( edge );
+
+					}
+
+				}
+
+				edge = edge.next;
+
+			} while ( edge !== crossEdge );
+
+			return this;
+
+		},
+
+		// Creates a face with the vertices 'eyeVertex.point', 'horizonEdge.tail' and 'horizonEdge.head' in CCW order
+
+		addAdjoiningFace: function ( eyeVertex, horizonEdge ) {
+
+			// all the half edges are created in ccw order thus the face is always pointing outside the hull
+
+			var face = Face.create( eyeVertex, horizonEdge.tail(), horizonEdge.head() );
+
+			this.faces.push( face );
+
+			// join face.getEdge( - 1 ) with the horizon's opposite edge face.getEdge( - 1 ) = face.getEdge( 2 )
+
+			face.getEdge( - 1 ).setTwin( horizonEdge.twin );
+
+			return face.getEdge( 0 ); // the half edge whose vertex is the eyeVertex
+
+
+		},
+
+		//  Adds 'horizon.length' faces to the hull, each face will be linked with the
+		//  horizon opposite face and the face on the left/right
+
+		addNewFaces: function ( eyeVertex, horizon ) {
+
+			this.newFaces = [];
+
+			var firstSideEdge = null;
+			var previousSideEdge = null;
+
+			for ( var i = 0; i < horizon.length; i ++ ) {
+
+				var horizonEdge = horizon[ i ];
+
+				// returns the right side edge
+
+				var sideEdge = this.addAdjoiningFace( eyeVertex, horizonEdge );
+
+				if ( firstSideEdge === null ) {
+
+					firstSideEdge = sideEdge;
+
+				} else {
+
+					// joins face.getEdge( 1 ) with previousFace.getEdge( 0 )
+
+					sideEdge.next.setTwin( previousSideEdge );
+
+				}
+
+				this.newFaces.push( sideEdge.face );
+				previousSideEdge = sideEdge;
+
+			}
+
+			// perform final join of new faces
+
+			firstSideEdge.next.setTwin( previousSideEdge );
+
+			return this;
+
+		},
+
+		// Adds a vertex to the hull
+
+		addVertexToHull: function ( eyeVertex ) {
+
+			var horizon = [];
+
+			this.unassigned.clear();
+
+			// remove 'eyeVertex' from 'eyeVertex.face' so that it can't be added to the 'unassigned' vertex list
+
+			this.removeVertexFromFace( eyeVertex, eyeVertex.face );
+
+			this.computeHorizon( eyeVertex.point, null, eyeVertex.face, horizon );
+
+			this.addNewFaces( eyeVertex, horizon );
+
+			// reassign 'unassigned' vertices to the new faces
+
+			this.resolveUnassignedPoints( this.newFaces );
+
+			return	this;
+
+		},
+
+		cleanup: function () {
+
+			this.assigned.clear();
+			this.unassigned.clear();
+			this.newFaces = [];
+
+			return this;
+
+		},
+
+		compute: function () {
+
+			var vertex;
+
+			this.computeInitialHull();
+
+			// add all available vertices gradually to the hull
+
+			while ( ( vertex = this.nextVertexToAdd() ) !== undefined ) {
+
+				this.addVertexToHull( vertex );
+
+			}
+
+			this.reindexFaces();
+
+			this.cleanup();
+
+			return this;
+
+		}
+
+	});
+
+	// FACE
+
+	function Face() {
+
+		this.normal = new THREE.Vector3();
+		this.midpoint = new THREE.Vector3();
+		this.area = 0;
+
+		this.constant = 0; // signed distance from face to the origin
+		this.outside = null; // reference to a vertex in a vertex list this face can see
+		this.mark = Visible;
+		this.edge = null;
+
+	}
+
+	Object.assign( Face, {
+
+		create: function ( a, b, c ) {
+
+			var face = new Face();
+
+			var e0 = new HalfEdge( a, face );
+			var e1 = new HalfEdge( b, face );
+			var e2 = new HalfEdge( c, face );
+
+			// join edges
+
+			e0.next = e2.prev = e1;
+			e1.next = e0.prev = e2;
+			e2.next = e1.prev = e0;
+
+			// main half edge reference
+
+			face.edge = e0;
+
+			return face.compute();
+
+		}
+
+	} );
+
+	Object.assign( Face.prototype, {
+
+		getEdge: function ( i ) {
+
+			var edge = this.edge;
+
+			while ( i > 0 ) {
+
+				edge = edge.next;
+				i --;
+
+			}
+
+			while ( i < 0 ) {
+
+				edge = edge.prev;
+				i ++;
+
+			}
+
+			return edge;
+
+		},
+
+		compute: function () {
+
+			var triangle;
+
+			return function compute() {
+
+				if ( triangle === undefined ) triangle = new THREE.Triangle();
+
+				var a = this.edge.tail();
+				var b = this.edge.head();
+				var c = this.edge.next.head();
+
+				triangle.set( a.point, b.point, c.point );
+
+				triangle.getNormal( this.normal );
+				triangle.getMidpoint( this.midpoint );
+				this.area = triangle.getArea();
+
+				this.constant = this.normal.dot( this.midpoint );
+
+				return this;
+
+			};
+
+		}(),
+
+		distanceToPoint: function ( point ) {
+
+			return this.normal.dot( point ) - this.constant;
+
+		}
+
+	} );
+
+	// Entity for a Doubly-Connected Edge List (DCEL).
+
+	function HalfEdge( vertex, face ) {
+
+		this.vertex = vertex;
+		this.prev = null;
+		this.next = null;
+		this.twin = null;
+		this.face = face;
+
+	}
+
+	Object.assign( HalfEdge.prototype, {
+
+		head: function () {
+
+			return this.vertex;
+
+		},
+
+		tail: function () {
+
+			return this.prev ? this.prev.vertex : null;
+
+		},
+
+		length: function () {
+
+			var head = this.head();
+			var tail = this.tail();
+
+			if ( tail !== null ) {
+
+				return tail.point.distanceTo( head.point );
+
+			}
+
+			return - 1;
+
+		},
+
+		lengthSquared: function () {
+
+			var head = this.head();
+			var tail = this.tail();
+
+			if ( tail !== null ) {
+
+				return tail.point.distanceToSquared( head.point );
+
+			}
+
+			return - 1;
+
+		},
+
+		setTwin: function ( edge ) {
+
+			this.twin = edge;
+			edge.twin = this;
+
+			return this;
+
+		}
+
+	} );
+
+	// A vertex as a double linked list node.
+
+	function VertexNode( point ) {
+
+		this.point = point;
+		this.prev = null;
+		this.next = null;
+		this.face = null; // the face that is able to see this vertex
+
+	}
+
+	// A double linked list that contains vertex nodes.
+
+	function VertexList() {
+
+		this.head = null;
+		this.tail = null;
+
+	}
+
+	Object.assign( VertexList.prototype, {
+
+		first: function () {
+
+			return this.head;
+
+		},
+
+		last: function () {
+
+			return this.tail;
+
+		},
+
+		clear: function () {
+
+			this.head = this.tail = null;
+
+			return this;
+
+		},
+
+		// Inserts a vertex before the target vertex
+
+		insertBefore: function ( target, vertex ) {
+
+			vertex.prev = target.prev;
+			vertex.next = target;
+
+			if ( vertex.prev === null ) {
+
+				this.head = vertex;
+
+			} else {
+
+				vertex.prev.next = vertex;
+
+			}
+
+			target.prev = vertex;
+
+			return this;
+
+		},
+
+		// Inserts a vertex after the target vertex
+
+		insertAfter: function ( target, vertex ) {
+
+			vertex.prev = target;
+			vertex.next = target.next;
+
+			if ( vertex.next === null ) {
+
+				this.tail = vertex;
+
+			} else {
+
+				vertex.next.prev = vertex;
+
+			}
+
+			target.next = vertex;
+
+			return this;
+
+		},
+
+		// Appends a vertex to the end of the linked list
+
+		append: function ( vertex ) {
+
+			if ( this.head === null ) {
+
+				this.head = vertex;
+
+			} else {
+
+				this.tail.next = vertex;
+
+			}
+
+			vertex.prev = this.tail;
+			vertex.next = null; // the tail has no subsequent vertex
+
+			this.tail = vertex;
+
+			return this;
+
+		},
+
+		// Appends a chain of vertices where 'vertex' is the head.
+
+		appendChain: function ( vertex ) {
+
+			if ( this.head === null ) {
+
+				this.head = vertex;
+
+			} else {
+
+				this.tail.next = vertex;
+
+			}
+
+			vertex.prev = this.tail;
+
+			// ensure that the 'tail' reference points to the last vertex of the chain
+
+			while ( vertex.next !== null ) {
+
+				vertex = vertex.next;
+
+			}
+
+			this.tail = vertex;
+
+			return this;
+
+		},
+
+		// Removes a vertex from the linked list
+
+		remove: function ( vertex ) {
+
+			if ( vertex.prev === null ) {
+
+				this.head = vertex.next;
+
+			} else {
+
+				vertex.prev.next = vertex.next;
+
+			}
+
+			if ( vertex.next === null ) {
+
+				this.tail = vertex.prev;
+
+			} else {
+
+				vertex.next.prev = vertex.prev;
+
+			}
+
+			return this;
+
+		},
+
+		// Removes a list of vertices whose 'head' is 'a' and whose 'tail' is b
+
+		removeSubList: function ( a, b ) {
+
+			if ( a.prev === null ) {
+
+				this.head = b.next;
+
+			} else {
+
+				a.prev.next = b.next;
+
+			}
+
+			if ( b.next === null ) {
+
+				this.tail = a.prev;
+
+			} else {
+
+				b.next.prev = a.prev;
+
+			}
+
+			return this;
+
+		},
+
+		isEmpty: function () {
+
+			return this.head === null;
+
+		}
+
+	} );
+
 	/*global THREE*/
+
 
 	function geometryInfo ( g, type ) {
 	    var facesOnly = false;
@@ -110,6 +1324,10 @@
 	}
 
 
+	/**
+	* CAPSULE GEOMETRY
+	*/
+
 	function Capsule( Radius, Height, SRadius, H ) {
 
 	    THREE.BufferGeometry.call( this );
@@ -142,6 +1360,73 @@
 	}
 
 	Capsule.prototype = Object.create( THREE.BufferGeometry.prototype );
+
+	/**
+	* CONVEX GEOMETRY
+	*/
+
+	function ConvexGeometry( points ) {
+
+	    THREE.Geometry.call( this );
+
+	    this.fromBufferGeometry( new ConvexBufferGeometry( points ) );
+	    this.mergeVertices();
+
+	}
+
+	ConvexGeometry.prototype = Object.create( THREE.Geometry.prototype );
+	ConvexGeometry.prototype.constructor = ConvexGeometry;
+
+	/**
+	* CONVEXBUFFER GEOMETRY
+	*/
+
+	function ConvexBufferGeometry( points ) {
+
+	    THREE.BufferGeometry.call( this );
+
+	    // buffers
+
+	    var vertices = [];
+	    var normals = [];
+
+	    // execute QuickHull
+
+	    var quickHull = new QuickHull().setFromPoints( points );
+
+	    // generate vertices and normals
+
+	    var faces = quickHull.faces;
+
+	    for ( var i = 0; i < faces.length; i ++ ) {
+
+	        var face = faces[ i ];
+	        var edge = face.edge;
+
+	        // we move along a doubly-connected edge list to access all face points (see HalfEdge docs)
+
+	        do {
+
+	            var point = edge.head().point;
+
+	            vertices.push( point.x, point.y, point.z );
+	            normals.push( face.normal.x, face.normal.y, face.normal.z );
+
+	            edge = edge.next;
+
+	        } while ( edge !== face.edge );
+
+	    }
+
+	    // build geometry
+
+	    this.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	    this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+
+	}
+
+	ConvexBufferGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
+	ConvexBufferGeometry.prototype.constructor = ConvexBufferGeometry;
 
 	// ROOT reference of engine
 
@@ -201,19 +1486,24 @@
 
 			this.bodys.forEach( function ( b, id ) {
 
-				n = N + ( id * 8 );
-				var s = AR[n];// speed km/h
-		        if ( s > 0 ) {
 
-		            if ( b.material.name == 'sleep' ) b.material = root.mat.move;
-		            if( s > 50 && b.material.name == 'move' ) b.material = root.mat.speed;
-		            else if( s < 50 && b.material.name == 'speed') b.material = root.mat.move;
-		      
-		        } else {
-		            if ( b.material.name == 'move' || b.material.name == 'speed' ) b.material = root.mat.sleep;
+				n = N + ( id * 8 );
+
+				if( AR[n] + AR[n+1] + AR[n+2] + AR[n+3] !== 0 || b.isKinemmatic ) {
+
+					var s = AR[n];// speed km/h
+			        if ( s > 0 ) {
+
+			            if ( b.material.name == 'sleep' ) b.material = root.mat.move;
+			            if( s > 50 && b.material.name == 'move' ) b.material = root.mat.speed;
+			            else if( s < 50 && b.material.name == 'speed') b.material = root.mat.move;
+			      
+			        } else {
+			            if ( b.material.name == 'move' || b.material.name == 'speed' ) b.material = root.mat.sleep;
+			        }
+					b.position.fromArray( AR, n + 1 );
+		            b.quaternion.fromArray( AR, n + 4 );
 		        }
-				b.position.fromArray( AR, n + 1 );
-	            b.quaternion.fromArray( AR, n + 4 );
 
 			} );
 
@@ -236,8 +1526,6 @@
 		},
 
 		remove: function ( name ) {
-
-
 
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
@@ -391,6 +1679,11 @@
 
 		    	if( o.type === 'box' && o.mass === 0 && ! o.kinematic ) o.type = 'hardbox';
 		    	if( o.type === 'capsule' ) o.geometry = new Capsule( o.size[0] , o.size[1]*0.5 );
+		    	if( o.type === 'realbox' ||  o.type === 'realhardbox') o.geometry = new THREE.BoxBufferGeometry( o.size[0], o.size[1], o.size[2] );
+		    	if( o.type === 'realsphere' ) o.geometry = new THREE.SphereBufferGeometry( o.size[0], 16, 12 );
+		    	if( o.type === 'realcylinder' ) o.geometry = new THREE.CylinderBufferGeometry( o.size[0], o.size[0], o.size[1]*0.5,12,1 );
+		    	if( o.type === 'realcone' ) o.geometry = new THREE.CylinderBufferGeometry( 0, o.size[0]*0.5, o.size[1]*0.55,12,1 );
+		    	
 
 		        if( o.geometry ){
 
@@ -405,9 +1698,10 @@
 		        mesh = new THREE.Mesh( o.geometry || root.geo[o.type], material );
 
 		        if( o.geometry ){
+
 		            root.extraGeo.push( o.geometry );
-		            if( o.geoSize ) mesh.scale.fromArray( o.geoSize );
-		            if( !o.geoSize && o.size && o.type !== 'capsule' ) mesh.scale.fromArray( o.size );
+		            if( o.geoSize ) mesh.scale.fromArray( o.geoSize );// ??
+		            //if( !o.geoSize && o.size && o.type !== 'capsule' ) mesh.scale.fromArray( o.size );
 		            customGeo = true;
 		        }
 
@@ -419,11 +1713,16 @@
 		    if( mesh ){
 
 		        if( !customGeo ) mesh.scale.fromArray( o.size );
+
+		        // out of view on start
+		        //mesh.position.set(0,-1000000,0);
 		        mesh.position.fromArray( o.pos );
 		        mesh.quaternion.fromArray( o.quat );
 
 		        mesh.receiveShadow = true;
 		        mesh.castShadow = o.mass === 0 && ! o.kinematic ? false : true;
+
+		        mesh.updateMatrix();
 
 		        mesh.name = o.name;
 
@@ -455,6 +1754,8 @@
 		    	if( o.mass === 0 && ! o.kinematic ) mesh.isSolid = true;
 		    	if( o.kinematic ) mesh.isKinemmatic = true;
 		    	else mesh.isBody = true;
+		    	//mesh.userData.mass = o.mass;
+		    	mesh.userData.mass = o.mass;
 		        map.set( o.name, mesh );
 		        return mesh;
 		    }
@@ -899,7 +2200,7 @@
 
 
 
-	    var gt = new THREE.ConvexGeometry( points );
+	    var gt = new ConvexGeometry( points );
 
 	    
 	    var indices = new Uint32Array( gt.faces.length * 3 );
@@ -1754,6 +3055,533 @@
 
 	} );
 
+	/*global THREE*/
+	/**
+	 * @author yomboprime https://github.com/yomboprime
+	 *
+	 * fileoverview This class can be used to subdivide a convex Geometry object into pieces.
+	 *
+	 * Usage:
+	 *
+	 * Use the function prepareBreakableObject to prepare a Mesh object to be broken.
+	 *
+	 * Then, call the various functions to subdivide the object (subdivideByImpact, cutByPlane)
+	 *
+	 * Sub-objects that are product of subdivision don't need prepareBreakableObject to be called on them.
+	 *
+	 * Requisites for the object:
+	 *
+	 *  - Mesh object must have a BufferGeometry (not Geometry) and a Material
+	 *
+	 *  - Vertex normals must be planar (not smoothed)
+	 *
+	 *  - The geometry must be convex (this is not checked in the library). You can create convex
+	 *  geometries with THREE.ConvexBufferGeometry. The BoxBufferGeometry, SphereBufferGeometry and other convex primitives
+	 *  can also be used.
+	 *
+	 * Note: This lib adds member variables to object's userData member (see prepareBreakableObject function)
+	 * Use with caution and read the code when using with other libs.
+	 *
+	 * @param {double} minSizeForBreak Min size a debris can have to break.
+	 * @param {double} smallDelta Max distance to consider that a point belongs to a plane.
+	 *
+	*/
+
+
+	function ConvexObjectBreaker( minSizeForBreak, smallDelta ) {
+
+		this.minSizeForBreak = minSizeForBreak || 1.4;
+		this.smallDelta = smallDelta || 0.0001;
+
+		this.tempLine1 = new THREE.Line3();
+		this.tempPlane1 = new THREE.Plane();
+		this.tempPlane2 = new THREE.Plane();
+		this.tempPlane_Cut = new THREE.Plane();
+		this.tempCM1 = new THREE.Vector3();
+		this.tempCM2 = new THREE.Vector3();
+		this.tempVector3 = new THREE.Vector3();
+		this.tempVector3_2 = new THREE.Vector3();
+		this.tempVector3_3 = new THREE.Vector3();
+		this.tempVector3_P0 = new THREE.Vector3();
+		this.tempVector3_P1 = new THREE.Vector3();
+		this.tempVector3_P2 = new THREE.Vector3();
+		this.tempVector3_N0 = new THREE.Vector3();
+		this.tempVector3_N1 = new THREE.Vector3();
+		this.tempVector3_AB = new THREE.Vector3();
+		this.tempVector3_CB = new THREE.Vector3();
+		this.tempResultObjects = { object1: null, object2: null };
+
+		this.segments = [];
+		var n = 30 * 30;
+		for ( var i = 0; i < n; i ++ ) this.segments[ i ] = false;
+
+	}
+	ConvexObjectBreaker.prototype = {
+
+		constructor: ConvexObjectBreaker,
+
+		prepareBreakableObject: function ( object, mass, velocity, angularVelocity, breakable ) {
+
+			// object is a THREE.Object3d (normally a Mesh), must have a BufferGeometry, and it must be convex.
+			// Its material property is propagated to its children (sub-pieces)
+			// mass must be > 0
+
+			if ( ! object.geometry.isBufferGeometry ) {
+
+				console.error( 'ConvexObjectBreaker.prepareBreakableObject(): Parameter object must have a BufferGeometry.' );
+
+			}
+
+			var userData = object.userData;
+			userData.mass = mass;
+			userData.velocity = velocity !== undefined ? velocity.clone() : new THREE.Vector3();
+			userData.angularVelocity = angularVelocity !== undefined ? angularVelocity.clone() : new THREE.Vector3();
+			userData.breakable = breakable;
+
+		},
+
+		/**
+		 * @param {int} maxRadialIterations Iterations for radial cuts.
+		 * @param {int} maxRandomIterations Max random iterations for not-radial cuts
+		 *
+		 * Returns the array of pieces
+		 */
+		subdivideByImpact: function ( object, PointOfImpact, Normal, maxRadialIterations, maxRandomIterations ) {
+
+			var debris = [];
+
+			var pointOfImpact = new THREE.Vector3().fromArray( PointOfImpact );
+			var normal = new THREE.Vector3().fromArray( Normal );
+
+			var tempPlane1 = this.tempPlane1;
+			var tempPlane2 = this.tempPlane2;
+
+			this.tempVector3.addVectors( pointOfImpact, normal );
+			tempPlane1.setFromCoplanarPoints( pointOfImpact, object.position, this.tempVector3 );
+
+			var maxTotalIterations = maxRandomIterations + maxRadialIterations;
+
+			var scope = this;
+
+			function subdivideRadial( subObject, startAngle, endAngle, numIterations ) {
+
+				if ( Math.random() < numIterations * 0.05 || numIterations > maxTotalIterations ) {
+
+					debris.push( subObject );
+
+					return;
+
+				}
+
+				var angle = Math.PI;
+
+				if ( numIterations === 0 ) {
+
+					tempPlane2.normal.copy( tempPlane1.normal );
+					tempPlane2.constant = tempPlane1.constant;
+
+				} else {
+
+					if ( numIterations <= maxRadialIterations ) {
+
+						angle = ( endAngle - startAngle ) * ( 0.2 + 0.6 * Math.random() ) + startAngle;
+
+						// Rotate tempPlane2 at impact point around normal axis and the angle
+						scope.tempVector3_2.copy( object.position ).sub( pointOfImpact ).applyAxisAngle( normal, angle ).add( pointOfImpact );
+						tempPlane2.setFromCoplanarPoints( pointOfImpact, scope.tempVector3, scope.tempVector3_2 );
+
+					} else {
+
+						angle = ( ( 0.5 * ( numIterations & 1 ) ) + 0.2 * ( 2 - Math.random() ) ) * Math.PI;
+
+						// Rotate tempPlane2 at object position around normal axis and the angle
+						scope.tempVector3_2.copy( pointOfImpact ).sub( subObject.position ).applyAxisAngle( normal, angle ).add( subObject.position );
+						scope.tempVector3_3.copy( normal ).add( subObject.position );
+						tempPlane2.setFromCoplanarPoints( subObject.position, scope.tempVector3_3, scope.tempVector3_2 );
+
+					}
+
+				}
+
+				// Perform the cut
+				scope.cutByPlane( subObject, tempPlane2, scope.tempResultObjects );
+
+				var obj1 = scope.tempResultObjects.object1;
+				var obj2 = scope.tempResultObjects.object2;
+
+				if ( obj1 ) {
+
+					subdivideRadial( obj1, startAngle, angle, numIterations + 1 );
+
+				}
+
+				if ( obj2 ) {
+
+					subdivideRadial( obj2, angle, endAngle, numIterations + 1 );
+
+				}
+
+			}
+
+			subdivideRadial( object, 0, 2 * Math.PI, 0 );
+
+			return debris;
+
+		},
+
+		cutByPlane: function ( object, plane, output ) {
+
+			// Returns breakable objects in output.object1 and output.object2 members, the resulting 2 pieces of the cut.
+			// object2 can be null if the plane doesn't cut the object.
+			// object1 can be null only in case of internal error
+			// Returned value is number of pieces, 0 for error.
+
+			var geometry = object.geometry;
+			var coords = geometry.attributes.position.array;
+			var normals = geometry.attributes.normal.array;
+
+			var numPoints = coords.length / 3;
+			var numFaces = numPoints / 3;
+
+			var indices = geometry.getIndex();
+
+			if ( indices ) {
+
+				indices = indices.array;
+				numFaces = indices.length / 3;
+
+			}
+
+			function getVertexIndex( faceIdx, vert ) {
+
+				// vert = 0, 1 or 2.
+
+				var idx = faceIdx * 3 + vert;
+
+				return indices ? indices[ idx ] : idx;
+
+			}
+
+			var points1 = [];
+			var points2 = [];
+
+			var delta = this.smallDelta;
+
+			// Reset segments mark
+			var numPointPairs = numPoints * numPoints;
+			for ( var i = 0; i < numPointPairs; i ++ ) this.segments[ i ] = false;
+
+			var p0 = this.tempVector3_P0;
+			var p1 = this.tempVector3_P1;
+			var n0 = this.tempVector3_N0;
+			var n1 = this.tempVector3_N1;
+
+			// Iterate through the faces to mark edges shared by coplanar faces
+			for ( var i = 0; i < numFaces - 1; i ++ ) {
+
+				var a1 = getVertexIndex( i, 0 );
+				var b1 = getVertexIndex( i, 1 );
+				var c1 = getVertexIndex( i, 2 );
+
+				// Assuming all 3 vertices have the same normal
+				n0.set( normals[ a1 ], normals[ a1 ] + 1, normals[ a1 ] + 2 );
+
+				for ( var j = i + 1; j < numFaces; j ++ ) {
+
+					var a2 = getVertexIndex( j, 0 );
+					var b2 = getVertexIndex( j, 1 );
+					var c2 = getVertexIndex( j, 2 );
+
+					// Assuming all 3 vertices have the same normal
+					n1.set( normals[ a2 ], normals[ a2 ] + 1, normals[ a2 ] + 2 );
+
+					var coplanar = 1 - n0.dot( n1 ) < delta;
+
+					if ( coplanar ) {
+
+						if ( a1 === a2 || a1 === b2 || a1 === c2 ) {
+
+							if ( b1 === a2 || b1 === b2 || b1 === c2 ) {
+
+								this.segments[ a1 * numPoints + b1 ] = true;
+								this.segments[ b1 * numPoints + a1 ] = true;
+
+							}	else {
+
+								this.segments[ c1 * numPoints + a1 ] = true;
+								this.segments[ a1 * numPoints + c1 ] = true;
+
+							}
+
+						}	else if ( b1 === a2 || b1 === b2 || b1 === c2 ) {
+
+							this.segments[ c1 * numPoints + b1 ] = true;
+							this.segments[ b1 * numPoints + c1 ] = true;
+
+						}
+
+					}
+
+				}
+
+			}
+
+			// Transform the plane to object local space
+			var localPlane = this.tempPlane_Cut;
+			object.updateMatrix();
+			ConvexObjectBreaker.transformPlaneToLocalSpace( plane, object.matrix, localPlane );
+
+			// Iterate through the faces adding points to both pieces
+			for ( var i = 0; i < numFaces; i ++ ) {
+
+				var va = getVertexIndex( i, 0 );
+				var vb = getVertexIndex( i, 1 );
+				var vc = getVertexIndex( i, 2 );
+
+				for ( var segment = 0; segment < 3; segment ++ ) {
+
+					var i0 = segment === 0 ? va : ( segment === 1 ? vb : vc );
+					var i1 = segment === 0 ? vb : ( segment === 1 ? vc : va );
+
+					var segmentState = this.segments[ i0 * numPoints + i1 ];
+
+					if ( segmentState ) continue; // The segment already has been processed in another face
+
+					// Mark segment as processed (also inverted segment)
+					this.segments[ i0 * numPoints + i1 ] = true;
+					this.segments[ i1 * numPoints + i0 ] = true;
+
+					p0.set( coords[ 3 * i0 ], coords[ 3 * i0 + 1 ], coords[ 3 * i0 + 2 ] );
+					p1.set( coords[ 3 * i1 ], coords[ 3 * i1 + 1 ], coords[ 3 * i1 + 2 ] );
+
+					// mark: 1 for negative side, 2 for positive side, 3 for coplanar point
+					var mark0 = 0;
+
+					var d = localPlane.distanceToPoint( p0 );
+
+					if ( d > delta ) {
+
+						mark0 = 2;
+						points2.push( p0.clone() );
+
+					} else if ( d < - delta ) {
+
+						mark0 = 1;
+						points1.push( p0.clone() );
+
+					} else {
+
+						mark0 = 3;
+						points1.push( p0.clone() );
+						points2.push( p0.clone() );
+
+					}
+
+					// mark: 1 for negative side, 2 for positive side, 3 for coplanar point
+					var mark1 = 0;
+
+					d = localPlane.distanceToPoint( p1 );
+
+					if ( d > delta ) {
+
+						mark1 = 2;
+						points2.push( p1.clone() );
+
+					} else if ( d < - delta ) {
+
+						mark1 = 1;
+						points1.push( p1.clone() );
+
+					}	else {
+
+						mark1 = 3;
+						points1.push( p1.clone() );
+						points2.push( p1.clone() );
+
+					}
+
+					if ( ( mark0 === 1 && mark1 === 2 ) || ( mark0 === 2 && mark1 === 1 ) ) {
+
+						// Intersection of segment with the plane
+
+						this.tempLine1.start.copy( p0 );
+						this.tempLine1.end.copy( p1 );
+
+						var intersection = new THREE.Vector3();
+						intersection = localPlane.intersectLine( this.tempLine1, intersection );
+
+						if ( intersection === undefined ) {
+
+							// Shouldn't happen
+							console.error( "Internal error: segment does not intersect plane." );
+							output.segmentedObject1 = null;
+							output.segmentedObject2 = null;
+							return 0;
+
+						}
+
+						points1.push( intersection );
+						points2.push( intersection.clone() );
+
+					}
+
+				}
+
+			}
+
+			// Calculate debris mass (very fast and imprecise):
+			var newMass = object.userData.mass * 0.5;
+
+			// Calculate debris Center of Mass (again fast and imprecise)
+			this.tempCM1.set( 0, 0, 0 );
+			var radius1 = 0;
+			var numPoints1 = points1.length;
+
+			if ( numPoints1 > 0 ) {
+
+				for ( var i = 0; i < numPoints1; i ++ ) this.tempCM1.add( points1[ i ] );
+
+				this.tempCM1.divideScalar( numPoints1 );
+				for ( var i = 0; i < numPoints1; i ++ ) {
+
+					var p = points1[ i ];
+					p.sub( this.tempCM1 );
+					radius1 = Math.max( radius1, p.x, p.y, p.z );
+
+				}
+				this.tempCM1.add( object.position );
+
+			}
+
+			this.tempCM2.set( 0, 0, 0 );
+			var radius2 = 0;
+			var numPoints2 = points2.length;
+			if ( numPoints2 > 0 ) {
+
+				for ( var i = 0; i < numPoints2; i ++ ) this.tempCM2.add( points2[ i ] );
+
+				this.tempCM2.divideScalar( numPoints2 );
+				for ( var i = 0; i < numPoints2; i ++ ) {
+
+					var p = points2[ i ];
+					p.sub( this.tempCM2 );
+					radius2 = Math.max( radius2, p.x, p.y, p.z );
+
+				}
+				this.tempCM2.add( object.position );
+
+			}
+
+			var object1 = null;
+			var object2 = null;
+
+			var numObjects = 0;
+
+			if ( numPoints1 > 4 ) {
+
+				object1 = new THREE.Mesh( new ConvexBufferGeometry( points1 ), object.material );
+				object1.position.copy( this.tempCM1 );
+				object1.quaternion.copy( object.quaternion );
+
+				this.prepareBreakableObject( object1, newMass, object.userData.velocity, object.userData.angularVelocity, 2 * radius1 > this.minSizeForBreak );
+
+				numObjects ++;
+
+			}
+
+			if ( numPoints2 > 4 ) {
+
+				object2 = new THREE.Mesh( new ConvexBufferGeometry( points2 ), object.material );
+				object2.position.copy( this.tempCM2 );
+				object2.quaternion.copy( object.quaternion );
+
+				this.prepareBreakableObject( object2, newMass, object.userData.velocity, object.userData.angularVelocity, 2 * radius2 > this.minSizeForBreak );
+
+				numObjects ++;
+
+			}
+
+			output.object1 = object1;
+			output.object2 = object2;
+
+			return numObjects;
+
+		}
+
+	};
+
+	ConvexObjectBreaker.transformFreeVector = function ( v, m ) {
+
+		// input:
+		// vector interpreted as a free vector
+		// THREE.Matrix4 orthogonal matrix (matrix without scale)
+
+		var x = v.x, y = v.y, z = v.z;
+		var e = m.elements;
+
+		v.x = e[ 0 ] * x + e[ 4 ] * y + e[ 8 ] * z;
+		v.y = e[ 1 ] * x + e[ 5 ] * y + e[ 9 ] * z;
+		v.z = e[ 2 ] * x + e[ 6 ] * y + e[ 10 ] * z;
+
+		return v;
+
+	};
+
+	ConvexObjectBreaker.transformFreeVectorInverse = function ( v, m ) {
+
+		// input:
+		// vector interpreted as a free vector
+		// THREE.Matrix4 orthogonal matrix (matrix without scale)
+
+		var x = v.x, y = v.y, z = v.z;
+		var e = m.elements;
+
+		v.x = e[ 0 ] * x + e[ 1 ] * y + e[ 2 ] * z;
+		v.y = e[ 4 ] * x + e[ 5 ] * y + e[ 6 ] * z;
+		v.z = e[ 8 ] * x + e[ 9 ] * y + e[ 10 ] * z;
+
+		return v;
+
+	};
+
+	ConvexObjectBreaker.transformTiedVectorInverse = function ( v, m ) {
+
+		// input:
+		// vector interpreted as a tied (ordinary) vector
+		// THREE.Matrix4 orthogonal matrix (matrix without scale)
+
+		var x = v.x, y = v.y, z = v.z;
+		var e = m.elements;
+
+		v.x = e[ 0 ] * x + e[ 1 ] * y + e[ 2 ] * z - e[ 12 ];
+		v.y = e[ 4 ] * x + e[ 5 ] * y + e[ 6 ] * z - e[ 13 ];
+		v.z = e[ 8 ] * x + e[ 9 ] * y + e[ 10 ] * z - e[ 14 ];
+
+		return v;
+
+	};
+
+	ConvexObjectBreaker.transformPlaneToLocalSpace = function () {
+
+		var v1 = new THREE.Vector3();
+
+		return function transformPlaneToLocalSpace( plane, m, resultPlane ) {
+
+			resultPlane.normal.copy( plane.normal );
+			resultPlane.constant = plane.constant;
+
+			var referencePoint = ConvexObjectBreaker.transformTiedVectorInverse( plane.coplanarPoint( v1 ), m );
+
+			ConvexObjectBreaker.transformFreeVectorInverse( resultPlane.normal, m );
+
+			// recalculate constant (like in setFromNormalAndCoplanarPoint)
+			resultPlane.constant = - referencePoint.dot( resultPlane.normal );
+
+
+		};
+
+	}();
+
 	/*
 	Copyright (c) 2011 Juan Mellado
 
@@ -2589,6 +4417,8 @@
 
 	    var rigidBody, softBody, terrains, vehicles, character, collision;
 
+	    var convexBreaker = null;
+
 	    var option = {
 
 	        worldscale: 1,
@@ -2682,7 +4512,7 @@
 	            Counts = Counts || {};
 
 	            var counts = {
-	                maxBody: Counts.maxBody || 1000,
+	                maxBody: Counts.maxBody || 1400,
 	                maxContact: Counts.maxContact || 200,
 	                maxCharacter: Counts.maxCharacter || 10, 
 	                maxCar: Counts.maxCar || 14,
@@ -2724,6 +4554,8 @@
 
 	                case 'moveSolid': exports.engine.moveSolid( data.o ); break;
 	                case 'ellipsoid': exports.engine.ellipsoidMesh( data.o ); break;
+
+	                case 'makeBreak': exports.engine.makeBreak( data.o ); break;
 	            }
 
 	        },
@@ -2757,16 +4589,28 @@
 
 	        postUpdate: function () {},
 
+	        update: function () {
+
+	            exports.engine.postUpdate();
+
+	            terrains.step();
+	            rigidBody.step( root.Ar, root.ArPos[ 0 ] );
+	            collision.step( root.Ar, root.ArPos[ 1 ] );
+	            character.step( root.Ar, root.ArPos[ 2 ] );
+	            vehicles.step( root.Ar, root.ArPos[ 3 ] );
+	            softBody.step( root.Ar, root.ArPos[ 4 ] );
+
+	        },
+
 	        step: function () {
 
 	            if ( t.now - 1000 > t.tmp ){ t.tmp = t.now; t.fps = t.n; t.n = 0; } t.n++; // FPS
 
 	            // TODO
 	            
-	            exports.engine.postUpdate();
-	            exports.engine.steps();
 	            if( refView ) refView.needUpdate( true );
-	            //engine.updateContact();
+	            //else 
+	            exports.engine.update();
 
 	            stepNext = true;
 	            
@@ -2909,6 +4753,8 @@
 
 	        anchor: function ( o ) { this.post('addAnchor', o ); },
 
+	        break: function ( o ) { this.post('addBreakable', o ); },
+
 	        moveSolid: function ( o ) {
 
 	            if ( ! map.has( o.name ) ) return;
@@ -2930,6 +4776,12 @@
 
 	        },
 
+	        removeRigidBody: function (name){
+
+	            rigidBody.remove(name);
+
+	        },
+
 	        initObject: function () {
 
 	            rigidBody = new RigidBody();
@@ -2945,16 +4797,7 @@
 
 	        },
 
-	        steps: function () {
-
-	            terrains.step();
-	            rigidBody.step( root.Ar, root.ArPos[ 0 ] );
-	            collision.step( root.Ar, root.ArPos[ 1 ] );
-	            character.step( root.Ar, root.ArPos[ 2 ] );
-	            vehicles.step( root.Ar, root.ArPos[ 3 ] );
-	            softBody.step( root.Ar, root.ArPos[ 4 ] );
-
-	        },
+	        
 
 	        clear: function ( o ) {
 
@@ -2990,7 +4833,12 @@
 	            else if( type === 'character' ) character.add( o );
 	            else if( type === 'collision' ) collision.add( o );
 	            else if( type === 'car' ) vehicles.add( o );
-	            else return rigidBody.add( o );
+	            else {
+	                if( o.breakable ){
+	                    if( type==='hardbox' || type==='box' || type==='sphere' || type==='cylinder' || type==='cone' ) o.type = 'real'+o.type;
+	                }
+	                return rigidBody.add( o );
+	            }
 
 	        },
 
@@ -3039,6 +4887,57 @@
 
 	            return root.container;
 
+	        },
+
+	        // BREAKABLE
+
+	        makeBreak: function ( o ) {
+
+	            var name = o.name;
+	            if ( ! map.has( name ) ) return;
+
+	            if( convexBreaker === null ) convexBreaker = new ConvexObjectBreaker();
+
+	            var mesh = map.get( name );
+	            // breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
+	            var breakOption = o.breakOption;
+	            
+	            var debris = convexBreaker.subdivideByImpact( mesh, o.pos, o.normal , breakOption[1], breakOption[2] ); // , 1.5 ??
+	            // remove one level
+	            breakOption[3] -= 1;
+	            // remove original object
+	            this.removeRigidBody( name );
+
+	            var i = debris.length;
+	            while( i-- ) this.addDebris( name, i, debris[ i ], breakOption );
+
+	        },
+
+	        addDebris: function ( name, id, mesh, breakOption ) {
+
+	            var o = {
+	                name: name+'_debris'+ id,
+	                material: mesh.material,
+	                type:'convex',
+	                shape: mesh.geometry,
+	                //size: mesh.scale.toArray(),
+	                pos: mesh.position.toArray(),
+	                quat: mesh.quaternion.toArray(),
+	                mass: mesh.userData.mass,
+	                linearVelocity:mesh.userData.velocity.toArray(),
+	                angularVelocity:mesh.userData.angularVelocity.toArray(),
+	            };
+
+	            // if levelOfSubdivision > 0 make debris breakable !!
+	            if( breakOption[3] > 0 ){
+
+	                o.breakable = true;
+	                o.breakOption = breakOption;
+
+	            }
+
+	            this.add( o );
+	            
 	        },
 	        
 	    };

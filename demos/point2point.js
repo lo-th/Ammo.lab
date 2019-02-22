@@ -26,7 +26,7 @@ function demo() {
         x = Math.rand(-50, 50);
         z = Math.rand(-50, 50);
         s = Math.rand(5, 15);
-        physic.add({ type:'box', geometry:geo.dice, size:[s,s,s], pos:[x,s*0.5,z], mass:s });
+        physic.add({ type:'box', geometry:geo.dice, geoSize:[s], size:[s], pos:[x,s*0.5,z], mass:s });
     }
 
 }

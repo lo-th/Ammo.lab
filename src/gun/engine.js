@@ -25,7 +25,7 @@ import { root, map } from './root.js';
 *    and gravity in meters per square second (9.8 m/s^2).
 */
 //var Module = { TOTAL_MEMORY: 64*1024*1024 };//default // 67108864
-self.Module = { TOTAL_MEMORY: 16*1024*1024 };//default // 67108864
+self.Module = { TOTAL_MEMORY: 256*1024*1024 };// TODO don't work ???
 
 self.onmessage = function ( e ) {
 
@@ -103,6 +103,8 @@ export var engine = ( function () {
 
 	var zero = null;
 
+	var numBreak = 0;
+
 
 
 	var rigidBody, softBody, constraint, terrains, vehicles, character, collision;
@@ -168,6 +170,9 @@ export var engine = ( function () {
 			vehicles.step( Ar, ArPos[ 3 ] );
 			softBody.step( Ar, ArPos[ 4 ] );
 			
+			// breakable object
+			if( numBreak !== 0 ) this.stepBreak();
+			
 
 			//constraint.step( Ar, ArPos[4] );
 
@@ -177,6 +182,8 @@ export var engine = ( function () {
 		},
 
 		reset: function ( o ) {
+
+			numBreak = 0;
 
 			carName = "";
 			heroName = "";
@@ -193,6 +200,8 @@ export var engine = ( function () {
 			vehicles.clear();
 			character.clear();
 			collision.clear();
+
+
 
 			// clear map map
 			map.clear();
@@ -263,13 +272,20 @@ export var engine = ( function () {
 				character = new Character();
 				collision = new Collision();
 
+
 				vehicles.addExtra = rigidBody.add;
 
 				self.postMessage( { m: 'initEngine' } );
 
-			} );
+			});
 
 		},
+
+		removeRigidBody: function ( name ) {
+
+            rigidBody.remove(name)
+
+        },
 
 		//-----------------------------
 		// ADD
@@ -284,6 +300,10 @@ export var engine = ( function () {
 		add: function ( o ) {
 
 			o.type = o.type === undefined ? 'box' : o.type;
+
+			if(o.breakable !== undefined ){
+				if( o.breakable ) numBreak ++;
+			}
 
 			var type = o.type;
 			var prev = o.type.substring( 0, 4 );
@@ -360,6 +380,12 @@ export var engine = ( function () {
 
 			root.world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collisionConfig, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfig );
 
+	
+
+
+			//console.log(dispatcher)
+			// This is required to use btGhostObjects ??
+			//root.world.getPairCache().setInternalGhostPairCallback( new Ammo.btGhostPairCallback() );
 			/*
 			root.world.getSolverInfo().set_m_splitImpulsePenetrationThreshold(0);
 			root.world.getSolverInfo().set_m_splitImpulse( true );
@@ -658,6 +684,72 @@ export var engine = ( function () {
 
 			if ( b.isBody || b.isSolid || b.isKinematic ) rigidBody.remove( name );
 			if ( b.isJoint ) constraint.remove( name );
+
+
+		},
+
+
+		//-----------------------------
+		// BREAKABLE
+		//-----------------------------
+
+		stepBreak: function () {
+
+			var manifold, point, contact, maxImpulse, impulse;
+			var pos, normal, rb0, rb1, body0, body1;
+
+			for ( var i = 0, il = dispatcher.getNumManifolds(); i < il; i ++ ) {
+
+				manifold = dispatcher.getManifoldByIndexInternal( i );
+
+				body0 = Ammo.castObject( manifold.getBody0(), Ammo.btRigidBody );
+				body1 = Ammo.castObject( manifold.getBody1(), Ammo.btRigidBody );
+
+				rb0 = body0.name;
+				rb1 = body1.name;
+
+				if ( !body0.breakable && !body1.breakable ) continue;
+				
+				contact = false;
+				maxImpulse = 0;
+				for ( var j = 0, jl = manifold.getNumContacts(); j < jl; j ++ ) {
+					point = manifold.getContactPoint( j );
+					if ( point.getDistance() < 0 ) {
+
+						contact = true;
+						impulse = point.getAppliedImpulse();
+
+						if ( impulse > maxImpulse ) {
+
+							maxImpulse = impulse;
+							pos = point.get_m_positionWorldOnB().toArray();
+							normal = point.get_m_normalWorldOnB().toArray();
+						}
+						break;
+					}
+				}
+
+				// If no point has contact, abort
+				if ( !contact ) continue;
+				
+				// Subdivision
+
+				if ( body0.breakable && maxImpulse > body0.breakOption[0] ) {
+
+					self.postMessage( { m: 'makeBreak', o:{ name:rb0, pos: math.vectomult( pos, root.scale ), normal:normal, breakOption:body0.breakOption } } );
+					this.removeRigidBody( rb0 );
+					
+				}
+
+				if ( body1.breakable && maxImpulse > body1.breakOption[0] ) {
+
+					self.postMessage( { m: 'makeBreak', o:{ name:rb1, pos: math.vectomult( pos, root.scale ), normal:normal, breakOption:body1.breakOption } } );
+					this.removeRigidBody( rb1 );
+
+				}
+
+			}
+
 
 
 		},

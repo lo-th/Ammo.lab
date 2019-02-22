@@ -167,7 +167,7 @@ function addBall () {
         physic.add({ 
         	name:(i+1), type:'sphere', material: tmpMat,
         	geometry:view.getGeometry( 'million', 'ball' ),
-        	size:[2.5], pos:[x, y, -11.6], mass:0.65, state:4, 
+        	size:[2.5], geoSize:[2.5], pos:[x, y, -11.6], mass:0.65, state:4, 
         	friction: 0.5, restitution: 0.3, 
         });
         j++;
@@ -194,7 +194,7 @@ function addBall () {
         physic.add({ 
             name:'x'+(i+1), type:'sphere', material: tmpMat,
             geometry:view.getGeometry( 'million', 'ball' ),
-            size:[2.5], pos:[x, y, -9.75], mass:0.65, state:4, 
+            size:[2.5], geoSize:[2.5], pos:[x, y, -9.75], mass:0.65, state:4, 
             friction: 0.5, restitution: 0.3, 
         });
         j++;

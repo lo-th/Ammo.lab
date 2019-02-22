@@ -1,4 +1,5 @@
 /*global Ammo*/
+import { math } from './math.js';
 import { root, map } from './root.js';
 
 /**
@@ -60,7 +61,6 @@ Object.assign( Collision.prototype, {
 		if ( n !== - 1 ) {
 
 			this.pairs.splice( n, 1 );
-			//this.contacts.splice( n, 1 );
 			this.destroy( p );
 
 		}
@@ -101,11 +101,38 @@ function Pair( a, b, name ) {
 	this.name = name;
 
 	this.result = 0;
+
+	this.pa = [0,0,0];
+	this.pb = [0,0,0];
+	this.nb = [0,0,0];
+	this.distance = 0;
+	this.impulse = 0;
+	this.maxImpulse = 0;
+
 	this.a = a;
 	this.b = b;
 
 	this.f = new Ammo.ConcreteContactResultCallback();
-	this.f.addSingleResult = function () {
+	///console.log(this.f)
+	this.f.addSingleResult = function ( manifoldPoint, collisionObjectA, id0, index0, collisionObjectB, id1, index1 ) {
+
+	    /*var manifold = Ammo.wrapPointer( manifoldPoint, Ammo.btManifoldPoint )
+
+	    this.nb = manifold.m_normalWorldOnB.toArray();
+	    this.pa = manifold.m_positionWorldOnA.toArray();
+	    this.pb = manifold.m_positionWorldOnB.toArray();
+
+	    this.distance = manifold.getDistance();
+	    this.impulse = manifold.getAppliedImpulse();
+	    if ( this.impulse > this.maxImpulse ) {
+	    	this.maxImpulse = this.impulse;
+	    }*/
+
+	  //  console.log( this.pa, this.pb, this.nb );
+
+	    //console.log( this.maxImpulse );
+
+
 
 		this.result = 1;
 

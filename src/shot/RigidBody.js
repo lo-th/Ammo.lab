@@ -21,19 +21,24 @@ Object.assign( RigidBody.prototype, {
 
 		this.bodys.forEach( function ( b, id ) {
 
-			n = N + ( id * 8 );
-			var s = AR[n];// speed km/h
-	        if ( s > 0 ) {
 
-	            if ( b.material.name == 'sleep' ) b.material = root.mat.move;
-	            if( s > 50 && b.material.name == 'move' ) b.material = root.mat.speed;
-	            else if( s < 50 && b.material.name == 'speed') b.material = root.mat.move;
-	      
-	        } else {
-	            if ( b.material.name == 'move' || b.material.name == 'speed' ) b.material = root.mat.sleep;
+			n = N + ( id * 8 );
+
+			if( AR[n] + AR[n+1] + AR[n+2] + AR[n+3] !== 0 || b.isKinemmatic ) {
+
+				var s = AR[n];// speed km/h
+		        if ( s > 0 ) {
+
+		            if ( b.material.name == 'sleep' ) b.material = root.mat.move;
+		            if( s > 50 && b.material.name == 'move' ) b.material = root.mat.speed;
+		            else if( s < 50 && b.material.name == 'speed') b.material = root.mat.move;
+		      
+		        } else {
+		            if ( b.material.name == 'move' || b.material.name == 'speed' ) b.material = root.mat.sleep;
+		        }
+				b.position.fromArray( AR, n + 1 );
+	            b.quaternion.fromArray( AR, n + 4 );
 	        }
-			b.position.fromArray( AR, n + 1 );
-            b.quaternion.fromArray( AR, n + 4 );
 
 		} );
 
@@ -56,8 +61,6 @@ Object.assign( RigidBody.prototype, {
 	},
 
 	remove: function ( name ) {
-
-
 
 		if ( ! map.has( name ) ) return;
 		var b = map.get( name );
@@ -211,6 +214,11 @@ Object.assign( RigidBody.prototype, {
 
 	    	if( o.type === 'box' && o.mass === 0 && ! o.kinematic ) o.type = 'hardbox';
 	    	if( o.type === 'capsule' ) o.geometry = new Capsule( o.size[0] , o.size[1]*0.5 );
+	    	if( o.type === 'realbox' ||  o.type === 'realhardbox') o.geometry = new THREE.BoxBufferGeometry( o.size[0], o.size[1], o.size[2] );
+	    	if( o.type === 'realsphere' ) o.geometry = new THREE.SphereBufferGeometry( o.size[0], 16, 12 );
+	    	if( o.type === 'realcylinder' ) o.geometry = new THREE.CylinderBufferGeometry( o.size[0], o.size[0], o.size[1]*0.5,12,1 );
+	    	if( o.type === 'realcone' ) o.geometry = new THREE.CylinderBufferGeometry( 0, o.size[0]*0.5, o.size[1]*0.55,12,1 );
+	    	
 
 	        if( o.geometry ){
 
@@ -225,9 +233,10 @@ Object.assign( RigidBody.prototype, {
 	        mesh = new THREE.Mesh( o.geometry || root.geo[o.type], material );
 
 	        if( o.geometry ){
+
 	            root.extraGeo.push( o.geometry );
-	            if( o.geoSize ) mesh.scale.fromArray( o.geoSize );
-	            if( !o.geoSize && o.size && o.type !== 'capsule' ) mesh.scale.fromArray( o.size );
+	            if( o.geoSize ) mesh.scale.fromArray( o.geoSize );// ??
+	            //if( !o.geoSize && o.size && o.type !== 'capsule' ) mesh.scale.fromArray( o.size );
 	            customGeo = true;
 	        }
 
@@ -239,11 +248,16 @@ Object.assign( RigidBody.prototype, {
 	    if( mesh ){
 
 	        if( !customGeo ) mesh.scale.fromArray( o.size );
+
+	        // out of view on start
+	        //mesh.position.set(0,-1000000,0);
 	        mesh.position.fromArray( o.pos );
 	        mesh.quaternion.fromArray( o.quat );
 
 	        mesh.receiveShadow = true;
 	        mesh.castShadow = o.mass === 0 && ! o.kinematic ? false : true;
+
+	        mesh.updateMatrix();
 
 	        mesh.name = o.name;
 
@@ -275,6 +289,8 @@ Object.assign( RigidBody.prototype, {
 	    	if( o.mass === 0 && ! o.kinematic ) mesh.isSolid = true;
 	    	if( o.kinematic ) mesh.isKinemmatic = true;
 	    	else mesh.isBody = true;
+	    	//mesh.userData.mass = o.mass;
+	    	mesh.userData.mass = o.mass;
 	        map.set( o.name, mesh );
 	        return mesh;
 	    }

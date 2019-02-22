@@ -93,6 +93,15 @@ var math = {
 
 	},
 
+	distanceArray: function ( p1, p2 ) {
+
+		var x = p2[0]-p1[0];
+		var y = p2[1]-p1[1];
+		var z = p2[2]-p1[2];
+		return Math.sqrt( x*x + y*y + z*z );
+
+	},
+
 };
 
 

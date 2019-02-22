@@ -93,6 +93,15 @@ var math = {
 
 	},
 
+	distanceArray: function ( p1, p2 ) {
+
+		var x = p2[0]-p1[0];
+		var y = p2[1]-p1[1];
+		var z = p2[2]-p1[2];
+		return Math.sqrt( x*x + y*y + z*z );
+
+	},
+
 };
 
 function mathExtend() {
@@ -859,21 +868,21 @@ Object.assign( RigidBody.prototype, {
 				shape = new Ammo.btStaticPlaneShape( p4, 0 );
 				break;
 
-			case 'box': case 'hardbox':
+			case 'box': case 'hardbox': case 'realbox': case 'realhardbox':
 				p4.setValue( o.size[ 0 ] * 0.5, o.size[ 1 ] * 0.5, o.size[ 2 ] * 0.5 );
 				shape = new Ammo.btBoxShape( p4 );
 				break;
 
-			case 'sphere':
+			case 'sphere': case 'realsphere':
 				shape = new Ammo.btSphereShape( o.size[ 0 ] );
 				break;
 
-			case 'cylinder':
+			case 'cylinder': case 'realcylinder':
 				p4.setValue( o.size[ 0 ], o.size[ 1 ] * 0.5, o.size[ 2 ] * 0.5 );
 				shape = new Ammo.btCylinderShape( p4 );
 				break;
 
-			case 'cone':
+			case 'cone': case 'realcone':
 				shape = new Ammo.btConeShape( o.size[ 0 ], o.size[ 1 ] * 0.5 );
 				break;
 
@@ -973,7 +982,7 @@ Object.assign( RigidBody.prototype, {
 
 		}
 
-		if ( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin*root.invScale );
+		if ( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin * root.invScale );
 
 		//console.log(shape.getMargin())
 
@@ -1048,12 +1057,22 @@ Object.assign( RigidBody.prototype, {
 
 		}
 
+		// BREAKABLE
+
+		body.breakable = o.breakable !== undefined ? o.breakable : false;
+
+		if( body.breakable ){
+
+			// breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
+			body.breakOption = o.breakOption !== undefined ? o.breakOption : [ 250, 1, 2, 1 ];
+
+		}
+
+	
+
 		
 
 		map.set( name, body );
-
-		//console.log(body)
-
 
 		Ammo.destroy( rbInfo );
 
@@ -2864,7 +2883,6 @@ Object.assign( Collision.prototype, {
 		if ( n !== - 1 ) {
 
 			this.pairs.splice( n, 1 );
-			//this.contacts.splice( n, 1 );
 			this.destroy( p );
 
 		}
@@ -2902,11 +2920,38 @@ function Pair( a, b, name ) {
 	this.name = name;
 
 	this.result = 0;
+
+	this.pa = [0,0,0];
+	this.pb = [0,0,0];
+	this.nb = [0,0,0];
+	this.distance = 0;
+	this.impulse = 0;
+	this.maxImpulse = 0;
+
 	this.a = a;
 	this.b = b;
 
 	this.f = new Ammo.ConcreteContactResultCallback();
-	this.f.addSingleResult = function () {
+	///console.log(this.f)
+	this.f.addSingleResult = function ( manifoldPoint, collisionObjectA, id0, index0, collisionObjectB, id1, index1 ) {
+
+	    /*var manifold = Ammo.wrapPointer( manifoldPoint, Ammo.btManifoldPoint )
+
+	    this.nb = manifold.m_normalWorldOnB.toArray();
+	    this.pa = manifold.m_positionWorldOnA.toArray();
+	    this.pb = manifold.m_positionWorldOnB.toArray();
+
+	    this.distance = manifold.getDistance();
+	    this.impulse = manifold.getAppliedImpulse();
+	    if ( this.impulse > this.maxImpulse ) {
+	    	this.maxImpulse = this.impulse;
+	    }*/
+
+	  //  console.log( this.pa, this.pb, this.nb );
+
+	    //console.log( this.maxImpulse );
+
+
 
 		this.result = 1;
 
@@ -2945,7 +2990,7 @@ Object.assign( Pair.prototype, {
 *    and gravity in meters per square second (9.8 m/s^2).
 */
 //var Module = { TOTAL_MEMORY: 64*1024*1024 };//default // 67108864
-self.Module = { TOTAL_MEMORY: 16*1024*1024 };//default // 67108864
+self.Module = { TOTAL_MEMORY: 256*1024*1024 };// TODO don't work ???
 
 self.onmessage = function ( e ) {
 
@@ -3021,6 +3066,8 @@ var engine = ( function () {
 
 	var zero = null;
 
+	var numBreak = 0;
+
 
 
 	var rigidBody, softBody, constraint, terrains, vehicles, character, collision;
@@ -3086,6 +3133,9 @@ var engine = ( function () {
 			vehicles.step( Ar, ArPos[ 3 ] );
 			softBody.step( Ar, ArPos[ 4 ] );
 			
+			// breakable object
+			if( numBreak !== 0 ) this.stepBreak();
+			
 
 			//constraint.step( Ar, ArPos[4] );
 
@@ -3095,6 +3145,8 @@ var engine = ( function () {
 		},
 
 		reset: function ( o ) {
+
+			numBreak = 0;
 
 			carName = "";
 			heroName = "";
@@ -3111,6 +3163,8 @@ var engine = ( function () {
 			vehicles.clear();
 			character.clear();
 			collision.clear();
+
+
 
 			// clear map map
 			map.clear();
@@ -3181,13 +3235,20 @@ var engine = ( function () {
 				character = new Character();
 				collision = new Collision();
 
+
 				vehicles.addExtra = rigidBody.add;
 
 				self.postMessage( { m: 'initEngine' } );
 
-			} );
+			});
 
 		},
+
+		removeRigidBody: function ( name ) {
+
+            rigidBody.remove(name);
+
+        },
 
 		//-----------------------------
 		// ADD
@@ -3202,6 +3263,10 @@ var engine = ( function () {
 		add: function ( o ) {
 
 			o.type = o.type === undefined ? 'box' : o.type;
+
+			if(o.breakable !== undefined ){
+				if( o.breakable ) numBreak ++;
+			}
 
 			var type = o.type;
 			var prev = o.type.substring( 0, 4 );
@@ -3278,6 +3343,12 @@ var engine = ( function () {
 
 			root.world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collisionConfig, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfig );
 
+	
+
+
+			//console.log(dispatcher)
+			// This is required to use btGhostObjects ??
+			//root.world.getPairCache().setInternalGhostPairCallback( new Ammo.btGhostPairCallback() );
 			/*
 			root.world.getSolverInfo().set_m_splitImpulsePenetrationThreshold(0);
 			root.world.getSolverInfo().set_m_splitImpulse( true );
@@ -3576,6 +3647,72 @@ var engine = ( function () {
 
 			if ( b.isBody || b.isSolid || b.isKinematic ) rigidBody.remove( name );
 			if ( b.isJoint ) constraint.remove( name );
+
+
+		},
+
+
+		//-----------------------------
+		// BREAKABLE
+		//-----------------------------
+
+		stepBreak: function () {
+
+			var manifold, point, contact, maxImpulse, impulse;
+			var pos, normal, rb0, rb1, body0, body1;
+
+			for ( var i = 0, il = dispatcher.getNumManifolds(); i < il; i ++ ) {
+
+				manifold = dispatcher.getManifoldByIndexInternal( i );
+
+				body0 = Ammo.castObject( manifold.getBody0(), Ammo.btRigidBody );
+				body1 = Ammo.castObject( manifold.getBody1(), Ammo.btRigidBody );
+
+				rb0 = body0.name;
+				rb1 = body1.name;
+
+				if ( !body0.breakable && !body1.breakable ) continue;
+				
+				contact = false;
+				maxImpulse = 0;
+				for ( var j = 0, jl = manifold.getNumContacts(); j < jl; j ++ ) {
+					point = manifold.getContactPoint( j );
+					if ( point.getDistance() < 0 ) {
+
+						contact = true;
+						impulse = point.getAppliedImpulse();
+
+						if ( impulse > maxImpulse ) {
+
+							maxImpulse = impulse;
+							pos = point.get_m_positionWorldOnB().toArray();
+							normal = point.get_m_normalWorldOnB().toArray();
+						}
+						break;
+					}
+				}
+
+				// If no point has contact, abort
+				if ( !contact ) continue;
+				
+				// Subdivision
+
+				if ( body0.breakable && maxImpulse > body0.breakOption[0] ) {
+
+					self.postMessage( { m: 'makeBreak', o:{ name:rb0, pos: math.vectomult( pos, root.scale ), normal:normal, breakOption:body0.breakOption } } );
+					this.removeRigidBody( rb0 );
+					
+				}
+
+				if ( body1.breakable && maxImpulse > body1.breakOption[0] ) {
+
+					self.postMessage( { m: 'makeBreak', o:{ name:rb1, pos: math.vectomult( pos, root.scale ), normal:normal, breakOption:body1.breakOption } } );
+					this.removeRigidBody( rb1 );
+
+				}
+
+			}
+
 
 
 		},
