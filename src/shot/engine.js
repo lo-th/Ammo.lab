@@ -552,6 +552,7 @@ export var engine = ( function () {
                 mass: mesh.userData.mass,
                 linearVelocity:mesh.userData.velocity.toArray(),
                 angularVelocity:mesh.userData.angularVelocity.toArray(),
+                margin:0.05, 
             };
 
             // if levelOfSubdivision > 0 make debris breakable !!
