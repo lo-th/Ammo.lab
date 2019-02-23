@@ -17,13 +17,13 @@ function demo() {
 
 
     physic.add({ 
-        name:'cc1', type:'cylinder', mass:100, state:4, size:[6], pos:[0,50,0], friction:0.5, material:glass,
+        name:'cc1', type:'cylinder', mass:100, size:[6], pos:[0,50,0], friction:0.5, material:glass,
         breakable:true, breakOption:[ 200, 2, 4, 2 ],
         margin: 0.05,
     });
 
     physic.add({ 
-        name:'cc2', type:'cylinder', mass:100, state:4, size:[6], pos:[0,100,0], friction:0.5, material:glass, 
+        name:'cc2', type:'cylinder', mass:100, size:[6], pos:[0,100,0], friction:0.5, material:glass, 
         breakable:true, breakOption:[ 200, 2, 4, 2 ],
         margin: 0.05,
     });

@@ -37,7 +37,7 @@ function demo() {
 
         // breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
         physic.add({ 
-            name:'glass'+i, type:'hardbox', size:[12, 0.2, 12], pos:[0,y,0], rot:[0,0,0], mass:50, state:4, material:glass, 
+            name:'glass'+i, type:'hardbox', size:[12, 0.2, 12], pos:[0,y,0], rot:[0,0,0], mass:50, material:glass, 
             breakable:true, breakOption:[ 200, 1, 3, 2 ],
             margin: 0.05,
         });
