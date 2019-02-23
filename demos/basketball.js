@@ -101,41 +101,31 @@ function afterLoadGeometry () {
 
     // net geometry
 
-    var customGeomtry = true;
     var max = 24;
     var netGeometry;
 
     var tmpGeometry = new THREE.CylinderGeometry( 22.5, 22.5, -35, max, 5, true );
     tmpGeometry.mergeVertices();
 
-    if( customGeomtry ){
+    netGeometry = new THREE.BufferGeometry().fromGeometry( tmpGeometry );
+    tmpGeometry.dispose();
+    netGeometry.translate(0,-17.5,0);
+    netGeometry.rotateY( Math.PI );
+    var v = netGeometry.attributes.position.array;
+    var lng = v.length/3;
 
-        netGeometry = new THREE.BufferGeometry().fromGeometry( tmpGeometry );
-        netGeometry.translate(0,-17.5,0);
-        netGeometry.rotateY( Math.PI );
-        var v = netGeometry.attributes.position.array;
-        var lng = v.length/3;
-
-        for( var i = 0; i < lng; i++ ) {
-            n = i*3;
-            y = Math.floor( v[n+1] );
-            if(y === -7 ) { v[n] *= 0.92; v[n+2] *= 0.92; }
-            if(y === -14 ) { v[n] *= 0.72; v[n+2] *= 0.72; }
-            if(y === -21 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
-            if(y === -28 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
-            if(y === -35 ) { v[n] *= 0.54; v[n+2] *= 0.54; }
-        }
-
-        netGeometry.attributes.position.needsUpdate = true;
-
-        tmpGeometry.dispose();
-
-    } else {
-
-        netGeometry = view.getGeometry( 'basket', 'B_net' );
-
+    for( var i = 0; i < lng; i++ ) {
+        n = i*3;
+        y = Math.floor( v[n+1] );
+        if(y === -7 ) { v[n] *= 0.92; v[n+2] *= 0.92; }
+        if(y === -14 ) { v[n] *= 0.72; v[n+2] *= 0.72; }
+        if(y === -21 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
+        if(y === -28 ) { v[n] *= 0.5; v[n+2] *= 0.5; }
+        if(y === -35 ) { v[n] *= 0.54; v[n+2] *= 0.54; }
     }
 
+    netGeometry.attributes.position.needsUpdate = true;
+    
     //
 
     physic.add({

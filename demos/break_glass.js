@@ -29,16 +29,17 @@ function demo() {
 
     for(var i = 0; i < 5; i++ ){
 
-        physic.add({ name:'b1'+i, type:'hardbox', size:[2, 2, 2], pos:[5,y,5], rot:[0,0,0], mass:100, state:2  });
-        physic.add({ name:'b2'+i, type:'hardbox', size:[2, 2, 2], pos:[5,y,-5], rot:[0,0,0], mass:100, state:2  });
-        physic.add({ name:'b3'+i, type:'hardbox', size:[2, 2, 2], pos:[-5,y,5], rot:[0,0,0], mass:100, state:2  });
-        physic.add({ name:'b4'+i, type:'hardbox', size:[2, 2, 2], pos:[-5,y,-5], rot:[0,0,0], mass:100, state:2  });
+        physic.add({ name:'b1'+i, type:'hardbox', size:[2, 2, 2], pos:[5,y,5], rot:[0,0,0], mass:100, state:2, margin:0.05  });
+        physic.add({ name:'b2'+i, type:'hardbox', size:[2, 2, 2], pos:[5,y,-5], rot:[0,0,0], mass:100, state:2, margin:0.05  });
+        physic.add({ name:'b3'+i, type:'hardbox', size:[2, 2, 2], pos:[-5,y,5], rot:[0,0,0], mass:100, state:2, margin:0.05  });
+        physic.add({ name:'b4'+i, type:'hardbox', size:[2, 2, 2], pos:[-5,y,-5], rot:[0,0,0], mass:100, state:2, margin:0.05 });
         y+=1.1;
 
         // breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
         physic.add({ 
             name:'glass'+i, type:'hardbox', size:[12, 0.2, 12], pos:[0,y,0], rot:[0,0,0], mass:50, state:4, material:glass, 
             breakable:true, breakOption:[ 200, 1, 3, 2 ],
+            margin: 0.05,
         });
         y+=1.1;
     }

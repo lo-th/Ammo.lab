@@ -57,10 +57,6 @@ function next(){
 
     editor.init( launch, isWithCode, '#308AFF', 'Ammo.lab' );
 
-    //physic.setView( view );
-    //physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / physic ' + physic.getFps() );  }
-    //physic.getKey = function () { return user.key;  }
-
     physic.start();
 
     ready();
@@ -88,13 +84,13 @@ function launch ( name, full ) {
 
 }
 
-function cam ( o ) { 
+/*function cam ( o ) { 
     o = o || {};
     o.x = o.x === undefined ? 0 : o.x;
     o.y = o.y === undefined ? 0 : o.y;
     o.z = o.z === undefined ? 0 : o.z;
     view.moveCam( o ); 
-};
+};*/
 
 function follow ( name, o ) { 
 
@@ -105,12 +101,3 @@ function follow ( name, o ) {
 };
 
 function ui ( option ) { editor.setOption( option ); };
-
-
-/*function remove ( o ) {
-
-    
-    physic.post( 'remove', o );
-   // view.removeList( o );
-
-};*/
