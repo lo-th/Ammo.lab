@@ -39,8 +39,6 @@ var mat = {};
 
 function demo() {
 
-    //cam ([-90, 0, 10]);
-
     view.hideGrid();
     
     view.addFog({exp:0.0025});
