@@ -1,7 +1,8 @@
 function demo() {
 
-    cam ({ theta:30, phi:40, distance:30 });;
-    load ( 'bot', afterLoad );
+    view.moveCam({ theta:30, phi:40, distance:30, target:[0,2,0] });
+    view.load ( ['bot.sea'], afterLoad, true, true );
+    physic.set();
     
 };
 
@@ -10,20 +11,32 @@ function afterLoad () {
     var size = 0.2;
 
     // load wheel map
-    view.addMap('base.jpg', 'tmp1');
-    view.addMap('wheel.jpg', 'tmp2');
+
+    var meca1 = view.material({
+        name:'meca1',
+        roughness: 0.4,
+        metalness: 0.6,
+        map: view.texture( 'base.jpg' ),
+    });
+
+    var meca2 = view.material({
+        name:'meca2',
+        roughness: 0.7,
+        metalness: 0.3,
+        map: view.texture( 'wheel.jpg' ),
+    });
 
     // infinie plane
-    add({type:'plane'});
+    physic.add({type:'plane'});
 
     // body
 
-    add({ 
+    physic.add({ 
         name:'body',
         type:'mesh', 
-        material:'tmp1',
-        geometry:view.getGeo()['base_frame'],
-        shape:view.getGeo()['base_frame_S'],
+        material:meca1,
+        geometry:view.getGeometry( 'bot', 'base_frame' ),
+        shape:view.getGeometry( 'bot', 'base_frame_S' ),
         mass:20,
         size:[size],
         pos:[0, 8.4*size, 0],
@@ -77,12 +90,12 @@ function afterLoad () {
             s = -speed;
         }
 
-        add({
+        physic.add({
             name:'w'+i,
             type:'mesh',
-            material:'tmp2',
-            geometry:view.getGeo()[name],
-            shape:view.getGeo()[name2],
+            material:meca2,
+            geometry:view.getGeometry( 'bot', name ),
+            shape:view.getGeometry( 'bot', name2 ),
             friction:0.4,
             mass:2,
             size:[size],
@@ -91,7 +104,7 @@ function afterLoad () {
             margin:0.01,
         });
 
-        add({
+        physic.add({
             name:'j'+i,
             type:'joint_hinge',
             body1:'body',

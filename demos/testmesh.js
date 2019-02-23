@@ -1,7 +1,7 @@
 function demo() {
 
     view.moveCam({ azim:0, polar:30, distance:80, target:[0,0,0] });
-    physic.set();
+    physic.set(); // reset default setting
     view.loadObject( 'bol', afterLoad );
 
 }

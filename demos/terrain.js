@@ -39,7 +39,7 @@ var mat = {};
 
 function demo() {
 
-    cam ([-90, 0, 10]);
+    //cam ([-90, 0, 10]);
 
     view.hideGrid();
     

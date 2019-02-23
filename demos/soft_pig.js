@@ -1,6 +1,7 @@
 function demo() {
 
-    view.moveCam({ theta:90, phi:20, distance:40, targrt:[0,1,0] });
+    view.moveCam({ theta:90, phi:20, distance:40, target:[0,1,0] });
+    physic.set(); // reset default setting
     view.load ( 'pig.sea', afterLoad, true );
 
 }

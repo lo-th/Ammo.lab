@@ -12,11 +12,11 @@ function demo() {
 
 
     view.moveCam({ theta:0, phi:20, distance:30, target:[0,2,0] });
-    view.load ( ['mecanum.sea'], afterLoadGeometry, true, true );
+    view.load ( ['mecanum.sea'], afterLoad, true, true );
 
 };
 
-function afterLoadGeometry () {
+function afterLoad () {
 
     view.addJoystick();
     

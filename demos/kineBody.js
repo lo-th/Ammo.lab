@@ -14,7 +14,7 @@ var q = new THREE.Quaternion();
 
 function demo() {
 
-    view.moveCam({ theta:20, phi:40, distance:100, pos:[0,20,0] });
+    view.moveCam({ theta:20, phi:40, distance:100, target:[0,20,0] });
 
     view.addSky({ url:'photo.jpg', hdr:true });
 

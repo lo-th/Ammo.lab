@@ -2870,6 +2870,14 @@ Object.assign( Character.prototype, {
 	    o.rot = o.rot == undefined ? [0,0,0] : Math.vectorad( o.rot );
 	    o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
 
+	    var material;
+	    if( o.material !== undefined ){ 
+	    	if( o.material.constructor === String ) material = root.mat[o.material];
+	    	else material = o.material;
+	    } else {
+	    	material = root.mat.hero;
+	    }
+
 	    var g = new THREE.CapsuleBufferGeometry( o.size[0], o.size[1]*0.5, 6 );
 
 	    var mesh = new THREE.Group();//o.mesh || new THREE.Mesh( g );
@@ -2881,18 +2889,11 @@ Object.assign( Character.prototype, {
 	        mesh.add( mm );
 
 	    }
-
-	    //mesh.material = mat.hero;
+	    
 	    if( o.mesh ){
 
-	        //this.mat.hero.skinning = true;
-	        //mesh.userData.skin = true;
-
 	        var model = o.mesh;
-
-	        
-
-	        model.material = root.mat.hero;
+	        model.material = material;
 	        model.scale.multiplyScalar( o.scale || 1 );
 	        model.position.set(0,0,0);
 	        
@@ -2906,7 +2907,7 @@ Object.assign( Character.prototype, {
 	        
 	    } else {
 
-	        var mx = new THREE.Mesh( g, root.mat.hero );
+	        var mx = new THREE.Mesh( g, material );
 	        root.extraGeo.push( g );
 	        mesh.add( mx );
 
@@ -2930,7 +2931,7 @@ Object.assign( Character.prototype, {
 	    mesh.receiveShadow = true;
 	    mesh.name = name;
 
-
+	    if( o.material ) delete( o.material );
 	    if( o.mesh ) delete( o.mesh );
 
 	    root.container.add( mesh );

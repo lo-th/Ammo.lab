@@ -17,7 +17,9 @@ function demo() {
 
     });
 
-    cam ({ theta:0, phi:0, distance:30, y:20 });
+    view.moveCam({ theta:0, phi:0, distance:30, target:[0,20,0] });
+
+    physic.set();
 
     // infinie plane
     physic.add({type:'plane'});

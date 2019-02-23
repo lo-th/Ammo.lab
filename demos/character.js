@@ -1,6 +1,6 @@
 function demo() {
 
-    //cam ( 0, 10, 10 );
+    physic.set(); // reset default setting
     view.load ( ['track.sea', 'heros.sea'], afterLoad, true, true );
 
 }
@@ -18,6 +18,14 @@ function demo() {
 
 function afterLoad () {
 
+	var heroMat = view.material({
+        name:'heroes',
+        roughness: 0.6,
+        metalness: 0.4,
+        map: view.texture( 'heros_c.jpg', { flip:false }),
+        skinning:true,
+    });
+
     //var m = view.getResult();
     view.addJoystick();
 
@@ -26,14 +34,12 @@ function afterLoad () {
     physic.add({ type:'mesh', shape:view.getGeometry('track', 'track'), density:0, friction:0.6, restitution:0.1 });
 
     //physic.add({ type:'character', name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5) ), scale:0.07, debug:false });
-    physic.add({ type:'character', name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5)), scale:0.07, debug:false });
+    physic.add({ type:'character', name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5)), scale:0.07, debug:false, material:heroMat });
 
 
     follow('bob', {  height:0.3, acceleration: 0.05, speed:10, distance:3 } );
 
     physic.move('bob');
-
-
 
     var s, x, y;
     for(var i = 0; i < 40; i++){

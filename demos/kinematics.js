@@ -2,6 +2,8 @@ function demo () {
 
     view.moveCam({ theta:0, phi:60, distance:100, target:[0,0,0] });
 
+    physic.set(); // reset default setting
+
     // infinie plane
     physic.add({type:'plane', group:1});
 

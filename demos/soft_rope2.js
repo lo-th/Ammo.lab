@@ -2,6 +2,8 @@ function demo() {
 
     view.moveCam({ theta:40, phi:20, distance:70, target:[0,0,0] });
 
+    physic.set(); // reset default setting
+
     view.hideGrid();
 
     physic.add({type:'plane', friction:0.6, restitution:0.1 }); // infinie plane

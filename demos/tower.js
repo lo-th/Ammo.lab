@@ -2,7 +2,7 @@ function demo() {
 
     view.moveCam({ azim:45, polar:30, distance:50, target:[0,0,0] });
 
-    physic.set();
+    physic.set(); // reset default setting
 
     addTower({ radius:9, height:20, detail:15, pos:[0,0,0], mass:0.4 });
 
