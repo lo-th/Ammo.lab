@@ -7,6 +7,7 @@ function demo() {
         fps:60,
         substep:2,// more substep = more accurate simulation default set to 2
         gravity:[0,-10,0],
+        fixed: true,
 
     })
 

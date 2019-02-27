@@ -18,6 +18,7 @@ import { root, map } from './root.js';
 //  5  : DISABLE_SIMULATION
 
 // ___________________________FLAG
+//  0  : RIGIDBODY
 //  1  : STATIC_OBJECT
 //  2  : KINEMATIC_OBJECT
 //  4  : NO_CONTACT_RESPONSE

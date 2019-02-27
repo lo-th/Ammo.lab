@@ -298,12 +298,13 @@ export function mathExtend() {
 
 		},
 
-		fromArray: function ( array, offset ) {
+		fromArray: function ( array, offset, scale ) {
 
 			//if ( offset === undefined ) offset = 0;
 			offset = offset || 0;
+			scale = scale || 1;
 
-			this.setValue( array[ offset ], array[ offset + 1 ], array[ offset + 2 ] );
+			this.setValue( array[ offset ] * scale, array[ offset + 1 ] * scale, array[ offset + 2 ] * scale );
 
 			return this;
 

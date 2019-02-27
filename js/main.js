@@ -16,7 +16,8 @@ var demos = [
     'character', 'joints', 'empty',  'asteroid', 'point2point', 'contact', 'testmesh', 'water',
     'mecanum', 'drone', 'millions', 'basketball', 'mecabot',
     'compound', 'tower', 
-    'break_glass', 'break_round'
+    'break_glass', 'break_round',
+    'rayTest'
 ];
 
 demos.sort();
@@ -49,11 +50,12 @@ function next(){
 
     //intro.clear();
     physic.setView( view );
-    physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / physic ' + physic.getFps() );  }
-    physic.getKey = function () { return user.key;  }
+    physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / ammo ' + physic.getFps() );  }
+    //physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / ammo ' + Math.floor(physic.getDelta()*1000) );  }
+    physic.getKey = function () { return user.key; }
 
     // for update envmap
-    view.extraUpdateMat = physic.updateTmpMat;
+    //view.extraUpdateMat = physic.updateTmpMat;
 
     editor.init( launch, isWithCode, '#308AFF', 'Ammo.lab' );
 
@@ -83,14 +85,6 @@ function launch ( name, full ) {
     demo = new window['demo'];
 
 }
-
-/*function cam ( o ) { 
-    o = o || {};
-    o.x = o.x === undefined ? 0 : o.x;
-    o.y = o.y === undefined ? 0 : o.y;
-    o.z = o.z === undefined ? 0 : o.z;
-    view.moveCam( o ); 
-};*/
 
 function follow ( name, o ) { 
 

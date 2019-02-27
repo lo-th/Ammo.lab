@@ -1483,7 +1483,7 @@ Object.assign( RigidBody.prototype, {
 
 			n = N + ( id * 8 );
 
-			if( AR[n] + AR[n+1] + AR[n+2] + AR[n+3] !== 0 || b.isKinemmatic ) {
+			//if( AR[n] + AR[n+1] + AR[n+2] + AR[n+3] !== 0 || b.isKinemmatic ) {
 
 				var s = AR[n];// speed km/h
 		        if ( s > 0 ) {
@@ -1495,9 +1495,10 @@ Object.assign( RigidBody.prototype, {
 		        } else {
 		            if ( b.material.name == 'move' || b.material.name == 'speed' ) b.material = root.mat.sleep;
 		        }
+		        
 				b.position.fromArray( AR, n + 1 );
 	            b.quaternion.fromArray( AR, n + 4 );
-	        }
+	        //}
 
 		} );
 
@@ -1549,6 +1550,10 @@ Object.assign( RigidBody.prototype, {
 		o.name = o.name !== undefined ? o.name : 'body' + this.ID ++;
 		// delete old if same name
 		this.remove( o.name );
+
+		if( o.breakable ){
+            if( o.type==='hardbox' || o.type==='box' || o.type==='sphere' || o.type==='cylinder' || o.type==='cone' ) o.type = 'real'+o.type;
+        }
 
 		if ( o.density !== undefined ) o.mass = o.density;
 		if ( o.bounce !== undefined ) o.restitution = o.bounce;
@@ -3051,6 +3056,207 @@ Object.assign( Pair.prototype, {
 } );
 
 /*global THREE*/
+
+function RayCaster() {
+
+	this.rays = [];
+
+}
+
+Object.assign( RayCaster.prototype, {
+
+	step: function () {
+
+		if( !this.rays.length ) return;
+
+		var raytest = [];
+
+		this.rays.forEach( function ( r, id ) {
+
+			r.updateMatrixWorld();
+			raytest.push( { origin:r.origin.toArray(), dest:r.dest.toArray() } );
+
+		});
+
+		root.post( 'rayCast', raytest );
+
+	},
+
+	receive: function ( o ) {
+
+		var i = o.length;
+		while(i--) this.rays[i].update( o[i] );
+
+	},
+
+	clear: function () {
+
+		while ( this.rays.length > 0 ) this.destroy( this.rays.pop() );
+
+	},
+
+	destroy: function ( r ) {
+
+		if ( r.parent ) r.parent.remove( r );
+
+	},
+
+	add: function ( o ) {
+
+		var ray = new Ray(o);
+
+		if( o.parent !== undefined ) o.parent.add( ray );
+	    else root.container.add( ray );
+
+		this.rays.push( ray );
+
+		return ray;
+
+	},
+
+} );
+
+//--------------------------------------
+//   RAY CLASS
+//--------------------------------------
+
+function Ray( o ) {
+
+
+	THREE.Line.call( this );
+
+	this.position.fromArray( o.pos || [0,0,0] );
+
+	this.origin = new THREE.Vector3();
+	this.dest = new THREE.Vector3();
+
+	this.start = new THREE.Vector3().fromArray( o.start || [0,0,0] );
+	this.end = new THREE.Vector3().fromArray( o.end || [0,10,0] );
+	this.point = new THREE.Vector3().fromArray( o.start || [0,10,0] );
+	this.pointX = new THREE.Vector3().fromArray( o.start || [0,10,0] );
+	this.normal = new THREE.Vector3().fromArray(  [0,0,0] );
+
+	this.c1 = new THREE.Vector3(0.1,0.1,0.1);
+	this.c2 = new THREE.Vector3(0,1.0,0);
+
+	this.inv = new THREE.Matrix4();
+
+
+	this.callback = o.callback || function (){};
+	this.result = { name:'' };
+
+	this.vertices = [ 0,0,0, 0,0,0, 0,0,0, 0,0,0 , 0,0,0, 0,0,0, 0,0,0 ];
+	this.colors = [  0,0,0, 0,0,0, 0,0,0, 0,0,0 , 0,0,0, 0,0,0, 0,0,0 ];
+
+	
+
+	this.geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( this.vertices, 3 ) );
+	this.geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( this.colors, 3 ) );
+	this.vertices = this.geometry.attributes.position.array;
+	this.colors = this.geometry.attributes.color.array;
+
+	
+
+
+	this.material.color.setHex( 0xFFFFFF );
+	this.material.vertexColors = THREE.VertexColors;
+
+	this.base = false;
+
+	this.upGeo();
+
+}
+
+Ray.prototype = Object.assign( Object.create( THREE.Line.prototype ), {
+
+	updateMatrixWorld: function ( force ){
+
+		THREE.Line.prototype.updateMatrixWorld.call( this, force );
+		this.origin.copy( this.start ).applyMatrix4( this.matrixWorld );
+		this.dest.copy( this.end ).applyMatrix4( this.matrixWorld );
+		this.inv.getInverse( this.matrixWorld );
+
+	},
+
+	upGeo: function ( on ) {
+
+		if( on ) {
+
+			this.isBase = false;
+
+			this.c2.toArray( this.colors, 0*3 );
+			this.c2.toArray( this.colors, 1*3 );
+
+			this.c2.toArray( this.colors, 5*3 );
+			this.c2.toArray( this.colors, 6*3 );
+
+			this.start.toArray( this.vertices, 0 );
+			this.point.toArray( this.vertices, 1*3 );
+			this.point.toArray( this.vertices, 2*3 );
+			this.end.toArray( this.vertices, 3*3 );
+			this.point.toArray( this.vertices, 4*3 );
+			this.point.toArray( this.vertices, 5*3 );//normal point
+			this.pointX.toArray( this.vertices, 6*3 );//normal point
+
+			this.geometry.attributes.position.needsUpdate = true;
+	    	this.geometry.attributes.color.needsUpdate = true;
+
+		} else {
+
+			if(this.isBase) return;
+
+			var i = 7;
+			while(i--) this.c1.toArray( this.colors, i*3 );
+
+			this.start.toArray( this.vertices, 0 );
+			this.start.toArray( this.vertices, 1*3 );
+			this.start.toArray( this.vertices, 2*3 );
+			this.end.toArray( this.vertices, 3*3 );
+			this.end.toArray( this.vertices, 4*3 );
+			this.end.toArray( this.vertices, 5*3 );
+			this.end.toArray( this.vertices, 6*3 );
+
+			this.geometry.attributes.position.needsUpdate = true;
+	     	this.geometry.attributes.color.needsUpdate = true;
+
+			this.isBase = true;
+
+		}
+
+		
+
+	},
+
+	update: function ( o ) {
+
+		if( o.hit ){
+
+			this.callback( o );
+			//this.material.color.setHex( 0x00FF00 );
+			this.point.fromArray( o.point ).applyMatrix4( this.inv );
+			var d = this.point.distanceTo( this.end );
+			//this.point = this.worldToLocal(this.point)
+		    this.normal.fromArray( o.normal );
+
+		    this.pointX.copy( this.point ).addScaledVector( this.normal, d );
+
+		    this.upGeo(true);
+
+		} else {
+
+			//this.material.color.setHex( 0xFF0000 );
+
+			this.upGeo();
+
+		}
+
+
+
+	}
+
+});
+
+/*global THREE*/
 /**
  * @author yomboprime https://github.com/yomboprime
  *
@@ -4401,18 +4607,22 @@ var engine = ( function () {
 
 
     var URL = window.URL || window.webkitURL;
+    var Time = typeof performance === 'undefined' ? Date : performance;
     
-    var t = { now:0, delta:0, then:0, inter:0, tmp:0, n:0, timerate:0 };
-    var timer = undefined;
-    var stepNext = false;
+    var t = { now:0, delta:0, then:0, inter:0, tmp:0, n:0, timerate:0, autoFps:false };
+    var interval = null;
     var refView = null;
     var isBuffer = false;
 
+    var stepNext = false;
+
     var PI90 = 1.570796326794896;
 
-    var rigidBody, softBody, terrains, vehicles, character, collision;
+    var rigidBody, softBody, terrains, vehicles, character, collision, rayCaster;
 
     var convexBreaker = null;
+
+    //var needUpdate = false;
 
     var option = {
 
@@ -4438,18 +4648,22 @@ var engine = ( function () {
             callback = Callback;
 
             option = {
+
                 fps: Option.fps || 60,
                 worldscale: Option.worldscale || 1,
                 gravity: Option.gravity || [0,-10,0],
                 substep: Option.substep || 2,
                 broadphase: Option.broadphase || 2,
                 soft: Option.soft !== undefined ? Option.soft : true,
+                fixed: Option.fixed !== undefined ? Option.fixed : false,
+                //autoFps : Option.autoFps !== undefined ? Option.autoFps : false,
 
                 //penetration: Option.penetration || 0.0399,
 
             };
 
             t.timerate = ( 1 / option.fps ) * 1000;
+            t.autoFps = option.autoFps;
 
             type = Type || 'LZMA';
             if( type === 'LZMA' ){ 
@@ -4542,7 +4756,7 @@ var engine = ( function () {
 
             switch( data.m ){
                 case 'initEngine': engine.initEngine(); break;
-                case 'start': engine.start( data ); break;
+                case 'start': engine.start(); break;
                 case 'step': engine.step(); break;
                 //
                 //case 'terrain': terrains.upGeo( data.o.name ); break;
@@ -4551,6 +4765,8 @@ var engine = ( function () {
                 case 'ellipsoid': engine.ellipsoidMesh( data.o ); break;
 
                 case 'makeBreak': engine.makeBreak( data.o ); break;
+
+                case 'rayCast': rayCaster.receive( data.o ); break;
             }
 
         },
@@ -4571,14 +4787,19 @@ var engine = ( function () {
 
         start: function ( o ) {
 
+            //console.log('start', t.timerate );
+
             stepNext = true;
 
             // create tranfere array if buffer
             if( isBuffer ) root.Ar = new Float32Array( root.ArMax );
 
-            engine.sendData( 0 );
+            //engine.sendData( 0 );
 
             //if ( !timer ) timer = requestAnimationFrame( engine.sendData );
+            t.then = Time.now();
+            if ( interval ) clearInterval( interval );
+            interval = setInterval( engine.sendData, t.timerate );
            
         },
 
@@ -4589,6 +4810,8 @@ var engine = ( function () {
             engine.postUpdate();
 
             terrains.step();
+            rayCaster.step();
+
             rigidBody.step( root.Ar, root.ArPos[ 0 ] );
             collision.step( root.Ar, root.ArPos[ 1 ] );
             character.step( root.Ar, root.ArPos[ 2 ] );
@@ -4600,8 +4823,7 @@ var engine = ( function () {
         step: function () {
 
             if ( t.now - 1000 > t.tmp ){ t.tmp = t.now; t.fps = t.n; t.n = 0; } t.n++; // FPS
-
-            // TODO
+            engine.tell();
             
             if( refView ) refView.needUpdate( true );
             //else 
@@ -4613,37 +4835,24 @@ var engine = ( function () {
 
         sendData: function ( time ){
 
-            if( refView ){
-                if( refView.pause ){ timer = null; return; }
-            }
+            if( refView ) if( refView.pause ) engine.stop();
+            
+        	if( !stepNext ) return;
 
-            timer = requestAnimationFrame( engine.sendData );
-            t.now = time;
-            t.delta = t.now - t.then;
+            t.now = Time.now();
+            t.delta = ( t.now - t.then ) * 0.001;
+        	t.then = t.now;
 
-            if ( t.delta > t.timerate ) {
+        	if( isBuffer ) worker.postMessage( { m:'step',  o:{ delta:t.delta, key: engine.getKey() }, Ar:root.Ar }, [ root.Ar.buffer ] );
+            else worker.postMessage( { m:'step', o:{ delta:t.delta, key: engine.getKey() } } );
 
-                t.then = t.now - ( t.delta % t.timerate );
-
-                if( stepNext ){
-
-                    if( isBuffer ) worker.postMessage( { m:'step',  o:{ key: engine.getKey() }, Ar:root.Ar }, [ root.Ar.buffer ] );
-                    else worker.postMessage( { m:'step', o:{ key: engine.getKey() } } );
-                    
-                    stepNext = false;
-
-                }
-
-                engine.tell();
-
-            }
+            stepNext = false;
 
         },
 
         setView: function ( v ) { 
 
-            refView = v; 
-
+            refView = v;
             root.mat = v.getMat();
             root.geo = v.getGeo();
             root.container = v.getScene();
@@ -4651,6 +4860,7 @@ var engine = ( function () {
         },
 
         getFps: function () { return t.fps; },
+        getDelta: function () { return t.delta; },
 
         tell: function () {},
         
@@ -4660,6 +4870,7 @@ var engine = ( function () {
 
             o = o || option;
             t.timerate = o.fps !== undefined ? (  1 / o.fps ) * 1000 : t.timerate;
+            t.autoFps = o.autoFps !== undefined ? o.autoFps : false;
             this.post( 'set', o );
 
         },
@@ -4674,10 +4885,7 @@ var engine = ( function () {
 
             //console.log('reset', full);
 
-            if ( timer ) {
-               window.cancelAnimationFrame( timer );
-               timer = undefined;
-            }
+            engine.stop();
 
             // remove all mesh
             engine.clear();
@@ -4696,9 +4904,9 @@ var engine = ( function () {
 
         stop: function () {
 
-            if ( timer ) {
-               window.cancelAnimationFrame( timer );
-               timer = undefined;
+            if ( interval ) {
+                clearInterval( interval );
+                interval = null;
             }
 
         },
@@ -4750,6 +4958,8 @@ var engine = ( function () {
 
         break: function ( o ) { this.post('addBreakable', o ); },
 
+        //rayCast: function ( o ) { this.post('rayCast', o ); },
+
         moveSolid: function ( o ) {
 
             if ( ! map.has( o.name ) ) return;
@@ -4786,6 +4996,7 @@ var engine = ( function () {
             vehicles = new Vehicle();
             character = new Character();
             collision = new Collision();
+            rayCaster = new RayCaster();
 
             // auto define basic function
             //if(!refView) this.defaultRoot();
@@ -4802,6 +5013,7 @@ var engine = ( function () {
             vehicles.clear();
             character.clear();
             softBody.clear();
+            rayCaster.clear();
 
             while( root.extraGeo.length > 0 ) root.extraGeo.pop().dispose();
 
@@ -4828,12 +5040,9 @@ var engine = ( function () {
             else if( type === 'character' ) character.add( o );
             else if( type === 'collision' ) collision.add( o );
             else if( type === 'car' ) vehicles.add( o );
-            else {
-                if( o.breakable ){
-                    if( type==='hardbox' || type==='box' || type==='sphere' || type==='cylinder' || type==='cone' ) o.type = 'real'+o.type;
-                }
-                return rigidBody.add( o );
-            }
+            else if( type === 'ray' ) return rayCaster.add( o );
+            else return rigidBody.add( o );
+            
 
         },
 

@@ -301,12 +301,13 @@
 
 			},
 
-			fromArray: function ( array, offset ) {
+			fromArray: function ( array, offset, scale ) {
 
 				//if ( offset === undefined ) offset = 0;
 				offset = offset || 0;
+				scale = scale || 1;
 
-				this.setValue( array[ offset ], array[ offset + 1 ], array[ offset + 2 ] );
+				this.setValue( array[ offset ] * scale, array[ offset + 1 ] * scale, array[ offset + 2 ] * scale );
 
 				return this;
 
@@ -731,6 +732,7 @@
 	//  5  : DISABLE_SIMULATION
 
 	// ___________________________FLAG
+	//  0  : RIGIDBODY
 	//  1  : STATIC_OBJECT
 	//  2  : KINEMATIC_OBJECT
 	//  4  : NO_CONTACT_RESPONSE
@@ -3054,6 +3056,7 @@
 		//var world = null;
 		var Ar, ArPos, ArMax;
 		var timestep = 1 / 60;
+		var fixed = false;
 		var substep = 2;
 
 		var isBuffer = false;
@@ -3073,6 +3076,8 @@
 		var zero = null;
 
 		var numBreak = 0;
+
+		var ray = null;
 
 
 
@@ -3121,6 +3126,9 @@
 
 				root.key = o.key;
 
+				vehicles.control( carName );
+				character.control( heroName );
+
 				this.stepMatrix();
 				this.stepOption();
 				this.stepForces();
@@ -3128,10 +3136,11 @@
 
 				terrains.step();
 
-				root.world.stepSimulation( timestep, substep );
+				// breakable object
+				if( numBreak !== 0 ) this.stepBreak();
 
-				vehicles.control( carName );
-				character.control( heroName );
+				if( fixed ) root.world.stepSimulation( o.delta, substep, timestep );
+				else root.world.stepSimulation( o.delta, substep );
 
 				rigidBody.step( Ar, ArPos[ 0 ] );
 				collision.step( Ar, ArPos[ 1 ] );
@@ -3140,10 +3149,8 @@
 				softBody.step( Ar, ArPos[ 4 ] );
 				
 				// breakable object
-				if( numBreak !== 0 ) this.stepBreak();
-				
-
-				//constraint.step( Ar, ArPos[4] );
+				//if( numBreak !== 0 ) this.stepBreak();
+			
 
 				if ( isBuffer ) self.postMessage( { m: 'step', Ar: Ar }, [ Ar.buffer ] );
 				else self.postMessage( { m: 'step', Ar: Ar } );
@@ -3240,6 +3247,8 @@
 					vehicles = new Vehicle();
 					character = new Character();
 					collision = new Collision();
+
+					ray = new Ammo.ClosestRayResultCallback();
 
 
 					vehicles.addExtra = rigidBody.add;
@@ -3405,8 +3414,9 @@
 
 				this.setWorldscale( o.worldscale !== undefined ? o.worldscale : 1 );
 
-				timestep = o.fps !== undefined ? 1 / o.fps : timestep;
-				substep = o.substep !== undefined ? o.substep : substep;
+				timestep = o.fps !== undefined ? 1 / o.fps : 1/60;
+				substep = o.substep !== undefined ? o.substep : 2;
+				fixed = o.fixed !== undefined ? o.fixed : false;
 
 				// penetration
 				if ( o.penetration !== undefined ) {
@@ -3719,7 +3729,52 @@
 
 				}
 
+			},
 
+			//-----------------------------
+			// RAYCAST
+			//-----------------------------
+
+			rayCast: function ( o ) {
+
+				var rayResult = [], r, result;
+
+				for( var i = 0, lng = o.length; i<lng; i++ ){
+
+					r = o[i];
+
+					result = {};
+
+					// Reset ray
+					ray.set_m_closestHitFraction( 1 );
+					ray.set_m_collisionObject( null );
+					// Set ray option
+					if( r.origin !== undefined ) ray.get_m_rayFromWorld().fromArray( r.origin, 0, root.invScale );
+					if( r.dest !== undefined ) ray.get_m_rayToWorld().fromArray( r.dest, 0, root.invScale );
+					if( r.group !== undefined ) ray.set_m_collisionFilterGroup( r.group );
+				    if( r.mask !== undefined ) ray.set_m_collisionFilterMask( r.mask );
+
+					// Perform ray test
+				    root.world.rayTest( ray.get_m_rayFromWorld(), ray.get_m_rayToWorld(), ray );
+
+				    if ( ray.hasHit() ) {
+
+				    	result = {
+				    		hit: true,
+				    		name: Ammo.castObject( ray.get_m_collisionObject(), Ammo.btRigidBody ).name,
+				    		point: ray.get_m_hitPointWorld().toArray( undefined, 0, root.scale ),
+				    		normal: ray.get_m_hitNormalWorld().toArray(),
+				    	};
+
+				    } else {
+				    	result = { hit: false };
+				    }
+
+				    rayResult.push( result );
+
+				}
+
+			    self.postMessage( { m:'rayCast', o:rayResult } );
 
 			},
 

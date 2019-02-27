@@ -24,7 +24,7 @@ Object.assign( RigidBody.prototype, {
 
 			n = N + ( id * 8 );
 
-			if( AR[n] + AR[n+1] + AR[n+2] + AR[n+3] !== 0 || b.isKinemmatic ) {
+			//if( AR[n] + AR[n+1] + AR[n+2] + AR[n+3] !== 0 || b.isKinemmatic ) {
 
 				var s = AR[n];// speed km/h
 		        if ( s > 0 ) {
@@ -36,9 +36,10 @@ Object.assign( RigidBody.prototype, {
 		        } else {
 		            if ( b.material.name == 'move' || b.material.name == 'speed' ) b.material = root.mat.sleep;
 		        }
+		        
 				b.position.fromArray( AR, n + 1 );
 	            b.quaternion.fromArray( AR, n + 4 );
-	        }
+	        //}
 
 		} );
 
@@ -90,6 +91,10 @@ Object.assign( RigidBody.prototype, {
 		o.name = o.name !== undefined ? o.name : 'body' + this.ID ++;
 		// delete old if same name
 		this.remove( o.name );
+
+		if( o.breakable ){
+            if( o.type==='hardbox' || o.type==='box' || o.type==='sphere' || o.type==='cylinder' || o.type==='cone' ) o.type = 'real'+o.type;
+        }
 
 		if ( o.density !== undefined ) o.mass = o.density;
 		if ( o.bounce !== undefined ) o.restitution = o.bounce

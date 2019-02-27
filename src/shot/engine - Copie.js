@@ -5,7 +5,6 @@ import { Terrain } from './Terrain.js';
 import { Vehicle } from './Vehicle.js';
 import { Character } from './Character.js';
 import { Collision } from './Collision.js';
-import { RayCaster } from './RayCaster.js';
 import { ConvexObjectBreaker } from './ConvexObjectBreaker.js';
 import { LZMAdecompact } from './lzma.js';
 import { root, map, REVISION } from './root.js';
@@ -28,20 +27,18 @@ export var engine = ( function () {
 
 
     var URL = window.URL || window.webkitURL;
-    var Time = typeof performance === 'undefined' ? Date : performance;
     
     var t = { now:0, delta:0, then:0, inter:0, tmp:0, n:0, timerate:0, autoFps:false };
     var timer = undefined;
     var interval = null;
+    var stepNext = false;
     var refView = null;
     var isBuffer = false;
     var isPause = false;
 
-    var stepNext = false;
-
     var PI90 = 1.570796326794896;
 
-    var rigidBody, softBody, constraint, terrains, vehicles, character, collision, rayCaster;
+    var rigidBody, softBody, constraint, terrains, vehicles, character, collision;
 
     var convexBreaker = null;
 
@@ -78,8 +75,7 @@ export var engine = ( function () {
                 substep: Option.substep || 2,
                 broadphase: Option.broadphase || 2,
                 soft: Option.soft !== undefined ? Option.soft : true,
-                fixed: Option.fixed !== undefined ? Option.fixed : false,
-                //autoFps : Option.autoFps !== undefined ? Option.autoFps : false,
+                autoFps : Option.autoFps !== undefined ? Option.autoFps : false,
 
                 //penetration: Option.penetration || 0.0399,
 
@@ -188,8 +184,6 @@ export var engine = ( function () {
                 case 'ellipsoid': engine.ellipsoidMesh( data.o ); break;
 
                 case 'makeBreak': engine.makeBreak( data.o ); break;
-
-                case 'rayCast': rayCaster.receive( data.o ); break;
             }
 
         },
@@ -210,19 +204,14 @@ export var engine = ( function () {
 
         start: function ( o ) {
 
-            //console.log('start', t.timerate );
-
             stepNext = true;
 
             // create tranfere array if buffer
             if( isBuffer ) root.Ar = new Float32Array( root.ArMax );
 
-            //engine.sendData( 0 );
+            engine.sendData( 0 );
 
             //if ( !timer ) timer = requestAnimationFrame( engine.sendData );
-            t.then = Time.now();
-            if ( interval ) clearInterval( interval );
-            interval = setInterval( engine.sendData, t.timerate );
            
         },
 
@@ -233,8 +222,6 @@ export var engine = ( function () {
             engine.postUpdate();
 
             terrains.step();
-            rayCaster.step();
-
             rigidBody.step( root.Ar, root.ArPos[ 0 ] );
             collision.step( root.Ar, root.ArPos[ 1 ] );
             character.step( root.Ar, root.ArPos[ 2 ] );
@@ -247,6 +234,8 @@ export var engine = ( function () {
 
             if ( t.now - 1000 > t.tmp ){ t.tmp = t.now; t.fps = t.n; t.n = 0; }; t.n++; // FPS
             engine.tell();
+
+            // TODO
             
             if( refView ) refView.needUpdate( true );
             //else 
@@ -258,24 +247,49 @@ export var engine = ( function () {
 
         sendData: function ( time ){
 
-            if( refView ) if( refView.pause ) engine.stop();
-            
-        	if( !stepNext ) return;
+            if( refView ){
+                if( refView.pause ){ timer = null; return; }
+            }
 
-            t.now = Time.now();
-            t.delta = ( t.now - t.then ) * 0.001;
-        	t.then = t.now;
+            timer = requestAnimationFrame( engine.sendData );
+            t.now = time;
+            t.delta = t.now - t.then;
 
-        	if( isBuffer ) worker.postMessage( { m:'step',  o:{ delta:t.delta, key: engine.getKey() }, Ar:root.Ar }, [ root.Ar.buffer ] );
-            else worker.postMessage( { m:'step', o:{ delta:t.delta, key: engine.getKey() } } );
+            if( t.autoFps ){
 
-            stepNext = false;
+            	if( !stepNext ) return;
+
+            	t.then = t.now;
+            	if( isBuffer ) worker.postMessage( { m:'step',  o:{ delta:t.delta * 0.001, key: engine.getKey() }, Ar:root.Ar }, [ root.Ar.buffer ] );
+	            else worker.postMessage( { m:'step', o:{ delta:t.delta * 0.001, key: engine.getKey() } } );
+
+	            stepNext = false;
+
+            } else {
+
+            	if ( t.delta > t.timerate ) {
+
+	                t.then = t.now - ( t.delta % t.timerate );
+
+	                if( stepNext ){
+
+	                    if( isBuffer ) worker.postMessage( { m:'step',  o:{ key: engine.getKey() }, Ar:root.Ar }, [ root.Ar.buffer ] );
+	                    else worker.postMessage( { m:'step', o:{ key: engine.getKey() } } );
+	                    
+	                    stepNext = false;
+
+	                }
+
+	            }
+
+            }
 
         },
 
         setView: function ( v ) { 
 
-            refView = v;
+            refView = v; 
+
             root.mat = v.getMat();
             root.geo = v.getGeo();
             root.container = v.getScene();
@@ -283,7 +297,6 @@ export var engine = ( function () {
         },
 
         getFps: function () { return t.fps; },
-        getDelta: function () { return t.delta; },
 
         tell: function () {},
         
@@ -308,7 +321,10 @@ export var engine = ( function () {
 
             //console.log('reset', full);
 
-            engine.stop();
+            if ( timer ) {
+               window.cancelAnimationFrame( timer );
+               timer = undefined;
+            }
 
             // remove all mesh
             engine.clear();
@@ -327,9 +343,9 @@ export var engine = ( function () {
 
         stop: function () {
 
-            if ( interval ) {
-                clearInterval( interval );
-                interval = null;
+            if ( timer ) {
+               window.cancelAnimationFrame( timer );
+               timer = undefined;
             }
 
         },
@@ -381,8 +397,6 @@ export var engine = ( function () {
 
         break: function ( o ) { this.post('addBreakable', o ); },
 
-        //rayCast: function ( o ) { this.post('rayCast', o ); },
-
         moveSolid: function ( o ) {
 
             if ( ! map.has( o.name ) ) return;
@@ -413,13 +427,13 @@ export var engine = ( function () {
         initObject: function () {
 
             rigidBody = new RigidBody();
+            constraint = new Collision();
             //constraint = new Constraint();
             softBody = new SoftBody();
             terrains = new Terrain();
             vehicles = new Vehicle();
             character = new Character();
             collision = new Collision();
-            rayCaster = new RayCaster();
 
             // auto define basic function
             //if(!refView) this.defaultRoot();
@@ -436,7 +450,6 @@ export var engine = ( function () {
             vehicles.clear();
             character.clear();
             softBody.clear();
-            rayCaster.clear();
 
             while( root.extraGeo.length > 0 ) root.extraGeo.pop().dispose();
 
@@ -463,9 +476,12 @@ export var engine = ( function () {
             else if( type === 'character' ) character.add( o );
             else if( type === 'collision' ) collision.add( o );
             else if( type === 'car' ) vehicles.add( o );
-            else if( type === 'ray' ) return rayCaster.add( o );
-            else return rigidBody.add( o );
-            
+            else {
+                if( o.breakable ){
+                    if( type==='hardbox' || type==='box' || type==='sphere' || type==='cylinder' || type==='cone' ) o.type = 'real'+o.type;
+                }
+                return rigidBody.add( o );
+            }
 
         },
 
