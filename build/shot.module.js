@@ -3132,8 +3132,7 @@ function Ray( o ) {
 
 	this.start = new THREE.Vector3().fromArray( o.start || [0,0,0] );
 	this.end = new THREE.Vector3().fromArray( o.end || [0,10,0] );
-	this.point = new THREE.Vector3().fromArray( o.start || [0,10,0] );
-	this.pointX = new THREE.Vector3().fromArray( o.start || [0,10,0] );
+	this.tmp = new THREE.Vector3();
 	this.normal = new THREE.Vector3().fromArray(  [0,0,0] );
 
 	this.c1 = new THREE.Vector3(0.1,0.1,0.1);
@@ -3147,6 +3146,7 @@ function Ray( o ) {
 
 	this.vertices = [ 0,0,0, 0,0,0, 0,0,0, 0,0,0 , 0,0,0, 0,0,0, 0,0,0 ];
 	this.colors = [  0,0,0, 0,0,0, 0,0,0, 0,0,0 , 0,0,0, 0,0,0, 0,0,0 ];
+	this.local = [ 0,0,0, 0,0,0 ];
 
 	this.geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( this.vertices, 3 ) );
 	this.geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( this.colors, 3 ) );
@@ -3173,43 +3173,47 @@ Ray.prototype = Object.assign( Object.create( THREE.Line.prototype ), {
 
 	},
 
-	upGeo: function ( on ) {
+	upGeo: function ( hit ) {
 
-		if( on ) {
+		var v = this.vertices;
+		var c = this.colors;
+		var l = this.local;
+		var n, d;
+
+		if( hit ) {
 
 			this.isBase = false;
 
-			this.c2.toArray( this.colors, 0*3 );
-			this.c2.toArray( this.colors, 1*3 );
+			c[0] = c[3] = c[15] = c[18] = this.c2.x;
+			c[1] = c[4] = c[16] = c[19] = this.c2.y;
+			c[2] = c[5] = c[17] = c[20] = this.c2.z;
 
-			this.c2.toArray( this.colors, 5*3 );
-			this.c2.toArray( this.colors, 6*3 );
+			v[3] = v[6] = v[12] = v[15] = l[0];
+			v[4] = v[7] = v[13] = v[16] = l[1];
+			v[5] = v[8] = v[14] = v[17] = l[2];
 
-			this.start.toArray( this.vertices, 0 );
-			this.point.toArray( this.vertices, 1*3 );
-			this.point.toArray( this.vertices, 2*3 );
-			this.end.toArray( this.vertices, 3*3 );
-			this.point.toArray( this.vertices, 4*3 );
-			this.point.toArray( this.vertices, 5*3 );//normal point
-			this.pointX.toArray( this.vertices, 6*3 );//normal point
+			v[18] = l[3];
+			v[19] = l[4];
+			v[20] = l[5];
 
 			this.geometry.attributes.position.needsUpdate = true;
 	    	this.geometry.attributes.color.needsUpdate = true;
 
 		} else {
 
-			if(this.isBase) return;
+			if( this.isBase ) return;
 
 			var i = 7;
-			while(i--) this.c1.toArray( this.colors, i*3 );
-
-			this.start.toArray( this.vertices, 0 );
-			this.start.toArray( this.vertices, 1*3 );
-			this.start.toArray( this.vertices, 2*3 );
-			this.end.toArray( this.vertices, 3*3 );
-			this.end.toArray( this.vertices, 4*3 );
-			this.end.toArray( this.vertices, 5*3 );
-			this.end.toArray( this.vertices, 6*3 );
+			while(i--){ 
+				n = i*3;
+				d = i<3 ? true : false;
+				c[n] = this.c1.x;
+				c[n+1] = this.c1.y;
+				c[n+2] = this.c1.z;
+				v[n] = d ? this.start.x : this.end.x;
+				v[n+1] = d ? this.start.y : this.end.y;
+				v[n+2] = d ? this.start.z : this.end.z;
+			}
 
 			this.geometry.attributes.position.needsUpdate = true;
 	     	this.geometry.attributes.color.needsUpdate = true;
@@ -3218,8 +3222,6 @@ Ray.prototype = Object.assign( Object.create( THREE.Line.prototype ), {
 
 		}
 
-		
-
 	},
 
 	update: function ( o ) {
@@ -3227,19 +3229,17 @@ Ray.prototype = Object.assign( Object.create( THREE.Line.prototype ), {
 		if( o.hit ){
 
 			this.callback( o );
-			//this.material.color.setHex( 0x00FF00 );
-			this.point.fromArray( o.point ).applyMatrix4( this.inv );
-			var d = this.point.distanceTo( this.end );
-			//this.point = this.worldToLocal(this.point)
+
+			this.tmp.fromArray( o.point ).applyMatrix4( this.inv );
+			var d = this.tmp.distanceTo( this.end );
+			this.tmp.toArray( this.local, 0 );
 		    this.normal.fromArray( o.normal );
+		    this.tmp.addScaledVector( this.normal, d );
+		    this.tmp.toArray( this.local, 3 );
 
-		    this.pointX.copy( this.point ).addScaledVector( this.normal, d );
-
-		    this.upGeo(true);
+		    this.upGeo( true );
 
 		} else {
-
-			//this.material.color.setHex( 0xFF0000 );
 
 			this.upGeo();
 
