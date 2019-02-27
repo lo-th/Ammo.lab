@@ -15,7 +15,16 @@ function demo() {
     //physic.add({ type:'plane', friction:1 }); // infinie plane
     physic.add({ type:'box', size:[10,2,60], rot:[10,0,0], pos:[0,-1.2,0], friction:0.5 });
 
-    ball = physic.add({ type:'highsphere', name:'ball', size:[5], pos:[0,10,-25], mass:2, friction:0.5 });
+    var ballMat = view.material({
+        name:'bball',
+        roughness: 0.4,
+        metalness: 0.7,
+        map: view.texture( 'bball.jpg', { repeat:[2,1], flip:false }),
+        bumpMap: view.texture( 'bball_b.jpg', { repeat:[2,1], flip:false }),
+        bumpScale: 0.1,
+    });
+
+    ball = physic.add({ type:'highsphere', name:'ball', size:[5], pos:[0,10,-25], mass:2, friction:0.5, material:ballMat });
 
     var i = 10;
     while(i--){
