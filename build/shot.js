@@ -3080,7 +3080,7 @@
 			this.rays.forEach( function ( r, id ) {
 
 				r.updateMatrixWorld();
-				raytest.push( { origin:r.origin.toArray(), dest:r.dest.toArray() } );
+				raytest.push( { origin:r.origin, dest:r.dest } );
 
 			});
 
@@ -3131,24 +3131,26 @@
 
 		THREE.Line.call( this );
 
+		this.callback = o.callback || function (){};
+
 		this.position.fromArray( o.pos || [0,0,0] );
 
-		this.origin = new THREE.Vector3();
-		this.dest = new THREE.Vector3();
+		this.origin = [ 0,0,0 ];
+		this.dest = [ 0,0,0 ];
 
 		this.start = new THREE.Vector3().fromArray( o.start || [0,0,0] );
 		this.end = new THREE.Vector3().fromArray( o.end || [0,10,0] );
+
+		// tmp
 		this.tmp = new THREE.Vector3();
 		this.normal = new THREE.Vector3().fromArray(  [0,0,0] );
-
-		this.c1 = new THREE.Vector3(0.1,0.1,0.1);
-		this.c2 = new THREE.Vector3(0,1.0,0);
-
 		this.inv = new THREE.Matrix4();
 
+		// color
+		this.c1 = [ 0.1,0.1,0.1 ];
+		this.c2 = [ 0.1,1.0,0.1 ];
 
-		this.callback = o.callback || function (){};
-		this.result = { name:'' };
+		// geometry
 
 		this.vertices = [ 0,0,0, 0,0,0, 0,0,0, 0,0,0 , 0,0,0, 0,0,0, 0,0,0 ];
 		this.colors = [  0,0,0, 0,0,0, 0,0,0, 0,0,0 , 0,0,0, 0,0,0, 0,0,0 ];
@@ -3173,13 +3175,18 @@
 		updateMatrixWorld: function ( force ){
 
 			THREE.Line.prototype.updateMatrixWorld.call( this, force );
-			this.origin.copy( this.start ).applyMatrix4( this.matrixWorld );
-			this.dest.copy( this.end ).applyMatrix4( this.matrixWorld );
+
+			this.tmp.copy( this.start ).applyMatrix4( this.matrixWorld );
+			this.tmp.toArray( this.origin, 0 );
+			this.tmp.copy( this.end ).applyMatrix4( this.matrixWorld );
+			this.tmp.toArray( this.dest, 0 );
 			this.inv.getInverse( this.matrixWorld );
 
 		},
 
 		upGeo: function ( hit ) {
+
+			if( !this.visible ) return;
 
 			var v = this.vertices;
 			var c = this.colors;
@@ -3190,9 +3197,9 @@
 
 				this.isBase = false;
 
-				c[0] = c[3] = c[15] = c[18] = this.c2.x;
-				c[1] = c[4] = c[16] = c[19] = this.c2.y;
-				c[2] = c[5] = c[17] = c[20] = this.c2.z;
+				c[0] = c[3] = c[15] = c[18] = this.c2[0];
+				c[1] = c[4] = c[16] = c[19] = this.c2[1];
+				c[2] = c[5] = c[17] = c[20] = this.c2[2];
 
 				v[3] = v[6] = v[12] = v[15] = l[0];
 				v[4] = v[7] = v[13] = v[16] = l[1];
@@ -3213,9 +3220,9 @@
 				while(i--){ 
 					n = i*3;
 					d = i<3 ? true : false;
-					c[n] = this.c1.x;
-					c[n+1] = this.c1.y;
-					c[n+2] = this.c1.z;
+					c[n] = this.c1[0];
+					c[n+1] = this.c1[1];
+					c[n+2] = this.c1[2];
 					v[n] = d ? this.start.x : this.end.x;
 					v[n+1] = d ? this.start.y : this.end.y;
 					v[n+2] = d ? this.start.z : this.end.z;
@@ -3236,12 +3243,14 @@
 
 				this.callback( o );
 
-				this.tmp.fromArray( o.point ).applyMatrix4( this.inv );
-				var d = this.tmp.distanceTo( this.end );
-				this.tmp.toArray( this.local, 0 );
-			    this.normal.fromArray( o.normal );
-			    this.tmp.addScaledVector( this.normal, d );
-			    this.tmp.toArray( this.local, 3 );
+				if( this.visible ){
+					this.tmp.fromArray( o.point ).applyMatrix4( this.inv );
+					var d = this.tmp.distanceTo( this.end );
+					this.tmp.toArray( this.local, 0 );
+				    this.normal.fromArray( o.normal );
+				    this.tmp.addScaledVector( this.normal, d );
+				    this.tmp.toArray( this.local, 3 );
+				}
 
 			    this.upGeo( true );
 
