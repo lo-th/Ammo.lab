@@ -26,9 +26,9 @@ function demo() {
 
     ball = physic.add({ type:'highsphere', name:'ball', size:[5], pos:[0,10,-25], mass:2, friction:0.5, material:ballMat });
 
-    var i = 10;
+    var i = 20;
     while(i--){
-        physic.add({ type:'ray', pos:[i-4.5,20,0], end:[0,-20, 0], callback:Yoch });
+        physic.add({ type:'ray', pos:[(i*0.5)-4.5,20,0], end:[0,-20, 0], callback:Yoch });
     }
     
     physic.postUpdate = update;
