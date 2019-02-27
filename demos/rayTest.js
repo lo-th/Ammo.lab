@@ -21,7 +21,6 @@ function demo() {
         metalness: 0.7,
         map: view.texture( 'bball.jpg', { repeat:[2,1], flip:false }),
         normalMap: view.texture( 'bball_n.jpg', { repeat:[2,1], flip:false }),
-       // bumpScale: 0.1,
     });
 
     ball = physic.add({ type:'highsphere', name:'ball', size:[5], pos:[0,10,-25], mass:2, friction:0.5, material:ballMat });
@@ -43,6 +42,6 @@ function Yoch( o ){
 
 function update () {
 
-    if(ball.position.y<-10) physic.matrix( [{ name:'ball', pos: [ Math.rand(-4,4),10,-25 ], noVelocity:true }] );
+    if(ball.position.y<-10) physic.matrix( [{ name:'ball', pos: [ Math.rand(-4,4),10,-25 ], rot:[Math.randInt(-180,180),0,Math.randInt(-180,180)], noVelocity:true }] );
 
 }
