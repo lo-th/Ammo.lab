@@ -226,8 +226,7 @@ function initMaterials () {
         roughness: 0.4,
         metalness: 0.7,
         map: view.texture( 'bball.jpg', { repeat:[2,1], flip:false }),
-        bumpMap: view.texture( 'bball_b.jpg', { repeat:[2,1], flip:false }),
-        bumpScale: 0.5,
+        normalMap: view.texture( 'bball_n.jpg', { repeat:[2,1], flip:false }),
     });
 
     mat['net'] = view.material({
