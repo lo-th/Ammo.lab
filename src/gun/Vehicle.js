@@ -85,7 +85,7 @@ Object.assign( Vehicle.prototype, {
 
 	},
 
-	addExtra: function ( o, extra ) {
+	addExtra: function () {
 
 	},
 
@@ -100,10 +100,14 @@ Object.assign( Vehicle.prototype, {
 
 		// car shape
 		var shapeType = o.shapeType || 'box';
-		var shape;
-		if ( shapeType == 'mesh' ) shape = this.addExtra( { type: 'mesh', v: o.v, mass: 1 }, 'isShape' );
-		else if ( shapeType == 'convex' ) shape = this.addExtra( { type: 'convex', v: o.v }, 'isShape' );
-		else shape = this.addExtra( { type: 'box', size: o.size }, 'isShape' );
+		var sho = {};
+
+		if ( shapeType == 'mesh' ) sho = { type: 'mesh', v: o.v, mass: 1 };
+		else if ( shapeType == 'convex' ) sho = { type: 'convex', v: o.v };
+		else sho = { type: 'box', size: o.size };
+
+		var shape = this.addExtra( sho, 'isShape' );
+
 		if ( o.v !== undefined ) delete ( o.v );
 
 		var vehicleRay = new Ammo.btDefaultVehicleRaycaster( root.world );
@@ -310,6 +314,10 @@ Object.assign( Car.prototype, {
 
 		// car body
 		this.body = new Ammo.btRigidBody( rbInfo );
+		this.body.name = this.name + '_body';
+		this.body.isRigidBody = true;
+		this.body.isBody = true;
+
 		this.body.setActivationState( 4 );
 
 		Ammo.destroy( rbInfo );

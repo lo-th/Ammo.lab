@@ -25,7 +25,7 @@ import { root, map } from './root.js';
 *    and gravity in meters per square second (9.8 m/s^2).
 */
 //var Module = { TOTAL_MEMORY: 64*1024*1024 };//default // 67108864
-self.Module = { TOTAL_MEMORY: 256*1024*1024 };// TODO don't work ???
+self.Module = { TOTAL_MEMORY: 256 * 1024 * 1024 };// TODO don't work ???
 
 self.onmessage = function ( e ) {
 
@@ -97,7 +97,9 @@ export var engine = ( function () {
 	var tmpForces = [];
 	var tmpMatrix = [];
 	var tmpOption = [];
+
 	var tmpRemove = [];
+	var tmpAdd = [];
 
 	var carName = "";
 	var heroName = "";
@@ -134,15 +136,15 @@ export var engine = ( function () {
 		},
 		//getKey: function () { return key; },
 
-		setDrive: function ( o ) {
+		setDrive: function ( name ) {
 
-			carName = o.name;
+			carName = name;
 
 		},
 
-		setMove: function ( o ) {
+		setMove: function ( name ) {
 
-			heroName = o.name;
+			heroName = name;
 
 		},
 		setAngle: function ( o ) {
@@ -155,20 +157,23 @@ export var engine = ( function () {
 
 			root.key = o.key;
 
+			//tmpRemove = tmpRemove.concat( o.remove );
+			this.stepRemove();
+
 			vehicles.control( carName );
 			character.control( heroName );
 
 			this.stepMatrix();
 			this.stepOption();
 			this.stepForces();
-			this.stepRemove();
+			
 
 			terrains.step();
 
 			// breakable object
-			if( numBreak !== 0 ) this.stepBreak();
+			if ( numBreak !== 0 ) this.stepBreak();
 
-			if( fixed ) root.world.stepSimulation( o.delta, substep, timestep );
+			if ( fixed ) root.world.stepSimulation( o.delta, substep, timestep );
 			else root.world.stepSimulation( o.delta, substep );
 
 			rigidBody.step( Ar, ArPos[ 0 ] );
@@ -176,10 +181,10 @@ export var engine = ( function () {
 			character.step( Ar, ArPos[ 2 ] );
 			vehicles.step( Ar, ArPos[ 3 ] );
 			softBody.step( Ar, ArPos[ 4 ] );
-			
+
 			// breakable object
 			//if( numBreak !== 0 ) this.stepBreak();
-		
+
 
 			if ( isBuffer ) self.postMessage( { m: 'step', Ar: Ar }, [ Ar.buffer ] );
 			else self.postMessage( { m: 'step', Ar: Ar } );
@@ -196,7 +201,9 @@ export var engine = ( function () {
 			tmpForces = [];
 			tmpMatrix = [];
 			tmpOption = [];
+			
 			tmpRemove = [];
+			tmpAdd = [];
 
 			rigidBody.clear();
 			constraint.clear();
@@ -284,32 +291,53 @@ export var engine = ( function () {
 
 				self.postMessage( { m: 'initEngine' } );
 
-			});
+			} );
 
 		},
 
-		removeRigidBody: function ( name ) {
+		//-----------------------------
+		// REMOVE
+		//-----------------------------
 
-            rigidBody.remove(name)
+		remove: function ( name ) {
 
-        },
+			if ( ! map.has( name ) ) return;
+			var b = map.get( name );
+
+			switch( b.type ){
+
+				case 'solid': case 'body' :
+				    rigidBody.remove( name );
+				break;
+				case 'soft':
+				    softBody.remove( name );
+				break;
+				case 'terrain':
+				    terrains.remove( name );
+				break;
+				case 'joint':
+				    constraint.remove( name );
+				break;
+
+			}
+
+			//rigidBody.remove( name );
+
+		},
+
 
 		//-----------------------------
 		// ADD
 		//-----------------------------
 
-		/*addExtra: function ( o, extra ) {
-
-            return rigidBody.add( o, extra );
-
-        },*/
-
 		add: function ( o ) {
 
 			o.type = o.type === undefined ? 'box' : o.type;
 
-			if(o.breakable !== undefined ){
-				if( o.breakable ) numBreak ++;
+			if ( o.breakable !== undefined ) {
+
+				if ( o.breakable ) numBreak ++;
+
 			}
 
 			var type = o.type;
@@ -387,7 +415,7 @@ export var engine = ( function () {
 
 			root.world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collisionConfig, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfig );
 
-	
+
 
 
 			//console.log(dispatcher)
@@ -397,7 +425,7 @@ export var engine = ( function () {
 			root.world.getSolverInfo().set_m_splitImpulsePenetrationThreshold(0);
 			root.world.getSolverInfo().set_m_splitImpulse( true );
 			*/
-			
+
 		},
 
 		clearWorld: function () {
@@ -408,7 +436,7 @@ export var engine = ( function () {
 			Ammo.destroy( collisionConfig );
 			Ammo.destroy( dispatcher );
 			Ammo.destroy( broadphase );
-			
+
 			root.world = null;
 
 		},
@@ -443,7 +471,7 @@ export var engine = ( function () {
 
 			this.setWorldscale( o.worldscale !== undefined ? o.worldscale : 1 );
 
-			timestep = o.fps !== undefined ? 1 / o.fps : 1/60;
+			timestep = o.fps !== undefined ? 1 / o.fps : 1 / 60;
 			substep = o.substep !== undefined ? o.substep : 2;
 			fixed = o.fixed !== undefined ? o.fixed : false;
 
@@ -472,7 +500,7 @@ export var engine = ( function () {
 		setForces: function ( o ) {
 
 			//if( o.constructor !== Array ) tmpForces.push(o);
-			//else 
+			//else
 			tmpForces = tmpForces.concat( o );
 
 		},
@@ -493,7 +521,7 @@ export var engine = ( function () {
 			var p2 = math.vector3();
 
 			if ( o.direction !== undefined ) p1.fromArray( math.vectomult( o.direction, root.invScale ) );
-			if ( o.distance  !== undefined ) p2.fromArray( math.vectomult( o.distance, root.invScale )  );
+			if ( o.distance !== undefined ) p2.fromArray( math.vectomult( o.distance, root.invScale ) );
 			else p2.zero();
 
 			switch ( o.type ) {
@@ -506,9 +534,9 @@ export var engine = ( function () {
 				case 'impulse' : case 5 : b.applyImpulse( p1, p2 ); break;// impulse , rel_pos
 				case 'impulseCentral' : case 6 : b.applyCentralImpulse( p1 ); break;
 
-				// joint
+					// joint
 
-				case 'motor' : case 7 : b.enableAngularMotor( o.enable || true , o.targetVelocity, o.maxMotor ); break; // bool, targetVelocity float, maxMotorImpulse float
+				case 'motor' : case 7 : b.enableAngularMotor( o.enable || true, o.targetVelocity, o.maxMotor ); break; // bool, targetVelocity float, maxMotorImpulse float
 
 			}
 
@@ -545,11 +573,11 @@ export var engine = ( function () {
 				b.getMotionState().getWorldTransform( t );
 				var r = [];
 				t.toArray( r );
-				
-				if ( o.keepX === undefined ) o.pos[ 0 ] = r[ 0 ] - o.pos[ 0 ];
-				if ( o.keepY === undefined ) o.pos[ 1 ] = r[ 1 ] - o.pos[ 1 ];
-				if ( o.keepZ === undefined ) o.pos[ 2 ] = r[ 2 ] - o.pos[ 2 ];
-				if ( o.keepRot === undefined ) o.quat = [ r[ 3 ], r[ 4 ], r[ 5 ], r[ 6 ] ];
+
+				if ( o.keepX !== undefined ) o.pos[ 0 ] = r[ 0 ] - o.pos[ 0 ];
+				if ( o.keepY !== undefined ) o.pos[ 1 ] = r[ 1 ] - o.pos[ 1 ];
+				if ( o.keepZ !== undefined ) o.pos[ 2 ] = r[ 2 ] - o.pos[ 2 ];
+				if ( o.keepRot !== undefined ) o.quat = [ r[ 3 ], r[ 4 ], r[ 5 ], r[ 6 ] ];
 
 			}
 
@@ -558,25 +586,28 @@ export var engine = ( function () {
 			// position and rotation
 			if ( o.pos !== undefined ) {
 
-				o.pos = math.vectomult( o.pos, root.invScale );
-				if ( o.rot !== undefined ) o.quat =  math.eulerToQuadArray( o.rot, true );// is euler degree
+				//o.pos = math.vectomult( o.pos, root.invScale );
+				if ( o.rot !== undefined ) o.quat = math.eulerToQuadArray( o.rot, true );// is euler degree
 				if ( o.quat !== undefined ) o.pos = o.pos.concat( o.quat );
-				t.fromArray( o.pos );
+				
+				t.fromArray( o.pos, 0, root.invScale );
 
 			}
 
-			if( o.noVelocity ){
+			if ( o.noVelocity ) {
+
 				b.setAngularVelocity( zero );
 				b.setLinearVelocity( zero );
+
 			}
 
 
 
-			if( b.isKinematic ) b.getMotionState().setWorldTransform( t );
+			if ( b.isKinematic ) b.getMotionState().setWorldTransform( t );
 			else b.setWorldTransform( t );
-			if( b.isBody ) b.activate();
 
-			if( b.isSolid ) self.postMessage( { m: 'moveSolid', o:{ name:o.name, pos: math.vectomult( o.pos, root.scale ), quat: o.quat } } );
+			if ( b.type === 'body' ) b.activate();
+			if ( b.type === 'solid' ) self.postMessage( { m: 'moveSolid', o: { name: o.name, pos: math.vectomult( o.pos, root.scale ), quat: o.quat } } );
 
 			t.free();
 
@@ -636,7 +667,13 @@ export var engine = ( function () {
 			if ( ! map.has( o.name ) ) return;
 			var b = map.get( o.name );
 
-			if( b.isRigidBody ) rigidBody.applyOption( b, o );
+			switch( b.type ){
+				case 'solid': case 'body' :
+				    rigidBody.applyOption( b, o );
+				break;
+			}
+
+			//if ( b.isRigidBody ) rigidBody.applyOption( b, o );
 
 			/*if ( o.flag !== undefined ) b.setCollisionFlags( o.flag );
 			if ( o.state !== undefined ) b.setMotionState( o.state );
@@ -681,21 +718,9 @@ export var engine = ( function () {
 
 		stepRemove: function () {
 
-			while ( tmpRemove.length > 0 ) this.applyRemove( tmpRemove.pop() );
+			while ( tmpRemove.length > 0 ) this.remove( tmpRemove.pop() );
 
 		},
-
-		applyRemove: function ( name ) {
-
-			if ( ! map.has( name ) ) return;
-			var b = map.get( name );
-
-			if ( b.isBody || b.isSolid || b.isKinematic ) rigidBody.remove( name );
-			if ( b.isJoint ) constraint.remove( name );
-
-
-		},
-
 
 		//-----------------------------
 		// BREAKABLE
@@ -716,11 +741,12 @@ export var engine = ( function () {
 				rb0 = body0.name;
 				rb1 = body1.name;
 
-				if ( !body0.breakable && !body1.breakable ) continue;
-				
+				if ( ! body0.breakable && ! body1.breakable ) continue;
+
 				contact = false;
 				maxImpulse = 0;
 				for ( var j = 0, jl = manifold.getNumContacts(); j < jl; j ++ ) {
+
 					point = manifold.getContactPoint( j );
 					if ( point.getDistance() < 0 ) {
 
@@ -732,27 +758,30 @@ export var engine = ( function () {
 							maxImpulse = impulse;
 							pos = point.get_m_positionWorldOnB().toArray();
 							normal = point.get_m_normalWorldOnB().toArray();
+
 						}
 						break;
+
 					}
+
 				}
 
 				// If no point has contact, abort
-				if ( !contact ) continue;
-				
+				if ( ! contact ) continue;
+
 				// Subdivision
 
-				if ( body0.breakable && maxImpulse > body0.breakOption[0] ) {
+				if ( body0.breakable && maxImpulse > body0.breakOption[ 0 ] ) {
 
-					self.postMessage( { m: 'makeBreak', o:{ name:rb0, pos: math.vectomult( pos, root.scale ), normal:normal, breakOption:body0.breakOption } } );
-					this.removeRigidBody( rb0 );
-					
+					self.postMessage( { m: 'makeBreak', o: { name: rb0, pos: math.vectomult( pos, root.scale ), normal: normal, breakOption: body0.breakOption } } );
+					//this.remove( rb0 );
+
 				}
 
-				if ( body1.breakable && maxImpulse > body1.breakOption[0] ) {
+				if ( body1.breakable && maxImpulse > body1.breakOption[ 0 ] ) {
 
-					self.postMessage( { m: 'makeBreak', o:{ name:rb1, pos: math.vectomult( pos, root.scale ), normal:normal, breakOption:body1.breakOption } } );
-					this.removeRigidBody( rb1 );
+					self.postMessage( { m: 'makeBreak', o: { name: rb1, pos: math.vectomult( pos, root.scale ), normal: normal, breakOption: body1.breakOption } } );
+					//this.remove( rb1 );
 
 				}
 
@@ -768,9 +797,9 @@ export var engine = ( function () {
 
 			var rayResult = [], r, result;
 
-			for( var i = 0, lng = o.length; i<lng; i++ ){
+			for ( var i = 0, lng = o.length; i < lng; i ++ ) {
 
-				r = o[i];
+				r = o[ i ];
 
 				result = {};
 
@@ -778,32 +807,42 @@ export var engine = ( function () {
 				ray.set_m_closestHitFraction( 1 );
 				ray.set_m_collisionObject( null );
 				// Set ray option
-				if( r.origin !== undefined ) ray.get_m_rayFromWorld().fromArray( r.origin, 0, root.invScale );
-				if( r.dest !== undefined ) ray.get_m_rayToWorld().fromArray( r.dest, 0, root.invScale );
-				if( r.group !== undefined ) ray.set_m_collisionFilterGroup( r.group );
-			    if( r.mask !== undefined ) ray.set_m_collisionFilterMask( r.mask );
+				if ( r.origin !== undefined ) ray.get_m_rayFromWorld().fromArray( r.origin, 0, root.invScale );
+				if ( r.dest !== undefined ) ray.get_m_rayToWorld().fromArray( r.dest, 0, root.invScale );
+				if ( r.group !== undefined ) ray.set_m_collisionFilterGroup( r.group );
+			    if ( r.mask !== undefined ) ray.set_m_collisionFilterMask( r.mask );
 
 				// Perform ray test
 			    root.world.rayTest( ray.get_m_rayFromWorld(), ray.get_m_rayToWorld(), ray );
 
 			    if ( ray.hasHit() ) {
 
+			    	//console.log(ray)
+
+			    	var name = Ammo.castObject( ray.get_m_collisionObject(), Ammo.btRigidBody ).name;
+			    	if ( name === undefined ) name = Ammo.castObject( ray.get_m_collisionObject(), Ammo.btSoftBody ).name;
+
+			    	var normal = ray.get_m_hitNormalWorld();
+			    	normal.normalize();
+			    	
 			    	result = {
 			    		hit: true,
-			    		name: Ammo.castObject( ray.get_m_collisionObject(), Ammo.btRigidBody ).name,
+			    		name: name,
 			    		point: ray.get_m_hitPointWorld().toArray( undefined, 0, root.scale ),
-			    		normal: ray.get_m_hitNormalWorld().toArray(),
-			    	}
+			    		normal: normal.toArray(),
+			    	};
 
 			    } else {
-			    	result = { hit: false }
-			    }
+
+			    	result = { hit: false };
+
+				}
 
 			    rayResult.push( result );
 
 			}
 
-		    self.postMessage( { m:'rayCast', o:rayResult } );
+		    self.postMessage( { m: 'rayCast', o: rayResult } );
 
 		},
 

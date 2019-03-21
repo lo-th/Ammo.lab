@@ -24,7 +24,7 @@ Object.assign( Constraint.prototype, {
 		this.joints.forEach( function ( b, id ) {
 
 			var n = N + ( id * 4 );
-			AR[ n ] = b.type;
+			AR[ n ] = b.ntype;
 
 		} );
 
@@ -76,6 +76,10 @@ Object.assign( Constraint.prototype, {
 
 		var b1 = map.get( o.b1 );
 		var b2 = map.get( o.b2 );
+
+		b1.activate();
+		b2.activate();
+		//console.log(b2)
 
 		var posA = math.vector3().fromArray( o.pos1 || [ 0, 0, 0 ] ).multiplyScalar( root.invScale );
 		var posB = math.vector3().fromArray( o.pos2 || [ 0, 0, 0 ] ).multiplyScalar( root.invScale );
@@ -145,15 +149,17 @@ Object.assign( Constraint.prototype, {
 			case "joint_conetwist": n = 4; joint = new Ammo.btConeTwistConstraint( b1, b2, formA, formB ); break;
 			case "joint_dof": n = 5; joint = new Ammo.btGeneric6DofConstraint( b1, b2, formA, formB, useA ); break;
 			case "joint_spring_dof": n = 6; joint = new Ammo.btGeneric6DofSpringConstraint( b1, b2, formA, formB, useA ); break;
-			case "joint_fixe": new Ammo.btFixedConstraint( b1, b2, formA, formB ); break;
+			case "joint_fixe": n = 7; joint = new Ammo.btFixedConstraint( b1, b2, formA, formB ); break;
             //case "joint_gear": joint = new Ammo.btGearConstraint( b1, b2, point1, point2, o.ratio || 1); break;// missing
             //case "joint_universal": joint = new Ammo.btUniversalConstraint( b1, b2, point1, point2, o.ratio || 1); break;// missing
 
 		}
 
+		//console.log( joint );
+
 		// EXTRA SETTING
 
-		if ( o.breaking ) joint.setBreakingImpulseThreshold( o.breaking );
+		if ( o.breaking && joint.setBreakingImpulseThreshold ) joint.setBreakingImpulseThreshold( o.breaking );
 
 		// hinge
 
@@ -260,13 +266,13 @@ Object.assign( Constraint.prototype, {
 
 		}
 
-
 		var collision = o.collision !== undefined ? o.collision : false;
 
 
 		joint.isJoint = true;
 		joint.name = name;
-		joint.type = n;
+		joint.nType = n;
+		joint.type = 'joint';
 
 		root.world.addConstraint( joint, collision ? false : true );
 		this.joints.push( joint );

@@ -24,6 +24,7 @@ demos.sort();
 
 var view, demo, physic;
 var demoName = 'basic';
+var currentMode = '';
 
 //////////////////////////////
 
@@ -50,14 +51,18 @@ function next(){
 
     //intro.clear();
     physic.setView( view );
+    physic.log = editor.log;
     physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / ammo ' + physic.getFps() );  }
     //physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / ammo ' + Math.floor(physic.getDelta()*1000) );  }
     physic.getKey = function () { return user.key; }
+
+
 
     // for update envmap
     //view.extraUpdateMat = physic.updateTmpMat;
 
     editor.init( launch, isWithCode, '#308AFF', 'Ammo.lab' );
+    editor.addExtraOption( physic.setMode );
 
     physic.start();
 

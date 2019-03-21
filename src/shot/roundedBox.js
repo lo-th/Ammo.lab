@@ -2,7 +2,7 @@
  * @author pailhead / http://dusanbosnjak.com
  */
 
-THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSegments ) {
+THREE.RoundedBoxGeometry = function ( width, height, depth, radius, radiusSegments ) {
 
 	THREE.BufferGeometry.call( this );
 
@@ -10,52 +10,52 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 
 
 	//validate params ===================================
-	
-	width =  width !== undefined ? width  : 1;
+
+	width = width !== undefined ? width : 1;
 	height = height !== undefined ? height : 1;
-	depth =  depth !== undefined  ? depth  : 1;
+	depth = depth !== undefined ? depth : 1;
 
 	radius = radius !== undefined ? radius : .15;
-	radiusSegments = radius !== radiusSegments ? Math.max( 1, Math.floor( radiusSegments ) ) : 1 ;
+	radiusSegments = radius !== radiusSegments ? Math.max( 1, Math.floor( radiusSegments ) ) : 1;
 
-	radius = Math.min( radius , Math.min( width , Math.min( height , Math.min( depth ) ) ) / 2 );
+	radius = Math.min( radius, Math.min( width, Math.min( height, Math.min( depth ) ) ) / 2 );
 
-	var edgeHalfWidth =  width / 2 - radius;
+	var edgeHalfWidth = width / 2 - radius;
 	var edgeHalfHeight = height / 2 - radius;
-	var edgeHalfDepth =  depth / 2 - radius;
+	var edgeHalfDepth = depth / 2 - radius;
 
 
 	//not sure why this is needed, for querying? ========
 
 	this.parameters = {
-		width: width , 
-		height: height , 
-		depth: depth , 
-		radius: radius, 
+		width: width,
+		height: height,
+		depth: depth,
+		radius: radius,
 		radiusSegments: radiusSegments
 	};
 
 
 	//calculate vertices count ==========================
 
-	var rs1 =  radiusSegments + 1; //radius segments + 1 
+	var rs1 = radiusSegments + 1; //radius segments + 1
 
-	var totalVertexCount = ( rs1 * radiusSegments + 1 ) << 3; 
+	var totalVertexCount = ( rs1 * radiusSegments + 1 ) << 3;
 
 
 	//make buffers ======================================
 
 	var positions = 	new THREE.BufferAttribute( new Float32Array( totalVertexCount * 3 ), 3 );
-	
+
 	var normals = 		new THREE.BufferAttribute( new Float32Array( totalVertexCount * 3 ), 3 );
-	
+
 
 	//some vars =========================================
 
-	var 
-		cornerVerts = [], 
+	var
+		cornerVerts = [],
 		cornerNormals = [],
-		normal = new THREE.Vector3(),
+		//normal = new THREE.Vector3(),
 		vertex = new THREE.Vector3(),
 		vertexPool = [],
 		normalPool = [],
@@ -72,29 +72,29 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 	doCorners();
 	doHeightEdges();
 	doWidthEdges();
-	doDepthEdges()
+	doDepthEdges();
 
 	// calculate vert positions =========================
 
-	function doVertices(){
+	function doVertices() {
 
 		//corner offsets
 		var cornerLayout = [
-			new THREE.Vector3(  1 ,  1 ,  1 ),
-			new THREE.Vector3(  1 ,  1 , -1 ),
-			new THREE.Vector3( -1 ,  1 , -1 ),
-			new THREE.Vector3( -1 ,  1 ,  1 ),
-			new THREE.Vector3(  1 , -1 ,  1 ),
-			new THREE.Vector3(  1 , -1 , -1 ),
-			new THREE.Vector3( -1 , -1 , -1 ),
-			new THREE.Vector3( -1 , -1 ,  1 )
+			new THREE.Vector3( 1, 1, 1 ),
+			new THREE.Vector3( 1, 1, - 1 ),
+			new THREE.Vector3( - 1, 1, - 1 ),
+			new THREE.Vector3( - 1, 1, 1 ),
+			new THREE.Vector3( 1, - 1, 1 ),
+			new THREE.Vector3( 1, - 1, - 1 ),
+			new THREE.Vector3( - 1, - 1, - 1 ),
+			new THREE.Vector3( - 1, - 1, 1 )
 		];
 
-		//corner holder 
-		for ( var j = 0 ; j < 8 ; j ++ ){
+		//corner holder
+		for ( var j = 0; j < 8; j ++ ) {
 
-			cornerVerts.push([]); 
-			cornerNormals.push([]); 
+			cornerVerts.push( [] );
+			cornerNormals.push( [] );
 
 		}
 
@@ -102,7 +102,7 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 
 		var PIhalf = Math.PI / 2;
 
-		var cornerOffset = new THREE.Vector3( edgeHalfWidth , edgeHalfHeight , edgeHalfDepth );
+		var cornerOffset = new THREE.Vector3( edgeHalfWidth, edgeHalfHeight, edgeHalfDepth );
 
 		for ( var y = 0; y <= radiusSegments; y ++ ) {
 
@@ -110,29 +110,29 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 
 			var va = v * PIhalf; //arrange in 90 deg
 
-			var cosVa = Math.cos( va ); //scale of vertical angle 
+			var cosVa = Math.cos( va ); //scale of vertical angle
 
 			var sinVa = Math.sin( va );
 
-			if( y == radiusSegments ){
+			if ( y == radiusSegments ) {
 
-				vertex.set( 0 , 1 , 0 );
+				vertex.set( 0, 1, 0 );
 
 				var vert = vertex.clone().multiplyScalar( radius ).add( cornerOffset );
-				
-				cornerVerts[0].push( vert );
+
+				cornerVerts[ 0 ].push( vert );
 
 				vertexPool.push( vert );
-				
+
 				var norm = vertex.clone();
 
-				cornerNormals[0].push( norm );
+				cornerNormals[ 0 ].push( norm );
 
 				normalPool.push( norm );
 
 				continue; //skip row loop
-			
-			} 	
+
+			}
 
 			for ( var x = 0; x <= radiusSegments; x ++ ) {
 
@@ -148,14 +148,14 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 				//copy sphere point, scale by radius, offset by half whd
 				var vert = vertex.clone().multiplyScalar( radius ).add( cornerOffset );
 
-				cornerVerts[0].push( vert );
+				cornerVerts[ 0 ].push( vert );
 
 				vertexPool.push( vert );
-				
+
 				//sphere already normalized, just clone
 
 				var norm = vertex.clone().normalize();
-				cornerNormals[0].push( norm );
+				cornerNormals[ 0 ].push( norm );
 				normalPool.push( norm );
 
 			}
@@ -164,34 +164,34 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 
 		//distribute corner verts ===========================
 
-		for ( var i = 1 ; i < 8 ; i ++ ){
+		for ( var i = 1; i < 8; i ++ ) {
 
-			for( var j = 0 ; j < cornerVerts[0].length ; j ++ ){
+			for ( var j = 0; j < cornerVerts[ 0 ].length; j ++ ) {
 
-				var vert = cornerVerts[0][j].clone().multiply( cornerLayout[i] );
+				var vert = cornerVerts[ 0 ][ j ].clone().multiply( cornerLayout[ i ] );
 
-				cornerVerts[i].push( vert );
-				
+				cornerVerts[ i ].push( vert );
+
 				vertexPool.push( vert );
 
-				var norm = cornerNormals[0][j].clone().multiply( cornerLayout[i] );
+				var norm = cornerNormals[ 0 ][ j ].clone().multiply( cornerLayout[ i ] );
 
-				cornerNormals[i].push( norm );
+				cornerNormals[ i ].push( norm );
 
 				normalPool.push( norm );
 
 			}
 
-		}	
+		}
 
 	}
-	
+
 
 	// weave corners ====================================
 
-	function doCorners(){
+	function doCorners() {
 
-		var indexInd = 0;
+		//var indexInd = 0;
 
 
 		var flips = [
@@ -207,16 +207,16 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 
 		var lastRowOffset = rs1 * ( radiusSegments - 1 );
 
-		for ( var i = 0 ; i < 8 ; i ++ ){
+		for ( var i = 0; i < 8; i ++ ) {
 
 			var cornerOffset = cornerVertNumber * i;
 
-			for ( var v = 0 ; v < radiusSegments - 1 ; v ++ ){
+			for ( var v = 0; v < radiusSegments - 1; v ++ ) {
 
 				var r1 = v * rs1; 		//row offset
-				var r2 = (v + 1) * rs1; //next row
+				var r2 = ( v + 1 ) * rs1; //next row
 
-				for ( var u = 0 ; u < radiusSegments ; u ++ ){
+				for ( var u = 0; u < radiusSegments; u ++ ) {
 
 					var u1 = u + 1;
 					var a = cornerOffset + r1 + u;
@@ -224,7 +224,7 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 					var c = cornerOffset + r2 + u;
 					var d = cornerOffset + r2 + u1;
 
-					if( !flips[i] ){
+					if ( ! flips[ i ] ) {
 
 						indices.push( a );
 						indices.push( b );
@@ -249,14 +249,14 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 				}
 
 			}
-			
-			for ( var u = 0 ; u < radiusSegments ; u ++ ){
+
+			for ( var u = 0; u < radiusSegments; u ++ ) {
 
 				var a = cornerOffset + lastRowOffset + u;
 				var b = cornerOffset + lastRowOffset + u + 1;
 				var c = cornerOffset + lastVertex;
 
-				if( !flips[i] ){
+				if ( ! flips[ i ] ) {
 
 					indices.push( a );
 					indices.push( b );
@@ -275,12 +275,12 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 		}
 
 	}
-	
+
 
 	//plates ============================================
 	//fix this loop matrices find pattern something
 
-	function doFaces(){
+	function doFaces() {
 
 		//top
 		var a = lastVertex;// + cornerVertNumber * 0;
@@ -308,7 +308,7 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 		indices.push( d );
 		indices.push( c );
 
-		//left 
+		//left
 		a = 0;
 		b = cornerVertNumber;
 		c = cornerVertNumber * 4;
@@ -321,7 +321,7 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 		indices.push( c );
 		indices.push( d );
 
-		//right 
+		//right
 		a = cornerVertNumber * 2;
 		b = cornerVertNumber * 3;
 		c = cornerVertNumber * 6;
@@ -334,7 +334,7 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 		indices.push( c );
 		indices.push( d );
 
-		//front 
+		//front
 		a = radiusSegments;
 		b = radiusSegments + cornerVertNumber * 3;
 		c = radiusSegments + cornerVertNumber * 4;
@@ -347,7 +347,7 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 		indices.push( d );
 		indices.push( c );
 
-		//back 
+		//back
 		a = radiusSegments + cornerVertNumber;
 		b = radiusSegments + cornerVertNumber * 2;
 		c = radiusSegments + cornerVertNumber * 5;
@@ -365,14 +365,14 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 
 	// weave edges ======================================
 
-	function doHeightEdges(){
+	function doHeightEdges() {
 
-		for ( var i = 0 ; i < 4 ; i ++ ){
+		for ( var i = 0; i < 4; i ++ ) {
 
 			var cOffset = i * cornerVertNumber;
 			var cRowOffset = 4 * cornerVertNumber + cOffset;
 			var needsFlip = i & 1 === 1;
-			for ( var u = 0 ; u < radiusSegments ; u ++ ){
+			for ( var u = 0; u < radiusSegments; u ++ ) {
 
 				var u1 = u + 1;
 				var a = cOffset + u;
@@ -380,7 +380,7 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 				var c = cRowOffset + u;
 				var d = cRowOffset + u1;
 
-				if( !needsFlip ){
+				if ( ! needsFlip ) {
 
 					indices.push( a );
 					indices.push( b );
@@ -405,30 +405,30 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 		}
 
 	}
-	
-	function doDepthEdges(){
 
-		var cStarts = [ 0 , 2 , 4 , 6 ];
-		var cEnds =   [ 1 , 3 , 5 , 7 ];
-			
-		for ( var i = 0 ; i < 4 ; i ++ ){
+	function doDepthEdges() {
+
+		var cStarts = [ 0, 2, 4, 6 ];
+		var cEnds = [ 1, 3, 5, 7 ];
+
+		for ( var i = 0; i < 4; i ++ ) {
 
 			var cStart = cornerVertNumber * cStarts[ i ];
-			var cEnd =   cornerVertNumber * cEnds[ i ];
+			var cEnd = cornerVertNumber * cEnds[ i ];
 
 			var needsFlip = 1 >= i;
 
-			for ( var u = 0 ; u < radiusSegments ; u ++ ){
+			for ( var u = 0; u < radiusSegments; u ++ ) {
 
-				var urs1 =  u * rs1;
-				var u1rs1 = (u+1) * rs1;
+				var urs1 = u * rs1;
+				var u1rs1 = ( u + 1 ) * rs1;
 
 				var a = cStart + urs1;
 				var b = cStart + u1rs1;
 				var c = cEnd + urs1;
-				var d = cEnd + u1rs1
+				var d = cEnd + u1rs1;
 
-				if( needsFlip ){
+				if ( needsFlip ) {
 
 					indices.push( a );
 					indices.push( c );
@@ -454,31 +454,31 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 
 	}
 
-	function doWidthEdges(){
+	function doWidthEdges() {
 
 		var end = radiusSegments - 1;
 
-		var cStarts = [ 0 , 1 , 4 , 5 ];
-		var cEnds =   [ 3 , 2 , 7 , 6 ];
-		var needsFlip = [0,1,1,0];
+		var cStarts = [ 0, 1, 4, 5 ];
+		var cEnds = [ 3, 2, 7, 6 ];
+		var needsFlip = [ 0, 1, 1, 0 ];
 
-		for ( var i = 0 ; i < 4 ; i ++ ){
+		for ( var i = 0; i < 4; i ++ ) {
 
-			var cStart = cStarts[i] * cornerVertNumber;
-			var cEnd = cEnds[i] * cornerVertNumber;
-			
+			var cStart = cStarts[ i ] * cornerVertNumber;
+			var cEnd = cEnds[ i ] * cornerVertNumber;
 
-			for ( var u = 0 ; u <= end ; u ++ ){
+
+			for ( var u = 0; u <= end; u ++ ) {
 
 				// var dInd = u != end ? radiusSegments + u * rs1 : cornerVertNumber - 1;
 
 				var a = cStart + radiusSegments + u * rs1;
-				var b = cStart + (u != end ? radiusSegments + (u + 1) * rs1 : cornerVertNumber - 1);
+				var b = cStart + ( u != end ? radiusSegments + ( u + 1 ) * rs1 : cornerVertNumber - 1 );
 
 				var c = cEnd + radiusSegments + u * rs1;
-				var d = cEnd + (u != end ? radiusSegments + (u + 1) * rs1 : cornerVertNumber - 1);
+				var d = cEnd + ( u != end ? radiusSegments + ( u + 1 ) * rs1 : cornerVertNumber - 1 );
 
-				if( !needsFlip[i] ){
+				if ( ! needsFlip[ i ] ) {
 
 					indices.push( a );
 					indices.push( b );
@@ -487,8 +487,7 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 					indices.push( d );
 					indices.push( c );
 
-				} 
-				else {
+				} else {
 
 					indices.push( a );
 					indices.push( c );
@@ -510,32 +509,32 @@ THREE.RoundedBoxGeometry = function ( width , height , depth , radius, radiusSeg
 
 	var index = 0;
 
-	for ( var i = 0 ; i < vertexPool.length ; i ++ ){
+	for ( var i = 0; i < vertexPool.length; i ++ ) {
 
-		positions.setXYZ( 
-			index , 
-			vertexPool[i].x , 
-			vertexPool[i].y , 
-			vertexPool[i].z 
+		positions.setXYZ(
+			index,
+			vertexPool[ i ].x,
+			vertexPool[ i ].y,
+			vertexPool[ i ].z
 		);
 
-		normals.setXYZ( 
-			index , 
-			normalPool[i].x , 
-			normalPool[i].y , 
-			normalPool[i].z 
+		normals.setXYZ(
+			index,
+			normalPool[ i ].x,
+			normalPool[ i ].y,
+			normalPool[ i ].z
 		);
 
-		index++;
+		index ++;
 
 	}
 
-	this.setIndex( new THREE.BufferAttribute( new Uint16Array( indices ) , 1 ) );
-	
+	this.setIndex( new THREE.BufferAttribute( new Uint16Array( indices ), 1 ) );
+
 	this.addAttribute( 'position', positions );
-	
+
 	this.addAttribute( 'normal', normals );
-	
+
 };
 
 THREE.RoundedBoxGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );

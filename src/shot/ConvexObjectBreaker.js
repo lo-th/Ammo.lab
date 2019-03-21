@@ -59,7 +59,7 @@ function ConvexObjectBreaker( minSizeForBreak, smallDelta ) {
 	var n = 30 * 30;
 	for ( var i = 0; i < n; i ++ ) this.segments[ i ] = false;
 
-};
+}
 
 ConvexObjectBreaker.prototype = {
 

@@ -11,19 +11,19 @@ function Terrain() {
 
 Object.assign( Terrain.prototype, {
 
-	step: function ( AR, N ) {
+	step: function () {
 
-		this.terrains.forEach( function ( t, id ) {
+		this.terrains.forEach( function ( t ) {
 
-			if( t.needsUpdate ){
+			if ( t.needsUpdate ) {
 
-			    t.updateGeometry(); 
-				root.post( 'setTerrain', { name:t.name, heightData:t.heightData });
+			    t.updateGeometry();
+				root.post( 'setTerrain', { name: t.name, heightData: t.heightData } );
 				t.needsUpdate = false;
 
 			}
 
-		})
+		} );
 
 	},
 
@@ -56,7 +56,7 @@ Object.assign( Terrain.prototype, {
 
 	},
 
-	add: function ( o, extra ) {
+	add: function ( o ) {
 
 
 		var name = o.name !== undefined ? o.name : o.type + this.ID ++;
@@ -64,15 +64,16 @@ Object.assign( Terrain.prototype, {
 		// delete old if same name
 		this.remove( name );
 
-		o.sample = o.sample === undefined ? [64,64] : o.sample;
-	    o.pos = o.pos === undefined ? [0,0,0] : o.pos;
+		o.sample = o.sample === undefined ? [ 64, 64 ] : o.sample;
+	    o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
 	    o.complexity = o.complexity === undefined ? 30 : o.complexity;
 	    o.name = name;
 
 
 	    var terrain = new THREE.Terrain( o );
 
-	    terrain.needsUpdate = false; 
+	    terrain.needsUpdate = false;
+	    terrain.type = 'terrain';
 
 	    //terrain.physicsUpdate = function () { root.post( 'setTerrain', { name:this.name, heightData:this.heightData } ) }
 
@@ -82,7 +83,7 @@ Object.assign( Terrain.prototype, {
 
 	    root.container.add( terrain );
 
-        this.terrains.push( terrain );
+		this.terrains.push( terrain );
 
 		map.set( name, terrain );
 
@@ -99,8 +100,8 @@ Object.assign( Terrain.prototype, {
 
 		//if(!t.needsUpdate) return;
 
-		t.updateGeometry(); 
-        //t.needsUpdate = false; 
+		t.updateGeometry();
+        //t.needsUpdate = false;
 
 	},
 
@@ -110,7 +111,7 @@ Object.assign( Terrain.prototype, {
 		var t = map.get( name );
 
 		if( t.isWater ){ t.local.y += 0.25; t.local.z += 0.25; t.update( true ); t.needsUpdate = true; }
-        else t.easing( true ); 
+        else t.easing( true );
 
 	},*/
 
@@ -120,9 +121,9 @@ Object.assign( Terrain.prototype, {
 		var t = map.get( name );
 
 		t.local.x += x || 0;
-        t.local.z += z || 0;
-        t.update( true );
-        t.needsUpdate = true;
+		t.local.z += z || 0;
+		t.update( true );
+		t.needsUpdate = true;
 
 
 	},

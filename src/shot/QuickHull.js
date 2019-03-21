@@ -468,7 +468,11 @@ Object.assign( QuickHull.prototype, {
 			}
 
 			// TODO resolve bug
-			if(!v2){ console.log('bug v2'); return;}
+			if ( ! v2 ) {
+
+				console.log( 'bug v2' ); return;
+
+			}
 
 			// 3. The next vertex 'v3' is the one farthest to the plane 'v0', 'v1', 'v2'
 
@@ -838,7 +842,7 @@ Object.assign( QuickHull.prototype, {
 
 	}
 
-});
+} );
 
 // FACE
 

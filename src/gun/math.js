@@ -20,7 +20,7 @@ var math = {
 
 	eulerToQuadArray: function ( array, deg ) {
 
-		if( deg ) array = math.vectomult( array, math.torad );
+		if ( deg ) array = math.vectomult( array, math.torad );
 
 		var q = math.quaternion().setFromEuler( array );
 		var result = q.toArray();
@@ -95,10 +95,10 @@ var math = {
 
 	distanceArray: function ( p1, p2 ) {
 
-		var x = p2[0]-p1[0];
-		var y = p2[1]-p1[1];
-		var z = p2[2]-p1[2];
-		return Math.sqrt( x*x + y*y + z*z );
+		var x = p2[ 0 ] - p1[ 0 ];
+		var y = p2[ 1 ] - p1[ 1 ];
+		var z = p2[ 2 ] - p1[ 2 ];
+		return Math.sqrt( x * x + y * y + z * z );
 
 	},
 
@@ -305,7 +305,6 @@ export function mathExtend() {
 			scale = scale || 1;
 
 			this.setValue( array[ offset ] * scale, array[ offset + 1 ] * scale, array[ offset + 2 ] * scale );
-
 			return this;
 
 		},
@@ -386,8 +385,8 @@ export function mathExtend() {
 
 		fromArray: function ( array, offset ) {
 
-			//if ( offset === undefined ) offset = 0;
-			offset = offset || 0;
+			if ( offset === undefined ) offset = 0;
+			//offset = offset || 0;
 			this.setValue( array[ offset ], array[ offset + 1 ], array[ offset + 2 ], array[ offset + 3 ] );
 
 			return this;

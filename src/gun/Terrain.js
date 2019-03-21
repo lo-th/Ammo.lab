@@ -74,7 +74,7 @@ Object.assign( Terrain.prototype, {
 		// delete old if same name
 		this.remove( name );
 
-		var group = o.group === undefined ? 1 : o.group;
+		var group = o.group === undefined ? 2 : o.group;
 		var mask = o.mask === undefined ? - 1 : o.mask;
 
 		var t = new LandScape( name, o );
@@ -108,6 +108,7 @@ function LandScape( name, o ) {
 	this.data = null;
 	this.tmpData = null;
 	this.dataHeap = null;
+	this.type = 'terrain';
 
 	if ( root.scale !== 1 ) {
 
@@ -167,6 +168,8 @@ function LandScape( name, o ) {
 
 	var body = new Ammo.btRigidBody( rbInfo );
 	body.setCollisionFlags( flag );
+
+	body.name = name;
 
 	this.name = name;
 	this.body = body;

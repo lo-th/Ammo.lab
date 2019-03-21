@@ -10,7 +10,7 @@ import { ConvexObjectBreaker } from './ConvexObjectBreaker.js';
 import { LZMAdecompact } from './lzma.js';
 import { root, map, REVISION } from './root.js';
 
-/**   _  _____ _   _   
+/**   _  _____ _   _
 *    | ||_   _| |_| |
 *    | |_ | | |  _  |
 *    |___||_| |_| |_|
@@ -20,556 +20,870 @@ import { root, map, REVISION } from './root.js';
 
 export var engine = ( function () {
 
-    'use strict';
+	'use strict';
 
-    var type = 'LZMA'; // LZMA / WASM / ASM
+	var type = 'LZMA'; // LZMA / WASM / ASM
 
-    var worker, callback, blob = null;
+	var worker, callback, blob = null;
 
+	var URL = window.URL || window.webkitURL;
+	var Time = typeof performance === 'undefined' ? Date : performance;
+	var t = { now: 0, delta: 0, then: 0, inter: 0, tmp: 0, n: 0, timerate: 0, autoFps: false };
 
-    var URL = window.URL || window.webkitURL;
-    var Time = typeof performance === 'undefined' ? Date : performance;
-    
-    var t = { now:0, delta:0, then:0, inter:0, tmp:0, n:0, timerate:0, autoFps:false };
-    var timer = undefined;
-    var interval = null;
-    var refView = null;
-    var isBuffer = false;
-    var isPause = false;
+	//var timer = undefined;
+	var interval = null;
+	var refView = null;
 
-    var stepNext = false;
+	var isBuffer = false;
+	//var isPause = false;
+	var stepNext = false;
 
-    var PI90 = 1.570796326794896;
+	var currentMode = '';
 
-    var rigidBody, softBody, constraint, terrains, vehicles, character, collision, rayCaster;
+	var PI90 = 1.570796326794896;
+	var torad = 0.0174532925199432957;
+	var todeg = 57.295779513082320876;
 
-    var convexBreaker = null;
+	var rigidBody, softBody, terrains, vehicles, character, collision, rayCaster;
 
-    //var needUpdate = false;
+	var convexBreaker = null;
+	var ray = null;
+	var mouseMode = 'free';
 
-    var option = {
+	var tmpRemove = [];
+	var tmpAdd = [];
 
-        worldscale: 1,
-        gravity: [0,-10,0],
-        fps: 60,
+	//var needUpdate = false;
 
-        substep: 2,
-        broadphase: 2,
-        soft: true,
+	var option = {
 
-    }
+		worldscale: 1,
+		gravity: [ 0, - 10, 0 ],
+		fps: 60,
 
-    engine = {
+		substep: 2,
+		broadphase: 2,
+		soft: true,
 
-        init: function ( Callback, Type, Option, Counts ) {
+	};
 
-            this.initArray( Counts );
-            this.defaultRoot();
+	engine = {
 
-            Option = Option || {};
+		init: function ( Callback, Type, Option, Counts ) {
 
-            callback = Callback;
+			this.initArray( Counts );
+			this.defaultRoot();
 
-            option = {
+			Option = Option || {};
 
-                fps: Option.fps || 60,
-                worldscale: Option.worldscale || 1,
-                gravity: Option.gravity || [0,-10,0],
-                substep: Option.substep || 2,
-                broadphase: Option.broadphase || 2,
-                soft: Option.soft !== undefined ? Option.soft : true,
-                fixed: Option.fixed !== undefined ? Option.fixed : false,
-                //autoFps : Option.autoFps !== undefined ? Option.autoFps : false,
+			callback = Callback;
 
-                //penetration: Option.penetration || 0.0399,
+			option = {
 
-            };
+				fps: Option.fps || 60,
+				worldscale: Option.worldscale || 1,
+				gravity: Option.gravity || [ 0, - 10, 0 ],
+				substep: Option.substep || 2,
+				broadphase: Option.broadphase || 2,
+				soft: Option.soft !== undefined ? Option.soft : true,
+				fixed: Option.fixed !== undefined ? Option.fixed : false,
+				//autoFps : Option.autoFps !== undefined ? Option.autoFps : false,
 
-            t.timerate = ( 1 / option.fps ) * 1000;
-            t.autoFps = option.autoFps;
+				//penetration: Option.penetration || 0.0399,
 
-            type = Type || 'LZMA';
-            if( type === 'LZMA' ){ 
-                engine.load( option );
-            } else {
-                blob = document.location.href.replace(/\/[^/]*$/,"/") + ( type === 'WASM' ? "./build/ammo.wasm.js" : "./build/ammo.js" );
-                engine.startWorker();
-            }
+			};
 
-        },
+			t.timerate = ( 1 / option.fps ) * 1000;
+			t.autoFps = option.autoFps;
 
-        load: function () {
+			type = Type || 'LZMA';
+			if ( type === 'LZMA' ) {
 
-            var xhr = new XMLHttpRequest(); 
-            xhr.responseType = "arraybuffer";
-            xhr.open( 'GET', "./build/ammo.hex", true );
+				engine.load( option );
 
-            xhr.onreadystatechange = function () {
+			} else {
 
-                if ( xhr.readyState === 4 ) {
-                    if ( xhr.status === 200 || xhr.status === 0 ){
-                        blob = URL.createObjectURL( new Blob([ LZMAdecompact( xhr.response ) ], { type: 'application/javascript' }));
-                        engine.startWorker();
-                    }else{ 
-                        console.error( "Couldn't load ["+ "./build/ammo.hex" + "] [" + xhr.status + "]" );
-                    }
-                }
-            }
+				blob = document.location.href.replace( /\/[^/]*$/, "/" ) + ( type === 'WASM' ? "./build/ammo.wasm.js" : "./build/ammo.js" );
+				engine.startWorker();
 
-            xhr.send( null );
+			}
 
-        },
+		},
 
-        startWorker: function () {
+		load: function () {
 
-           //blob = document.location.href.replace(/\/[^/]*$/,"/") + "./build/ammo.js" ;
+			var xhr = new XMLHttpRequest();
+			xhr.responseType = "arraybuffer";
+			xhr.open( 'GET', "./build/ammo.hex", true );
 
-            worker = new Worker('./build/gun.js');
-            worker.postMessage = worker.webkitPostMessage || worker.postMessage;
-            worker.onmessage = engine.message;
+			xhr.onreadystatechange = function () {
 
-            // test transferrables
-            var ab = new ArrayBuffer(1);
-            worker.postMessage( { m:'test', ab:ab }, [ab] );
-            isBuffer = ab.byteLength ? false : true;
+				if ( xhr.readyState === 4 ) {
 
-            // start engine worker
-            engine.post( 'init', { blob:blob, ArPos:root.ArPos, ArMax:root.ArMax, isBuffer:isBuffer, option:option } );
-            root.post = engine.post;
+					if ( xhr.status === 200 || xhr.status === 0 ) {
 
-        },
+						blob = URL.createObjectURL( new Blob( [ LZMAdecompact( xhr.response ) ], { type: 'application/javascript' } ) );
+						engine.startWorker();
 
-        initArray : function ( Counts ) {
+					} else {
 
-            Counts = Counts || {}
+						console.error( "Couldn't load [" + "./build/ammo.hex" + "] [" + xhr.status + "]" );
 
-            var counts = {
-                maxBody: Counts.maxBody || 1400,
-                maxContact: Counts.maxContact || 200,
-                maxCharacter: Counts.maxCharacter || 10, 
-                maxCar: Counts.maxCar || 14,
-                maxSoftPoint: Counts.maxSoftPoint || 8192,
-            }
+					}
 
-            root.ArLng = [ 
-                counts.maxBody * 8, // rigidbody
-                counts.maxContact , // contact
-                counts.maxCharacter * 8, // hero
-                counts.maxCar * 56, // cars
-                counts.maxSoftPoint * 3,  // soft point
-            ];
+				}
 
-            root.ArPos = [ 
-                0, 
-                root.ArLng[0], 
-                root.ArLng[0] + root.ArLng[1],
-                root.ArLng[0] + root.ArLng[1] + root.ArLng[2],
-                root.ArLng[0] + root.ArLng[1] + root.ArLng[2] + root.ArLng[3],
-            ];
+			};
 
-            root.ArMax = root.ArLng[0] + root.ArLng[1] + root.ArLng[2] + root.ArLng[3] + root.ArLng[4];
+			xhr.send( null );
 
-        },
+		},
 
-        message: function( e ) {
+		startWorker: function () {
 
-            var data = e.data;
-            if( data.Ar ) root.Ar = data.Ar;
-            //if( data.contacts ) contacts = data.contacts;
+			//blob = document.location.href.replace(/\/[^/]*$/,"/") + "./build/ammo.js" ;
 
-            switch( data.m ){
-                case 'initEngine': engine.initEngine(); break;
-                case 'start': engine.start(); break;
-                case 'step': engine.step(); break;
-                //
-                //case 'terrain': terrains.upGeo( data.o.name ); break;
+			worker = new Worker( './build/gun.js' );
+			worker.postMessage = worker.webkitPostMessage || worker.postMessage;
+			worker.onmessage = engine.message;
 
-                case 'moveSolid': engine.moveSolid( data.o ); break;
-                case 'ellipsoid': engine.ellipsoidMesh( data.o ); break;
+			// test transferrables
+			var ab = new ArrayBuffer( 1 );
+			worker.postMessage( { m: 'test', ab: ab }, [ ab ] );
+			isBuffer = ab.byteLength ? false : true;
 
-                case 'makeBreak': engine.makeBreak( data.o ); break;
+			// start engine worker
+			engine.post( 'init', { blob: blob, ArPos: root.ArPos, ArMax: root.ArMax, isBuffer: isBuffer, option: option } );
+			root.post = engine.post;
 
-                case 'rayCast': rayCaster.receive( data.o ); break;
-            }
+		},
 
-        },
+		initArray: function ( Counts ) {
 
+			Counts = Counts || {};
 
-        initEngine: function () {
+			var counts = {
+				maxBody: Counts.maxBody || 1400,
+				maxContact: Counts.maxContact || 200,
+				maxCharacter: Counts.maxCharacter || 10,
+				maxCar: Counts.maxCar || 14,
+				maxSoftPoint: Counts.maxSoftPoint || 8192,
+			};
 
-            URL.revokeObjectURL( blob );
-            blob = null;
+			root.ArLng = [
+				counts.maxBody * 8, // rigidbody
+				counts.maxContact, // contact
+				counts.maxCharacter * 8, // hero
+				counts.maxCar * 56, // cars
+				counts.maxSoftPoint * 3, // soft point
+			];
 
-            this.initObject();
+			root.ArPos = [
+				0,
+				root.ArLng[ 0 ],
+				root.ArLng[ 0 ] + root.ArLng[ 1 ],
+				root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ],
+				root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ] + root.ArLng[ 3 ],
+			];
 
-            console.log( 'AMMO.Worker '+ REVISION + ( isBuffer ? ' with ':' without ' ) + 'Buffer #'+ type );
+			root.ArMax = root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ] + root.ArLng[ 3 ] + root.ArLng[ 4 ];
 
-            if( callback ) callback();
+		},
 
-        },
+		message: function ( e ) {
 
-        start: function ( o ) {
+			var data = e.data;
+			if ( data.Ar ) root.Ar = data.Ar;
+			//if( data.contacts ) contacts = data.contacts;
 
-            //console.log('start', t.timerate );
+			switch ( data.m ) {
 
-            stepNext = true;
+				case 'initEngine': engine.initEngine(); break;
+				case 'start': engine.start(); break;
+				case 'step': engine.step(); break;
+					//
+					//case 'terrain': terrains.upGeo( data.o.name ); break;
 
-            // create tranfere array if buffer
-            if( isBuffer ) root.Ar = new Float32Array( root.ArMax );
+				case 'moveSolid': engine.moveSolid( data.o ); break;
+				case 'ellipsoid': engine.ellipsoidMesh( data.o ); break;
 
-            //engine.sendData( 0 );
+				case 'makeBreak': engine.makeBreak( data.o ); break;
 
-            //if ( !timer ) timer = requestAnimationFrame( engine.sendData );
-            t.then = Time.now();
-            if ( interval ) clearInterval( interval );
-            interval = setInterval( engine.sendData, t.timerate );
-           
-        },
+				case 'rayCast': rayCaster.receive( data.o ); break;
 
-        postUpdate: function () {},
+			}
 
-        update: function () {
+		},
 
-            engine.postUpdate();
 
-            terrains.step();
-            rayCaster.step();
+		initEngine: function () {
 
-            rigidBody.step( root.Ar, root.ArPos[ 0 ] );
-            collision.step( root.Ar, root.ArPos[ 1 ] );
-            character.step( root.Ar, root.ArPos[ 2 ] );
-            vehicles.step( root.Ar, root.ArPos[ 3 ] );
-            softBody.step( root.Ar, root.ArPos[ 4 ] );
+			URL.revokeObjectURL( blob );
+			blob = null;
 
-        },
+			this.initObject();
 
-        step: function () {
+			console.log( 'AMMO.Worker ' + REVISION + ( isBuffer ? ' with ' : ' without ' ) + 'Buffer #' + type );
 
-            if ( t.now - 1000 > t.tmp ){ t.tmp = t.now; t.fps = t.n; t.n = 0; }; t.n++; // FPS
-            engine.tell();
-            
-            if( refView ) refView.needUpdate( true );
-            //else 
-            engine.update();
+			if ( callback ) callback();
 
-            stepNext = true;
-            
-        },
+		},
 
-        sendData: function ( time ){
+		start: function () {
 
-            if( refView ) if( refView.pause ) engine.stop();
-            
-        	if( !stepNext ) return;
+			//console.log('start', t.timerate );
 
-            t.now = Time.now();
-            t.delta = ( t.now - t.then ) * 0.001;
+			stepNext = true;
+
+			// create tranfere array if buffer
+			if ( isBuffer ) root.Ar = new Float32Array( root.ArMax );
+
+			//engine.sendData( 0 );
+
+			//if ( !timer ) timer = requestAnimationFrame( engine.sendData );
+			t.then = Time.now();
+			if ( interval ) clearInterval( interval );
+			interval = setInterval( engine.sendData, t.timerate );
+
+
+			// test ray
+			engine.setMode( currentMode );
+			//this.addRayCamera();
+
+		},
+
+		postUpdate: function () {},
+
+		update: function () {
+
+			engine.postUpdate();
+
+			terrains.step();
+			rayCaster.step();
+
+			rigidBody.step( root.Ar, root.ArPos[ 0 ] );
+			collision.step( root.Ar, root.ArPos[ 1 ] );
+			character.step( root.Ar, root.ArPos[ 2 ] );
+			vehicles.step( root.Ar, root.ArPos[ 3 ] );
+			softBody.step( root.Ar, root.ArPos[ 4 ] );
+
+		},
+
+		step: function () {
+
+			//engine.stepRemove();
+
+			if ( t.now - 1000 > t.tmp ) {
+
+				t.tmp = t.now; t.fps = t.n; t.n = 0;
+
+			} t.n ++; // FPS
+			engine.tell();
+
+			if ( refView ) refView.needUpdate( true );
+			
+			engine.update();
+
+			engine.stepRemove();
+        	engine.stepAdd();
+
+			stepNext = true;
+
+		},
+
+		sendData: function () {
+
+			if ( refView ) if ( refView.pause ) engine.stop();
+
+        	if ( ! stepNext ) return;
+
+			t.now = Time.now();
+			t.delta = ( t.now - t.then ) * 0.001;
         	t.then = t.now;
 
-        	if( isBuffer ) worker.postMessage( { m:'step',  o:{ delta:t.delta, key: engine.getKey() }, Ar:root.Ar }, [ root.Ar.buffer ] );
-            else worker.postMessage( { m:'step', o:{ delta:t.delta, key: engine.getKey() } } );
+        	if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta, key: engine.getKey() }, Ar: root.Ar }, [ root.Ar.buffer ] );
+			else worker.postMessage( { m: 'step', o: { delta: t.delta, key: engine.getKey() } } );
 
-            stepNext = false;
+			stepNext = false;
 
-        },
+		},
 
-        setView: function ( v ) { 
+		stepRemove: function () {
 
-            refView = v;
-            root.mat = v.getMat();
-            root.geo = v.getGeo();
-            root.container = v.getScene();
+			if( tmpRemove.length === 0 ) return;
+			this.post( 'setRemove', tmpRemove );
+			while ( tmpRemove.length > 0 ) this.remove( tmpRemove.pop(), true );
 
-        },
+		},
 
-        getFps: function () { return t.fps; },
-        getDelta: function () { return t.delta; },
+		stepAdd: function () {
 
-        tell: function () {},
-        
-        getKey: function () { return [0,0,0,0,0,0,0,0]; },
+			if( tmpAdd.length === 0 ) return;
+			//this.post( 'setAdd', tmpAdd );
+			while ( tmpAdd.length > 0 ) this.add( tmpAdd.pop(), true );
 
-        set: function ( o ) {
+		},
 
-            o = o || option;
-            t.timerate = o.fps !== undefined ? (  1 / o.fps ) * 1000 : t.timerate;
-            t.autoFps = o.autoFps !== undefined ? o.autoFps : false;
-            this.post( 'set', o );
+		setView: function ( v ) {
 
-        },
+			refView = v;
+			root.mat = v.getMat();
+			root.geo = v.getGeo();
+			root.container = v.getScene();
 
-        post: function ( m, o ) {
+		},
 
-            worker.postMessage( { m:m, o:o } );
+		getFps: function () {
 
-        },
+			return t.fps;
 
-        reset: function( full ) {
+		},
+		getDelta: function () {
 
-            //console.log('reset', full);
+			return t.delta;
 
-            engine.stop();
+		},
 
-            // remove all mesh
-            engine.clear();
+		tell: function () {},
+		log: function () {},
 
-            // remove tmp material
-            while ( root.tmpMat.length > 0 ) root.tmpMat.pop().dispose();
+		getKey: function () {
 
-            engine.postUpdate = function (){};
-            
-            if( refView ) refView.reset( full );
+			return [ 0, 0, 0, 0, 0, 0, 0, 0 ];
 
-            // clear physic object;
-            engine.post( 'reset', { full:full } );
+		},
 
-        },
+		set: function ( o ) {
 
-        stop: function () {
+			o = o || option;
+			t.timerate = o.fps !== undefined ? ( 1 / o.fps ) * 1000 : t.timerate;
+			t.autoFps = o.autoFps !== undefined ? o.autoFps : false;
+			this.post( 'set', o );
 
-            if ( interval ) {
-                clearInterval( interval );
-                interval = null;
-            }
+		},
 
-        },
+		post: function ( m, o ) {
 
-        destroy: function (){
+			worker.postMessage( { m:m, o:o } );
 
-            worker.terminate();
-            worker = undefined;
+		},
 
-        },
+		reset: function ( full ) {
 
+			//console.log('reset', full);
 
+			engine.stop();
 
-        ////////////////////////////
+			// remove all mesh
+			engine.clear();
 
-        addMat : function ( m ) { root.tmpMat.push( m ); },
+			// remove tmp material
+			while ( root.tmpMat.length > 0 ) root.tmpMat.pop().dispose();
 
-        ellipsoidMesh: function ( o ) {
+			engine.postUpdate = function () {};
 
-            softBody.createEllipsoid( o );
+			tmpRemove = [];
+			tmpAdd = [];
 
-        },
+			if ( refView ) refView.reset( full );
 
-        updateTmpMat : function ( envmap, hdr ) {
-            var i = root.tmpMat.length, m;
-            while( i-- ){
-                m = root.tmpMat[i];
-                if( m.envMap !== undefined ){
-                    if( m.type === 'MeshStandardMaterial' ) m.envMap = envmap;
-                    else m.envMap =  hdr ? null : envmap;
-                    m.needsUpdate = true;
-                }
-            }
-        },
 
+			// clear physic object;
+			engine.post( 'reset', { full: full } );
 
+		},
 
+		stop: function () {
 
-        drive: function ( name ) { this.post('setDrive', { name:name } ); },
-        move: function ( name ) { this.post('setMove', { name:name } ); },
+			if ( interval ) {
 
+				clearInterval( interval );
+				interval = null;
 
-        forces: function ( o ) { this.post('setForces', o ); },
-        option: function ( o ) { this.post('setOption', o ); },
-        remove: function ( o ) { this.post('setRemove', o ); },
-        matrix: function ( o ) { this.post('setMatrix', o ); },//if( o.constructor !== Array ) o = [ o ]; 
+			}
 
-        anchor: function ( o ) { this.post('addAnchor', o ); },
+		},
 
-        break: function ( o ) { this.post('addBreakable', o ); },
+		destroy: function () {
 
-        //rayCast: function ( o ) { this.post('rayCast', o ); },
+			worker.terminate();
+			worker = undefined;
 
-        moveSolid: function ( o ) {
+		},
 
-            if ( ! map.has( o.name ) ) return;
-            var b = map.get( o.name );
-            if( o.pos !== undefined ) b.position.fromArray( o.pos );
-            if( o.quat !== undefined ) b.quaternion.fromArray( o.quat );
 
-        },
 
-        getBodys: function () {
+		////////////////////////////
 
-            return rigidBody.bodys;
+		addMat: function ( m ) {
 
-        },
+			root.tmpMat.push( m );
 
-        byName: function ( name ) {
+		},
 
-            return map.get( name );
+		ellipsoidMesh: function ( o ) {
 
-        },
+			softBody.createEllipsoid( o );
 
-        removeRigidBody: function (name){
+		},
 
-            rigidBody.remove(name)
+		updateTmpMat: function ( envmap, hdr ) {
 
-        },
+			var i = root.tmpMat.length, m;
+			while ( i -- ) {
 
-        initObject: function () {
+				m = root.tmpMat[ i ];
+				if ( m.envMap !== undefined ) {
 
-            rigidBody = new RigidBody();
-            //constraint = new Constraint();
-            softBody = new SoftBody();
-            terrains = new Terrain();
-            vehicles = new Vehicle();
-            character = new Character();
-            collision = new Collision();
-            rayCaster = new RayCaster();
+					if ( m.type === 'MeshStandardMaterial' ) m.envMap = envmap;
+					else m.envMap = hdr ? null : envmap;
+					m.needsUpdate = true;
 
-            // auto define basic function
-            //if(!refView) this.defaultRoot();
+				}
 
-        },
+			}
 
-        
+		},
 
-        clear: function ( o ) {
+		drive: function ( name ) {
 
-            rigidBody.clear();
-            collision.clear();
-            terrains.clear();
-            vehicles.clear();
-            character.clear();
-            softBody.clear();
-            rayCaster.clear();
+			this.post( 'setDrive', name );
 
-            while( root.extraGeo.length > 0 ) root.extraGeo.pop().dispose();
+		},
+		move: function ( name ) {
 
-        },
+			this.post( 'setMove', name );
 
+		},
 
-        addGroup: function ( list ) {
 
-            for( var i = 0, lng = list.length; i < lng; i++ ){
-                this.add( list[i] );
-            }
+		forces: function ( o ) {
 
-        },
+			this.post( 'setForces', o );
 
-        add: function ( o ) {
+		},
+		option: function ( o ) {
 
-            o = o || {};
-            var type = o.type === undefined ? 'box' : o.type;
-            var prev = type.substring( 0, 4 );
+			this.post( 'setOption', o );
 
-            if( prev === 'join' ) root.post( 'add', o );
-            else if( prev === 'soft' ) softBody.add( o );
-            else if( type === 'terrain' ) terrains.add( o );
-            else if( type === 'character' ) character.add( o );
-            else if( type === 'collision' ) collision.add( o );
-            else if( type === 'car' ) vehicles.add( o );
-            else if( type === 'ray' ) return rayCaster.add( o );
-            else return rigidBody.add( o );
-            
+		},
+		removes: function ( o ) {
 
-        },
+			tmpRemove = tmpRemove.concat( o );
 
-        defaultRoot: function () {
+		},
+		matrix: function ( o ) {
 
-            // geometry
+			this.post( 'setMatrix', o );
 
-            var geo = {
-                circle:     new THREE.CircleBufferGeometry( 1,6 ),
-                plane:      new THREE.PlaneBufferGeometry(1,1,1,1),
-                box:        new THREE.BoxBufferGeometry(1,1,1),
-                hardbox:    new THREE.BoxBufferGeometry(1,1,1),
-                cone:       new THREE.CylinderBufferGeometry( 0,1,0.5 ),
-                wheel:      new THREE.CylinderBufferGeometry( 1,1,1, 18 ),
-                sphere:     new THREE.SphereBufferGeometry( 1, 16, 12 ),
-                highsphere: new THREE.SphereBufferGeometry( 1, 32, 24 ),
-                cylinder:   new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
-                hardcylinder: new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
-            };
+		}, //if( o.constructor !== Array ) o = [ o ];
 
-            geo.circle.rotateX( -PI90 );
-            geo.plane.rotateX( -PI90 );
-            geo.wheel.rotateZ( -PI90 );
+		anchor: function ( o ) {
 
-            root.geo = geo;
+			this.post( 'addAnchor', o );
 
-            // material
+		},
 
-            var wire = false;
-            root.mat = {
+		break: function ( o ) {
 
-                move: new THREE.MeshLambertMaterial({ color:0xFF8811, name:'move', wireframe:wire }),
-                speed: new THREE.MeshLambertMaterial({ color:0xFFFF11, name:'speed', wireframe:wire }),
-                sleep: new THREE.MeshLambertMaterial({ color:0x1188FF, name:'sleep', wireframe:wire }),
-                basic: new THREE.MeshLambertMaterial({ color:0x111111, name:'basic', wireframe:wire }),
-                static: new THREE.MeshLambertMaterial({ color:0x1111FF, name:'static', wireframe:wire }),
-                kinematic: new THREE.MeshLambertMaterial({ color:0x11FF11, name:'kinematic', wireframe:wire }),
+			this.post( 'addBreakable', o );
 
-            };
+		},
 
-            root.container = new THREE.Group();
+		//rayCast: function ( o ) { this.post('rayCast', o ); },
 
-        },
+		moveSolid: function ( o ) {
 
-        getContainer: function () {
+			if ( ! map.has( o.name ) ) return;
+			var b = map.get( o.name );
+			if ( o.pos !== undefined ) b.position.fromArray( o.pos );
+			if ( o.quat !== undefined ) b.quaternion.fromArray( o.quat );
 
-            return root.container;
+		},
 
-        },
+		getBodys: function () {
 
-        // BREAKABLE
+			return rigidBody.bodys;
 
-        makeBreak: function ( o ) {
+		},
 
-            var name = o.name;
-            if ( ! map.has( name ) ) return;
+		byName: function ( name ) {
 
-            if( convexBreaker === null ) convexBreaker = new ConvexObjectBreaker();
+			return map.get( name );
 
-            var mesh = map.get( name );
-            // breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
-            var breakOption = o.breakOption;
-            
-            var debris = convexBreaker.subdivideByImpact( mesh, o.pos, o.normal , breakOption[1], breakOption[2] ); // , 1.5 ??
-            // remove one level
-            breakOption[3] -= 1;
-            // remove original object
-            this.removeRigidBody( name );
+		},
 
-            var i = debris.length;
-            while( i-- ) this.addDebris( name, i, debris[ i ], breakOption );
+		
 
-        },
+		initObject: function () {
 
-        addDebris: function ( name, id, mesh, breakOption ) {
+			rigidBody = new RigidBody();
+			//constraint = new Constraint();
+			softBody = new SoftBody();
+			terrains = new Terrain();
+			vehicles = new Vehicle();
+			character = new Character();
+			collision = new Collision();
+			rayCaster = new RayCaster();
 
-            var o = {
-                name: name+'_debris'+ id,
-                material: mesh.material,
-                type:'convex',
-                shape: mesh.geometry,
-                //size: mesh.scale.toArray(),
-                pos: mesh.position.toArray(),
-                quat: mesh.quaternion.toArray(),
-                mass: mesh.userData.mass,
-                linearVelocity:mesh.userData.velocity.toArray(),
-                angularVelocity:mesh.userData.angularVelocity.toArray(),
-                margin:0.05, 
-            };
+			// auto define basic function
+			//if(!refView) this.defaultRoot();
 
-            // if levelOfSubdivision > 0 make debris breakable !!
-            if( breakOption[3] > 0 ){
+		},
 
-                o.breakable = true;
-                o.breakOption = breakOption;
 
-            }
 
-            this.add( o );
-            
-        },
-        
-    }
 
-    return engine;
+		clear: function () {
 
-})();
+			rigidBody.clear();
+			collision.clear();
+			terrains.clear();
+			vehicles.clear();
+			character.clear();
+			softBody.clear();
+			rayCaster.clear();
+
+			while ( root.extraGeo.length > 0 ) root.extraGeo.pop().dispose();
+
+		},
+
+		//-----------------------------
+		// REMOVE
+		//-----------------------------
+
+		remove: function ( name, phy ) {
+
+			if ( ! map.has( name ) ) return;
+			var b = engine.byName( name );
+
+			switch( b.type ){
+
+				case 'solid': case 'body' :
+				    rigidBody.remove( name );
+				break;
+
+				case 'soft' :
+				    softBody.remove( name );
+				break;
+
+				case 'terrain' :
+				    terrains.remove( name );
+				break;
+
+			}
+
+			// remove physics 
+			if( !phy ) this.post( 'remove', name );
+
+		},
+
+		removeConstraint: function ( name ) {
+
+			this.post( 'remove', name );
+
+		},
+
+		removeRay: function ( name ) {
+
+			rayCaster.remove( name );
+
+		},
+
+		//-----------------------------
+		// ADD
+		//-----------------------------
+
+		addGroup: function ( list ) {
+
+			tmpAdd.concat( list );
+
+			//for ( var i = 0, lng = list.length; i < lng; i ++ ) {
+
+			//	this.add( list[ i ] );
+
+			//}
+
+		},
+
+		add: function ( o ) {
+
+			o = o || {};
+			var type = o.type === undefined ? 'box' : o.type;
+			var prev = type.substring( 0, 4 );
+
+			if ( prev === 'join' ) root.post( 'add', o );
+			else if ( prev === 'soft' ) softBody.add( o );
+			else if ( type === 'terrain' ) terrains.add( o );
+			else if ( type === 'character' ) character.add( o );
+			else if ( type === 'collision' ) collision.add( o );
+			else if ( type === 'car' ) vehicles.add( o );
+			else if ( type === 'ray' ) return rayCaster.add( o );
+			else return rigidBody.add( o );
+
+		},
+
+		defaultRoot: function () {
+
+			// geometry
+
+			var geo = {
+				circle: new THREE.CircleBufferGeometry( 1, 6 ),
+				plane: new THREE.PlaneBufferGeometry( 1, 1, 1, 1 ),
+				box: new THREE.BoxBufferGeometry( 1, 1, 1 ),
+				hardbox: new THREE.BoxBufferGeometry( 1, 1, 1 ),
+				cone: new THREE.CylinderBufferGeometry( 0, 1, 0.5 ),
+				wheel: new THREE.CylinderBufferGeometry( 1, 1, 1, 18 ),
+				sphere: new THREE.SphereBufferGeometry( 1, 16, 12 ),
+				highsphere: new THREE.SphereBufferGeometry( 1, 32, 24 ),
+				cylinder: new THREE.CylinderBufferGeometry( 1, 1, 1, 12, 1 ),
+				hardcylinder: new THREE.CylinderBufferGeometry( 1, 1, 1, 12, 1 ),
+			};
+
+			geo.circle.rotateX( - PI90 );
+			geo.plane.rotateX( - PI90 );
+			geo.wheel.rotateZ( - PI90 );
+
+			root.geo = geo;
+
+			// material
+
+			var wire = false;
+			root.mat = {
+
+				move: new THREE.MeshLambertMaterial( { color: 0xFF8811, name: 'move', wireframe: wire } ),
+				speed: new THREE.MeshLambertMaterial( { color: 0xFFFF11, name: 'speed', wireframe: wire } ),
+				sleep: new THREE.MeshLambertMaterial( { color: 0x1188FF, name: 'sleep', wireframe: wire } ),
+				basic: new THREE.MeshLambertMaterial( { color: 0x111111, name: 'basic', wireframe: wire } ),
+				static: new THREE.MeshLambertMaterial( { color: 0x1111FF, name: 'static', wireframe: wire } ),
+				kinematic: new THREE.MeshLambertMaterial( { color: 0x11FF11, name: 'kinematic', wireframe: wire } ),
+
+			};
+
+			root.container = new THREE.Group();
+
+		},
+
+		getContainer: function () {
+
+			return root.container;
+
+		},
+
+		// BREAKABLE
+
+		makeBreak: function ( o ) {
+
+			var name = o.name;
+			if ( ! map.has( name ) ) return;
+
+			if ( convexBreaker === null ) convexBreaker = new ConvexObjectBreaker();
+
+			var mesh = map.get( name );
+			// breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
+			var breakOption = o.breakOption;
+
+			var debris = convexBreaker.subdivideByImpact( mesh, o.pos, o.normal, breakOption[ 1 ], breakOption[ 2 ] ); // , 1.5 ??
+			// remove one level
+			breakOption[ 3 ] -= 1;
+			
+			
+			// remove original object
+			tmpRemove.push( name );
+
+			var i = debris.length;
+			while ( i -- ) tmpAdd.push( this.addDebris( name, i, debris[ i ], breakOption ) );
+
+		},
+
+		addDebris: function ( name, id, mesh, breakOption ) {
+
+			var o = {
+				name: name + '_debris' + id,
+				material: mesh.material,
+				type: 'convex',
+				shape: mesh.geometry,
+				//size: mesh.scale.toArray(),
+				pos: mesh.position.toArray(),
+				quat: mesh.quaternion.toArray(),
+				mass: mesh.userData.mass,
+				linearVelocity: mesh.userData.velocity.toArray(),
+				angularVelocity: mesh.userData.angularVelocity.toArray(),
+				margin: 0.05,
+			};
+
+			// if levelOfSubdivision > 0 make debris breakable !!
+			if ( breakOption[ 3 ] > 0 ) {
+
+				o.breakable = true;
+				o.breakOption = breakOption;
+
+			}
+
+			//this.add( o );
+
+			return o;
+
+		},
+
+		// EXTRA MODE
+
+
+
+		setMode: function ( mode ) {
+
+			if ( mode !== currentMode ) {
+
+				if ( currentMode === 'picker' ) engine.removeRayCamera();
+				if ( currentMode === 'shoot' ) engine.removeShootCamera();
+
+			}
+
+			currentMode = mode;
+
+			if ( currentMode === 'picker' ) engine.addRayCamera();
+			if ( currentMode === 'shoot' ) engine.addShootCamera();
+
+		},
+
+		// CAMERA SHOOT
+
+		addShootCamera: function () {
+
+		},
+
+		removeShootCamera: function () {
+
+		},
+
+		// CAMERA RAY
+
+		removeRayCamera: function () {
+
+			if ( ! refView ) return;
+			engine.removeRay( 'cameraRay' );
+			refView.removeRay();
+			engine.log();
+
+		},
+
+		addRayCamera: function () {
+
+			if ( ! refView ) return;
+
+			ray = engine.add( { name: 'cameraRay', type: 'ray', callback: engine.onRay, mask: 1, visible: false } );// only move body
+			refView.activeRay( engine.updateRayCamera );
+
+		},
+
+		updateRayCamera: function ( offset ) {
+
+			ray.setFromCamera( refView.getMouse(), refView.getCamera() );
+			if ( mouseMode === 'drag' ) engine.matrix( [{ name:'dragger', pos: offset.toArray(), keepRot:true }] );
+
+		},
+
+		onRay: function ( o ) {
+
+			var mouse = refView.getMouse();
+			var control = refView.getControls();
+			var name = o.name === undefined ? '' : o.name;
+
+			if ( mouse.z === 0 ) {
+
+				if ( mouseMode === 'drag' ){ 
+					control.enableRotate = true;
+					engine.removeConnector();
+				}
+
+				mouseMode = 'free';
+
+			} else {
+
+				if ( mouseMode === 'free' ) {
+
+					if ( name ) {
+
+						if( mouseMode !== 'drag' ){
+
+							refView.setDragPlane( o.point );
+						    control.enableRotate = false;
+						    engine.addConnector( o );
+						    mouseMode = 'drag';
+
+						} 
+
+					} else {
+
+						mouseMode = 'rotate';
+
+					}
+
+				}
+
+				/*if ( mouseMode === 'drag' ){
+
+					physic.matrix( [{ name:'dragger', pos: refView.getOffset().toArray() }] );
+
+				}*/
+
+			}
+
+			// debug
+			engine.log( mouseMode + '   ' + name );
+
+		},
+
+		addConnector: function ( o ) {
+
+			//console.log(o)
+			var mesh = engine.byName( o.name );
+			var p0 = new THREE.Vector3().fromArray( o.point );
+			var qB = mesh.quaternion.toArray();
+			var pos = engine.getLocalPoint( p0, mesh ).toArray();
+
+			engine.add({ 
+				name:'dragger', type:'sphere', size:[0.1], 
+				pos:o.point,
+				quat: qB, 
+				mass:0, 
+				kinematic: true,
+				group:32,
+				mask:32, 
+			});
+
+			engine.add({ 
+				name:'connector', 
+				type:'joint_fixe', 
+				b1:'dragger', b2:o.name, 
+				pos1:[0,0,0], pos2:pos,
+				collision:false 
+			});
+		},
+
+		removeConnector: function () {
+
+			engine.remove( 'dragger');
+			engine.removeConstraint( 'connector');
+
+		},
+
+		getLocalPoint: function (vector, mesh) {
+			
+			mesh.updateMatrix();
+			//mesh.updateMatrixWorld(true);
+			var m1 = new THREE.Matrix4();
+			var s = new THREE.Vector3(1,1,1);
+			var m0 = new THREE.Matrix4().compose( mesh.position, mesh.quaternion, s );
+			m1.getInverse( m0 );
+			return vector.applyMatrix4( m1 );
+
+		},
+
+
+
+	};
+
+	return engine;
+
+} )();

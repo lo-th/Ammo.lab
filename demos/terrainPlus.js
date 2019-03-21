@@ -40,6 +40,10 @@ function demo() {
         bottom:true,
 
         maxSpeed: 0.02,
+
+        //flag:2,//KINEMATIC ?
+        //group:4,//KINEMATIC ?
+
         //acc:0.001,
         //dec:0.001,
 

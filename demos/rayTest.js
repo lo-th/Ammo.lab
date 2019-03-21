@@ -27,7 +27,7 @@ function demo() {
 
     var i = 20;
     while(i--){
-        physic.add({ type:'ray', pos:[(i*0.5)-4.5,20,0], end:[0,-20, 0], callback:Yoch });
+        physic.add({ type:'ray', pos:[(i*0.5)-4.5,20,0], start:[0,0,5], end:[0,-20, 0], callback:Yoch });
     }
     
     physic.postUpdate = update;

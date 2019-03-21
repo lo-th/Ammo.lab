@@ -1,5 +1,4 @@
 /*global Ammo*/
-import { math } from './math.js';
 import { root, map } from './root.js';
 
 /**
@@ -102,9 +101,9 @@ function Pair( a, b, name ) {
 
 	this.result = 0;
 
-	this.pa = [0,0,0];
-	this.pb = [0,0,0];
-	this.nb = [0,0,0];
+	this.pa = [ 0, 0, 0 ];
+	this.pb = [ 0, 0, 0 ];
+	this.nb = [ 0, 0, 0 ];
 	this.distance = 0;
 	this.impulse = 0;
 	this.maxImpulse = 0;
@@ -114,8 +113,9 @@ function Pair( a, b, name ) {
 
 	this.f = new Ammo.ConcreteContactResultCallback();
 	///console.log(this.f)
-	this.f.addSingleResult = function ( manifoldPoint, collisionObjectA, id0, index0, collisionObjectB, id1, index1 ) {
+	this.f.addSingleResult = function ( ) {
 
+		//this.f.addSingleResult = function ( manifoldPoint, collisionObjectA, id0, index0, collisionObjectB, id1, index1 ) {
 	    /*var manifold = Ammo.wrapPointer( manifoldPoint, Ammo.btManifoldPoint )
 
 	    this.nb = manifold.m_normalWorldOnB.toArray();

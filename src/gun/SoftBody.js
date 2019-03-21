@@ -45,16 +45,16 @@ Object.assign( SoftBody.prototype, {
 
 		var list = [];
 
-		var s = b.get_m_nodes(), n, r; // get vertrices list
+		var s = b.get_m_nodes(), r; // get vertrices list
 		var lng = s.size();
 
-		for ( var j=0; j<lng; j++ ) {
+		for ( var j = 0; j < lng; j ++ ) {
 
-			n = ( j * 3 );
+			//n = ( j * 3 );
 			r = s.at( j ).get_m_x().toArray();
-			if(r[1]>300) list.push( j )
+			if ( r[ 1 ] > 300 ) list.push( j );
 			//list.push( r );
-			
+
 
 		}
 
@@ -62,7 +62,7 @@ Object.assign( SoftBody.prototype, {
 
 	},
 
-	move: function ( o ) {
+	/*move: function ( o ) {
 
 		if ( ! map.has( o.name ) ) return;
 		var soft = map.get( o.name );
@@ -76,7 +76,7 @@ Object.assign( SoftBody.prototype, {
 
 		soft.set_m_nodes( s );
 
-	},
+	},*/
 
 	clear: function () {
 
@@ -160,20 +160,11 @@ Object.assign( SoftBody.prototype, {
 				//if ( o.margin === undefined ) o.margin = o.radius || 0.2;
 				body = softBodyHelpers.CreateRope( worldInfo, p1, p2, nseg, o.fixed || 0 );
 				//body.setTotalMass(o.mass);
-
-				//console.log(body)
-
-
-				//console.log(body.get_m_nodes().size())
-
 				body.softType = 2;
 
 				break;
 
 			case 'softEllips':
-
-				//var center = o.center || [ 0, 0, 0]; // start
-				//var p1 = o.radius || [ 3, 3, 3]; // end
 
 				p1.fromArray( o.center || [ 0, 0, 0 ], 0, root.invScale );
 				p2.fromArray( o.radius || [ 3, 3, 3 ], 0, root.invScale );
@@ -202,7 +193,7 @@ Object.assign( SoftBody.prototype, {
 
 				break;
 
-			/*case 'softConvex': // BUG !!
+				/*case 'softConvex': // BUG !!
 
 			    //var j = o.v.length;
 			    //while( j-- ) { o.v[ j ] *= root.invScale; }
@@ -210,7 +201,7 @@ Object.assign( SoftBody.prototype, {
 				var lng = o.v.length / 3;
 				var arr = [];
 				var i = 0, n;
-				
+
 				for ( i = 0; i<lng; i++ ) {
 
 					n = i * 3;
@@ -221,7 +212,7 @@ Object.assign( SoftBody.prototype, {
 
 				}
 
-				
+
 
 
 
@@ -231,7 +222,7 @@ Object.assign( SoftBody.prototype, {
 				body.softType = 4;
 
 
-				
+
 				// free node
 				i = lng;
 				//while ( i -- ) arr[i].free();
@@ -253,9 +244,11 @@ Object.assign( SoftBody.prototype, {
 			case 'softMesh': case 'softConvex':
 
 			    var j = o.v.length;
-			    while( j-- ) { o.v[ j ] *= root.invScale; }
+			    while ( j -- ) {
 
-			    //console.log(o.v)
+					o.v[ j ] *= root.invScale;
+
+				}
 
 				body = softBodyHelpers.CreateFromTriMesh( worldInfo, o.v, o.i, o.ntri, o.randomize || true );
 				body.softType = 5;
@@ -321,30 +314,20 @@ Object.assign( SoftBody.prototype, {
 
 		body.setTotalMass( o.mass || 0, o.fromfaces || false );
 		//body.setPose( true, true );
-		if( o.restitution !== undefined ) body.setRestitution( o.restitution );
-		if( o.rolling !== undefined ) body.setRollingFriction( o.rolling );
-
-		if( o.flag !== undefined ) body.setCollisionFlags( o.flag );
-
-
-		if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin*root.invScale );
-		
-
+		if ( o.restitution !== undefined ) body.setRestitution( o.restitution );
+		if ( o.rolling !== undefined ) body.setRollingFriction( o.rolling );
+		if ( o.flag !== undefined ) body.setCollisionFlags( o.flag );
+		if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin * root.invScale );
 
 		// Soft-soft and soft-rigid collisions
 		root.world.addSoftBody( body, o.group || 1, o.mask || - 1 );
 
 		body.setActivationState( o.state || 4 );
-
 		body.points = body.get_m_nodes().size();
-
-		//if ( o.margin !== undefined ) body.getCollisionShape().setMargin( o.margin );
-		//if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin );
-
 		body.name = name;
-		body.isSoft = true;
+		//body.isSoft = true;
 
-		//console.log( body, this.getNodes( body ) )
+		body.type = 'soft';
 
 		this.softs.push( body );
 

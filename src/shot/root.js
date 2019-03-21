@@ -10,10 +10,10 @@ export var root = {
 	ArMax: 0,
 	key: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
 
-	post:null,// send to worker
+	post: null, // send to worker
 	extraGeo: [], // array of extra geometry to delete
 
-	container: null,// THREE scene or group
+	container: null, // THREE scene or group
 	tmpMat: [], // tmp materials
 	mat: {}, // materials object
 	geo: {}, // geometrys object
@@ -29,8 +29,8 @@ export var map = new Map();
 
 export function vectorad( r ) {
 
-    var i = r.length;
-    while(i--) r[i] *= root.torad;
-    return r;
+	var i = r.length;
+	while ( i -- ) r[ i ] *= root.torad;
+	return r;
 
-};
+}

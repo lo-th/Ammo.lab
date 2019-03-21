@@ -13,7 +13,7 @@ function demo () {
     physic.add({type:'box', group:1, size:[1,20,100], pos:[50.5,10,0] });
     physic.add({type:'box', group:1, size:[1,20,100], pos:[-50.5,10,0] });
 
-    physic.add({ type:'cylinder', name:'bob', size:[2,4,2], pos:[0,2,0], mass:10, flag:2, kinematic: true, friction:0.01 });
+    physic.add({ type:'cylinder', name:'bob', size:[2,8,2], pos:[0,2,0], mass:10, flag:2, kinematic:true, friction:0.01 });
     
     var i, s, x, y, t;
     for( i = 0; i < 80; i++){
@@ -30,6 +30,6 @@ function demo () {
 
 function rayMove ( m ) {
 
-    physic.matrix( [{ name:'bob', pos:[ m.position.x, m.position.y+2, m.position.z ], quat:m.quaternion.toArray() }] );
+    physic.matrix( [{ name:'bob', pos:[ m.x, m.y+4, m.z ] }] );
 
 };

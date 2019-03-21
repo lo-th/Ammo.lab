@@ -1,4 +1,3 @@
-/*global THREE*/
 import { root, map } from './root.js';
 
 function Collision() {
@@ -14,9 +13,9 @@ Object.assign( Collision.prototype, {
 
 		this.pairs.forEach( function ( pair, id ) {
 
-            pair.callback( AR[ N + id ] || 0 );
+			pair.callback( AR[ N + id ] || 0 );
 
-        });
+		} );
 
 	},
 
@@ -49,7 +48,7 @@ Object.assign( Collision.prototype, {
 
 	},
 
-	add: function ( o, extra ) {
+	add: function ( o ) {
 
 
 		var name = o.name !== undefined ? o.name : 'pair' + this.ID ++;
@@ -59,10 +58,10 @@ Object.assign( Collision.prototype, {
 
 	    var pair = new Pair( name, o.callback );
 
-        this.pairs.push( pair );
+		this.pairs.push( pair );
 
-        delete( o.callback );
-        //o.callback = null;
+		delete ( o.callback );
+		//o.callback = null;
 
 		map.set( name, pair );
 

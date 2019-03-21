@@ -83,8 +83,7 @@ Object.assign( RigidBody.prototype, {
 
 	destroy: function ( b ) {
 
-		//var world = this.engine.getWorld();
-		if ( b.isSolid ) root.world.removeCollisionObject( b );
+		if ( b.type === 'solid' ) root.world.removeCollisionObject( b );
 		else root.world.removeRigidBody( b );
 		Ammo.destroy( b );
 		map.delete( b.name );
@@ -96,7 +95,7 @@ Object.assign( RigidBody.prototype, {
 		if ( ! map.has( name ) ) return;
 		var b = map.get( name );
 
-		var solid = b.isSolid ? true : false;
+		var solid = b.type === 'solid' ? true : false;
 		var n = solid ? this.solids.indexOf( b ) : this.bodys.indexOf( b );
 
 		if ( n !== - 1 ) {
@@ -139,6 +138,7 @@ Object.assign( RigidBody.prototype, {
 
 			o.flag = 2;
 			o.state = 4;
+			if ( o.group === undefined ) o.group = 4;
 
 		}
 
@@ -187,11 +187,11 @@ Object.assign( RigidBody.prototype, {
 			case 'compound':
 
 				shape = new Ammo.btCompoundShape();
-				var m, g, s, tr = math.transform();
+				var g, s, tr = math.transform();
 
-		    	for( var i = 0; i < o.shapes.length; i++ ){
+		    	for ( var i = 0; i < o.shapes.length; i ++ ) {
 
-		    		g = o.shapes[i];
+		    		g = o.shapes[ i ];
 
 		    		if ( root.scale !== 1 ) {
 
@@ -204,24 +204,26 @@ Object.assign( RigidBody.prototype, {
 		            tr.identity().fromArray( g.pos.concat( g.quat ) );
 
 		    		switch ( g.type ) {
+
 		    			case 'box': case 'hardbox':
 							p4.setValue( g.size[ 0 ] * 0.5, g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
 							s = new Ammo.btBoxShape( p4 );
-						break;
+							break;
 						case 'sphere':
 							s = new Ammo.btSphereShape( g.size[ 0 ] );
-						break;
+							break;
 						case 'cylinder': case 'hardcylinder':
 							p4.setValue( g.size[ 0 ], g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
 							s = new Ammo.btCylinderShape( p4 );
-						break;
+							break;
 						case 'cone':
 							s = new Ammo.btConeShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
-						break;
+							break;
 						case 'capsule':
 							s = new Ammo.btCapsuleShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
-						break;
-		    		}
+							break;
+
+					}
 
 		    		shape.addChildShape( tr, s );
 
@@ -231,7 +233,7 @@ Object.assign( RigidBody.prototype, {
 
 		    	tr.free();
 
-			break;
+				break;
 
 			case 'mesh':
 				var mTriMesh = new Ammo.btTriangleMesh();
@@ -317,22 +319,21 @@ Object.assign( RigidBody.prototype, {
 
 		var body = new Ammo.btRigidBody( rbInfo );
 
-		body.isRigidBody = true;
+		//body.isRigidBody = true;
 
 		//console.log(body)
 
-		//body.isKinematic = isKinematic;
 		body.name = name;
 
 		// TODO  body.setCenterOfMassTransform()
-
 
 		if ( mass === 0 && ! isKinematic ) {
 
 			body.setCollisionFlags( o.flag || 1 );
 			root.world.addCollisionObject( body, o.group || 2, o.mask || - 1 );
 
-			body.isSolid = true;
+			//body.isSolid = true;
+			body.type = 'solid';
 			this.solids.push( body );
 
 		} else {
@@ -344,9 +345,9 @@ Object.assign( RigidBody.prototype, {
 
 			root.world.addRigidBody( body, o.group || 1, o.mask || - 1 );
 
-			if( isKinematic ) body.isKinematic = true;
-			else body.isBody = true;
-
+			if ( isKinematic ) body.isKinematic = true;
+			//else body.isBody = true;
+			body.type = 'body';
 			this.bodys.push( body );
 
 		}
@@ -355,21 +356,16 @@ Object.assign( RigidBody.prototype, {
 
 		body.breakable = o.breakable !== undefined ? o.breakable : false;
 
-		if( body.breakable ){
+		if ( body.breakable ) {
 
 			// breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
 			body.breakOption = o.breakOption !== undefined ? o.breakOption : [ 250, 1, 2, 1 ];
 
 		}
 
-	
-
-		
-
 		map.set( name, body );
 
-		Ammo.destroy( rbInfo )
-
+		Ammo.destroy( rbInfo );
 
 		this.applyOption( body, o );
 
@@ -399,8 +395,7 @@ Object.assign( RigidBody.prototype, {
 		if ( o.rollingFriction !== undefined ) b.setRollingFriction( o.rollingFriction );
 		if ( o.sleeping !== undefined ) b.setSleepingThresholds( o.sleeping[ 0 ], o.sleeping[ 1 ] );
 
-
-        // TODO try this setting
+		// TODO try this setting
 		if ( o.linearVelocity !== undefined ) b.setLinearVelocity( p1.fromArray( o.linearVelocity ) );
 		if ( o.angularVelocity !== undefined ) b.setAngularVelocity( p1.fromArray( o.angularVelocity ) );
 		if ( o.linearFactor !== undefined ) b.setLinearFactor( p1.fromArray( o.linearFactor ) );

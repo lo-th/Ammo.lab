@@ -20,7 +20,7 @@ var math = {
 
 	eulerToQuadArray: function ( array, deg ) {
 
-		if( deg ) array = math.vectomult( array, math.torad );
+		if ( deg ) array = math.vectomult( array, math.torad );
 
 		var q = math.quaternion().setFromEuler( array );
 		var result = q.toArray();
@@ -95,10 +95,10 @@ var math = {
 
 	distanceArray: function ( p1, p2 ) {
 
-		var x = p2[0]-p1[0];
-		var y = p2[1]-p1[1];
-		var z = p2[2]-p1[2];
-		return Math.sqrt( x*x + y*y + z*z );
+		var x = p2[ 0 ] - p1[ 0 ];
+		var y = p2[ 1 ] - p1[ 1 ];
+		var z = p2[ 2 ] - p1[ 2 ];
+		return Math.sqrt( x * x + y * y + z * z );
 
 	},
 
@@ -302,7 +302,6 @@ function mathExtend() {
 			scale = scale || 1;
 
 			this.setValue( array[ offset ] * scale, array[ offset + 1 ] * scale, array[ offset + 2 ] * scale );
-
 			return this;
 
 		},
@@ -383,8 +382,8 @@ function mathExtend() {
 
 		fromArray: function ( array, offset ) {
 
-			//if ( offset === undefined ) offset = 0;
-			offset = offset || 0;
+			if ( offset === undefined ) offset = 0;
+			//offset = offset || 0;
 			this.setValue( array[ offset ], array[ offset + 1 ], array[ offset + 2 ], array[ offset + 3 ] );
 
 			return this;
@@ -791,8 +790,7 @@ Object.assign( RigidBody.prototype, {
 
 	destroy: function ( b ) {
 
-		//var world = this.engine.getWorld();
-		if ( b.isSolid ) root.world.removeCollisionObject( b );
+		if ( b.type === 'solid' ) root.world.removeCollisionObject( b );
 		else root.world.removeRigidBody( b );
 		Ammo.destroy( b );
 		map.delete( b.name );
@@ -804,7 +802,7 @@ Object.assign( RigidBody.prototype, {
 		if ( ! map.has( name ) ) return;
 		var b = map.get( name );
 
-		var solid = b.isSolid ? true : false;
+		var solid = b.type === 'solid' ? true : false;
 		var n = solid ? this.solids.indexOf( b ) : this.bodys.indexOf( b );
 
 		if ( n !== - 1 ) {
@@ -847,6 +845,7 @@ Object.assign( RigidBody.prototype, {
 
 			o.flag = 2;
 			o.state = 4;
+			if ( o.group === undefined ) o.group = 4;
 
 		}
 
@@ -897,9 +896,9 @@ Object.assign( RigidBody.prototype, {
 				shape = new Ammo.btCompoundShape();
 				var g, s, tr = math.transform();
 
-		    	for( var i = 0; i < o.shapes.length; i++ ){
+		    	for ( var i = 0; i < o.shapes.length; i ++ ) {
 
-		    		g = o.shapes[i];
+		    		g = o.shapes[ i ];
 
 		    		if ( root.scale !== 1 ) {
 
@@ -912,24 +911,26 @@ Object.assign( RigidBody.prototype, {
 		            tr.identity().fromArray( g.pos.concat( g.quat ) );
 
 		    		switch ( g.type ) {
+
 		    			case 'box': case 'hardbox':
 							p4.setValue( g.size[ 0 ] * 0.5, g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
 							s = new Ammo.btBoxShape( p4 );
-						break;
+							break;
 						case 'sphere':
 							s = new Ammo.btSphereShape( g.size[ 0 ] );
-						break;
+							break;
 						case 'cylinder': case 'hardcylinder':
 							p4.setValue( g.size[ 0 ], g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
 							s = new Ammo.btCylinderShape( p4 );
-						break;
+							break;
 						case 'cone':
 							s = new Ammo.btConeShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
-						break;
+							break;
 						case 'capsule':
 							s = new Ammo.btCapsuleShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
-						break;
-		    		}
+							break;
+
+					}
 
 		    		shape.addChildShape( tr, s );
 
@@ -939,7 +940,7 @@ Object.assign( RigidBody.prototype, {
 
 		    	tr.free();
 
-			break;
+				break;
 
 			case 'mesh':
 				var mTriMesh = new Ammo.btTriangleMesh();
@@ -1025,22 +1026,21 @@ Object.assign( RigidBody.prototype, {
 
 		var body = new Ammo.btRigidBody( rbInfo );
 
-		body.isRigidBody = true;
+		//body.isRigidBody = true;
 
 		//console.log(body)
 
-		//body.isKinematic = isKinematic;
 		body.name = name;
 
 		// TODO  body.setCenterOfMassTransform()
-
 
 		if ( mass === 0 && ! isKinematic ) {
 
 			body.setCollisionFlags( o.flag || 1 );
 			root.world.addCollisionObject( body, o.group || 2, o.mask || - 1 );
 
-			body.isSolid = true;
+			//body.isSolid = true;
+			body.type = 'solid';
 			this.solids.push( body );
 
 		} else {
@@ -1052,9 +1052,9 @@ Object.assign( RigidBody.prototype, {
 
 			root.world.addRigidBody( body, o.group || 1, o.mask || - 1 );
 
-			if( isKinematic ) body.isKinematic = true;
-			else body.isBody = true;
-
+			if ( isKinematic ) body.isKinematic = true;
+			//else body.isBody = true;
+			body.type = 'body';
 			this.bodys.push( body );
 
 		}
@@ -1063,21 +1063,16 @@ Object.assign( RigidBody.prototype, {
 
 		body.breakable = o.breakable !== undefined ? o.breakable : false;
 
-		if( body.breakable ){
+		if ( body.breakable ) {
 
 			// breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
 			body.breakOption = o.breakOption !== undefined ? o.breakOption : [ 250, 1, 2, 1 ];
 
 		}
 
-	
-
-		
-
 		map.set( name, body );
 
 		Ammo.destroy( rbInfo );
-
 
 		this.applyOption( body, o );
 
@@ -1107,8 +1102,7 @@ Object.assign( RigidBody.prototype, {
 		if ( o.rollingFriction !== undefined ) b.setRollingFriction( o.rollingFriction );
 		if ( o.sleeping !== undefined ) b.setSleepingThresholds( o.sleeping[ 0 ], o.sleeping[ 1 ] );
 
-
-        // TODO try this setting
+		// TODO try this setting
 		if ( o.linearVelocity !== undefined ) b.setLinearVelocity( p1.fromArray( o.linearVelocity ) );
 		if ( o.angularVelocity !== undefined ) b.setAngularVelocity( p1.fromArray( o.angularVelocity ) );
 		if ( o.linearFactor !== undefined ) b.setLinearFactor( p1.fromArray( o.linearFactor ) );
@@ -1155,7 +1149,7 @@ Object.assign( Constraint.prototype, {
 		this.joints.forEach( function ( b, id ) {
 
 			var n = N + ( id * 4 );
-			AR[ n ] = b.type;
+			AR[ n ] = b.ntype;
 
 		} );
 
@@ -1207,6 +1201,10 @@ Object.assign( Constraint.prototype, {
 
 		var b1 = map.get( o.b1 );
 		var b2 = map.get( o.b2 );
+
+		b1.activate();
+		b2.activate();
+		//console.log(b2)
 
 		var posA = math.vector3().fromArray( o.pos1 || [ 0, 0, 0 ] ).multiplyScalar( root.invScale );
 		var posB = math.vector3().fromArray( o.pos2 || [ 0, 0, 0 ] ).multiplyScalar( root.invScale );
@@ -1276,15 +1274,17 @@ Object.assign( Constraint.prototype, {
 			case "joint_conetwist": n = 4; joint = new Ammo.btConeTwistConstraint( b1, b2, formA, formB ); break;
 			case "joint_dof": n = 5; joint = new Ammo.btGeneric6DofConstraint( b1, b2, formA, formB, useA ); break;
 			case "joint_spring_dof": n = 6; joint = new Ammo.btGeneric6DofSpringConstraint( b1, b2, formA, formB, useA ); break;
-			case "joint_fixe": new Ammo.btFixedConstraint( b1, b2, formA, formB ); break;
+			case "joint_fixe": n = 7; joint = new Ammo.btFixedConstraint( b1, b2, formA, formB ); break;
             //case "joint_gear": joint = new Ammo.btGearConstraint( b1, b2, point1, point2, o.ratio || 1); break;// missing
             //case "joint_universal": joint = new Ammo.btUniversalConstraint( b1, b2, point1, point2, o.ratio || 1); break;// missing
 
 		}
 
+		//console.log( joint );
+
 		// EXTRA SETTING
 
-		if ( o.breaking ) joint.setBreakingImpulseThreshold( o.breaking );
+		if ( o.breaking && joint.setBreakingImpulseThreshold ) joint.setBreakingImpulseThreshold( o.breaking );
 
 		// hinge
 
@@ -1391,13 +1391,13 @@ Object.assign( Constraint.prototype, {
 
 		}
 
-
 		var collision = o.collision !== undefined ? o.collision : false;
 
 
 		joint.isJoint = true;
 		joint.name = name;
-		joint.type = n;
+		joint.nType = n;
+		joint.type = 'joint';
 
 		root.world.addConstraint( joint, collision ? false : true );
 		this.joints.push( joint );
@@ -1466,11 +1466,13 @@ Object.assign( SoftBody.prototype, {
 		var s = b.get_m_nodes(), r; // get vertrices list
 		var lng = s.size();
 
-		for ( var j=0; j<lng; j++ ) {
+		for ( var j = 0; j < lng; j ++ ) {
+
+			//n = ( j * 3 );
 			r = s.at( j ).get_m_x().toArray();
-			if(r[1]>300) list.push( j );
+			if ( r[ 1 ] > 300 ) list.push( j );
 			//list.push( r );
-			
+
 
 		}
 
@@ -1478,7 +1480,7 @@ Object.assign( SoftBody.prototype, {
 
 	},
 
-	move: function ( o ) {
+	/*move: function ( o ) {
 
 		if ( ! map.has( o.name ) ) return;
 		var soft = map.get( o.name );
@@ -1492,7 +1494,7 @@ Object.assign( SoftBody.prototype, {
 
 		soft.set_m_nodes( s );
 
-	},
+	},*/
 
 	clear: function () {
 
@@ -1576,20 +1578,11 @@ Object.assign( SoftBody.prototype, {
 				//if ( o.margin === undefined ) o.margin = o.radius || 0.2;
 				body = softBodyHelpers.CreateRope( worldInfo, p1, p2, nseg, o.fixed || 0 );
 				//body.setTotalMass(o.mass);
-
-				//console.log(body)
-
-
-				//console.log(body.get_m_nodes().size())
-
 				body.softType = 2;
 
 				break;
 
 			case 'softEllips':
-
-				//var center = o.center || [ 0, 0, 0]; // start
-				//var p1 = o.radius || [ 3, 3, 3]; // end
 
 				p1.fromArray( o.center || [ 0, 0, 0 ], 0, root.invScale );
 				p2.fromArray( o.radius || [ 3, 3, 3 ], 0, root.invScale );
@@ -1618,7 +1611,7 @@ Object.assign( SoftBody.prototype, {
 
 				break;
 
-			/*case 'softConvex': // BUG !!
+				/*case 'softConvex': // BUG !!
 
 			    //var j = o.v.length;
 			    //while( j-- ) { o.v[ j ] *= root.invScale; }
@@ -1626,7 +1619,7 @@ Object.assign( SoftBody.prototype, {
 				var lng = o.v.length / 3;
 				var arr = [];
 				var i = 0, n;
-				
+
 				for ( i = 0; i<lng; i++ ) {
 
 					n = i * 3;
@@ -1637,7 +1630,7 @@ Object.assign( SoftBody.prototype, {
 
 				}
 
-				
+
 
 
 
@@ -1647,7 +1640,7 @@ Object.assign( SoftBody.prototype, {
 				body.softType = 4;
 
 
-				
+
 				// free node
 				i = lng;
 				//while ( i -- ) arr[i].free();
@@ -1669,9 +1662,11 @@ Object.assign( SoftBody.prototype, {
 			case 'softMesh': case 'softConvex':
 
 			    var j = o.v.length;
-			    while( j-- ) { o.v[ j ] *= root.invScale; }
+			    while ( j -- ) {
 
-			    //console.log(o.v)
+					o.v[ j ] *= root.invScale;
+
+				}
 
 				body = softBodyHelpers.CreateFromTriMesh( worldInfo, o.v, o.i, o.ntri, o.randomize || true );
 				body.softType = 5;
@@ -1737,30 +1732,20 @@ Object.assign( SoftBody.prototype, {
 
 		body.setTotalMass( o.mass || 0, o.fromfaces || false );
 		//body.setPose( true, true );
-		if( o.restitution !== undefined ) body.setRestitution( o.restitution );
-		if( o.rolling !== undefined ) body.setRollingFriction( o.rolling );
-
-		if( o.flag !== undefined ) body.setCollisionFlags( o.flag );
-
-
-		if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin*root.invScale );
-		
-
+		if ( o.restitution !== undefined ) body.setRestitution( o.restitution );
+		if ( o.rolling !== undefined ) body.setRollingFriction( o.rolling );
+		if ( o.flag !== undefined ) body.setCollisionFlags( o.flag );
+		if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin * root.invScale );
 
 		// Soft-soft and soft-rigid collisions
 		root.world.addSoftBody( body, o.group || 1, o.mask || - 1 );
 
 		body.setActivationState( o.state || 4 );
-
 		body.points = body.get_m_nodes().size();
-
-		//if ( o.margin !== undefined ) body.getCollisionShape().setMargin( o.margin );
-		//if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin );
-
 		body.name = name;
-		body.isSoft = true;
+		//body.isSoft = true;
 
-		//console.log( body, this.getNodes( body ) )
+		body.type = 'soft';
 
 		this.softs.push( body );
 
@@ -1851,7 +1836,7 @@ Object.assign( Terrain.prototype, {
 		// delete old if same name
 		this.remove( name );
 
-		var group = o.group === undefined ? 1 : o.group;
+		var group = o.group === undefined ? 2 : o.group;
 		var mask = o.mask === undefined ? - 1 : o.mask;
 
 		var t = new LandScape( name, o );
@@ -1882,6 +1867,7 @@ function LandScape( name, o ) {
 	this.data = null;
 	this.tmpData = null;
 	this.dataHeap = null;
+	this.type = 'terrain';
 
 	if ( root.scale !== 1 ) {
 
@@ -1941,6 +1927,8 @@ function LandScape( name, o ) {
 
 	var body = new Ammo.btRigidBody( rbInfo );
 	body.setCollisionFlags( flag );
+
+	body.name = name;
 
 	this.name = name;
 	this.body = body;
@@ -2085,7 +2073,7 @@ Object.assign( Vehicle.prototype, {
 
 	},
 
-	addExtra: function ( o, extra ) {
+	addExtra: function () {
 
 	},
 
@@ -2100,10 +2088,14 @@ Object.assign( Vehicle.prototype, {
 
 		// car shape
 		var shapeType = o.shapeType || 'box';
-		var shape;
-		if ( shapeType == 'mesh' ) shape = this.addExtra( { type: 'mesh', v: o.v, mass: 1 }, 'isShape' );
-		else if ( shapeType == 'convex' ) shape = this.addExtra( { type: 'convex', v: o.v }, 'isShape' );
-		else shape = this.addExtra( { type: 'box', size: o.size }, 'isShape' );
+		var sho = {};
+
+		if ( shapeType == 'mesh' ) sho = { type: 'mesh', v: o.v, mass: 1 };
+		else if ( shapeType == 'convex' ) sho = { type: 'convex', v: o.v };
+		else sho = { type: 'box', size: o.size };
+
+		var shape = this.addExtra( sho, 'isShape' );
+
 		if ( o.v !== undefined ) delete ( o.v );
 
 		var vehicleRay = new Ammo.btDefaultVehicleRaycaster( root.world );
@@ -2307,6 +2299,10 @@ Object.assign( Car.prototype, {
 
 		// car body
 		this.body = new Ammo.btRigidBody( rbInfo );
+		this.body.name = this.name + '_body';
+		this.body.isRigidBody = true;
+		this.body.isBody = true;
+
 		this.body.setActivationState( 4 );
 
 		Ammo.destroy( rbInfo );
@@ -2923,9 +2919,9 @@ function Pair( a, b, name ) {
 
 	this.result = 0;
 
-	this.pa = [0,0,0];
-	this.pb = [0,0,0];
-	this.nb = [0,0,0];
+	this.pa = [ 0, 0, 0 ];
+	this.pb = [ 0, 0, 0 ];
+	this.nb = [ 0, 0, 0 ];
 	this.distance = 0;
 	this.impulse = 0;
 	this.maxImpulse = 0;
@@ -2935,8 +2931,9 @@ function Pair( a, b, name ) {
 
 	this.f = new Ammo.ConcreteContactResultCallback();
 	///console.log(this.f)
-	this.f.addSingleResult = function ( manifoldPoint, collisionObjectA, id0, index0, collisionObjectB, id1, index1 ) {
+	this.f.addSingleResult = function ( ) {
 
+		//this.f.addSingleResult = function ( manifoldPoint, collisionObjectA, id0, index0, collisionObjectB, id1, index1 ) {
 	    /*var manifold = Ammo.wrapPointer( manifoldPoint, Ammo.btManifoldPoint )
 
 	    this.nb = manifold.m_normalWorldOnB.toArray();
@@ -2992,7 +2989,7 @@ Object.assign( Pair.prototype, {
 *    and gravity in meters per square second (9.8 m/s^2).
 */
 //var Module = { TOTAL_MEMORY: 64*1024*1024 };//default // 67108864
-self.Module = { TOTAL_MEMORY: 256*1024*1024 };// TODO don't work ???
+self.Module = { TOTAL_MEMORY: 256 * 1024 * 1024 };// TODO don't work ???
 
 self.onmessage = function ( e ) {
 
@@ -3062,6 +3059,7 @@ var engine = ( function () {
 	var tmpForces = [];
 	var tmpMatrix = [];
 	var tmpOption = [];
+
 	var tmpRemove = [];
 
 	var carName = "";
@@ -3099,15 +3097,15 @@ var engine = ( function () {
 		},
 		//getKey: function () { return key; },
 
-		setDrive: function ( o ) {
+		setDrive: function ( name ) {
 
-			carName = o.name;
+			carName = name;
 
 		},
 
-		setMove: function ( o ) {
+		setMove: function ( name ) {
 
-			heroName = o.name;
+			heroName = name;
 
 		},
 		setAngle: function ( o ) {
@@ -3120,20 +3118,23 @@ var engine = ( function () {
 
 			root.key = o.key;
 
+			//tmpRemove = tmpRemove.concat( o.remove );
+			this.stepRemove();
+
 			vehicles.control( carName );
 			character.control( heroName );
 
 			this.stepMatrix();
 			this.stepOption();
 			this.stepForces();
-			this.stepRemove();
+			
 
 			terrains.step();
 
 			// breakable object
-			if( numBreak !== 0 ) this.stepBreak();
+			if ( numBreak !== 0 ) this.stepBreak();
 
-			if( fixed ) root.world.stepSimulation( o.delta, substep, timestep );
+			if ( fixed ) root.world.stepSimulation( o.delta, substep, timestep );
 			else root.world.stepSimulation( o.delta, substep );
 
 			rigidBody.step( Ar, ArPos[ 0 ] );
@@ -3141,10 +3142,10 @@ var engine = ( function () {
 			character.step( Ar, ArPos[ 2 ] );
 			vehicles.step( Ar, ArPos[ 3 ] );
 			softBody.step( Ar, ArPos[ 4 ] );
-			
+
 			// breakable object
 			//if( numBreak !== 0 ) this.stepBreak();
-		
+
 
 			if ( isBuffer ) self.postMessage( { m: 'step', Ar: Ar }, [ Ar.buffer ] );
 			else self.postMessage( { m: 'step', Ar: Ar } );
@@ -3161,6 +3162,7 @@ var engine = ( function () {
 			tmpForces = [];
 			tmpMatrix = [];
 			tmpOption = [];
+			
 			tmpRemove = [];
 
 			rigidBody.clear();
@@ -3249,32 +3251,53 @@ var engine = ( function () {
 
 				self.postMessage( { m: 'initEngine' } );
 
-			});
+			} );
 
 		},
 
-		removeRigidBody: function ( name ) {
+		//-----------------------------
+		// REMOVE
+		//-----------------------------
 
-            rigidBody.remove(name);
+		remove: function ( name ) {
 
-        },
+			if ( ! map.has( name ) ) return;
+			var b = map.get( name );
+
+			switch( b.type ){
+
+				case 'solid': case 'body' :
+				    rigidBody.remove( name );
+				break;
+				case 'soft':
+				    softBody.remove( name );
+				break;
+				case 'terrain':
+				    terrains.remove( name );
+				break;
+				case 'joint':
+				    constraint.remove( name );
+				break;
+
+			}
+
+			//rigidBody.remove( name );
+
+		},
+
 
 		//-----------------------------
 		// ADD
 		//-----------------------------
 
-		/*addExtra: function ( o, extra ) {
-
-            return rigidBody.add( o, extra );
-
-        },*/
-
 		add: function ( o ) {
 
 			o.type = o.type === undefined ? 'box' : o.type;
 
-			if(o.breakable !== undefined ){
-				if( o.breakable ) numBreak ++;
+			if ( o.breakable !== undefined ) {
+
+				if ( o.breakable ) numBreak ++;
+
 			}
 
 			var type = o.type;
@@ -3352,7 +3375,7 @@ var engine = ( function () {
 
 			root.world = isSoft ? new Ammo.btSoftRigidDynamicsWorld( dispatcher, broadphase, solver, collisionConfig, solverSoft ) : new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfig );
 
-	
+
 
 
 			//console.log(dispatcher)
@@ -3362,7 +3385,7 @@ var engine = ( function () {
 			root.world.getSolverInfo().set_m_splitImpulsePenetrationThreshold(0);
 			root.world.getSolverInfo().set_m_splitImpulse( true );
 			*/
-			
+
 		},
 
 		clearWorld: function () {
@@ -3373,7 +3396,7 @@ var engine = ( function () {
 			Ammo.destroy( collisionConfig );
 			Ammo.destroy( dispatcher );
 			Ammo.destroy( broadphase );
-			
+
 			root.world = null;
 
 		},
@@ -3408,7 +3431,7 @@ var engine = ( function () {
 
 			this.setWorldscale( o.worldscale !== undefined ? o.worldscale : 1 );
 
-			timestep = o.fps !== undefined ? 1 / o.fps : 1/60;
+			timestep = o.fps !== undefined ? 1 / o.fps : 1 / 60;
 			substep = o.substep !== undefined ? o.substep : 2;
 			fixed = o.fixed !== undefined ? o.fixed : false;
 
@@ -3437,7 +3460,7 @@ var engine = ( function () {
 		setForces: function ( o ) {
 
 			//if( o.constructor !== Array ) tmpForces.push(o);
-			//else 
+			//else
 			tmpForces = tmpForces.concat( o );
 
 		},
@@ -3458,7 +3481,7 @@ var engine = ( function () {
 			var p2 = math.vector3();
 
 			if ( o.direction !== undefined ) p1.fromArray( math.vectomult( o.direction, root.invScale ) );
-			if ( o.distance  !== undefined ) p2.fromArray( math.vectomult( o.distance, root.invScale )  );
+			if ( o.distance !== undefined ) p2.fromArray( math.vectomult( o.distance, root.invScale ) );
 			else p2.zero();
 
 			switch ( o.type ) {
@@ -3471,9 +3494,9 @@ var engine = ( function () {
 				case 'impulse' : case 5 : b.applyImpulse( p1, p2 ); break;// impulse , rel_pos
 				case 'impulseCentral' : case 6 : b.applyCentralImpulse( p1 ); break;
 
-				// joint
+					// joint
 
-				case 'motor' : case 7 : b.enableAngularMotor( o.enable || true , o.targetVelocity, o.maxMotor ); break; // bool, targetVelocity float, maxMotorImpulse float
+				case 'motor' : case 7 : b.enableAngularMotor( o.enable || true, o.targetVelocity, o.maxMotor ); break; // bool, targetVelocity float, maxMotorImpulse float
 
 			}
 
@@ -3510,11 +3533,11 @@ var engine = ( function () {
 				b.getMotionState().getWorldTransform( t );
 				var r = [];
 				t.toArray( r );
-				
-				if ( o.keepX === undefined ) o.pos[ 0 ] = r[ 0 ] - o.pos[ 0 ];
-				if ( o.keepY === undefined ) o.pos[ 1 ] = r[ 1 ] - o.pos[ 1 ];
-				if ( o.keepZ === undefined ) o.pos[ 2 ] = r[ 2 ] - o.pos[ 2 ];
-				if ( o.keepRot === undefined ) o.quat = [ r[ 3 ], r[ 4 ], r[ 5 ], r[ 6 ] ];
+
+				if ( o.keepX !== undefined ) o.pos[ 0 ] = r[ 0 ] - o.pos[ 0 ];
+				if ( o.keepY !== undefined ) o.pos[ 1 ] = r[ 1 ] - o.pos[ 1 ];
+				if ( o.keepZ !== undefined ) o.pos[ 2 ] = r[ 2 ] - o.pos[ 2 ];
+				if ( o.keepRot !== undefined ) o.quat = [ r[ 3 ], r[ 4 ], r[ 5 ], r[ 6 ] ];
 
 			}
 
@@ -3523,25 +3546,28 @@ var engine = ( function () {
 			// position and rotation
 			if ( o.pos !== undefined ) {
 
-				o.pos = math.vectomult( o.pos, root.invScale );
-				if ( o.rot !== undefined ) o.quat =  math.eulerToQuadArray( o.rot, true );// is euler degree
+				//o.pos = math.vectomult( o.pos, root.invScale );
+				if ( o.rot !== undefined ) o.quat = math.eulerToQuadArray( o.rot, true );// is euler degree
 				if ( o.quat !== undefined ) o.pos = o.pos.concat( o.quat );
-				t.fromArray( o.pos );
+				
+				t.fromArray( o.pos, 0, root.invScale );
 
 			}
 
-			if( o.noVelocity ){
+			if ( o.noVelocity ) {
+
 				b.setAngularVelocity( zero );
 				b.setLinearVelocity( zero );
+
 			}
 
 
 
-			if( b.isKinematic ) b.getMotionState().setWorldTransform( t );
+			if ( b.isKinematic ) b.getMotionState().setWorldTransform( t );
 			else b.setWorldTransform( t );
-			if( b.isBody ) b.activate();
 
-			if( b.isSolid ) self.postMessage( { m: 'moveSolid', o:{ name:o.name, pos: math.vectomult( o.pos, root.scale ), quat: o.quat } } );
+			if ( b.type === 'body' ) b.activate();
+			if ( b.type === 'solid' ) self.postMessage( { m: 'moveSolid', o: { name: o.name, pos: math.vectomult( o.pos, root.scale ), quat: o.quat } } );
 
 			t.free();
 
@@ -3601,7 +3627,13 @@ var engine = ( function () {
 			if ( ! map.has( o.name ) ) return;
 			var b = map.get( o.name );
 
-			if( b.isRigidBody ) rigidBody.applyOption( b, o );
+			switch( b.type ){
+				case 'solid': case 'body' :
+				    rigidBody.applyOption( b, o );
+				break;
+			}
+
+			//if ( b.isRigidBody ) rigidBody.applyOption( b, o );
 
 			/*if ( o.flag !== undefined ) b.setCollisionFlags( o.flag );
 			if ( o.state !== undefined ) b.setMotionState( o.state );
@@ -3646,21 +3678,9 @@ var engine = ( function () {
 
 		stepRemove: function () {
 
-			while ( tmpRemove.length > 0 ) this.applyRemove( tmpRemove.pop() );
+			while ( tmpRemove.length > 0 ) this.remove( tmpRemove.pop() );
 
 		},
-
-		applyRemove: function ( name ) {
-
-			if ( ! map.has( name ) ) return;
-			var b = map.get( name );
-
-			if ( b.isBody || b.isSolid || b.isKinematic ) rigidBody.remove( name );
-			if ( b.isJoint ) constraint.remove( name );
-
-
-		},
-
 
 		//-----------------------------
 		// BREAKABLE
@@ -3681,11 +3701,12 @@ var engine = ( function () {
 				rb0 = body0.name;
 				rb1 = body1.name;
 
-				if ( !body0.breakable && !body1.breakable ) continue;
-				
+				if ( ! body0.breakable && ! body1.breakable ) continue;
+
 				contact = false;
 				maxImpulse = 0;
 				for ( var j = 0, jl = manifold.getNumContacts(); j < jl; j ++ ) {
+
 					point = manifold.getContactPoint( j );
 					if ( point.getDistance() < 0 ) {
 
@@ -3697,27 +3718,30 @@ var engine = ( function () {
 							maxImpulse = impulse;
 							pos = point.get_m_positionWorldOnB().toArray();
 							normal = point.get_m_normalWorldOnB().toArray();
+
 						}
 						break;
+
 					}
+
 				}
 
 				// If no point has contact, abort
-				if ( !contact ) continue;
-				
+				if ( ! contact ) continue;
+
 				// Subdivision
 
-				if ( body0.breakable && maxImpulse > body0.breakOption[0] ) {
+				if ( body0.breakable && maxImpulse > body0.breakOption[ 0 ] ) {
 
-					self.postMessage( { m: 'makeBreak', o:{ name:rb0, pos: math.vectomult( pos, root.scale ), normal:normal, breakOption:body0.breakOption } } );
-					this.removeRigidBody( rb0 );
-					
+					self.postMessage( { m: 'makeBreak', o: { name: rb0, pos: math.vectomult( pos, root.scale ), normal: normal, breakOption: body0.breakOption } } );
+					//this.remove( rb0 );
+
 				}
 
-				if ( body1.breakable && maxImpulse > body1.breakOption[0] ) {
+				if ( body1.breakable && maxImpulse > body1.breakOption[ 0 ] ) {
 
-					self.postMessage( { m: 'makeBreak', o:{ name:rb1, pos: math.vectomult( pos, root.scale ), normal:normal, breakOption:body1.breakOption } } );
-					this.removeRigidBody( rb1 );
+					self.postMessage( { m: 'makeBreak', o: { name: rb1, pos: math.vectomult( pos, root.scale ), normal: normal, breakOption: body1.breakOption } } );
+					//this.remove( rb1 );
 
 				}
 
@@ -3733,9 +3757,9 @@ var engine = ( function () {
 
 			var rayResult = [], r, result;
 
-			for( var i = 0, lng = o.length; i<lng; i++ ){
+			for ( var i = 0, lng = o.length; i < lng; i ++ ) {
 
-				r = o[i];
+				r = o[ i ];
 
 				result = {};
 
@@ -3743,32 +3767,42 @@ var engine = ( function () {
 				ray.set_m_closestHitFraction( 1 );
 				ray.set_m_collisionObject( null );
 				// Set ray option
-				if( r.origin !== undefined ) ray.get_m_rayFromWorld().fromArray( r.origin, 0, root.invScale );
-				if( r.dest !== undefined ) ray.get_m_rayToWorld().fromArray( r.dest, 0, root.invScale );
-				if( r.group !== undefined ) ray.set_m_collisionFilterGroup( r.group );
-			    if( r.mask !== undefined ) ray.set_m_collisionFilterMask( r.mask );
+				if ( r.origin !== undefined ) ray.get_m_rayFromWorld().fromArray( r.origin, 0, root.invScale );
+				if ( r.dest !== undefined ) ray.get_m_rayToWorld().fromArray( r.dest, 0, root.invScale );
+				if ( r.group !== undefined ) ray.set_m_collisionFilterGroup( r.group );
+			    if ( r.mask !== undefined ) ray.set_m_collisionFilterMask( r.mask );
 
 				// Perform ray test
 			    root.world.rayTest( ray.get_m_rayFromWorld(), ray.get_m_rayToWorld(), ray );
 
 			    if ( ray.hasHit() ) {
 
+			    	//console.log(ray)
+
+			    	var name = Ammo.castObject( ray.get_m_collisionObject(), Ammo.btRigidBody ).name;
+			    	if ( name === undefined ) name = Ammo.castObject( ray.get_m_collisionObject(), Ammo.btSoftBody ).name;
+
+			    	var normal = ray.get_m_hitNormalWorld();
+			    	normal.normalize();
+			    	
 			    	result = {
 			    		hit: true,
-			    		name: Ammo.castObject( ray.get_m_collisionObject(), Ammo.btRigidBody ).name,
+			    		name: name,
 			    		point: ray.get_m_hitPointWorld().toArray( undefined, 0, root.scale ),
-			    		normal: ray.get_m_hitNormalWorld().toArray(),
+			    		normal: normal.toArray(),
 			    	};
 
 			    } else {
+
 			    	result = { hit: false };
-			    }
+
+				}
 
 			    rayResult.push( result );
 
 			}
 
-		    self.postMessage( { m:'rayCast', o:rayResult } );
+		    self.postMessage( { m: 'rayCast', o: rayResult } );
 
 		},
 

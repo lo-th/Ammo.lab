@@ -474,7 +474,11 @@
 				}
 
 				// TODO resolve bug
-				if(!v2){ console.log('bug v2'); return;}
+				if ( ! v2 ) {
+
+					console.log( 'bug v2' ); return;
+
+				}
 
 				// 3. The next vertex 'v3' is the one farthest to the plane 'v0', 'v1', 'v2'
 
@@ -844,7 +848,7 @@
 
 		}
 
-	});
+	} );
 
 	// FACE
 
@@ -1220,106 +1224,127 @@
 	/*global THREE*/
 
 
-	function geometryInfo ( g, type ) {
-	    var facesOnly = false;
+	function geometryInfo( g, type ) {
+		var facesOnly = false;
 
-	    if(type == 'mesh' || type == 'convex') facesOnly = true;
-	    //if(type == 'convex') verticesOnly = true;
+		if ( type == 'mesh' || type == 'convex' ) facesOnly = true;
+		//if(type == 'convex') verticesOnly = true;
 
-	    var i, j, n, p, n2;
+		var i, j, n, p, n2;
 
-	    var tmpGeo = g.isBufferGeometry ? new THREE.Geometry().fromBufferGeometry( g ) : g;
-	    tmpGeo.mergeVertices();
+		var tmpGeo = g.isBufferGeometry ? new THREE.Geometry().fromBufferGeometry( g ) : g;
+		tmpGeo.mergeVertices();
 
-	    var totalVertices = g.attributes.position.array.length/3;
-	    var numVertices = tmpGeo.vertices.length;
-	    var numFaces = tmpGeo.faces.length;
+		var totalVertices = g.attributes.position.array.length / 3;
+		var numVertices = tmpGeo.vertices.length;
+		var numFaces = tmpGeo.faces.length;
 
-	    g.realVertices = new Float32Array( numVertices * 3 );
-	    g.realIndices = new ( numFaces * 3 > 65535 ? Uint32Array : Uint16Array )( numFaces * 3 );
+		g.realVertices = new Float32Array( numVertices * 3 );
+		g.realIndices = new ( numFaces * 3 > 65535 ? Uint32Array : Uint16Array )( numFaces * 3 );
 
-	    {
-	        g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( totalVertices*3 ), 3 ) );
-	        var cc = g.attributes.color.array;
+		{
 
-	        i = totalVertices;
-	        while(i--){
-	            n = i * 3;
-	            cc[ n ] = 1;
-	            cc[ n + 1 ] = 1;
-	            cc[ n + 2 ] = 1;
-	        }
-	    }
+			g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( totalVertices * 3 ), 3 ) );
+			var cc = g.attributes.color.array;
 
-	    i = numVertices;
-	    while(i--){
-	        p = tmpGeo.vertices[ i ];
-	        n = i * 3;
-	        g.realVertices[ n ] = p.x;
-	        g.realVertices[ n + 1 ] = p.y;
-	        g.realVertices[ n + 2 ] = p.z;
-	    }
+			i = totalVertices;
+			while ( i -- ) {
 
-	    i = numFaces;
-	    while(i--){
-	        p = tmpGeo.faces[ i ];
-	        n = i * 3;
-	        g.realIndices[ n ] = p.a;
-	        g.realIndices[ n + 1 ] = p.b;
-	        g.realIndices[ n + 2 ] = p.c;
-	    }
+				n = i * 3;
+				cc[ n ] = 1;
+				cc[ n + 1 ] = 1;
+				cc[ n + 2 ] = 1;
 
-	    tmpGeo.dispose();
+			}
 
-	    //g.realIndices = g.getIndex();
-	    //g.setIndex(g.realIndices);
+		}
 
-	    if( facesOnly ){ 
+		i = numVertices;
+		while ( i -- ) {
 
-	        var faces = [];
-	        i = g.realIndices.length;
-	        while(i--){
-	            n = i * 3;
-	            p = g.realIndices[i]*3;
-	            faces[n] = g.realVertices[ p ];
-	            faces[n+1] = g.realVertices[ p+1 ];
-	            faces[n+2] = g.realVertices[ p+2 ];
-	        }
-	        return faces;
-	    }
+			p = tmpGeo.vertices[ i ];
+			n = i * 3;
+			g.realVertices[ n ] = p.x;
+			g.realVertices[ n + 1 ] = p.y;
+			g.realVertices[ n + 2 ] = p.z;
 
-	    // find same point
-	    var ar = [];
-	    var pos = g.attributes.position.array;
-	    i = numVertices;
-	    while(i--){
-	        n = i*3;
-	        ar[i] = [];
-	        j = totalVertices;
-	        while(j--){
-	            n2 = j*3;
-	            if( pos[n2] == g.realVertices[n] && pos[n2+1] == g.realVertices[n+1] && pos[n2+2] == g.realVertices[n+2] ) ar[i].push(j);
-	        }
-	    }
+		}
 
-	    // generate same point index
-	    var pPoint = new ( numVertices > 65535 ? Uint32Array : Uint16Array )( numVertices );
-	    var lPoint = new ( totalVertices > 65535 ? Uint32Array : Uint16Array )( totalVertices );
+		i = numFaces;
+		while ( i -- ) {
 
-	    p = 0;
-	    for(i=0; i<numVertices; i++){
-	        n = ar[i].length;
-	        pPoint[i] = p;
-	        j = n;
-	        while(j--){ lPoint[p+j] = ar[i][j]; }
-	        p += n;
-	    }
+			p = tmpGeo.faces[ i ];
+			n = i * 3;
+			g.realIndices[ n ] = p.a;
+			g.realIndices[ n + 1 ] = p.b;
+			g.realIndices[ n + 2 ] = p.c;
 
-	    g.numFaces = numFaces;
-	    g.numVertices = numVertices;
-	    g.maxi = totalVertices;
-	    g.pPoint = pPoint;
-	    g.lPoint = lPoint;
+		}
+
+		tmpGeo.dispose();
+
+		//g.realIndices = g.getIndex();
+		//g.setIndex(g.realIndices);
+
+		if ( facesOnly ) {
+
+			var faces = [];
+			i = g.realIndices.length;
+			while ( i -- ) {
+
+				n = i * 3;
+				p = g.realIndices[ i ] * 3;
+				faces[ n ] = g.realVertices[ p ];
+				faces[ n + 1 ] = g.realVertices[ p + 1 ];
+				faces[ n + 2 ] = g.realVertices[ p + 2 ];
+
+			}
+			return faces;
+
+		}
+
+		// find same point
+		var ar = [];
+		var pos = g.attributes.position.array;
+		i = numVertices;
+		while ( i -- ) {
+
+			n = i * 3;
+			ar[ i ] = [];
+			j = totalVertices;
+			while ( j -- ) {
+
+				n2 = j * 3;
+				if ( pos[ n2 ] == g.realVertices[ n ] && pos[ n2 + 1 ] == g.realVertices[ n + 1 ] && pos[ n2 + 2 ] == g.realVertices[ n + 2 ] ) ar[ i ].push( j );
+
+			}
+
+		}
+
+		// generate same point index
+		var pPoint = new ( numVertices > 65535 ? Uint32Array : Uint16Array )( numVertices );
+		var lPoint = new ( totalVertices > 65535 ? Uint32Array : Uint16Array )( totalVertices );
+
+		p = 0;
+		for ( i = 0; i < numVertices; i ++ ) {
+
+			n = ar[ i ].length;
+			pPoint[ i ] = p;
+			j = n;
+			while ( j -- ) {
+
+				lPoint[ p + j ] = ar[ i ][ j ];
+
+			}
+			p += n;
+
+		}
+
+		g.numFaces = numFaces;
+		g.numVertices = numVertices;
+		g.maxi = totalVertices;
+		g.pPoint = pPoint;
+		g.lPoint = lPoint;
 
 	}
 
@@ -1330,32 +1355,32 @@
 
 	function Capsule( Radius, Height, SRadius, H ) {
 
-	    THREE.BufferGeometry.call( this );
+		THREE.BufferGeometry.call( this );
 
-	    this.type = 'CapsuleBufferGeometry';
+		this.type = 'CapsuleBufferGeometry';
 
-	    var radius = Radius || 1;
-	    var height = Height || 1;
+		var radius = Radius || 1;
+		var height = Height || 1;
 
-	    var sRadius = SRadius || 12;
-	    var sHeight = Math.floor(sRadius*0.5);// SHeight || 6;
-	    var h = H || 1;
-	    var o0 = Math.PI * 2;
-	    var o1 = Math.PI * 0.5;
-	    var g = new THREE.Geometry();
-	    var m0 = new THREE.CylinderGeometry(radius, radius, height, sRadius, h, true);
-	    var m1 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, 0, o1);
-	    var m2 = new THREE.SphereGeometry(radius, sRadius, sHeight, 0, o0, o1, o1);
-	    var mtx0 = new THREE.Matrix4().makeTranslation(0,0,0);
-	    if(SRadius===6) mtx0.makeRotationY(30*0.0174532925199432957);
-	    var mtx1 = new THREE.Matrix4().makeTranslation(0, height*0.5,0);
-	    var mtx2 = new THREE.Matrix4().makeTranslation(0, -height*0.5,0);
-	    g.merge( m0, mtx0);
-	    g.merge( m1, mtx1);
-	    g.merge( m2, mtx2);
-	    g.mergeVertices();
+		var sRadius = SRadius || 12;
+		var sHeight = Math.floor( sRadius * 0.5 );// SHeight || 6;
+		var h = H || 1;
+		var o0 = Math.PI * 2;
+		var o1 = Math.PI * 0.5;
+		var g = new THREE.Geometry();
+		var m0 = new THREE.CylinderGeometry( radius, radius, height, sRadius, h, true );
+		var m1 = new THREE.SphereGeometry( radius, sRadius, sHeight, 0, o0, 0, o1 );
+		var m2 = new THREE.SphereGeometry( radius, sRadius, sHeight, 0, o0, o1, o1 );
+		var mtx0 = new THREE.Matrix4().makeTranslation( 0, 0, 0 );
+		if ( SRadius === 6 ) mtx0.makeRotationY( 30 * 0.0174532925199432957 );
+		var mtx1 = new THREE.Matrix4().makeTranslation( 0, height * 0.5, 0 );
+		var mtx2 = new THREE.Matrix4().makeTranslation( 0, - height * 0.5, 0 );
+		g.merge( m0, mtx0 );
+		g.merge( m1, mtx1 );
+		g.merge( m2, mtx2 );
+		g.mergeVertices();
 
-	    this.fromGeometry( g );
+		this.fromGeometry( g );
 
 	}
 
@@ -1367,10 +1392,10 @@
 
 	function ConvexGeometry( points ) {
 
-	    THREE.Geometry.call( this );
+		THREE.Geometry.call( this );
 
-	    this.fromBufferGeometry( new ConvexBufferGeometry( points ) );
-	    this.mergeVertices();
+		this.fromBufferGeometry( new ConvexBufferGeometry( points ) );
+		this.mergeVertices();
 
 	}
 
@@ -1383,45 +1408,45 @@
 
 	function ConvexBufferGeometry( points ) {
 
-	    THREE.BufferGeometry.call( this );
+		THREE.BufferGeometry.call( this );
 
-	    // buffers
+		// buffers
 
-	    var vertices = [];
-	    var normals = [];
+		var vertices = [];
+		var normals = [];
 
-	    // execute QuickHull
+		// execute QuickHull
 
-	    var quickHull = new QuickHull().setFromPoints( points );
+		var quickHull = new QuickHull().setFromPoints( points );
 
-	    // generate vertices and normals
+		// generate vertices and normals
 
-	    var faces = quickHull.faces;
+		var faces = quickHull.faces;
 
-	    for ( var i = 0; i < faces.length; i ++ ) {
+		for ( var i = 0; i < faces.length; i ++ ) {
 
-	        var face = faces[ i ];
-	        var edge = face.edge;
+			var face = faces[ i ];
+			var edge = face.edge;
 
-	        // we move along a doubly-connected edge list to access all face points (see HalfEdge docs)
+			// we move along a doubly-connected edge list to access all face points (see HalfEdge docs)
 
-	        do {
+			do {
 
-	            var point = edge.head().point;
+				var point = edge.head().point;
 
-	            vertices.push( point.x, point.y, point.z );
-	            normals.push( face.normal.x, face.normal.y, face.normal.z );
+				vertices.push( point.x, point.y, point.z );
+				normals.push( face.normal.x, face.normal.y, face.normal.z );
 
-	            edge = edge.next;
+				edge = edge.next;
 
-	        } while ( edge !== face.edge );
+			} while ( edge !== face.edge );
 
-	    }
+		}
 
-	    // build geometry
+		// build geometry
 
-	    this.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-	    this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+		this.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+		this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
 
 	}
 
@@ -1440,10 +1465,10 @@
 		ArMax: 0,
 		key: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
 
-		post:null,// send to worker
+		post: null, // send to worker
 		extraGeo: [], // array of extra geometry to delete
 
-		container: null,// THREE scene or group
+		container: null, // THREE scene or group
 		tmpMat: [], // tmp materials
 		mat: {}, // materials object
 		geo: {}, // geometrys object
@@ -1459,9 +1484,9 @@
 
 	function vectorad( r ) {
 
-	    var i = r.length;
-	    while(i--) r[i] *= root.torad;
-	    return r;
+		var i = r.length;
+		while ( i -- ) r[ i ] *= root.torad;
+		return r;
 
 	}
 
@@ -1491,18 +1516,20 @@
 
 				//if( AR[n] + AR[n+1] + AR[n+2] + AR[n+3] !== 0 || b.isKinemmatic ) {
 
-					var s = AR[n];// speed km/h
+				var s = AR[ n ];// speed km/h
 			        if ( s > 0 ) {
 
 			            if ( b.material.name == 'sleep' ) b.material = root.mat.move;
-			            if( s > 50 && b.material.name == 'move' ) b.material = root.mat.speed;
-			            else if( s < 50 && b.material.name == 'speed') b.material = root.mat.move;
-			      
+			            if ( s > 50 && b.material.name == 'move' ) b.material = root.mat.speed;
+			            else if ( s < 50 && b.material.name == 'speed' ) b.material = root.mat.move;
+
 			        } else {
+
 			            if ( b.material.name == 'move' || b.material.name == 'speed' ) b.material = root.mat.sleep;
-			        }
-			        
-					b.position.fromArray( AR, n + 1 );
+
+				}
+
+				b.position.fromArray( AR, n + 1 );
 		            b.quaternion.fromArray( AR, n + 4 );
 		        //}
 
@@ -1530,7 +1557,7 @@
 
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
-			var solid = b.isSolid ? true : false;
+			var solid = b.type === 'solid' ? true : false;
 			var n = solid ? this.solids.indexOf( b ) : this.bodys.indexOf( b );
 
 			if ( n !== - 1 ) {
@@ -1551,15 +1578,7 @@
 
 		},
 
-		add: function ( o, extra ) {
-
-			o.name = o.name !== undefined ? o.name : 'body' + this.ID ++;
-			// delete old if same name
-			this.remove( o.name );
-
-			if( o.breakable ){
-	            if( o.type==='hardbox' || o.type==='box' || o.type==='sphere' || o.type==='cylinder' || o.type==='cone' ) o.type = 'real'+o.type;
-	        }
+		add: function ( o ) {
 
 			if ( o.density !== undefined ) o.mass = o.density;
 			if ( o.bounce !== undefined ) o.restitution = o.bounce;
@@ -1567,93 +1586,132 @@
 			o.mass = o.mass === undefined ? 0 : o.mass;
 			o.kinematic = o.kinematic || false;
 
+			var autoName = 'body';
+			if ( o.mass === 0 && ! o.kinematic ) autoName = 'static';
+
+			o.name = o.name !== undefined ? o.name : autoName + this.ID ++;
+
+			// delete old if same name
+			this.remove( o.name );
+
+			if ( o.breakable ) {
+
+				if ( o.type === 'hardbox' || o.type === 'box' || o.type === 'sphere' || o.type === 'cylinder' || o.type === 'cone' ) o.type = 'real' + o.type;
+
+			}
+
 			o.type = o.type === undefined ? 'box' : o.type;
 			o.size = o.size === undefined ? [ 1, 1, 1 ] : o.size;
 			o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
 			//o.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
 
-		
-
-
 		    var customGeo = false;
-		   
-		    // size
-		    o.size = o.size == undefined ? [1,1,1] : o.size;
-		    if( o.size.length === 1 ){ o.size[1] = o.size[0]; }
-		    if( o.size.length === 2 ){ o.size[2] = o.size[0]; }
 
-		    if( o.geoSize ){
-		        if(o.geoSize.length === 1){ o.geoSize[1] = o.geoSize[0]; }
-		        if(o.geoSize.length === 2){ o.geoSize[2] = o.geoSize[0]; }
-		    }
+		    // size
+		    o.size = o.size == undefined ? [ 1, 1, 1 ] : o.size;
+		    if ( o.size.length === 1 ) {
+
+				o.size[ 1 ] = o.size[ 0 ];
+
+			}
+		    if ( o.size.length === 2 ) {
+
+				o.size[ 2 ] = o.size[ 0 ];
+
+			}
+
+		    if ( o.geoSize ) {
+
+		        if ( o.geoSize.length === 1 ) {
+
+					o.geoSize[ 1 ] = o.geoSize[ 0 ];
+
+				}
+		        if ( o.geoSize.length === 2 ) {
+
+					o.geoSize[ 2 ] = o.geoSize[ 0 ];
+
+				}
+
+			}
 
 		    // rotation is in degree
-		    o.rot = o.rot === undefined ? [0,0,0] : vectorad( o.rot );
+		    o.rot = o.rot === undefined ? [ 0, 0, 0 ] : vectorad( o.rot );
 		    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
 
-		    if( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotA ) ) ).toArray();
-		    if( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotB ) ) ).toArray();
+		    if ( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotA ) ) ).toArray();
+		    if ( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotB ) ) ).toArray();
 
-		    if( o.angUpper ) o.angUpper = vectorad( o.angUpper );
-		    if( o.angLower ) o.angLower = vectorad( o.angLower );
+		    if ( o.angUpper ) o.angUpper = vectorad( o.angUpper );
+		    if ( o.angLower ) o.angLower = vectorad( o.angLower );
 
 		    var mesh = null;
 
 
-		    if(o.type === 'plane'){
+		    if ( o.type === 'plane' ) {
+
 		        //this.grid.position.set( o.pos[0], o.pos[1], o.pos[2] )
-		        root.post( 'add', o ); 
+		        root.post( 'add', o );
 		        return;
-		    }
-		    
+
+			}
+
 		    // material
 
 		    var material;
-		    if( o.material !== undefined ){ 
+		    if ( o.material !== undefined ) {
 
-		    	if( o.material.constructor === String ) material = root.mat[o.material];
+		    	if ( o.material.constructor === String ) material = root.mat[ o.material ];
 		    	else material = o.material;
-		    
-		    } else { 
 
-		    	if( o.mass === 0 && ! o.kinematic ) material = root.mat.static;
+		    } else {
+
+		    	if ( o.mass === 0 && ! o.kinematic ) material = root.mat.static;
 		    	else material = root.mat.move;
-		    	if( o.kinematic ) material = root.mat.kinematic;
+		    	if ( o.kinematic ) material = root.mat.kinematic;
 
 		    }
 
 		    // geometry
 
-		    if( o.type === 'compound') {
+		    if ( o.type === 'compound' ) {
 
 		    	var m, g;
-			    for( var i = 0; i < o.shapes.length; i++ ){
+			    for ( var i = 0; i < o.shapes.length; i ++ ) {
 
-		    		g = o.shapes[i];
+		    		g = o.shapes[ i ];
 		    		g.size = g.size === undefined ? [ 1, 1, 1 ] : g.size;
-		    		if( g.size.length === 1 ){ g.size[1] = g.size[0]; }
-		            if( g.size.length === 2 ){ g.size[2] = g.size[0]; }
+		    		if ( g.size.length === 1 ) {
+
+						g.size[ 1 ] = g.size[ 0 ];
+
+					}
+		            if ( g.size.length === 2 ) {
+
+						g.size[ 2 ] = g.size[ 0 ];
+
+					}
 		            g.pos = g.pos === undefined ? [ 0, 0, 0 ] : g.pos;
-		    		g.rot = g.rot === undefined ? [0,0,0] : vectorad( g.rot );
-	                g.quat = g.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( g.rot ) ).toArray() : g.quat;
+		    		g.rot = g.rot === undefined ? [ 0, 0, 0 ] : vectorad( g.rot );
+					g.quat = g.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( g.rot ) ).toArray() : g.quat;
 
 		    	}
 
 		    	mesh = o.geometry ? new THREE.Mesh( o.geometry, material ) : new THREE.Group();
 
-		    	if( o.geometry )  root.extraGeo.push( o.geometry );
-		    	 
-		    	if( !o.geometry || o.debug ){
+		    	if ( o.geometry ) root.extraGeo.push( o.geometry );
+
+		    	if ( ! o.geometry || o.debug ) {
 
 		    		//mesh = new THREE.Group();
 		    		mesh.material = material;// TODO fix
 			    	var m, g;
-			    	for( var i = 0; i < o.shapes.length; i++ ){
+			    	for ( var i = 0; i < o.shapes.length; i ++ ) {
 
-			    		g = o.shapes[i];
-			    		if( g.type === 'box' ) g.type = 'hardbox';
-			    		if( g.type === 'cylinder' ) g.type = 'hardcylinder';
-			    		m = new THREE.Mesh( g.type === 'capsule' ? new Capsule( o.size[0] , o.size[1]*0.5 ) : root.geo[g.type], o.debug ? root.mat.debug : material );
+			    		g = o.shapes[ i ];
+			    		if ( g.type === 'box' ) g.type = 'hardbox';
+			    		if ( g.type === 'cylinder' ) g.type = 'hardcylinder';
+			    		m = new THREE.Mesh( g.type === 'capsule' ? new Capsule( o.size[ 0 ], o.size[ 1 ] * 0.5 ) : root.geo[ g.type ], o.debug ? root.mat.debug : material );
 			    		m.scale.fromArray( g.size );
 			    		m.position.fromArray( g.pos );
 		                m.quaternion.fromArray( g.quat );
@@ -1661,63 +1719,69 @@
 			    		mesh.add( m );
 
 			    	}
-		    	}
 
-		    } else if ( o.type === 'mesh' || o.type === 'convex' ){
+				}
 
-		        if( o.shape ) {
+		    } else if ( o.type === 'mesh' || o.type === 'convex' ) {
+
+		        if ( o.shape ) {
+
 		            o.v = geometryInfo( o.shape, o.type );
 		            root.extraGeo.push( o.shape );
-		        }
 
-		        if( o.geometry ){
+				}
+
+		        if ( o.geometry ) {
 
 		            mesh = new THREE.Mesh( o.geometry, material );
 		            root.extraGeo.push( o.geometry );
-		            
+
 		        } else {
+
 		            mesh = new THREE.Mesh( o.shape, material );
 		            //extraGeo.push(mesh.geometry);
-		        }
+
+				}
 
 		    } else {
 
-		    	if( o.type === 'box' && o.mass === 0 && ! o.kinematic ) o.type = 'hardbox';
-		    	if( o.type === 'capsule' ) o.geometry = new Capsule( o.size[0] , o.size[1]*0.5 );
-		    	if( o.type === 'realbox' ||  o.type === 'realhardbox') o.geometry = new THREE.BoxBufferGeometry( o.size[0], o.size[1], o.size[2] );
-		    	if( o.type === 'realsphere' ) o.geometry = new THREE.SphereBufferGeometry( o.size[0], 16, 12 );
-		    	if( o.type === 'realcylinder' ) o.geometry = new THREE.CylinderBufferGeometry( o.size[0], o.size[0], o.size[1]*0.5,12,1 );
-		    	if( o.type === 'realcone' ) o.geometry = new THREE.CylinderBufferGeometry( 0, o.size[0]*0.5, o.size[1]*0.55,12,1 );
-		    	
+		    	if ( o.type === 'box' && o.mass === 0 && ! o.kinematic ) o.type = 'hardbox';
+		    	if ( o.type === 'capsule' ) o.geometry = new Capsule( o.size[ 0 ], o.size[ 1 ] * 0.5 );
+		    	if ( o.type === 'realbox' || o.type === 'realhardbox' ) o.geometry = new THREE.BoxBufferGeometry( o.size[ 0 ], o.size[ 1 ], o.size[ 2 ] );
+		    	if ( o.type === 'realsphere' ) o.geometry = new THREE.SphereBufferGeometry( o.size[ 0 ], 16, 12 );
+		    	if ( o.type === 'realcylinder' ) o.geometry = new THREE.CylinderBufferGeometry( o.size[ 0 ], o.size[ 0 ], o.size[ 1 ] * 0.5, 12, 1 );
+		    	if ( o.type === 'realcone' ) o.geometry = new THREE.CylinderBufferGeometry( 0, o.size[ 0 ] * 0.5, o.size[ 1 ] * 0.55, 12, 1 );
 
-		        if( o.geometry ){
 
-		            if( o.geoRot || o.geoScale ) o.geometry = o.geometry.clone();
+		        if ( o.geometry ) {
+
+		            if ( o.geoRot || o.geoScale ) o.geometry = o.geometry.clone();
 		            // rotation only geometry
-		            if( o.geoRot ) o.geometry.applyMatrix(new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( vectorad(o.geoRot))));
+		            if ( o.geoRot ) o.geometry.applyMatrix( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( vectorad( o.geoRot ) ) ) );
 		            // scale only geometry
-		            if( o.geoScale ) o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[0], o.geoScale[1], o.geoScale[2] ) );
-		            
+		            if ( o.geoScale ) o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[ 0 ], o.geoScale[ 1 ], o.geoScale[ 2 ] ) );
+
 		        }
 
-		        mesh = new THREE.Mesh( o.geometry || root.geo[o.type], material );
+		        mesh = new THREE.Mesh( o.geometry || root.geo[ o.type ], material );
 
-		        if( o.geometry ){
+		        if ( o.geometry ) {
 
 		            root.extraGeo.push( o.geometry );
-		            if( o.geoSize ) mesh.scale.fromArray( o.geoSize );// ??
+		            if ( o.geoSize ) mesh.scale.fromArray( o.geoSize );// ??
 		            //if( !o.geoSize && o.size && o.type !== 'capsule' ) mesh.scale.fromArray( o.size );
 		            customGeo = true;
-		        }
+
+				}
 
 		    }
 
-		    if(o.type ==='highsphere') o.type = 'sphere';
+		    if ( o.type === 'highsphere' ) o.type = 'sphere';
 
 
-		    if( mesh ){
+		    if ( mesh ) {
 
-		        if( !customGeo ) mesh.scale.fromArray( o.size );
+		        if ( ! customGeo ) mesh.scale.fromArray( o.size );
 
 		        // out of view on start
 		        //mesh.position.set(0,-1000000,0);
@@ -1730,22 +1794,23 @@
 		        mesh.updateMatrix();
 
 		        mesh.name = o.name;
+		        //mesh.type = 'rigidbody';
 
-		        if( o.parent !== undefined ) o.parent.add( mesh );
+		        if ( o.parent !== undefined ) o.parent.add( mesh );
 		        else root.container.add( mesh );
 
 		    }
 
-		    if( o.shape ) delete( o.shape );
-		    if( o.geometry ) delete( o.geometry );
-		    if( o.material ) delete( o.material );
-		    
-		    if( o.noPhy === undefined ){
+		    if ( o.shape ) delete ( o.shape );
+		    if ( o.geometry ) delete ( o.geometry );
+		    if ( o.material ) delete ( o.material );
 
-		        // push 
-		        if( mesh ){
+		    if ( o.noPhy === undefined ) {
 
-		            if( o.mass === 0 && ! o.kinematic ) this.solids.push( mesh );// static
+		        // push
+		        if ( mesh ) {
+
+		            if ( o.mass === 0 && ! o.kinematic ) this.solids.push( mesh );// static
 		            else this.bodys.push( mesh );// dynamique
 
 		        }
@@ -1755,15 +1820,19 @@
 
 		    }
 
-		    if( mesh ){ 
-		    	if( o.mass === 0 && ! o.kinematic ) mesh.isSolid = true;
-		    	if( o.kinematic ) mesh.isKinemmatic = true;
-		    	else mesh.isBody = true;
+		    if ( mesh ) {
+
+		    	mesh.type = o.mass === 0 && ! o.kinematic ? 'solid' : 'body';
+
+		    	//if ( o.mass === 0 && ! o.kinematic ) mesh.isSolid = true;
+		    	//if ( o.kinematic ) mesh.isKinemmatic = true;
+		    	//else mesh.isBody = true;
 		    	//mesh.userData.mass = o.mass;
 		    	mesh.userData.mass = o.mass;
 		        map.set( o.name, mesh );
 		        return mesh;
-		    }
+
+			}
 
 
 		}
@@ -1785,7 +1854,7 @@
 
 			var softPoints = N;
 
-			this.softs.forEach( function ( b, id ) {
+			this.softs.forEach( function ( b ) {
 
 				var n, c, cc, p, j, k, u;
 		        var g = b.geometry;
@@ -1795,24 +1864,26 @@
 		        var isWithNormal = g.attributes.normal ? true : false;
 
 
-		        if( t === 2 ){ // rope
+		        if ( t === 2 ) { // rope
 
 		            j = g.positions.length;
-		            while( j-- ){
+		            while ( j -- ) {
+
 		                n = softPoints + ( j * 3 );
-		                g.positions[j].set( AR[n], AR[n+1], AR[n+2] );
-		            }
+		                g.positions[ j ].set( AR[ n ], AR[ n + 1 ], AR[ n + 2 ] );
+
+					}
 
 		            g.updatePath();
 
 		        } else {
 
-		            if( !g.attributes.position ) return;
+		            if ( ! g.attributes.position ) return;
 
 		            p = g.attributes.position.array;
-		            if( isWithColor ) c = g.attributes.color.array;
+		            if ( isWithColor ) c = g.attributes.color.array;
 
-		            if( t === 5 || t === 4 ){ // softTriMesh // softConvex
+		            if ( t === 5 || t === 4 ) { // softTriMesh // softConvex
 
 		                var max = g.numVertices;
 		                var maxi = g.maxi;
@@ -1820,87 +1891,101 @@
 		                var lPoint = g.lPoint;
 
 		                j = max;
-		                while(j--){
-		                    n = (j*3) + softPoints;
-		                    if( j == max-1 ) k = maxi - pPoint[j];
-		                    else k = pPoint[j+1] - pPoint[j];
-		                    var d = pPoint[j];
-		                    while(k--){
-		                        u = lPoint[d+k]*3;
-		                        p[u] = AR[n];
-		                        p[u+1] = AR[n+1]; 
-		                        p[u+2] = AR[n+2];
-		                    }
-		                }
+		                while ( j -- ) {
+
+		                    n = ( j * 3 ) + softPoints;
+		                    if ( j == max - 1 ) k = maxi - pPoint[ j ];
+		                    else k = pPoint[ j + 1 ] - pPoint[ j ];
+		                    var d = pPoint[ j ];
+		                    while ( k -- ) {
+
+		                        u = lPoint[ d + k ] * 3;
+		                        p[ u ] = AR[ n ];
+		                        p[ u + 1 ] = AR[ n + 1 ];
+		                        p[ u + 2 ] = AR[ n + 2 ];
+
+							}
+
+						}
 
 		            } else { // cloth // ellipsoid
 
-		                if( g.attributes.order ) order = g.attributes.order.array;
+		                if ( g.attributes.order ) order = g.attributes.order.array;
 		                j = p.length;
 
 		                n = 2;
 
-		                if( order !== null ) {
+		                if ( order !== null ) {
 
 		                    j = order.length;
-		                    while(j--){
-		                        k = order[j] * 3;
-		                        n = j*3 + softPoints;
-		                        p[k] = AR[n];
-		                        p[k+1] = AR[n+1];
-		                        p[k+2] = AR[n+2];
+		                    while ( j -- ) {
 
-		                        cc = Math.abs(AR[n+1]/10);
-		                        c[k] = cc;
-		                        c[k+1] = cc;
-		                        c[k+2] = cc;
-		                    }
+		                        k = order[ j ] * 3;
+		                        n = j * 3 + softPoints;
+		                        p[ k ] = AR[ n ];
+		                        p[ k + 1 ] = AR[ n + 1 ];
+		                        p[ k + 2 ] = AR[ n + 2 ];
+
+		                        cc = Math.abs( AR[ n + 1 ] / 10 );
+		                        c[ k ] = cc;
+		                        c[ k + 1 ] = cc;
+		                        c[ k + 2 ] = cc;
+
+							}
 
 		                } else {
-		                     while(j--){
-		                         
-		                        p[j] = AR[ j + softPoints ];
-		                        if(n==1){ 
-		                            cc = Math.abs(p[j]/10);
-		                            c[j-1] = cc;
-		                            c[j] = cc;
-		                            c[j+1] = cc;
-		                        }
-		                        n--;
+
+		                     while ( j -- ) {
+
+		                        p[ j ] = AR[ j + softPoints ];
+		                        if ( n == 1 ) {
+
+		                            cc = Math.abs( p[ j ] / 10 );
+		                            c[ j - 1 ] = cc;
+		                            c[ j ] = cc;
+		                            c[ j + 1 ] = cc;
+
+								}
+		                        n --;
 		                        n = n < 0 ? 2 : n;
-		                    }
+
+							}
 
 		                }
 
 		            }
 
-		            if( t !== 2 ) g.computeVertexNormals();
+		            if ( t !== 2 ) g.computeVertexNormals();
 
-		            if( isWithNormal ){
+		            if ( isWithNormal ) {
 
 		                var norm = g.attributes.normal.array;
 
 		                j = max;
-		                while(j--){
-		                    if( j == max-1 ) k = maxi - pPoint[j];
-		                    else k = pPoint[j+1] - pPoint[j];
-		                    var d = pPoint[j];
-		                    var ref = lPoint[d]*3;
-		                    while(k--){
-		                        u = lPoint[d+k]*3;
-		                        norm[u] = norm[ref];
-		                        norm[u+1] = norm[ref+1]; 
-		                        norm[u+2] = norm[ref+2];
-		                    }
-		                }
+		                while ( j -- ) {
+
+		                    if ( j == max - 1 ) k = maxi - pPoint[ j ];
+		                    else k = pPoint[ j + 1 ] - pPoint[ j ];
+		                    var d = pPoint[ j ];
+		                    var ref = lPoint[ d ] * 3;
+		                    while ( k -- ) {
+
+		                        u = lPoint[ d + k ] * 3;
+		                        norm[ u ] = norm[ ref ];
+		                        norm[ u + 1 ] = norm[ ref + 1 ];
+		                        norm[ u + 2 ] = norm[ ref + 2 ];
+
+							}
+
+						}
 
 		                g.attributes.normal.needsUpdate = true;
 
 		            }
 
-		            if( isWithColor ) g.attributes.color.needsUpdate = true;
+		            if ( isWithColor ) g.attributes.color.needsUpdate = true;
 		            g.attributes.position.needsUpdate = true;
-		            
+
 		            g.computeBoundingSphere();
 
 		        }
@@ -1909,7 +1994,7 @@
 
 			} );
 
-			
+
 
 		},
 
@@ -1942,7 +2027,7 @@
 
 		},
 
-		add: function ( o, extra ) {
+		add: function ( o ) {
 
 
 			var name = o.name !== undefined ? o.name : o.type + this.ID ++;
@@ -1950,60 +2035,63 @@
 			// delete old if same name
 			this.remove( name );
 
-	         // material
+			// material
 
-	        var material;
-	        if( o.material !== undefined ){ 
+			var material;
+			if ( o.material !== undefined ) {
 
-	            if( o.material.constructor === String ) material = root.mat[o.material];
-	            else material = o.material;
-	        
-	        } else { 
+				if ( o.material.constructor === String ) material = root.mat[ o.material ];
+				else material = o.material;
 
-	            material = root.mat.soft;
+			} else {
 
-	        }
+				material = root.mat.soft;
+
+			}
 
 			var tmp, mesh;
 
-			switch( o.type ) {
+			switch ( o.type ) {
+
 				case 'softMesh': case 'softTriMesh': tmp = softMesh( o, material ); break;
 				case 'softConvex': tmp = softMesh( o, material ); break;
 				case 'softCloth': tmp = softCloth( o, material ); break;
 				case 'softRope': tmp = softRope( o, material ); break;
 
-				case 'softEllips':// tmp = ellipsoid( o ); 
-	                root.post( 'add', o );
-	                return;
-	            break;
+				case 'softEllips':// tmp = ellipsoid( o );
+					root.post( 'add', o );
+					return;
+					break;
+
 			}
 
 			mesh = tmp.mesh;
 			o = tmp.o;
 
 			mesh.name = name;
-	        mesh.isSoft = true;
+			//mesh.isSoft = true;
+			mesh.type = 'soft';
 
 
 		    root.container.add( mesh );
-	        this.softs.push( mesh );
+			this.softs.push( mesh );
 			map.set( name, mesh );
 
 			root.post( 'add', o );
 
 		},
 
-	    createEllipsoid: function ( o ) {
+		createEllipsoid: function ( o ) {
 
-	        var mesh = ellipsoid( o );
-	        //o = tmp.o;
+			var mesh = ellipsoid( o );
+			//o = tmp.o;
 
-	        mesh.name = o.name;
-	        root.container.add( mesh );
-	        this.softs.push( mesh );
-	        map.set( o.name, mesh );
+			mesh.name = o.name;
+			root.container.add( mesh );
+			this.softs.push( mesh );
+			map.set( o.name, mesh );
 
-	    },
+		},
 
 		/////
 
@@ -2019,44 +2107,45 @@
 
 	function softMesh( o, material ) {
 
-	    var g = o.shape.clone();
-	    var pos = o.pos || [0,0,0];
-	    var size = o.size || [1,1,1];
-	    var rot = o.rot || [0,0,0];
+		var g = o.shape.clone();
+		var pos = o.pos || [ 0, 0, 0 ];
+		var size = o.size || [ 1, 1, 1 ];
+		var rot = o.rot || [ 0, 0, 0 ];
 
-	    g.translate( pos[0], pos[1], pos[2] );
-	    g.scale( size[0], size[1], size[2] );
+		g.translate( pos[ 0 ], pos[ 1 ], pos[ 2 ] );
+		g.scale( size[ 0 ], size[ 1 ], size[ 2 ] );
 
-	    //g.rotateX( rot[0] *= Math.degtorad );
-	    //g.rotateY( rot[1] *= Math.degtorad );
-	    //g.rotateZ( rot[2] *= Math.degtorad );
-	    g.applyMatrix( new THREE.Matrix4().makeRotationY(rot[1] *= Math.torad ));
+		//g.rotateX( rot[0] *= Math.degtorad );
+		//g.rotateY( rot[1] *= Math.degtorad );
+		//g.rotateZ( rot[2] *= Math.degtorad );
+		g.applyMatrix( new THREE.Matrix4().makeRotationY( rot[ 1 ] *= Math.torad ) );
 
-	    geometryInfo( g );
+		geometryInfo( g );
 
-	    root.extraGeo.push( g );
+		root.extraGeo.push( g );
 
-	    o.v = g.realVertices;
-	    o.i = g.realIndices;
-	    o.ntri = g.numFaces;
+		o.v = g.realVertices;
+		o.i = g.realIndices;
+		o.ntri = g.numFaces;
 
-	    
 
-	    //var material = o.material === undefined ? root.mat.soft : root.mat[o.material];
-	    var mesh = new THREE.Mesh( g, material );
 
-	    mesh.castShadow = true;
-	    mesh.receiveShadow = true;
-	    
-	    mesh.softType = 5;
-	    mesh.points = o.v.length / 3;
+		//var material = o.material === undefined ? root.mat.soft : root.mat[o.material];
+		var mesh = new THREE.Mesh( g, material );
 
-	    if( o.shape ) delete(o.shape);
-	    if( o.material ) delete(o.material);
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
 
-	    return { mesh: mesh, o: o };
-	    
+		mesh.softType = 5;
+		mesh.points = o.v.length / 3;
+
+		if ( o.shape ) delete ( o.shape );
+		if ( o.material ) delete ( o.material );
+
+		return { mesh: mesh, o: o };
+
 	}
+
 	//--------------------------------------
 	//   SOFT CONVEX
 	//--------------------------------------
@@ -2080,10 +2169,10 @@
 
 	    //var material = o.material === undefined ? root.mat.soft : root.mat[o.material];
 	    var mesh = new THREE.Mesh( g, material );
-	    
+
 	    mesh.castShadow = true;
 	    mesh.receiveShadow = true;
-	    
+
 	    mesh.softType = 4;
 	    mesh.points = o.v.length / 3;
 
@@ -2103,58 +2192,59 @@
 	};*/
 
 
-	function softCloth ( o, material ) {
+	function softCloth( o, material ) {
 
-	    var div = o.div || [16,16];
-	    var size = o.size || [100,0,100];
-	    var pos = o.pos || [0,0,0];
+		var div = o.div || [ 16, 16 ];
+		var size = o.size || [ 100, 0, 100 ];
+		var pos = o.pos || [ 0, 0, 0 ];
 
-	    var max = div[0] * div[1];
+		var max = div[ 0 ] * div[ 1 ];
 
-	    var g = new THREE.PlaneBufferGeometry( size[0], size[2], div[0] - 1, div[1] - 1 );
-	    g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max*3 ), 3 ) );
-	    g.rotateX( -Math.PI90 );
-	    //g.translate( -size[0]*0.5, 0, -size[2]*0.5 );
+		var g = new THREE.PlaneBufferGeometry( size[ 0 ], size[ 2 ], div[ 0 ] - 1, div[ 1 ] - 1 );
+		g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
+		g.rotateX( - Math.PI90 );
+		//g.translate( -size[0]*0.5, 0, -size[2]*0.5 );
 
-	    //var numVerts = g.attributes.position.array.length / 3;
+		//var numVerts = g.attributes.position.array.length / 3;
 
-	    var mesh = new THREE.Mesh( g, material );
+		var mesh = new THREE.Mesh( g, material );
 
-	    //mesh.idx = view.setIdx( softs.length, 'softs' );
+		//mesh.idx = view.setIdx( softs.length, 'softs' );
 
-	    //view.setName( o, mesh );
-	    //this.byName[ o.name ] = mesh;
+		//view.setName( o, mesh );
+		//this.byName[ o.name ] = mesh;
 
-	   // mesh.material.needsUpdate = true;
-	    mesh.position.set( pos[0], pos[1], pos[2] );
+		// mesh.material.needsUpdate = true;
+		mesh.position.set( pos[ 0 ], pos[ 1 ], pos[ 2 ] );
 
-	    mesh.castShadow = true;
-	    mesh.receiveShadow = true;//true;
-	    //mesh.frustumCulled = false;
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;//true;
+		//mesh.frustumCulled = false;
 
-	    mesh.softType = 1;
-	    mesh.points = g.attributes.position.array.length / 3;
+		mesh.softType = 1;
+		mesh.points = g.attributes.position.array.length / 3;
 
-	    o.size = size;
-	    o.div = div;
-	    o.pos = pos;
+		o.size = size;
+		o.div = div;
+		o.pos = pos;
 
 
-	    return { mesh: mesh, o: o };
+		return { mesh: mesh, o: o };
 
 	}
+
 	//--------------------------------------
 	//   ROPE
 	//--------------------------------------
 
-	function softRope ( o, material ) {
+	function softRope( o, material ) {
 
-	    //var max = o.numSegment || 10;
-	    //var start = o.start || [0,0,0];
-	    //var end = o.end || [0,10,0];
+		//var max = o.numSegment || 10;
+		//var start = o.start || [0,0,0];
+		//var end = o.end || [0,10,0];
 
-	   // max += 2;
-	    /*var ropeIndices = [];
+		// max += 2;
+		/*var ropeIndices = [];
 
 	    //var n;
 	    //var pos = new Float32Array( max * 3 );
@@ -2164,23 +2254,24 @@
 
 	    }*/
 
-	    if( o.numSeg === undefined ) o.numSeg = o.numSegment;
+		if ( o.numSeg === undefined ) o.numSeg = o.numSegment;
 
-	    var g = new THREE.Tubular( o, o.numSeg || 10, o.radius || 0.2, o.numRad || 6, false );
+		var g = new THREE.Tubular( o, o.numSeg || 10, o.radius || 0.2, o.numRad || 6, false );
 
-	    var mesh = new THREE.Mesh( g, material );
+		var mesh = new THREE.Mesh( g, material );
 
-	    mesh.castShadow = true;
-	    mesh.receiveShadow = true;
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
 
-	    mesh.softType = 2;
-	    mesh.points = g.positions.length;
+		mesh.softType = 2;
+		mesh.points = g.positions.length;
 
-	    return { mesh: mesh, o: o };
+		return { mesh: mesh, o: o };
 
 	}
+
 	//--------------------------------------
-	//   ELLIPSOID 
+	//   ELLIPSOID
 	//--------------------------------------
 	/*
 	function ellipsoid( o ) {
@@ -2192,117 +2283,129 @@
 	*/
 	function ellipsoid( o ) {
 
-	    var max = o.lng;
-	    var points = [];
-	    var ar = o.a;
-	    var i, j, k, v, n;
-	    
-	    // create temp convex geometry and convert to buffergeometry
-	    for( i = 0; i<max; i++ ){
-	        n = i*3;
-	        points.push( new THREE.Vector3(ar[n], ar[n+1], ar[n+2]));
-	    }
+		var max = o.lng;
+		var points = [];
+		var ar = o.a;
+		var i, j, k, v, n;
+
+		// create temp convex geometry and convert to buffergeometry
+		for ( i = 0; i < max; i ++ ) {
+
+			n = i * 3;
+			points.push( new THREE.Vector3( ar[ n ], ar[ n + 1 ], ar[ n + 2 ] ) );
+
+		}
 
 
 
-	    var gt = new ConvexGeometry( points );
-
-	    
-	    var indices = new Uint32Array( gt.faces.length * 3 );
-	    var vertices = new Float32Array( max * 3 );
-	    var order = new Float32Array( max );
-	    //var normals = new Float32Array( max * 3 );
-
-	    
-
-	    
-
-	     // get new order of vertices
-	    v = gt.vertices;
-	    i = max;
-	    //var v = gt.vertices;
-	    //var i = max, j, k;
-	    while(i--){
-	        j = max;
-	        while(j--){
-	            n = j*3;
-	            if(ar[n]==v[i].x && ar[n+1]==v[i].y && ar[n+2]==v[i].z) order[j] = i;
-	        }
-	    }
-
-	   
-	    i = max;
-	    while(i--){
-	        n = i*3;
-	        k = order[i]*3;
-
-	        vertices[k] = ar[n];
-	        vertices[k+1] = ar[n+1];
-	        vertices[k+2] = ar[n+2];
-
-	    }
-
-	    // get indices of faces
-	    i = gt.faces.length;
-	    while(i--){
-	        n = i*3;
-	        var face = gt.faces[i];
-	        indices[n] = face.a;
-	        indices[n+1] = face.b;
-	        indices[n+2] = face.c;
-	    }
+		var gt = new ConvexGeometry( points );
 
 
-	    //gt.computeVertexNormals();
-	    //gt.computeFaceNormals();
+		var indices = new Uint32Array( gt.faces.length * 3 );
+		var vertices = new Float32Array( max * 3 );
+		var order = new Float32Array( max );
+		//var normals = new Float32Array( max * 3 );
 
 
-	    //console.log(gtt.vertices.length)
-	    var g = new THREE.BufferGeometry();//.fromDirectGeometry( gt );
-
-	    g.setIndex( new THREE.BufferAttribute( indices, 1 ) );
-	    g.addAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
-	    g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
-	    g.addAttribute('order', new THREE.BufferAttribute( order, 1 ));
-	    
-	    //g.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
-
-	    if(gt.uvs){
-	        var uvs = new Float32Array( gt.uvs.length * 2 );
-	        g.addAttribute( 'uv', new  THREE.BufferAttribute( uvs, 2 ).copyVector2sArray( gt.uvs ), 2 ) ;
-	    }
-	    
-
-	    g.computeVertexNormals();
-
-	    root.extraGeo.push( g );
 
 
-	    gt.dispose();
+
+		// get new order of vertices
+		v = gt.vertices;
+		i = max;
+		//var v = gt.vertices;
+		//var i = max, j, k;
+		while ( i -- ) {
+
+			j = max;
+			while ( j -- ) {
+
+				n = j * 3;
+				if ( ar[ n ] == v[ i ].x && ar[ n + 1 ] == v[ i ].y && ar[ n + 2 ] == v[ i ].z ) order[ j ] = i;
+
+			}
+
+		}
 
 
-	    //g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
-	    var mesh = new THREE.Mesh( g, root.mat.soft );
+		i = max;
+		while ( i -- ) {
 
-	    //mesh.idx = view.setIdx( softs.length, 'softs' );
+			n = i * 3;
+			k = order[ i ] * 3;
 
-	    //this.byName[ o.name ] = mesh;
+			vertices[ k ] = ar[ n ];
+			vertices[ k + 1 ] = ar[ n + 1 ];
+			vertices[ k + 2 ] = ar[ n + 2 ];
 
-	    //this.setName( o, mesh );
+		}
 
-	    mesh.softType = 3;
-	    mesh.isSoft = true;
-	    mesh.points = g.attributes.position.array.length / 3;
+		// get indices of faces
+		i = gt.faces.length;
+		while ( i -- ) {
 
-	    //console.log( mesh.points )
+			n = i * 3;
+			var face = gt.faces[ i ];
+			indices[ n ] = face.a;
+			indices[ n + 1 ] = face.b;
+			indices[ n + 2 ] = face.c;
 
-	    mesh.castShadow = true;
-	    mesh.receiveShadow = true;
+		}
 
-	    return mesh;
 
-	    //this.scene.add( mesh );
-	    //this.softs.push( mesh );
+		//gt.computeVertexNormals();
+		//gt.computeFaceNormals();
+
+
+		//console.log(gtt.vertices.length)
+		var g = new THREE.BufferGeometry();//.fromDirectGeometry( gt );
+
+		g.setIndex( new THREE.BufferAttribute( indices, 1 ) );
+		g.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+		g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
+		g.addAttribute( 'order', new THREE.BufferAttribute( order, 1 ) );
+
+		//g.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
+
+		if ( gt.uvs ) {
+
+			var uvs = new Float32Array( gt.uvs.length * 2 );
+			g.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ).copyVector2sArray( gt.uvs ), 2 );
+
+		}
+
+
+		g.computeVertexNormals();
+
+		root.extraGeo.push( g );
+
+
+		gt.dispose();
+
+
+		//g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
+		var mesh = new THREE.Mesh( g, root.mat.soft );
+
+		//mesh.idx = view.setIdx( softs.length, 'softs' );
+
+		//this.byName[ o.name ] = mesh;
+
+		//this.setName( o, mesh );
+
+		mesh.softType = 3;
+		//mesh.isSoft = true;
+		mesh.type = 'soft';
+		mesh.points = g.attributes.position.array.length / 3;
+
+		//console.log( mesh.points )
+
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+
+		return mesh;
+
+		//this.scene.add( mesh );
+		//this.softs.push( mesh );
 
 	}
 
@@ -2318,19 +2421,19 @@
 
 	Object.assign( Terrain.prototype, {
 
-		step: function ( AR, N ) {
+		step: function () {
 
-			this.terrains.forEach( function ( t, id ) {
+			this.terrains.forEach( function ( t ) {
 
-				if( t.needsUpdate ){
+				if ( t.needsUpdate ) {
 
-				    t.updateGeometry(); 
-					root.post( 'setTerrain', { name:t.name, heightData:t.heightData });
+				    t.updateGeometry();
+					root.post( 'setTerrain', { name: t.name, heightData: t.heightData } );
 					t.needsUpdate = false;
 
 				}
 
-			});
+			} );
 
 		},
 
@@ -2363,7 +2466,7 @@
 
 		},
 
-		add: function ( o, extra ) {
+		add: function ( o ) {
 
 
 			var name = o.name !== undefined ? o.name : o.type + this.ID ++;
@@ -2371,15 +2474,16 @@
 			// delete old if same name
 			this.remove( name );
 
-			o.sample = o.sample === undefined ? [64,64] : o.sample;
-		    o.pos = o.pos === undefined ? [0,0,0] : o.pos;
+			o.sample = o.sample === undefined ? [ 64, 64 ] : o.sample;
+		    o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
 		    o.complexity = o.complexity === undefined ? 30 : o.complexity;
 		    o.name = name;
 
 
 		    var terrain = new THREE.Terrain( o );
 
-		    terrain.needsUpdate = false; 
+		    terrain.needsUpdate = false;
+		    terrain.type = 'terrain';
 
 		    //terrain.physicsUpdate = function () { root.post( 'setTerrain', { name:this.name, heightData:this.heightData } ) }
 
@@ -2389,7 +2493,7 @@
 
 		    root.container.add( terrain );
 
-	        this.terrains.push( terrain );
+			this.terrains.push( terrain );
 
 			map.set( name, terrain );
 
@@ -2406,8 +2510,8 @@
 
 			//if(!t.needsUpdate) return;
 
-			t.updateGeometry(); 
-	        //t.needsUpdate = false; 
+			t.updateGeometry();
+	        //t.needsUpdate = false;
 
 		},
 
@@ -2417,7 +2521,7 @@
 			var t = map.get( name );
 
 			if( t.isWater ){ t.local.y += 0.25; t.local.z += 0.25; t.update( true ); t.needsUpdate = true; }
-	        else t.easing( true ); 
+	        else t.easing( true );
 
 		},*/
 
@@ -2427,9 +2531,9 @@
 			var t = map.get( name );
 
 			t.local.x += x || 0;
-	        t.local.z += z || 0;
-	        t.update( true );
-	        t.needsUpdate = true;
+			t.local.z += z || 0;
+			t.update( true );
+			t.needsUpdate = true;
 
 
 		},
@@ -2455,8 +2559,8 @@
 
 			this.cars.forEach( function ( b, id ) {
 
-				n = N + (id * 56);
-		        b.userData.speed = AR[n];
+				n = N + ( id * 56 );
+		        b.userData.speed = AR[ n ];
 
 		        b.position.fromArray( AR, n + 1 );
 		        b.quaternion.fromArray( AR, n + 4 );
@@ -2465,70 +2569,77 @@
 		        var j = b.userData.NumWheels, w, k, v;
 		        var w = 8 * ( 4 + 1 );
 		        var decal = 0.2;
-		        var ratio = 1/decal;
+		        var ratio = 1 / decal;
 		        var radius = b.userData.radius;
-		        var steering = AR[n+8];
+		        var steering = AR[ n + 8 ];
 
-		        if( b.userData.steeringWheel ) {
+		        if ( b.userData.steeringWheel ) {
+
 		            b.userData.steeringWheel.rotation.y = - steering * 6;
-		        }
+
+				}
 
 
-		        if( b.userData.isWithBrake ){
+		        if ( b.userData.isWithBrake ) {
 
 		            k = j;
 
-		            while(k--){
-		                if(k===0)  b.userData.b[k].rotation.y = steering;
-		                if(k===1)  b.userData.b[k].rotation.y = Math.Pi - steering;
-		                b.userData.b[k].position.y = radius - AR[n+w+k];
+		            while ( k -- ) {
+
+		                if ( k === 0 ) b.userData.b[ k ].rotation.y = steering;
+		                if ( k === 1 ) b.userData.b[ k ].rotation.y = Math.Pi - steering;
+		                b.userData.b[ k ].position.y = radius - AR[ n + w + k ];
 
 		            }
-		            
+
 		        }
 
-		        if( b.userData.isWithSusp ){
+		        if ( b.userData.isWithSusp ) {
 
 		            k = j;
 
-		            while(k--){
+		            while ( k -- ) {
 
-		                v = ( AR[n+w+k] )*ratio;
+		                v = ( AR[ n + w + k ] ) * ratio;
 
 		                v = v > 1 ? 1 : v;
-		                v = v < -1 ? -1 : v;
+		                v = v < - 1 ? - 1 : v;
 
-		                if(v>0){
+		                if ( v > 0 ) {
 
-		                    b.userData.s[k].setWeight( 'low', v );
-		                    b.userData.s[k].setWeight( 'top', 0 );
+		                    b.userData.s[ k ].setWeight( 'low', v );
+		                    b.userData.s[ k ].setWeight( 'top', 0 );
 
 		                } else {
 
-		                    b.userData.s[k].setWeight( 'low', 0 );
-		                    b.userData.s[k].setWeight( 'top', -v );
+		                    b.userData.s[ k ].setWeight( 'low', 0 );
+		                    b.userData.s[ k ].setWeight( 'top', - v );
 
 		                }
 
 		            }
-		            
+
 		        }
 
 
-		        if(b.userData.helper){
-		            if( j == 4 ){
-		                b.userData.helper.updateSuspension(AR[n+w+0], AR[n+w+1], AR[n+w+2], AR[n+w+3]);
-		            }
-		        }
-		        
-		        while(j--){
+		        if ( b.userData.helper ) {
+
+		            if ( j == 4 ) {
+
+		                b.userData.helper.updateSuspension( AR[ n + w + 0 ], AR[ n + w + 1 ], AR[ n + w + 2 ], AR[ n + w + 3 ] );
+
+					}
+
+				}
+
+		        while ( j -- ) {
 
 		            w = 8 * ( j + 1 );
-		            b.userData.w[j].position.fromArray( AR, n + w + 1 );
-		            b.userData.w[j].quaternion.fromArray( AR, n + w + 4 );
+		            b.userData.w[ j ].position.fromArray( AR, n + w + 1 );
+		            b.userData.w[ j ].quaternion.fromArray( AR, n + w + 4 );
 
 		        }
-				
+
 
 			} );
 
@@ -2544,9 +2655,9 @@
 		destroy: function ( b ) {
 
 			var wheel;
-			for( var i = 0, lng = b.userData.w.length; i < lng; i++){
+			for ( var i = 0, lng = b.userData.w.length; i < lng; i ++ ) {
 
-				wheel = b.userData.w[i];
+				wheel = b.userData.w[ i ];
 				if ( wheel.parent ) wheel.parent.remove( wheel );
 
 			}
@@ -2571,7 +2682,7 @@
 
 		},
 
-		add: function ( o, extra ) {
+		add: function ( o ) {
 
 
 			var name = o.name !== undefined ? o.name : o.type + this.ID ++;
@@ -2582,13 +2693,13 @@
 
 
 
-			var size = o.size || [2,0.5,4];
-		    var pos = o.pos || [0,0,0];
-		    var rot = o.rot || [0,0,0];
+			var size = o.size || [ 2, 0.5, 4 ];
+		    var pos = o.pos || [ 0, 0, 0 ];
+		    var rot = o.rot || [ 0, 0, 0 ];
 
-		    var wPos = o.wPos || [1, 0, 1.6];
+		    var wPos = o.wPos || [ 1, 0, 1.6 ];
 
-		    o.masscenter = o.masscenter == undefined ? [0,0,0] : o.masscenter;
+		    o.masscenter = o.masscenter == undefined ? [ 0, 0, 0 ] : o.masscenter;
 
 		    //var masscenter = o.masscenter || [0,0.25,0];
 
@@ -2596,7 +2707,7 @@
 
 		    // chassis
 		    var mesh;
-		    if( o.mesh ){
+		    if ( o.mesh ) {
 
 		        mesh = new THREE.Group();//o.mesh;
 		        mesh.add( o.mesh );
@@ -2607,28 +2718,31 @@
 		                //mesh.children[k].castShadow = true;
 		                //mesh.children[k].receiveShadow = true;
 		            }*/
-		    } else if( o.geometry ){
+
+			} else if ( o.geometry ) {
 
 		            mesh = new THREE.Mesh( o.geometry, o.material );
 		            root.extraGeo.push( o.geometry );
-		            
+
 		    } else {
 
-		        var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry(size[0], size[1], size[2]) );//geo.box;
-		        g.translate( -o.masscenter[0], -o.masscenter[1], -o.masscenter[2] );
+		        var g = new THREE.BufferGeometry().fromGeometry( new THREE.BoxGeometry( size[ 0 ], size[ 1 ], size[ 2 ] ) );//geo.box;
+		        g.translate( - o.masscenter[ 0 ], - o.masscenter[ 1 ], - o.masscenter[ 2 ] );
 		        root.extraGeo.push( g );
 		        mesh = new THREE.Mesh( g, root.mat.move );
 
-		    } 
-		    
-
-		    if( o.debug && o.shape ){
-		        mesh = new THREE.Mesh( o.shape, root.mat.debug );
 		    }
 
+
+		    if ( o.debug && o.shape ) {
+
+		        mesh = new THREE.Mesh( o.shape, root.mat.debug );
+
+			}
+
 		    //mesh.scale.set( size[0], size[1], size[2] );
-		    mesh.position.set( pos[0], pos[1], pos[2] );
-		    mesh.rotation.set( rot[0], rot[1], rot[2] );
+		    mesh.position.set( pos[ 0 ], pos[ 1 ], pos[ 2 ] );
+		    mesh.rotation.set( rot[ 0 ], rot[ 1 ], rot[ 2 ] );
 
 		    // copy rotation quaternion
 		    o.quat = mesh.quaternion.toArray();
@@ -2650,13 +2764,13 @@
 
 		    mesh.userData.steeringWheel = o.meshSteeringWheel || null;
 
-		    
+
 
 		    // wheels
 
 		    var radius = o.radius || 0.4;
 		    var deep = o.deep || 0.3;
-		    wPos = o.wPos || [1, -0.25, 1.6];
+		    wPos = o.wPos || [ 1, - 0.25, 1.6 ];
 
 		    var w = [];
 		    var s = [];
@@ -2668,92 +2782,111 @@
 
 		    var needScale = o.wheel == undefined ? true : false;
 
-		    var gw = o.wheel || root.geo['wheel'];
+		    var gw = o.wheel || root.geo[ 'wheel' ];
 		    var gwr = gw.clone();
 		    gwr.rotateY( Math.Pi );
 		    root.extraGeo.push( gwr );
 
 		    var wheelmat = root.mat.move;
-		    if( o.wheelMaterial !== undefined ){ 
-	        	if( o.wheelMaterial.constructor === String ) wheelmat = root.mat[o.wheelMaterial];
+		    if ( o.wheelMaterial !== undefined ) {
+
+	        	if ( o.wheelMaterial.constructor === String ) wheelmat = root.mat[ o.wheelMaterial ];
 	        	else wheelmat = o.wheelMaterial;
-	        }
+
+			}
 
 		    var i = o.nw || 4;
 
-		    while(i--){
+		    while ( i -- ) {
 
-		        if(o.meshBrake){
+		        if ( o.meshBrake ) {
 
-		            m = o.meshBrake.clone(); 
+		            m = o.meshBrake.clone();
 		           // this.scene.add( m );
 		            mesh.add( m );
 		            m.position.y = radius;
-		            if(i==1 || i==2){ m.rotation.y = Math.Pi; m.position.x = wPos[0]; m.rotation.x = Math.Pi;}
-		            else { m.position.x = -wPos[0]; }
-		            if(i==0 || i==1) m.position.z = wPos[2];
-		            else m.position.z = -wPos[2];
+		            if ( i == 1 || i == 2 ) {
 
-		            b[i] = m;//.children[0];
+						m.rotation.y = Math.Pi; m.position.x = wPos[ 0 ]; m.rotation.x = Math.Pi;
+
+					} else {
+
+						m.position.x = - wPos[ 0 ];
+
+					}
+		            if ( i == 0 || i == 1 ) m.position.z = wPos[ 2 ];
+		            else m.position.z = - wPos[ 2 ];
+
+		            b[ i ] = m;//.children[0];
 
 		        }
 
-		        if(o.meshSusp){
+		        if ( o.meshSusp ) {
 
-		            m = o.meshSusp.clone(); 
+		            m = o.meshSusp.clone();
 		            mesh.add( m );
 		            m.position.y = radius;
-		            if(i==1 || i==2) m.rotation.y = Math.Pi;
-		            if(i==0 || i==1) m.position.z = wPos[2];
-		            else m.position.z = -wPos[2];
+		            if ( i == 1 || i == 2 ) m.rotation.y = Math.Pi;
+		            if ( i == 0 || i == 1 ) m.position.z = wPos[ 2 ];
+		            else m.position.z = - wPos[ 2 ];
 
-		            s[i] = m.children[0];
+		            s[ i ] = m.children[ 0 ];
 
 		        }
 
-		        if( o.meshWheel ){
+		        if ( o.meshWheel ) {
 
-		            w[i] = o.meshWheel.clone();
+		            w[ i ] = o.meshWheel.clone();
 		            needScale = false;
-		            if(i==1 || i==2){ 
-		                w[i] = new THREE.Group();
+		            if ( i == 1 || i == 2 ) {
+
+		                w[ i ] = new THREE.Group();
 		                var ww = o.meshWheel.clone();
 		                ww.rotation.y = Math.Pi;
-		                w[i].add(ww);
-		            } else {
-		                w[i] = o.meshWheel.clone();
-		                var k = w[i].children.length; 
-		                while( k-- ){
-		                    if(w[i].children[k].name === 'h_pneu') w[i].children[k].rotation.y = Math.Pi;
-		                }
-		            }
+		                w[ i ].add( ww );
+
+					} else {
+
+		                w[ i ] = o.meshWheel.clone();
+		                var k = w[ i ].children.length;
+		                while ( k -- ) {
+
+		                    if ( w[ i ].children[ k ].name === 'h_pneu' ) w[ i ].children[ k ].rotation.y = Math.Pi;
+
+						}
+
+					}
 
 
 		        } else {
-		            if(i==1 || i==2) w[i] = new THREE.Mesh( gw, root.mat.move );
-		            else w[i] = new THREE.Mesh( gwr, root.mat.move );
-		        }
 
-		        
+		            if ( i == 1 || i == 2 ) w[ i ] = new THREE.Mesh( gw, root.mat.move );
+		            else w[ i ] = new THREE.Mesh( gwr, root.mat.move );
 
-		        if( needScale ) w[i].scale.set( deep, radius, radius );
+				}
+
+
+
+		        if ( needScale ) w[ i ].scale.set( deep, radius, radius );
 		        //else w[i].material = this.mat.move;//mat.cars;
 
-		        w[i].material = wheelmat;
-		        w[i].castShadow = true;
-		        w[i].receiveShadow = true;
+		        w[ i ].material = wheelmat;
+		        w[ i ].castShadow = true;
+		        w[ i ].receiveShadow = true;
 
-		        root.container.add( w[i] );
+		        root.container.add( w[ i ] );
 
 		    }
 
-		    if(o.extraWeels){
+		    if ( o.extraWeels ) {
+
 		        var www = o.meshWheel.clone();
-		        www.children[0].visible = false;
-		        www.rotation.z = -Math.Pi * 0.5;
-		        www.position.set( 0,1.25, -1.11 );
+		        www.children[ 0 ].visible = false;
+		        www.rotation.z = - Math.Pi * 0.5;
+		        www.position.set( 0, 1.25, - 1.11 );
 		        mesh.add( www );
-		    }
+
+			}
 
 		    mesh.userData.radius = radius;
 		    mesh.userData.w = w;
@@ -2762,29 +2895,31 @@
 		    mesh.userData.isWithSusp = isWithSusp;
 		    mesh.userData.isWithBrake = isWithBrake;
 
-		    if(o.helper){
+		    if ( o.helper ) {
+
 		        mesh.userData.helper = new THREE.CarHelper( wPos, o.masscenter, deep );
 		        mesh.add( mesh.userData.helper );
-		    }
+
+			}
 
 
 
-		    if( o.mesh ) o.mesh = null;
-		    if( o.wheel ) o.wheel = null;
+		    if ( o.mesh ) o.mesh = null;
+		    if ( o.wheel ) o.wheel = null;
 
 		    if ( o.shapeType == 'mesh' || o.shapeType == 'convex' ) o.v = geometryInfo( o.shape, o.shapeType );
 
-		    if( o.shape ) delete(o.shape);
-		    if( o.geometry ) delete(o.geometry);
-		    if( o.material ) delete(o.material);
-		    if( o.mesh ) delete(o.mesh);
-		    if( o.meshWheel ) delete(o.meshWheel);
-		    if( o.meshSusp ) delete(o.meshSusp);
-		    if( o.meshBrake ) delete(o.meshBrake);
-		    if( o.meshSteeringWheel ) delete(o.meshSteeringWheel);
-		    if( o.wheelMaterial ) delete( o.wheelMaterial );
+		    if ( o.shape ) delete ( o.shape );
+		    if ( o.geometry ) delete ( o.geometry );
+		    if ( o.material ) delete ( o.material );
+		    if ( o.mesh ) delete ( o.mesh );
+		    if ( o.meshWheel ) delete ( o.meshWheel );
+		    if ( o.meshSusp ) delete ( o.meshSusp );
+		    if ( o.meshBrake ) delete ( o.meshBrake );
+		    if ( o.meshSteeringWheel ) delete ( o.meshSteeringWheel );
+		    if ( o.wheelMaterial ) delete ( o.wheelMaterial );
 
-	        this.cars.push( mesh );
+			this.cars.push( mesh );
 
 			map.set( name, mesh );
 
@@ -2811,28 +2946,29 @@
 
 			this.heroes.forEach( function ( b, id ) {
 
-				n = N + (id * 8);
-		        var s = AR[n] * 3.33;
+				n = N + ( id * 8 );
+		        var s = AR[ n ] * 3.33;
 		        b.userData.speed = s * 100;
 		        b.position.fromArray( AR, n + 1 );
 		        b.quaternion.fromArray( AR, n + 4 );
 
-		        if(b.skin){
+		        if ( b.skin ) {
 
-		            if( s === 0 ) b.skin.play( 0, 0.3 );
-		            else{ 
+		            if ( s === 0 ) b.skin.play( 0, 0.3 );
+		            else {
+
 		                b.skin.play( 1, 0.3 );
 		                b.skin.setTimeScale( s );
 
 		            }
 
 		            //console.log(s)
-		            
+
 		        }
 
 			} );
 
-			
+
 
 		},
 
@@ -2865,7 +3001,7 @@
 
 		},
 
-		add: function ( o, extra ) {
+		add: function ( o ) {
 
 
 			var name = o.name !== undefined ? o.name : o.type + this.ID ++;
@@ -2873,49 +3009,61 @@
 			// delete old if same name
 			this.remove( name );
 
-			o.size = o.size == undefined ? [0.25,2,2] : o.size;
-		    if(o.size.length == 1){ o.size[1] = o.size[0]; }
-		    if(o.size.length == 2){ o.size[2] = o.size[0]; }
+			o.size = o.size == undefined ? [ 0.25, 2, 2 ] : o.size;
+		    if ( o.size.length == 1 ) {
 
-		    o.pos = o.pos === undefined ? [0,0,0] : o.pos;
-		    o.rot = o.rot == undefined ? [0,0,0] : Math.vectorad( o.rot );
+				o.size[ 1 ] = o.size[ 0 ];
+
+			}
+		    if ( o.size.length == 2 ) {
+
+				o.size[ 2 ] = o.size[ 0 ];
+
+			}
+
+		    o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
+		    o.rot = o.rot == undefined ? [ 0, 0, 0 ] : Math.vectorad( o.rot );
 		    o.quat = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray();
 
 		    var material;
-		    if( o.material !== undefined ){ 
-		    	if( o.material.constructor === String ) material = root.mat[o.material];
-		    	else material = o.material;
-		    } else {
-		    	material = root.mat.hero;
-		    }
+		    if ( o.material !== undefined ) {
 
-		    var g = new THREE.CapsuleBufferGeometry( o.size[0], o.size[1]*0.5, 6 );
+		    	if ( o.material.constructor === String ) material = root.mat[ o.material ];
+		    	else material = o.material;
+
+			} else {
+
+		    	material = root.mat.hero;
+
+			}
+
+		    var g = new THREE.CapsuleBufferGeometry( o.size[ 0 ], o.size[ 1 ] * 0.5, 6 );
 
 		    var mesh = new THREE.Group();//o.mesh || new THREE.Mesh( g );
 
-		    if( o.debug ){
+		    if ( o.debug ) {
 
 		        var mm = new THREE.Mesh( g, root.mat.debug );
 		        root.extraGeo.push( g );
 		        mesh.add( mm );
 
 		    }
-		    
-		    if( o.mesh ){
+
+		    if ( o.mesh ) {
 
 		        var model = o.mesh;
 		        model.material = material;
 		        model.scale.multiplyScalar( o.scale || 1 );
-		        model.position.set(0,0,0);
-		        
+		        model.position.set( 0, 0, 0 );
+
 		        model.setTimeScale( 0.5 );
-		        model.play(0);
+		        model.play( 0 );
 
 		        mesh.add( model );
 		        mesh.skin = model;
 
 		        //this.extraGeo.push( mesh.skin.geometry );
-		        
+
 		    } else {
 
 		        var mx = new THREE.Mesh( g, material );
@@ -2923,10 +3071,10 @@
 		        mesh.add( mx );
 
 		    }
-		    
 
 
-		    
+
+
 
 		    mesh.userData.speed = 0;
 		    mesh.userData.type = 'hero';
@@ -2936,17 +3084,17 @@
 		    mesh.position.fromArray( o.pos );
 		    mesh.quaternion.fromArray( o.quat );
 
-		    
+
 
 		    mesh.castShadow = true;
 		    mesh.receiveShadow = true;
 		    mesh.name = name;
 
-		    if( o.material ) delete( o.material );
-		    if( o.mesh ) delete( o.mesh );
+		    if ( o.material ) delete ( o.material );
+		    if ( o.mesh ) delete ( o.mesh );
 
 		    root.container.add( mesh );
-	        this.heroes.push( mesh );
+			this.heroes.push( mesh );
 
 			map.set( name, mesh );
 
@@ -2959,8 +3107,6 @@
 
 
 	} );
-
-	/*global THREE*/
 
 	function Collision() {
 
@@ -2975,9 +3121,9 @@
 
 			this.pairs.forEach( function ( pair, id ) {
 
-	            pair.callback( AR[ N + id ] || 0 );
+				pair.callback( AR[ N + id ] || 0 );
 
-	        });
+			} );
 
 		},
 
@@ -3010,7 +3156,7 @@
 
 		},
 
-		add: function ( o, extra ) {
+		add: function ( o ) {
 
 
 			var name = o.name !== undefined ? o.name : 'pair' + this.ID ++;
@@ -3020,10 +3166,10 @@
 
 		    var pair = new Pair( name, o.callback );
 
-	        this.pairs.push( pair );
+			this.pairs.push( pair );
 
-	        delete( o.callback );
-	        //o.callback = null;
+			delete ( o.callback );
+			//o.callback = null;
 
 			map.set( name, pair );
 
@@ -3065,6 +3211,7 @@
 
 	function RayCaster() {
 
+		this.ID = 0;
 		this.rays = [];
 
 	}
@@ -3073,16 +3220,16 @@
 
 		step: function () {
 
-			if( !this.rays.length ) return;
+			if ( ! this.rays.length ) return;
 
 			var raytest = [];
 
-			this.rays.forEach( function ( r, id ) {
+			this.rays.forEach( function ( r ) {
 
 				r.updateMatrixWorld();
-				raytest.push( { origin:r.origin, dest:r.dest } );
+				raytest.push( { origin: r.origin, dest: r.dest, group: r.group, mask: r.mask } );
 
-			});
+			} );
 
 			root.post( 'rayCast', raytest );
 
@@ -3090,32 +3237,56 @@
 
 		receive: function ( o ) {
 
-			var i = o.length;
-			while(i--) this.rays[i].update( o[i] );
+			var i = this.rays.length;
+			if ( ! i ) return;
+			if ( i !== o.length ) return;
+
+			while ( i -- ) this.rays[ i ].update( o[ i ] );
 
 		},
 
 		clear: function () {
 
 			while ( this.rays.length > 0 ) this.destroy( this.rays.pop() );
+			this.ID = 0;
 
 		},
 
 		destroy: function ( r ) {
 
 			if ( r.parent ) r.parent.remove( r );
+			map.delete( r.name );
+
+		},
+
+		remove: function ( name ) {
+
+			if ( ! map.has( name ) ) return;
+			var r = map.get( name );
+			var n = this.rays.indexOf( r );
+
+			if ( n !== - 1 ) {
+
+				this.rays.splice( n, 1 );
+				this.destroy( r );
+
+			}
 
 		},
 
 		add: function ( o ) {
 
-			var ray = new Ray(o);
+			o.name = o.name !== undefined ? o.name : 'ray' + this.ID ++;
+			// delete old if same name
+			this.remove( o.name );
 
-			if( o.parent !== undefined ) o.parent.add( ray );
+			var ray = new Ray( o );
+
+			if ( o.parent !== undefined ) o.parent.add( ray );
 		    else root.container.add( ray );
 
 			this.rays.push( ray );
-
+			map.set( o.name, ray );
 			return ray;
 
 		},
@@ -3131,30 +3302,37 @@
 
 		THREE.Line.call( this );
 
-		this.callback = o.callback || function (){};
+		this.name = o.name;
+		this.visible = o.visible !== undefined ? o.visible : true;
 
-		this.position.fromArray( o.pos || [0,0,0] );
+		this.callback = o.callback || function () {};
 
-		this.origin = [ 0,0,0 ];
-		this.dest = [ 0,0,0 ];
+		this.position.fromArray( o.pos || [ 0, 0, 0 ] );
 
-		this.start = new THREE.Vector3().fromArray( o.start || [0,0,0] );
-		this.end = new THREE.Vector3().fromArray( o.end || [0,10,0] );
+		this.group = o.group !== undefined ? o.group : 1;
+		this.mask = o.mask !== undefined ? o.mask : - 1;
+
+		this.origin = [ 0, 0, 0 ];
+		this.dest = [ 0, 0, 0 ];
+
+		this.start = new THREE.Vector3().fromArray( o.start || [ 0, 0, 0 ] );
+		this.end = new THREE.Vector3().fromArray( o.end || [ 0, 10, 0 ] );
+		//this.direction = new THREE.Vector3();
 
 		// tmp
 		this.tmp = new THREE.Vector3();
-		this.normal = new THREE.Vector3().fromArray(  [0,0,0] );
+		this.normal = new THREE.Vector3();
 		this.inv = new THREE.Matrix4();
 
 		// color
-		this.c1 = [ 0.1,0.1,0.1 ];
-		this.c2 = [ 0.1,1.0,0.1 ];
+		this.c1 = [ 0.1, 0.1, 0.1 ];
+		this.c2 = [ 0.1, 1.0, 0.1 ];
 
 		// geometry
 
-		this.vertices = [ 0,0,0, 0,0,0, 0,0,0, 0,0,0 , 0,0,0, 0,0,0, 0,0,0 ];
-		this.colors = [  0,0,0, 0,0,0, 0,0,0, 0,0,0 , 0,0,0, 0,0,0, 0,0,0 ];
-		this.local = [ 0,0,0, 0,0,0 ];
+		this.vertices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+		this.colors = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+		this.local = [ 0, 0, 0, 0, 0, 0 ];
 
 		this.geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( this.vertices, 3 ) );
 		this.geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( this.colors, 3 ) );
@@ -3172,7 +3350,30 @@
 
 	Ray.prototype = Object.assign( Object.create( THREE.Line.prototype ), {
 
-		updateMatrixWorld: function ( force ){
+		setFromCamera: function ( coords, camera ) {
+
+			if ( ( camera && camera.isPerspectiveCamera ) ) {
+
+				this.start.setFromMatrixPosition( camera.matrixWorld );
+				this.tmp.set( coords.x, coords.y, 0.5 ).unproject( camera ).sub( this.start ).normalize();
+				this.end.copy( this.tmp ).multiplyScalar( camera.far ).add( this.start );
+
+
+			} else if ( ( camera && camera.isOrthographicCamera ) ) {
+
+				this.start.set( coords.x, coords.y, ( camera.near + camera.far ) / ( camera.near - camera.far ) ).unproject( camera ); // set origin in plane of camera
+				this.normal.set( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
+				this.end.addScaledVector( this.normal, camera.far );
+
+			} else {
+
+				console.error( 'THREE.Raycaster: Unsupported camera type.' );
+
+			}
+
+		},
+
+		updateMatrixWorld: function ( force ) {
 
 			THREE.Line.prototype.updateMatrixWorld.call( this, force );
 
@@ -3186,46 +3387,48 @@
 
 		upGeo: function ( hit ) {
 
-			if( !this.visible ) return;
+			if ( ! this.visible ) return;
 
 			var v = this.vertices;
 			var c = this.colors;
 			var l = this.local;
 			var n, d;
 
-			if( hit ) {
+			if ( hit ) {
 
 				this.isBase = false;
 
-				c[0] = c[3] = c[15] = c[18] = this.c2[0];
-				c[1] = c[4] = c[16] = c[19] = this.c2[1];
-				c[2] = c[5] = c[17] = c[20] = this.c2[2];
+				c[ 0 ] = c[ 3 ] = c[ 15 ] = c[ 18 ] = this.c2[ 0 ];
+				c[ 1 ] = c[ 4 ] = c[ 16 ] = c[ 19 ] = this.c2[ 1 ];
+				c[ 2 ] = c[ 5 ] = c[ 17 ] = c[ 20 ] = this.c2[ 2 ];
 
-				v[3] = v[6] = v[12] = v[15] = l[0];
-				v[4] = v[7] = v[13] = v[16] = l[1];
-				v[5] = v[8] = v[14] = v[17] = l[2];
+				v[ 3 ] = v[ 6 ] = v[ 12 ] = v[ 15 ] = l[ 0 ];
+				v[ 4 ] = v[ 7 ] = v[ 13 ] = v[ 16 ] = l[ 1 ];
+				v[ 5 ] = v[ 8 ] = v[ 14 ] = v[ 17 ] = l[ 2 ];
 
-				v[18] = l[3];
-				v[19] = l[4];
-				v[20] = l[5];
+				v[ 18 ] = l[ 3 ];
+				v[ 19 ] = l[ 4 ];
+				v[ 20 ] = l[ 5 ];
 
 				this.geometry.attributes.position.needsUpdate = true;
 		    	this.geometry.attributes.color.needsUpdate = true;
 
 			} else {
 
-				if( this.isBase ) return;
+				if ( this.isBase ) return;
 
 				var i = 7;
-				while(i--){ 
-					n = i*3;
-					d = i<3 ? true : false;
-					c[n] = this.c1[0];
-					c[n+1] = this.c1[1];
-					c[n+2] = this.c1[2];
-					v[n] = d ? this.start.x : this.end.x;
-					v[n+1] = d ? this.start.y : this.end.y;
-					v[n+2] = d ? this.start.z : this.end.z;
+				while ( i -- ) {
+
+					n = i * 3;
+					d = i < 3 ? true : false;
+					c[ n ] = this.c1[ 0 ];
+					c[ n + 1 ] = this.c1[ 1 ];
+					c[ n + 2 ] = this.c1[ 2 ];
+					v[ n ] = d ? this.start.x : this.end.x;
+					v[ n + 1 ] = d ? this.start.y : this.end.y;
+					v[ n + 2 ] = d ? this.start.z : this.end.z;
+
 				}
 
 				this.geometry.attributes.position.needsUpdate = true;
@@ -3239,20 +3442,21 @@
 
 		update: function ( o ) {
 
-			if( o.hit ){
+			if ( o.hit ) {
 
-				this.callback( o );
+				//this.callback( o );
 
-				if( this.visible ){
+				if ( this.visible ) {
+
 					this.tmp.fromArray( o.point ).applyMatrix4( this.inv );
 					var d = this.tmp.distanceTo( this.end );
 					this.tmp.toArray( this.local, 0 );
 				    this.normal.fromArray( o.normal );
 				    this.tmp.addScaledVector( this.normal, d );
 				    this.tmp.toArray( this.local, 3 );
-				}
+				    this.upGeo( true );
 
-			    this.upGeo( true );
+				}
 
 			} else {
 
@@ -3260,11 +3464,11 @@
 
 			}
 
-
+			this.callback( o );
 
 		}
 
-	});
+	} );
 
 	/*global THREE*/
 	/**
@@ -3327,6 +3531,7 @@
 		for ( var i = 0; i < n; i ++ ) this.segments[ i ] = false;
 
 	}
+
 	ConvexObjectBreaker.prototype = {
 
 		constructor: ConvexObjectBreaker,
@@ -4161,7 +4366,7 @@
 
 				symbol = ( symbol << 1 ) | rangeDecoder.decodeBit( this._decoders, symbol );
 
-			}while ( symbol < 0x100 );
+			} while ( symbol < 0x100 );
 
 			return symbol & 0xff;
 
@@ -4188,7 +4393,7 @@
 
 				}
 
-			}while ( symbol < 0x100 );
+			} while ( symbol < 0x100 );
 
 			return symbol & 0xff;
 
@@ -4490,9 +4695,9 @@
 
 			value = properties.readByte();
 			lc = value % 9;
-			value = ~~ ( value / 9 );
+			value = ~ ~ ( value / 9 );
 			lp = value % 5;
-			pb = ~~ ( value / 5 );
+			pb = ~ ~ ( value / 5 );
 
 			if ( ! this.setLcLpPb( lc, lp, pb ) ) {
 
@@ -4561,7 +4766,7 @@
 
 		return LZMA;
 
-	})();
+	} )();
 
 	/**
 	 * 	SEA3D LZMA
@@ -4572,7 +4777,7 @@
 
 		data = new Uint8Array( data );
 
-		var inStream = 
+		var inStream =
 		{
 			data: data,
 			position: 0,
@@ -4601,7 +4806,7 @@
 
 	/*global THREE*/
 
-	/**   _  _____ _   _   
+	/**   _  _____ _   _
 	*    | ||_   _| |_| |
 	*    | |_ | | |  _  |
 	*    |___||_| |_| |_|
@@ -4611,555 +4816,869 @@
 
 	exports.engine = ( function () {
 
-	    var type = 'LZMA'; // LZMA / WASM / ASM
+		var type = 'LZMA'; // LZMA / WASM / ASM
 
-	    var worker, callback, blob = null;
+		var worker, callback, blob = null;
 
+		var URL = window.URL || window.webkitURL;
+		var Time = typeof performance === 'undefined' ? Date : performance;
+		var t = { now: 0, delta: 0, then: 0, inter: 0, tmp: 0, n: 0, timerate: 0, autoFps: false };
 
-	    var URL = window.URL || window.webkitURL;
-	    var Time = typeof performance === 'undefined' ? Date : performance;
-	    
-	    var t = { now:0, delta:0, then:0, inter:0, tmp:0, n:0, timerate:0, autoFps:false };
-	    var interval = null;
-	    var refView = null;
-	    var isBuffer = false;
+		//var timer = undefined;
+		var interval = null;
+		var refView = null;
 
-	    var stepNext = false;
+		var isBuffer = false;
+		//var isPause = false;
+		var stepNext = false;
 
-	    var PI90 = 1.570796326794896;
+		var currentMode = '';
 
-	    var rigidBody, softBody, terrains, vehicles, character, collision, rayCaster;
+		var PI90 = 1.570796326794896;
 
-	    var convexBreaker = null;
+		var rigidBody, softBody, terrains, vehicles, character, collision, rayCaster;
 
-	    //var needUpdate = false;
+		var convexBreaker = null;
+		var ray = null;
+		var mouseMode = 'free';
 
-	    var option = {
+		var tmpRemove = [];
+		var tmpAdd = [];
 
-	        worldscale: 1,
-	        gravity: [0,-10,0],
-	        fps: 60,
+		//var needUpdate = false;
 
-	        substep: 2,
-	        broadphase: 2,
-	        soft: true,
+		var option = {
 
-	    };
+			worldscale: 1,
+			gravity: [ 0, - 10, 0 ],
+			fps: 60,
 
-	    exports.engine = {
+			substep: 2,
+			broadphase: 2,
+			soft: true,
 
-	        init: function ( Callback, Type, Option, Counts ) {
+		};
 
-	            this.initArray( Counts );
-	            this.defaultRoot();
+		exports.engine = {
 
-	            Option = Option || {};
+			init: function ( Callback, Type, Option, Counts ) {
 
-	            callback = Callback;
+				this.initArray( Counts );
+				this.defaultRoot();
 
-	            option = {
+				Option = Option || {};
 
-	                fps: Option.fps || 60,
-	                worldscale: Option.worldscale || 1,
-	                gravity: Option.gravity || [0,-10,0],
-	                substep: Option.substep || 2,
-	                broadphase: Option.broadphase || 2,
-	                soft: Option.soft !== undefined ? Option.soft : true,
-	                fixed: Option.fixed !== undefined ? Option.fixed : false,
-	                //autoFps : Option.autoFps !== undefined ? Option.autoFps : false,
+				callback = Callback;
 
-	                //penetration: Option.penetration || 0.0399,
+				option = {
 
-	            };
+					fps: Option.fps || 60,
+					worldscale: Option.worldscale || 1,
+					gravity: Option.gravity || [ 0, - 10, 0 ],
+					substep: Option.substep || 2,
+					broadphase: Option.broadphase || 2,
+					soft: Option.soft !== undefined ? Option.soft : true,
+					fixed: Option.fixed !== undefined ? Option.fixed : false,
+					//autoFps : Option.autoFps !== undefined ? Option.autoFps : false,
 
-	            t.timerate = ( 1 / option.fps ) * 1000;
-	            t.autoFps = option.autoFps;
+					//penetration: Option.penetration || 0.0399,
 
-	            type = Type || 'LZMA';
-	            if( type === 'LZMA' ){ 
-	                exports.engine.load( option );
-	            } else {
-	                blob = document.location.href.replace(/\/[^/]*$/,"/") + ( type === 'WASM' ? "./build/ammo.wasm.js" : "./build/ammo.js" );
-	                exports.engine.startWorker();
-	            }
+				};
 
-	        },
+				t.timerate = ( 1 / option.fps ) * 1000;
+				t.autoFps = option.autoFps;
 
-	        load: function () {
+				type = Type || 'LZMA';
+				if ( type === 'LZMA' ) {
 
-	            var xhr = new XMLHttpRequest(); 
-	            xhr.responseType = "arraybuffer";
-	            xhr.open( 'GET', "./build/ammo.hex", true );
+					exports.engine.load( option );
 
-	            xhr.onreadystatechange = function () {
+				} else {
 
-	                if ( xhr.readyState === 4 ) {
-	                    if ( xhr.status === 200 || xhr.status === 0 ){
-	                        blob = URL.createObjectURL( new Blob([ LZMAdecompact( xhr.response ) ], { type: 'application/javascript' }));
-	                        exports.engine.startWorker();
-	                    }else{ 
-	                        console.error( "Couldn't load ["+ "./build/ammo.hex" + "] [" + xhr.status + "]" );
-	                    }
-	                }
-	            };
+					blob = document.location.href.replace( /\/[^/]*$/, "/" ) + ( type === 'WASM' ? "./build/ammo.wasm.js" : "./build/ammo.js" );
+					exports.engine.startWorker();
 
-	            xhr.send( null );
+				}
 
-	        },
+			},
 
-	        startWorker: function () {
+			load: function () {
 
-	           //blob = document.location.href.replace(/\/[^/]*$/,"/") + "./build/ammo.js" ;
+				var xhr = new XMLHttpRequest();
+				xhr.responseType = "arraybuffer";
+				xhr.open( 'GET', "./build/ammo.hex", true );
 
-	            worker = new Worker('./build/gun.js');
-	            worker.postMessage = worker.webkitPostMessage || worker.postMessage;
-	            worker.onmessage = exports.engine.message;
+				xhr.onreadystatechange = function () {
 
-	            // test transferrables
-	            var ab = new ArrayBuffer(1);
-	            worker.postMessage( { m:'test', ab:ab }, [ab] );
-	            isBuffer = ab.byteLength ? false : true;
+					if ( xhr.readyState === 4 ) {
 
-	            // start engine worker
-	            exports.engine.post( 'init', { blob:blob, ArPos:root.ArPos, ArMax:root.ArMax, isBuffer:isBuffer, option:option } );
-	            root.post = exports.engine.post;
+						if ( xhr.status === 200 || xhr.status === 0 ) {
 
-	        },
+							blob = URL.createObjectURL( new Blob( [ LZMAdecompact( xhr.response ) ], { type: 'application/javascript' } ) );
+							exports.engine.startWorker();
 
-	        initArray : function ( Counts ) {
+						} else {
 
-	            Counts = Counts || {};
+							console.error( "Couldn't load [" + "./build/ammo.hex" + "] [" + xhr.status + "]" );
 
-	            var counts = {
-	                maxBody: Counts.maxBody || 1400,
-	                maxContact: Counts.maxContact || 200,
-	                maxCharacter: Counts.maxCharacter || 10, 
-	                maxCar: Counts.maxCar || 14,
-	                maxSoftPoint: Counts.maxSoftPoint || 8192,
-	            };
+						}
 
-	            root.ArLng = [ 
-	                counts.maxBody * 8, // rigidbody
-	                counts.maxContact , // contact
-	                counts.maxCharacter * 8, // hero
-	                counts.maxCar * 56, // cars
-	                counts.maxSoftPoint * 3,  // soft point
-	            ];
+					}
 
-	            root.ArPos = [ 
-	                0, 
-	                root.ArLng[0], 
-	                root.ArLng[0] + root.ArLng[1],
-	                root.ArLng[0] + root.ArLng[1] + root.ArLng[2],
-	                root.ArLng[0] + root.ArLng[1] + root.ArLng[2] + root.ArLng[3],
-	            ];
+				};
 
-	            root.ArMax = root.ArLng[0] + root.ArLng[1] + root.ArLng[2] + root.ArLng[3] + root.ArLng[4];
+				xhr.send( null );
 
-	        },
+			},
 
-	        message: function( e ) {
+			startWorker: function () {
 
-	            var data = e.data;
-	            if( data.Ar ) root.Ar = data.Ar;
-	            //if( data.contacts ) contacts = data.contacts;
+				//blob = document.location.href.replace(/\/[^/]*$/,"/") + "./build/ammo.js" ;
 
-	            switch( data.m ){
-	                case 'initEngine': exports.engine.initEngine(); break;
-	                case 'start': exports.engine.start(); break;
-	                case 'step': exports.engine.step(); break;
-	                //
-	                //case 'terrain': terrains.upGeo( data.o.name ); break;
+				worker = new Worker( './build/gun.js' );
+				worker.postMessage = worker.webkitPostMessage || worker.postMessage;
+				worker.onmessage = exports.engine.message;
 
-	                case 'moveSolid': exports.engine.moveSolid( data.o ); break;
-	                case 'ellipsoid': exports.engine.ellipsoidMesh( data.o ); break;
+				// test transferrables
+				var ab = new ArrayBuffer( 1 );
+				worker.postMessage( { m: 'test', ab: ab }, [ ab ] );
+				isBuffer = ab.byteLength ? false : true;
 
-	                case 'makeBreak': exports.engine.makeBreak( data.o ); break;
+				// start engine worker
+				exports.engine.post( 'init', { blob: blob, ArPos: root.ArPos, ArMax: root.ArMax, isBuffer: isBuffer, option: option } );
+				root.post = exports.engine.post;
 
-	                case 'rayCast': rayCaster.receive( data.o ); break;
-	            }
+			},
 
-	        },
+			initArray: function ( Counts ) {
 
+				Counts = Counts || {};
 
-	        initEngine: function () {
+				var counts = {
+					maxBody: Counts.maxBody || 1400,
+					maxContact: Counts.maxContact || 200,
+					maxCharacter: Counts.maxCharacter || 10,
+					maxCar: Counts.maxCar || 14,
+					maxSoftPoint: Counts.maxSoftPoint || 8192,
+				};
 
-	            URL.revokeObjectURL( blob );
-	            blob = null;
+				root.ArLng = [
+					counts.maxBody * 8, // rigidbody
+					counts.maxContact, // contact
+					counts.maxCharacter * 8, // hero
+					counts.maxCar * 56, // cars
+					counts.maxSoftPoint * 3, // soft point
+				];
 
-	            this.initObject();
+				root.ArPos = [
+					0,
+					root.ArLng[ 0 ],
+					root.ArLng[ 0 ] + root.ArLng[ 1 ],
+					root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ],
+					root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ] + root.ArLng[ 3 ],
+				];
 
-	            console.log( 'AMMO.Worker '+ REVISION + ( isBuffer ? ' with ':' without ' ) + 'Buffer #'+ type );
+				root.ArMax = root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ] + root.ArLng[ 3 ] + root.ArLng[ 4 ];
 
-	            if( callback ) callback();
+			},
 
-	        },
+			message: function ( e ) {
 
-	        start: function ( o ) {
+				var data = e.data;
+				if ( data.Ar ) root.Ar = data.Ar;
+				//if( data.contacts ) contacts = data.contacts;
 
-	            //console.log('start', t.timerate );
+				switch ( data.m ) {
 
-	            stepNext = true;
+					case 'initEngine': exports.engine.initEngine(); break;
+					case 'start': exports.engine.start(); break;
+					case 'step': exports.engine.step(); break;
+						//
+						//case 'terrain': terrains.upGeo( data.o.name ); break;
 
-	            // create tranfere array if buffer
-	            if( isBuffer ) root.Ar = new Float32Array( root.ArMax );
+					case 'moveSolid': exports.engine.moveSolid( data.o ); break;
+					case 'ellipsoid': exports.engine.ellipsoidMesh( data.o ); break;
 
-	            //engine.sendData( 0 );
+					case 'makeBreak': exports.engine.makeBreak( data.o ); break;
 
-	            //if ( !timer ) timer = requestAnimationFrame( engine.sendData );
-	            t.then = Time.now();
-	            if ( interval ) clearInterval( interval );
-	            interval = setInterval( exports.engine.sendData, t.timerate );
-	           
-	        },
+					case 'rayCast': rayCaster.receive( data.o ); break;
 
-	        postUpdate: function () {},
+				}
 
-	        update: function () {
+			},
 
-	            exports.engine.postUpdate();
 
-	            terrains.step();
-	            rayCaster.step();
+			initEngine: function () {
 
-	            rigidBody.step( root.Ar, root.ArPos[ 0 ] );
-	            collision.step( root.Ar, root.ArPos[ 1 ] );
-	            character.step( root.Ar, root.ArPos[ 2 ] );
-	            vehicles.step( root.Ar, root.ArPos[ 3 ] );
-	            softBody.step( root.Ar, root.ArPos[ 4 ] );
+				URL.revokeObjectURL( blob );
+				blob = null;
 
-	        },
+				this.initObject();
 
-	        step: function () {
+				console.log( 'AMMO.Worker ' + REVISION + ( isBuffer ? ' with ' : ' without ' ) + 'Buffer #' + type );
 
-	            if ( t.now - 1000 > t.tmp ){ t.tmp = t.now; t.fps = t.n; t.n = 0; } t.n++; // FPS
-	            exports.engine.tell();
-	            
-	            if( refView ) refView.needUpdate( true );
-	            //else 
-	            exports.engine.update();
+				if ( callback ) callback();
 
-	            stepNext = true;
-	            
-	        },
+			},
 
-	        sendData: function ( time ){
+			start: function () {
 
-	            if( refView ) if( refView.pause ) exports.engine.stop();
-	            
-	        	if( !stepNext ) return;
+				//console.log('start', t.timerate );
 
-	            t.now = Time.now();
-	            t.delta = ( t.now - t.then ) * 0.001;
+				stepNext = true;
+
+				// create tranfere array if buffer
+				if ( isBuffer ) root.Ar = new Float32Array( root.ArMax );
+
+				//engine.sendData( 0 );
+
+				//if ( !timer ) timer = requestAnimationFrame( engine.sendData );
+				t.then = Time.now();
+				if ( interval ) clearInterval( interval );
+				interval = setInterval( exports.engine.sendData, t.timerate );
+
+
+				// test ray
+				exports.engine.setMode( currentMode );
+				//this.addRayCamera();
+
+			},
+
+			postUpdate: function () {},
+
+			update: function () {
+
+				exports.engine.postUpdate();
+
+				terrains.step();
+				rayCaster.step();
+
+				rigidBody.step( root.Ar, root.ArPos[ 0 ] );
+				collision.step( root.Ar, root.ArPos[ 1 ] );
+				character.step( root.Ar, root.ArPos[ 2 ] );
+				vehicles.step( root.Ar, root.ArPos[ 3 ] );
+				softBody.step( root.Ar, root.ArPos[ 4 ] );
+
+			},
+
+			step: function () {
+
+				//engine.stepRemove();
+
+				if ( t.now - 1000 > t.tmp ) {
+
+					t.tmp = t.now; t.fps = t.n; t.n = 0;
+
+				} t.n ++; // FPS
+				exports.engine.tell();
+
+				if ( refView ) refView.needUpdate( true );
+				
+				exports.engine.update();
+
+				exports.engine.stepRemove();
+	        	exports.engine.stepAdd();
+
+				stepNext = true;
+
+			},
+
+			sendData: function () {
+
+				if ( refView ) if ( refView.pause ) exports.engine.stop();
+
+	        	if ( ! stepNext ) return;
+
+				t.now = Time.now();
+				t.delta = ( t.now - t.then ) * 0.001;
 	        	t.then = t.now;
 
-	        	if( isBuffer ) worker.postMessage( { m:'step',  o:{ delta:t.delta, key: exports.engine.getKey() }, Ar:root.Ar }, [ root.Ar.buffer ] );
-	            else worker.postMessage( { m:'step', o:{ delta:t.delta, key: exports.engine.getKey() } } );
+	        	if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta, key: exports.engine.getKey() }, Ar: root.Ar }, [ root.Ar.buffer ] );
+				else worker.postMessage( { m: 'step', o: { delta: t.delta, key: exports.engine.getKey() } } );
 
-	            stepNext = false;
+				stepNext = false;
 
-	        },
+			},
 
-	        setView: function ( v ) { 
+			stepRemove: function () {
 
-	            refView = v;
-	            root.mat = v.getMat();
-	            root.geo = v.getGeo();
-	            root.container = v.getScene();
+				if( tmpRemove.length === 0 ) return;
+				this.post( 'setRemove', tmpRemove );
+				while ( tmpRemove.length > 0 ) this.remove( tmpRemove.pop(), true );
 
-	        },
+			},
 
-	        getFps: function () { return t.fps; },
-	        getDelta: function () { return t.delta; },
+			stepAdd: function () {
 
-	        tell: function () {},
-	        
-	        getKey: function () { return [0,0,0,0,0,0,0,0]; },
+				if( tmpAdd.length === 0 ) return;
+				//this.post( 'setAdd', tmpAdd );
+				while ( tmpAdd.length > 0 ) this.add( tmpAdd.pop(), true );
 
-	        set: function ( o ) {
+			},
 
-	            o = o || option;
-	            t.timerate = o.fps !== undefined ? (  1 / o.fps ) * 1000 : t.timerate;
-	            t.autoFps = o.autoFps !== undefined ? o.autoFps : false;
-	            this.post( 'set', o );
+			setView: function ( v ) {
 
-	        },
+				refView = v;
+				root.mat = v.getMat();
+				root.geo = v.getGeo();
+				root.container = v.getScene();
 
-	        post: function ( m, o ) {
+			},
 
-	            worker.postMessage( { m:m, o:o } );
+			getFps: function () {
 
-	        },
+				return t.fps;
 
-	        reset: function( full ) {
+			},
+			getDelta: function () {
 
-	            //console.log('reset', full);
+				return t.delta;
 
-	            exports.engine.stop();
+			},
 
-	            // remove all mesh
-	            exports.engine.clear();
+			tell: function () {},
+			log: function () {},
 
-	            // remove tmp material
-	            while ( root.tmpMat.length > 0 ) root.tmpMat.pop().dispose();
+			getKey: function () {
 
-	            exports.engine.postUpdate = function (){};
-	            
-	            if( refView ) refView.reset( full );
+				return [ 0, 0, 0, 0, 0, 0, 0, 0 ];
 
-	            // clear physic object;
-	            exports.engine.post( 'reset', { full:full } );
+			},
 
-	        },
+			set: function ( o ) {
 
-	        stop: function () {
+				o = o || option;
+				t.timerate = o.fps !== undefined ? ( 1 / o.fps ) * 1000 : t.timerate;
+				t.autoFps = o.autoFps !== undefined ? o.autoFps : false;
+				this.post( 'set', o );
 
-	            if ( interval ) {
-	                clearInterval( interval );
-	                interval = null;
-	            }
+			},
 
-	        },
+			post: function ( m, o ) {
 
-	        destroy: function (){
+				worker.postMessage( { m:m, o:o } );
 
-	            worker.terminate();
-	            worker = undefined;
+			},
 
-	        },
+			reset: function ( full ) {
 
+				//console.log('reset', full);
 
+				exports.engine.stop();
 
-	        ////////////////////////////
+				// remove all mesh
+				exports.engine.clear();
 
-	        addMat : function ( m ) { root.tmpMat.push( m ); },
+				// remove tmp material
+				while ( root.tmpMat.length > 0 ) root.tmpMat.pop().dispose();
 
-	        ellipsoidMesh: function ( o ) {
+				exports.engine.postUpdate = function () {};
 
-	            softBody.createEllipsoid( o );
+				tmpRemove = [];
+				tmpAdd = [];
 
-	        },
+				if ( refView ) refView.reset( full );
 
-	        updateTmpMat : function ( envmap, hdr ) {
-	            var i = root.tmpMat.length, m;
-	            while( i-- ){
-	                m = root.tmpMat[i];
-	                if( m.envMap !== undefined ){
-	                    if( m.type === 'MeshStandardMaterial' ) m.envMap = envmap;
-	                    else m.envMap =  hdr ? null : envmap;
-	                    m.needsUpdate = true;
-	                }
-	            }
-	        },
 
+				// clear physic object;
+				exports.engine.post( 'reset', { full: full } );
 
+			},
 
+			stop: function () {
 
-	        drive: function ( name ) { this.post('setDrive', { name:name } ); },
-	        move: function ( name ) { this.post('setMove', { name:name } ); },
+				if ( interval ) {
 
+					clearInterval( interval );
+					interval = null;
 
-	        forces: function ( o ) { this.post('setForces', o ); },
-	        option: function ( o ) { this.post('setOption', o ); },
-	        remove: function ( o ) { this.post('setRemove', o ); },
-	        matrix: function ( o ) { this.post('setMatrix', o ); },//if( o.constructor !== Array ) o = [ o ]; 
+				}
 
-	        anchor: function ( o ) { this.post('addAnchor', o ); },
+			},
 
-	        break: function ( o ) { this.post('addBreakable', o ); },
+			destroy: function () {
 
-	        //rayCast: function ( o ) { this.post('rayCast', o ); },
+				worker.terminate();
+				worker = undefined;
 
-	        moveSolid: function ( o ) {
+			},
 
-	            if ( ! map.has( o.name ) ) return;
-	            var b = map.get( o.name );
-	            if( o.pos !== undefined ) b.position.fromArray( o.pos );
-	            if( o.quat !== undefined ) b.quaternion.fromArray( o.quat );
 
-	        },
 
-	        getBodys: function () {
+			////////////////////////////
 
-	            return rigidBody.bodys;
+			addMat: function ( m ) {
 
-	        },
+				root.tmpMat.push( m );
 
-	        byName: function ( name ) {
+			},
 
-	            return map.get( name );
+			ellipsoidMesh: function ( o ) {
 
-	        },
+				softBody.createEllipsoid( o );
 
-	        removeRigidBody: function (name){
+			},
 
-	            rigidBody.remove(name);
+			updateTmpMat: function ( envmap, hdr ) {
 
-	        },
+				var i = root.tmpMat.length, m;
+				while ( i -- ) {
 
-	        initObject: function () {
+					m = root.tmpMat[ i ];
+					if ( m.envMap !== undefined ) {
 
-	            rigidBody = new RigidBody();
-	            //constraint = new Constraint();
-	            softBody = new SoftBody();
-	            terrains = new Terrain();
-	            vehicles = new Vehicle();
-	            character = new Character();
-	            collision = new Collision();
-	            rayCaster = new RayCaster();
+						if ( m.type === 'MeshStandardMaterial' ) m.envMap = envmap;
+						else m.envMap = hdr ? null : envmap;
+						m.needsUpdate = true;
 
-	            // auto define basic function
-	            //if(!refView) this.defaultRoot();
+					}
 
-	        },
+				}
 
-	        
+			},
 
-	        clear: function ( o ) {
+			drive: function ( name ) {
 
-	            rigidBody.clear();
-	            collision.clear();
-	            terrains.clear();
-	            vehicles.clear();
-	            character.clear();
-	            softBody.clear();
-	            rayCaster.clear();
+				this.post( 'setDrive', name );
 
-	            while( root.extraGeo.length > 0 ) root.extraGeo.pop().dispose();
+			},
+			move: function ( name ) {
 
-	        },
+				this.post( 'setMove', name );
 
+			},
 
-	        addGroup: function ( list ) {
 
-	            for( var i = 0, lng = list.length; i < lng; i++ ){
-	                this.add( list[i] );
-	            }
+			forces: function ( o ) {
 
-	        },
+				this.post( 'setForces', o );
 
-	        add: function ( o ) {
+			},
+			option: function ( o ) {
 
-	            o = o || {};
-	            var type = o.type === undefined ? 'box' : o.type;
-	            var prev = type.substring( 0, 4 );
+				this.post( 'setOption', o );
 
-	            if( prev === 'join' ) root.post( 'add', o );
-	            else if( prev === 'soft' ) softBody.add( o );
-	            else if( type === 'terrain' ) terrains.add( o );
-	            else if( type === 'character' ) character.add( o );
-	            else if( type === 'collision' ) collision.add( o );
-	            else if( type === 'car' ) vehicles.add( o );
-	            else if( type === 'ray' ) return rayCaster.add( o );
-	            else return rigidBody.add( o );
-	            
+			},
+			removes: function ( o ) {
 
-	        },
+				tmpRemove = tmpRemove.concat( o );
 
-	        defaultRoot: function () {
+			},
+			matrix: function ( o ) {
 
-	            // geometry
+				this.post( 'setMatrix', o );
 
-	            var geo = {
-	                circle:     new THREE.CircleBufferGeometry( 1,6 ),
-	                plane:      new THREE.PlaneBufferGeometry(1,1,1,1),
-	                box:        new THREE.BoxBufferGeometry(1,1,1),
-	                hardbox:    new THREE.BoxBufferGeometry(1,1,1),
-	                cone:       new THREE.CylinderBufferGeometry( 0,1,0.5 ),
-	                wheel:      new THREE.CylinderBufferGeometry( 1,1,1, 18 ),
-	                sphere:     new THREE.SphereBufferGeometry( 1, 16, 12 ),
-	                highsphere: new THREE.SphereBufferGeometry( 1, 32, 24 ),
-	                cylinder:   new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
-	                hardcylinder: new THREE.CylinderBufferGeometry( 1,1,1,12,1 ),
-	            };
+			}, //if( o.constructor !== Array ) o = [ o ];
 
-	            geo.circle.rotateX( -PI90 );
-	            geo.plane.rotateX( -PI90 );
-	            geo.wheel.rotateZ( -PI90 );
+			anchor: function ( o ) {
 
-	            root.geo = geo;
+				this.post( 'addAnchor', o );
 
-	            // material
+			},
 
-	            var wire = false;
-	            root.mat = {
+			break: function ( o ) {
 
-	                move: new THREE.MeshLambertMaterial({ color:0xFF8811, name:'move', wireframe:wire }),
-	                speed: new THREE.MeshLambertMaterial({ color:0xFFFF11, name:'speed', wireframe:wire }),
-	                sleep: new THREE.MeshLambertMaterial({ color:0x1188FF, name:'sleep', wireframe:wire }),
-	                basic: new THREE.MeshLambertMaterial({ color:0x111111, name:'basic', wireframe:wire }),
-	                static: new THREE.MeshLambertMaterial({ color:0x1111FF, name:'static', wireframe:wire }),
-	                kinematic: new THREE.MeshLambertMaterial({ color:0x11FF11, name:'kinematic', wireframe:wire }),
+				this.post( 'addBreakable', o );
 
-	            };
+			},
 
-	            root.container = new THREE.Group();
+			//rayCast: function ( o ) { this.post('rayCast', o ); },
 
-	        },
+			moveSolid: function ( o ) {
 
-	        getContainer: function () {
+				if ( ! map.has( o.name ) ) return;
+				var b = map.get( o.name );
+				if ( o.pos !== undefined ) b.position.fromArray( o.pos );
+				if ( o.quat !== undefined ) b.quaternion.fromArray( o.quat );
 
-	            return root.container;
+			},
 
-	        },
+			getBodys: function () {
 
-	        // BREAKABLE
+				return rigidBody.bodys;
 
-	        makeBreak: function ( o ) {
+			},
 
-	            var name = o.name;
-	            if ( ! map.has( name ) ) return;
+			byName: function ( name ) {
 
-	            if( convexBreaker === null ) convexBreaker = new ConvexObjectBreaker();
+				return map.get( name );
 
-	            var mesh = map.get( name );
-	            // breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
-	            var breakOption = o.breakOption;
-	            
-	            var debris = convexBreaker.subdivideByImpact( mesh, o.pos, o.normal , breakOption[1], breakOption[2] ); // , 1.5 ??
-	            // remove one level
-	            breakOption[3] -= 1;
-	            // remove original object
-	            this.removeRigidBody( name );
+			},
 
-	            var i = debris.length;
-	            while( i-- ) this.addDebris( name, i, debris[ i ], breakOption );
+			
 
-	        },
+			initObject: function () {
 
-	        addDebris: function ( name, id, mesh, breakOption ) {
+				rigidBody = new RigidBody();
+				//constraint = new Constraint();
+				softBody = new SoftBody();
+				terrains = new Terrain();
+				vehicles = new Vehicle();
+				character = new Character();
+				collision = new Collision();
+				rayCaster = new RayCaster();
 
-	            var o = {
-	                name: name+'_debris'+ id,
-	                material: mesh.material,
-	                type:'convex',
-	                shape: mesh.geometry,
-	                //size: mesh.scale.toArray(),
-	                pos: mesh.position.toArray(),
-	                quat: mesh.quaternion.toArray(),
-	                mass: mesh.userData.mass,
-	                linearVelocity:mesh.userData.velocity.toArray(),
-	                angularVelocity:mesh.userData.angularVelocity.toArray(),
-	                margin:0.05, 
-	            };
+				// auto define basic function
+				//if(!refView) this.defaultRoot();
 
-	            // if levelOfSubdivision > 0 make debris breakable !!
-	            if( breakOption[3] > 0 ){
+			},
 
-	                o.breakable = true;
-	                o.breakOption = breakOption;
 
-	            }
 
-	            this.add( o );
-	            
-	        },
-	        
-	    };
 
-	    return exports.engine;
+			clear: function () {
 
-	})();
+				rigidBody.clear();
+				collision.clear();
+				terrains.clear();
+				vehicles.clear();
+				character.clear();
+				softBody.clear();
+				rayCaster.clear();
+
+				while ( root.extraGeo.length > 0 ) root.extraGeo.pop().dispose();
+
+			},
+
+			//-----------------------------
+			// REMOVE
+			//-----------------------------
+
+			remove: function ( name, phy ) {
+
+				if ( ! map.has( name ) ) return;
+				var b = exports.engine.byName( name );
+
+				switch( b.type ){
+
+					case 'solid': case 'body' :
+					    rigidBody.remove( name );
+					break;
+
+					case 'soft' :
+					    softBody.remove( name );
+					break;
+
+					case 'terrain' :
+					    terrains.remove( name );
+					break;
+
+				}
+
+				// remove physics 
+				if( !phy ) this.post( 'remove', name );
+
+			},
+
+			removeConstraint: function ( name ) {
+
+				this.post( 'remove', name );
+
+			},
+
+			removeRay: function ( name ) {
+
+				rayCaster.remove( name );
+
+			},
+
+			//-----------------------------
+			// ADD
+			//-----------------------------
+
+			addGroup: function ( list ) {
+
+				tmpAdd.concat( list );
+
+				//for ( var i = 0, lng = list.length; i < lng; i ++ ) {
+
+				//	this.add( list[ i ] );
+
+				//}
+
+			},
+
+			add: function ( o ) {
+
+				o = o || {};
+				var type = o.type === undefined ? 'box' : o.type;
+				var prev = type.substring( 0, 4 );
+
+				if ( prev === 'join' ) root.post( 'add', o );
+				else if ( prev === 'soft' ) softBody.add( o );
+				else if ( type === 'terrain' ) terrains.add( o );
+				else if ( type === 'character' ) character.add( o );
+				else if ( type === 'collision' ) collision.add( o );
+				else if ( type === 'car' ) vehicles.add( o );
+				else if ( type === 'ray' ) return rayCaster.add( o );
+				else return rigidBody.add( o );
+
+			},
+
+			defaultRoot: function () {
+
+				// geometry
+
+				var geo = {
+					circle: new THREE.CircleBufferGeometry( 1, 6 ),
+					plane: new THREE.PlaneBufferGeometry( 1, 1, 1, 1 ),
+					box: new THREE.BoxBufferGeometry( 1, 1, 1 ),
+					hardbox: new THREE.BoxBufferGeometry( 1, 1, 1 ),
+					cone: new THREE.CylinderBufferGeometry( 0, 1, 0.5 ),
+					wheel: new THREE.CylinderBufferGeometry( 1, 1, 1, 18 ),
+					sphere: new THREE.SphereBufferGeometry( 1, 16, 12 ),
+					highsphere: new THREE.SphereBufferGeometry( 1, 32, 24 ),
+					cylinder: new THREE.CylinderBufferGeometry( 1, 1, 1, 12, 1 ),
+					hardcylinder: new THREE.CylinderBufferGeometry( 1, 1, 1, 12, 1 ),
+				};
+
+				geo.circle.rotateX( - PI90 );
+				geo.plane.rotateX( - PI90 );
+				geo.wheel.rotateZ( - PI90 );
+
+				root.geo = geo;
+
+				// material
+
+				var wire = false;
+				root.mat = {
+
+					move: new THREE.MeshLambertMaterial( { color: 0xFF8811, name: 'move', wireframe: wire } ),
+					speed: new THREE.MeshLambertMaterial( { color: 0xFFFF11, name: 'speed', wireframe: wire } ),
+					sleep: new THREE.MeshLambertMaterial( { color: 0x1188FF, name: 'sleep', wireframe: wire } ),
+					basic: new THREE.MeshLambertMaterial( { color: 0x111111, name: 'basic', wireframe: wire } ),
+					static: new THREE.MeshLambertMaterial( { color: 0x1111FF, name: 'static', wireframe: wire } ),
+					kinematic: new THREE.MeshLambertMaterial( { color: 0x11FF11, name: 'kinematic', wireframe: wire } ),
+
+				};
+
+				root.container = new THREE.Group();
+
+			},
+
+			getContainer: function () {
+
+				return root.container;
+
+			},
+
+			// BREAKABLE
+
+			makeBreak: function ( o ) {
+
+				var name = o.name;
+				if ( ! map.has( name ) ) return;
+
+				if ( convexBreaker === null ) convexBreaker = new ConvexObjectBreaker();
+
+				var mesh = map.get( name );
+				// breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
+				var breakOption = o.breakOption;
+
+				var debris = convexBreaker.subdivideByImpact( mesh, o.pos, o.normal, breakOption[ 1 ], breakOption[ 2 ] ); // , 1.5 ??
+				// remove one level
+				breakOption[ 3 ] -= 1;
+				
+				
+				// remove original object
+				tmpRemove.push( name );
+
+				var i = debris.length;
+				while ( i -- ) tmpAdd.push( this.addDebris( name, i, debris[ i ], breakOption ) );
+
+			},
+
+			addDebris: function ( name, id, mesh, breakOption ) {
+
+				var o = {
+					name: name + '_debris' + id,
+					material: mesh.material,
+					type: 'convex',
+					shape: mesh.geometry,
+					//size: mesh.scale.toArray(),
+					pos: mesh.position.toArray(),
+					quat: mesh.quaternion.toArray(),
+					mass: mesh.userData.mass,
+					linearVelocity: mesh.userData.velocity.toArray(),
+					angularVelocity: mesh.userData.angularVelocity.toArray(),
+					margin: 0.05,
+				};
+
+				// if levelOfSubdivision > 0 make debris breakable !!
+				if ( breakOption[ 3 ] > 0 ) {
+
+					o.breakable = true;
+					o.breakOption = breakOption;
+
+				}
+
+				//this.add( o );
+
+				return o;
+
+			},
+
+			// EXTRA MODE
+
+
+
+			setMode: function ( mode ) {
+
+				if ( mode !== currentMode ) {
+
+					if ( currentMode === 'picker' ) exports.engine.removeRayCamera();
+					if ( currentMode === 'shoot' ) exports.engine.removeShootCamera();
+
+				}
+
+				currentMode = mode;
+
+				if ( currentMode === 'picker' ) exports.engine.addRayCamera();
+				if ( currentMode === 'shoot' ) exports.engine.addShootCamera();
+
+			},
+
+			// CAMERA SHOOT
+
+			addShootCamera: function () {
+
+			},
+
+			removeShootCamera: function () {
+
+			},
+
+			// CAMERA RAY
+
+			removeRayCamera: function () {
+
+				if ( ! refView ) return;
+				exports.engine.removeRay( 'cameraRay' );
+				refView.removeRay();
+				exports.engine.log();
+
+			},
+
+			addRayCamera: function () {
+
+				if ( ! refView ) return;
+
+				ray = exports.engine.add( { name: 'cameraRay', type: 'ray', callback: exports.engine.onRay, mask: 1, visible: false } );// only move body
+				refView.activeRay( exports.engine.updateRayCamera );
+
+			},
+
+			updateRayCamera: function ( offset ) {
+
+				ray.setFromCamera( refView.getMouse(), refView.getCamera() );
+				if ( mouseMode === 'drag' ) exports.engine.matrix( [{ name:'dragger', pos: offset.toArray(), keepRot:true }] );
+
+			},
+
+			onRay: function ( o ) {
+
+				var mouse = refView.getMouse();
+				var control = refView.getControls();
+				var name = o.name === undefined ? '' : o.name;
+
+				if ( mouse.z === 0 ) {
+
+					if ( mouseMode === 'drag' ){ 
+						control.enableRotate = true;
+						exports.engine.removeConnector();
+					}
+
+					mouseMode = 'free';
+
+				} else {
+
+					if ( mouseMode === 'free' ) {
+
+						if ( name ) {
+
+							if( mouseMode !== 'drag' ){
+
+								refView.setDragPlane( o.point );
+							    control.enableRotate = false;
+							    exports.engine.addConnector( o );
+							    mouseMode = 'drag';
+
+							} 
+
+						} else {
+
+							mouseMode = 'rotate';
+
+						}
+
+					}
+
+					/*if ( mouseMode === 'drag' ){
+
+						physic.matrix( [{ name:'dragger', pos: refView.getOffset().toArray() }] );
+
+					}*/
+
+				}
+
+				// debug
+				exports.engine.log( mouseMode + '   ' + name );
+
+			},
+
+			addConnector: function ( o ) {
+
+				//console.log(o)
+				var mesh = exports.engine.byName( o.name );
+				var p0 = new THREE.Vector3().fromArray( o.point );
+				var qB = mesh.quaternion.toArray();
+				var pos = exports.engine.getLocalPoint( p0, mesh ).toArray();
+
+				exports.engine.add({ 
+					name:'dragger', type:'sphere', size:[0.1], 
+					pos:o.point,
+					quat: qB, 
+					mass:0, 
+					kinematic: true,
+					group:32,
+					mask:32, 
+				});
+
+				exports.engine.add({ 
+					name:'connector', 
+					type:'joint_fixe', 
+					b1:'dragger', b2:o.name, 
+					pos1:[0,0,0], pos2:pos,
+					collision:false 
+				});
+			},
+
+			removeConnector: function () {
+
+				exports.engine.remove( 'dragger');
+				exports.engine.removeConstraint( 'connector');
+
+			},
+
+			getLocalPoint: function (vector, mesh) {
+				
+				mesh.updateMatrix();
+				//mesh.updateMatrixWorld(true);
+				var m1 = new THREE.Matrix4();
+				var s = new THREE.Vector3(1,1,1);
+				var m0 = new THREE.Matrix4().compose( mesh.position, mesh.quaternion, s );
+				m1.getInverse( m0 );
+				return vector.applyMatrix4( m1 );
+
+			},
+
+
+
+		};
+
+		return exports.engine;
+
+	} )();
 
 	Object.defineProperty(exports, '__esModule', { value: true });
 

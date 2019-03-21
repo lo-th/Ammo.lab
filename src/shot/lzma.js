@@ -27,7 +27,7 @@ References:
 */
 var LZMA = ( function () {
 
-    'use strict';
+	'use strict';
 
 	var LZMA = LZMA || {};
 
@@ -368,7 +368,7 @@ var LZMA = ( function () {
 
 			symbol = ( symbol << 1 ) | rangeDecoder.decodeBit( this._decoders, symbol );
 
-		}while ( symbol < 0x100 );
+		} while ( symbol < 0x100 );
 
 		return symbol & 0xff;
 
@@ -395,7 +395,7 @@ var LZMA = ( function () {
 
 			}
 
-		}while ( symbol < 0x100 );
+		} while ( symbol < 0x100 );
 
 		return symbol & 0xff;
 
@@ -697,9 +697,9 @@ var LZMA = ( function () {
 
 		value = properties.readByte();
 		lc = value % 9;
-		value = ~~ ( value / 9 );
+		value = ~ ~ ( value / 9 );
 		lp = value % 5;
-		pb = ~~ ( value / 5 );
+		pb = ~ ~ ( value / 5 );
 
 		if ( ! this.setLcLpPb( lc, lp, pb ) ) {
 
@@ -768,7 +768,7 @@ var LZMA = ( function () {
 
 	return LZMA;
 
-})();
+} )();
 
 /**
  * 	SEA3D LZMA
@@ -779,7 +779,7 @@ export function LZMAdecompact( data ) {
 
 	data = new Uint8Array( data );
 
-	var inStream = 
+	var inStream =
 	{
 		data: data,
 		position: 0,
@@ -804,4 +804,4 @@ export function LZMAdecompact( data ) {
 
 	return new Uint8Array( outStream.data ).buffer;
 
-};
+}
