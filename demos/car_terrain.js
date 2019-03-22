@@ -96,6 +96,7 @@ function afterLoad () {
 
     makeBuggy();
 
+    //physic.post('setDrive', { name:'buggy' });
     physic.drive( 'buggy' );
 
 };
