@@ -4833,6 +4833,7 @@
 		var stepNext = false;
 
 		var currentMode = '';
+		var oldMode = '';
 
 		var PI90 = 1.570796326794896;
 
@@ -5039,7 +5040,7 @@
 
 
 				// test ray
-				exports.engine.setMode( currentMode );
+				exports.engine.setMode( oldMode );
 				//this.addRayCamera();
 
 			},
@@ -5163,6 +5164,9 @@
 			reset: function ( full ) {
 
 				//console.log('reset', full);
+
+				oldMode = currentMode;
+				exports.engine.setMode( '' );
 
 				exports.engine.stop();
 
@@ -5564,13 +5568,13 @@
 				if ( ! refView ) return;
 
 				ray = exports.engine.add( { name: 'cameraRay', type: 'ray', callback: exports.engine.onRay, mask: 1, visible: false } );// only move body
-				refView.activeRay( exports.engine.updateRayCamera );
+				refView.activeRay( exports.engine.updateRayCamera, false );
 
 			},
 
 			updateRayCamera: function ( offset ) {
 
-				ray.setFromCamera( refView.getMouse(), refView.getCamera() );
+				//ray.setFromCamera( refView.getMouse(), refView.getCamera() );
 				if ( mouseMode === 'drag' ) exports.engine.matrix( [{ name:'dragger', pos: offset.toArray(), keepRot:true }] );
 
 			},
@@ -5580,6 +5584,8 @@
 				var mouse = refView.getMouse();
 				var control = refView.getControls();
 				var name = o.name === undefined ? '' : o.name;
+
+				ray.setFromCamera( mouse, control.object );
 
 				if ( mouse.z === 0 ) {
 
