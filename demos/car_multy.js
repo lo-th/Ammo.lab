@@ -1,4 +1,10 @@
 var carMat;
+var option = {
+
+    follow:false,
+    currentCar: 'fordM',
+
+}
 
 function demo () {
 
@@ -16,6 +22,7 @@ function afterLoad () {
         fps:60,
         substep:2,
         gravity:[0,-10,0],
+        worldscale:1,
     })
 
     // infinie plane
@@ -31,15 +38,29 @@ function afterLoad () {
     });
 
     // create cars
+    var list = [];
     var g = [];
-    for (var i = 0; i < CARS.length; i++) g.push( vehicle( i, [-25+(i*4), 0,0], 'convex') );
+    for (var i = 0; i < CARS.length; i++){ 
+    	list.push( CARS[i].name );
+    	g.push( vehicle( i, [-25+(i*4), 0,0], 'convex') );
+    }
+
     physic.addGroup( g );
 
-    // ! \\ set the car we drive 0 to 13
-    // use keyboard to controle car 
+    ui ({
 
-    follow ('car_0');
-    physic.drive ('car_0');
+        base:option,
+        function: applyOption,
+
+        follow: { type:'bool' },
+        currentCar: { type:'list', list:list },
+    
+    });
+
+
+    // ! \\ set the car we drive
+    // use keyboard to controle car 
+    physic.drive (option.currentCar);
 
 };
 
@@ -60,7 +81,7 @@ var CARS = [
     { n:'014', name:'bus'    , radius:0.64, nw:4, w:'5', mass:11450, wPos:[1.25, 0, 2.49] },
 ];
 
-function vehicle (id, pos, shapeType) {
+function vehicle ( id, pos, shapeType ) {
 
     var o = CARS[id];
     o.type = 'car';
@@ -72,14 +93,9 @@ function vehicle (id, pos, shapeType) {
     var chassis = view.getGeometry( 'cars', 'mcar'+o.n );
     var down = view.getGeometry( 'cars', 'down'+o.n );
     var inside = view.getGeometry( 'cars', 'inside'+o.n );
-
-
     var yy = shape.boundingBox.min.y;
 
-    
-
     o.material = carMat;
-
 
     if( inside ) o.geometry = view.mergeGeometry([chassis, down, inside]);
     else o.geometry = view.mergeGeometry([chassis, down]);
@@ -90,8 +106,10 @@ function vehicle (id, pos, shapeType) {
     o.s_length = 0.1;//o.radius;// * 0.5;
     //The maximum distance the suspension can be compressed in Cm 
     //o.s_travel = (o.radius*2)*100;
+    o.mass = o.mass / 5;
     // Maximum suspension force
     o.s_force = o.mass*10;
+
 
     o.s_compression = 0.84;
     o.s_damping = 0.88;
@@ -101,12 +119,20 @@ function vehicle (id, pos, shapeType) {
     
     o.shape = shape;
     //o.mesh = mesh;
-    o.wheel = view.getGeometry( 'cars', 'w00'+o.w );
+    o.wheel = view.getGeometry( 'cars', 'w00' + o.w );
+    o.nWheel = o.nw;
 
-    o.name = 'car_'+ id;
+    //o.name = 'car_'+ id;
 
     o.helper = true;
 
     return o;
 
 };
+
+function applyOption () {
+
+	follow( option.follow ? option.currentCar : 'none' )
+	physic.drive (option.currentCar);
+
+}

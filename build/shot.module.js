@@ -5107,7 +5107,7 @@ var engine = ( function () {
 
 			if( tmpAdd.length === 0 ) return;
 			//this.post( 'setAdd', tmpAdd );
-			while ( tmpAdd.length > 0 ) this.add( tmpAdd.pop(), true );
+			while ( tmpAdd.length > 0 ) this.add( tmpAdd.pop() );
 
 		},
 
@@ -5386,13 +5386,7 @@ var engine = ( function () {
 
 		addGroup: function ( list ) {
 
-			tmpAdd.concat( list );
-
-			//for ( var i = 0, lng = list.length; i < lng; i ++ ) {
-
-			//	this.add( list[ i ] );
-
-			//}
+			tmpAdd = tmpAdd.concat( list );
 
 		},
 

@@ -89,7 +89,14 @@ var math = {
 
 	vectomult: function ( r, scale ) {
 
-		return [ r[ 0 ] * scale, r[ 1 ] * scale, r[ 2 ] * scale ];
+		//r = r.map(x => x * scale);
+
+		r = r.map( function (x) { return x * scale; } );
+
+		//var i = r.length;
+		//while(i--) r[i] * scale;
+
+		return r;//[ r[ 0 ] * scale, r[ 1 ] * scale, r[ 2 ] * scale ];
 
 	},
 

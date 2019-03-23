@@ -98,6 +98,10 @@ Object.assign( Vehicle.prototype, {
 
 		o.size = o.size === undefined ? [ 2, 0.5, 4 ] : o.size;
 
+		if( o.pos !== undefined ) o.pos = math.vectomult( o.pos, root.invScale );
+		if( o.size !== undefined ) o.size = math.vectomult( o.size, root.invScale );
+		if( o.masscenter !== undefined ) o.masscenter = math.vectomult( o.size, root.invScale );
+
 		// car shape
 		var shapeType = o.shapeType || 'box';
 		var sho = {};
@@ -191,21 +195,23 @@ Object.assign( Car.prototype, {
 
 	step: function ( Ar, n, trans ) {
 
+		var scale = root.scale;
+
 		// speed km/h
 		Ar[ n ] = this.chassis.getCurrentSpeedKmHour();
 
 		this.body.getMotionState().getWorldTransform( trans );
-		trans.toArray( Ar, n + 1 );
+		trans.toArray( Ar, n + 1, scale );
 
 		var j = this.data.nWheel, w, t;
 
 		if ( j === 4 ) {
 
 			w = 8 * ( 4 + 1 );
-			Ar[ n + w + 0 ] = this.chassis.getWheelInfo( 0 ).get_m_raycastInfo().get_m_suspensionLength();
-			Ar[ n + w + 1 ] = this.chassis.getWheelInfo( 1 ).get_m_raycastInfo().get_m_suspensionLength();
-			Ar[ n + w + 2 ] = this.chassis.getWheelInfo( 2 ).get_m_raycastInfo().get_m_suspensionLength();
-			Ar[ n + w + 3 ] = this.chassis.getWheelInfo( 3 ).get_m_raycastInfo().get_m_suspensionLength();
+			Ar[ n + w + 0 ] = this.chassis.getWheelInfo( 0 ).get_m_raycastInfo().get_m_suspensionLength() * scale;
+			Ar[ n + w + 1 ] = this.chassis.getWheelInfo( 1 ).get_m_raycastInfo().get_m_suspensionLength() * scale;
+			Ar[ n + w + 2 ] = this.chassis.getWheelInfo( 2 ).get_m_raycastInfo().get_m_suspensionLength() * scale;
+			Ar[ n + w + 3 ] = this.chassis.getWheelInfo( 3 ).get_m_raycastInfo().get_m_suspensionLength() * scale;
 
 		}
 
@@ -215,7 +221,7 @@ Object.assign( Car.prototype, {
 			t = this.chassis.getWheelTransformWS( j );
 
 			w = 8 * ( j + 1 );
-			t.toArray( Ar, n + w + 1 );
+			t.toArray( Ar, n + w + 1, scale );
 
 			if ( j === 0 ) Ar[ n + w ] = this.chassis.getWheelInfo( 0 ).get_m_steering();
 
@@ -281,7 +287,6 @@ Object.assign( Car.prototype, {
 
 		var data = this.data;
 
-
 		var trans = math.transform();
 		var p0 = math.vector3();
 		var p1 = math.vector3();
@@ -333,6 +338,10 @@ Object.assign( Car.prototype, {
 		// wheels
 		var radius = o.radius || 0.4;
 		var wPos = o.wPos || [ 1, 0, 1.6 ];
+
+		wPos = math.vectomult( wPos, root.invScale );
+		radius = radius * root.invScale;
+
 		wPos[ 1 ] -= o.masscenter[ 1 ];
 
 		var n = o.nWheel || 4, p, fw;
@@ -488,14 +497,14 @@ Object.assign( Car.prototype, {
 			w.set_m_wheelsDampingCompression( data.s_compression );
 			w.set_m_wheelsDampingRelaxation( data.s_damping );
 
-			w.set_m_maxSuspensionTravelCm( data.s_travel * 100 );
+			w.set_m_maxSuspensionTravelCm( data.s_travel * 100 * root.invScale );
 			w.set_m_maxSuspensionForce( data.s_force );
-			w.set_m_suspensionRestLength1( data.s_length );
+			w.set_m_suspensionRestLength1( data.s_length * root.invScale );
 
 			w.set_m_rollInfluence( data.w_roll );
 			w.set_m_frictionSlip( data.w_friction );
 
-			w.set_m_wheelsRadius( data.radius );
+			w.set_m_wheelsRadius( data.radius * root.invScale );
 			//w.set_m_chassisConnectionPointCS( tmpPos1.fromArray(o.w_position) );
 
 		}
