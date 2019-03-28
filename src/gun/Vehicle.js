@@ -301,7 +301,7 @@ Object.assign( Car.prototype, {
 
 		// car shape
 
-		console.log(o.masscenter)
+		//console.log(o.masscenter)
 
 		// move center of mass
 		p0.fromArray( o.masscenter ).negate();
