@@ -2101,7 +2101,7 @@
 
 			if( o.pos !== undefined ) o.pos = math.vectomult( o.pos, root.invScale );
 			if( o.size !== undefined ) o.size = math.vectomult( o.size, root.invScale );
-			if( o.masscenter !== undefined ) o.masscenter = math.vectomult( o.size, root.invScale );
+			if( o.masscenter !== undefined ) o.masscenter = math.vectomult( o.masscenter, root.invScale );
 
 			// car shape
 			var shapeType = o.shapeType || 'box';
@@ -2298,6 +2298,8 @@
 			data.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
 
 			// car shape
+
+			console.log(o.masscenter);
 
 			// move center of mass
 			p0.fromArray( o.masscenter ).negate();

@@ -157,7 +157,7 @@ Object.assign( Vehicle.prototype, {
 
 	    var wPos = o.wPos || [ 1, 0, 1.6 ];
 
-	    o.masscenter = o.masscenter == undefined ? [ 0, 0, 0 ] : o.masscenter;
+	    o.masscenter = o.masscenter === undefined ? [ 0, 0, 0 ] : o.masscenter;
 
 	    //var masscenter = o.masscenter || [0,0.25,0];
 
