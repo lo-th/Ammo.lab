@@ -114,8 +114,8 @@ Object.assign( Vehicle.prototype, {
 
 		if ( o.v !== undefined ) delete ( o.v );
 
-		var vehicleRay = new Ammo.btDefaultVehicleRaycaster( root.world );
-		var car = new Car( name, o, shape, vehicleRay );
+		//var vehicleRay = new Ammo.btDefaultVehicleRaycaster( root.world );
+		var car = new Car( name, o, shape );
 
 		root.world.addAction( car.chassis );
 		root.world.addRigidBody( car.body );
@@ -134,7 +134,7 @@ Object.assign( Vehicle.prototype, {
 export { Vehicle };
 
 
-function Car( name, o, shape, vehicleRay ) {
+function Car( name, o, shape ) {
 
 	this.name = name;
 
@@ -145,11 +145,18 @@ function Car( name, o, shape, vehicleRay ) {
 	this.motor = 0;
 	this.gearRatio = [ - 1, 0, 2.3, 1.8, 1.3, 0.9, 0.5 ];
 
+	this.wheelBody = [];
+	this.wheelJoint = [];
+
+	this.isRay = true;
+
 	this.data = {
 
 		mass: 100,
+		wMass: 1,
 		// wheels
 		radius: 0.5,
+		wWidth: 0.25,
 		nWheel: 4,
 		wPos: [ 1, 0, 1.6 ], // wheels position on chassis
 		// drive setting
@@ -187,7 +194,7 @@ function Car( name, o, shape, vehicleRay ) {
 
 	};
 
-	this.init( o, shape, vehicleRay );
+	this.init( o, shape );
 
 }
 
@@ -283,7 +290,7 @@ Object.assign( Car.prototype, {
 
 	},
 
-	init: function ( o, shape, vehicleRay ) {
+	init: function ( o, shape ) {
 
 		var data = this.data;
 
@@ -292,6 +299,8 @@ Object.assign( Car.prototype, {
 		var p1 = math.vector3();
 		var p2 = math.vector3();
 		var p3 = math.vector3();
+
+		this.isRay = o.isRay === undefined ? true : o.isRay;
 
 		data.mass = o.mass === undefined ? 800 : o.mass;
 		o.masscenter = o.masscenter === undefined ? [ 0, 0, 0 ] : o.masscenter;
@@ -329,15 +338,17 @@ Object.assign( Car.prototype, {
 
 		Ammo.destroy( rbInfo );
 
-		var tuning = new Ammo.btVehicleTuning();
-		//var vehicleRay = new Ammo.btDefaultVehicleRaycaster( world );
-		this.chassis = new Ammo.btRaycastVehicle( tuning, this.body, vehicleRay );
-		this.chassis.setCoordinateSystem( 0, 1, 2 );
+		if( this.isRay ) {
 
-		//console.log( this.chassis , vehicleRay)
+			var tuning = new Ammo.btVehicleTuning();
+			var vehicleRay = new Ammo.btDefaultVehicleRaycaster( root.world );
+			this.chassis = new Ammo.btRaycastVehicle( tuning, this.body, vehicleRay );
+			this.chassis.setCoordinateSystem( 0, 1, 2 );
 
+		}
 
 		// wheels
+
 		var radius = o.radius || 0.4;
 		var wPos = o.wPos || [ 1, 0, 1.6 ];
 
@@ -395,8 +406,60 @@ Object.assign( Car.prototype, {
 			p1.fromArray( p ); // position
 			p2.setValue( 0, - 1, 0 ); // wheelDir
 			p3.setValue( - 1, 0, 0 ); // wheelAxe
-			this.chassis.addWheel( p1, p2, p3, 1, radius, tuning, fw );
-			this.chassis.setBrake( o.breaking || 100, i );
+
+			if( this.isRay ){
+				
+				this.chassis.addWheel( p1, p2, p3, 1, radius, tuning, fw );
+			    this.chassis.setBrake( o.breaking || 100, i );
+
+			} else {
+
+				trans.identity();
+				trans.setOrigin( p1 );
+
+				p2.setValue( data.wWidth * root.invScale, radius, radius );
+				shape = new Ammo.btCylinderShape( p2 );
+
+				p0.setValue( 0, 0, 0 );
+				shape.calculateLocalInertia( data.wMass, p0 );
+
+				var motionState = new Ammo.btDefaultMotionState( trans );
+				var rbInfo = new Ammo.btRigidBodyConstructionInfo( data.wMass, motionState, shape, p0 );
+
+				var wheel = new Ammo.btRigidBody( rbInfo );
+
+				wheel.setFriction( 1110 );
+				wheel.setActivationState( 4 );
+				root.world.addRigidBody( wheel, 1, - 1 );
+
+				this.wheelBody[i] = wheel;
+
+				var joint = new Ammo.btHingeConstraint( this.body, wheel, p1, p0, p2, p3, false );
+				root.world.addConstraint( joint, false );
+
+				// Drive engine.
+				/*
+				joint.enableMotor(3, true);
+				joint.setMaxMotorForce(3, 1000);
+				joint.setTargetVelocity(3, 0);
+
+				// Steering engine.
+				joint.enableMotor(5, true);
+				joint.setMaxMotorForce(5, 1000);
+				joint.setTargetVelocity(5, 0);
+
+				joint.setParam( BT_CONSTRAINT_CFM, 0.15f, 2 );
+				joint.setParam( BT_CONSTRAINT_ERP, 0.35f, 2 );
+
+				joint.setDamping( 2, 2.0 );
+				joint.setStiffness( 2, 40.0 );
+				*/
+
+				this.wheelJoint[i] = joint;
+
+
+			}
+			
 
 		}
 

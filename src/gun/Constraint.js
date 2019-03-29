@@ -237,15 +237,19 @@ Object.assign( Constraint.prototype, {
 
 		}
 
+
+
 		// 6 DOF
 		// < 3 position
 		// > 3 rotation
+
 		if ( o.damping && joint.setDamping ) {
 
 			for ( var i = 0; i < 6; i ++ ) joint.setDamping( i, o.damping[ i ] );
 
 		}
-		if ( o.spring && joint.enableSpring ) {
+
+		if ( o.spring && joint.enableSpring && joint.setStiffness ) {
 
 			for ( var i = 0; i < 6; i ++ ) {
 

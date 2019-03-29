@@ -1,79 +1,19 @@
 
 var settings = {
-
     massChassis: 100,
     massAxis: 20,
     massArmtop: 20,
     massArmlow: 20,
-    massSpring: 10,
-    massWheel: 10,
-    massRoller: 1.25,
-
-    frictionRoller: 1,
 
 }
-var mat = {};
-// ! \\ set car speed and direction
-var acc = 5;
-var speed = 0;
-var translation = false;
-var rotation = true;
-
-
-
-var size = 0.05;
-var debug = false;
-
-var geo = view.getGeo();
-var mat = view.getMat();
-//var useSteering = false;
-
-//var steeringAxis = [1,1,1,1];
-//var steeringAxis = [0,0,0,0];
-
-// center of mass position y
-var decalY = (62.5 * size); 
-
-var buggyGroup = 1;
-var buggyMask = -1;//1|2;
-var noCollision = 32;
-var ground;
 
 function demo() {
-
-    view.hideGrid();
-    view.addFog({exp:0.0025});
-    view.addSky({ hour:9, hdr:true });
-
 
     physic.set({
         fps:60,
         substep:8,
         gravity:[0,-10,0],
     })
-
-
-    //physic.add({type:'plane', friction:1 });// infinie plane
-
-    // physic terrain shape
-
-    physic.add ({ 
-        type:'terrain',
-        name:'ground',
-        uv:50,
-        pos : [ 0, -10, 0 ], // terrain position
-        size : [ 1200, 30, 1200 ], // terrain size in meter
-        sample : [ 512, 512 ], // number of subdivision
-        frequency : [0.016,0.05,0.2], // frequency of noise
-        level : [ 1, 0.2, 0.05 ], // influence of octave
-        expo: 2,
-       // flipEdge : true, // inverse the triangle
-        hdt : 'PHY_FLOAT', // height data type PHY_FLOAT, PHY_UCHAR, PHY_SHORT
-        friction: 1, 
-        restitution: 0.2,
-    });
-
-    ground = physic.byName('ground');
 
 
     view.moveCam({ theta:45, phi:20, distance:25, target:[0,2,0] });
@@ -85,7 +25,24 @@ function afterLoad () {
 
     view.addJoystick();
     
-    
+    physic.add({type:'plane'});// infinie plane
+
+    // physic terrain shape
+
+    /*add ({ 
+        type:'terrain', 
+        uv:50,
+        pos : [ 0, -10, 0 ], // terrain position
+        size : [ 1000, 10, 1000 ], // terrain size in meter
+        sample : [ 512, 512 ], // number of subdivision
+        frequency : [0.016,0.05,0.2], // frequency of noise
+        level : [ 1, 0.2, 0.05 ], // influence of octave
+        expo: 3,
+        flipEdge : true, // inverse the triangle
+        hdt : 'PHY_FLOAT', // height data type PHY_FLOAT, PHY_UCHAR, PHY_SHORT
+        friction: 1, 
+        restitution: 0.2,
+    });*/
 
     //return
 
@@ -94,8 +51,6 @@ function afterLoad () {
 
     // mecanum buggy
     buildMecanum();
-
-    //physic.add({type:'box', name:'boyA', mass:100, pos:[0,15,0], size:[5] });
 
     //follow ('chassis', {distance:20, theta:-90});
 
@@ -182,7 +137,12 @@ function update() {
 
 };
 
-
+var mat = {};
+// ! \\ set car speed and direction
+var acc = 5;
+var speed = 0;
+var translation = false;
+var rotation = true;
 
 // -----------------------
 //    MECANUM BUGGY 
@@ -193,9 +153,24 @@ function update() {
 //
 // -----------------------
 
-function buildMecanum () {
+var size = 0.05;
+var debug = true;
 
-    var posY = ground.getHeight(0,0);
+var geo = view.getGeo();
+var mat = view.getMat();
+//var useSteering = false;
+
+//var steeringAxis = [1,1,1,1];
+var steeringAxis = [0,0,0,0];
+
+// center of mass position y
+var decalY = 62.5 * size; 
+
+var buggyGroup = 8;
+var buggyMask = -1;//1|2;
+var noCollision = 32;
+
+function buildMecanum () {
 
     // chassis
 
@@ -207,7 +182,7 @@ function buildMecanum () {
 
         mass:settings.massChassis,
         size:[size],
-        pos:[0, posY+decalY, 0],
+        pos:[0, decalY, 0],
 
         geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_chassis' ),
         material:debug ? undefined : mat.meca1,
@@ -223,7 +198,7 @@ function buildMecanum () {
 
     });
 
-    
+    physic.add({type:'box', name:'boyA', mass:100, pos:[0,15,0], size:[5] });
 
     // wheelAxis
 
@@ -244,11 +219,6 @@ function buildMecanum () {
 
 
 function wheelAxis ( n ) {
-
-    // mass 
-    var massPaddel = 20;
-    var massPadtop = 20;//2;
-    var massAxis = 20;//2;
 
     var rot = [10, 0, 0];
     var ext2;
@@ -304,7 +274,7 @@ function wheelAxis ( n ) {
         name:'armtop'+n,
         type:'hardbox',
 
-        mass:settings.massArmlow,
+        mass:settings.massArmTop,
         size:[28*size, 10*size, 80*size],
         //size:[10*size, 10*size, 63*size],
         //size:[3*size, 5*size, 63*size],
@@ -322,30 +292,88 @@ function wheelAxis ( n ) {
         angular:1,
     });
 
-
-    physic.add({ 
-        name:'axis'+n,
-        type:'hardbox',
-
-        mass:settings.massAxis,
-        friction:0.1,
-        size:[23*size, 23*size, 23*size],
-
-        geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_ar' ),
-        material:debug ? mat.blue : mat.meca3,
-        geoRot:gr2,
-        geoSize:[size],
-        
-        pos:pos2,
-        state:4,
-        group:buggyGroup, 
-        mask:buggyMask,
-    });
-
     
-    // joint
 
-    var limit = [ side>0 ? 0 : -15, side>0 ? 15 : 0, ,0.9,0.3,1 ];
+
+
+    if( steeringAxis[n] ){
+
+        physic.add({ 
+            name:'axis'+ n,
+            type:'box',
+
+            mass:settings.massAxis*0.5,
+            size:[23*size, 23*size, 23*size],
+
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_av' ),
+            material:debug ? undefined : mat.meca3,
+            geoRot:gr2,
+            geoSize:[size],
+            
+            pos:pos2,
+            state:4,
+            group:buggyGroup, 
+            mask:noCollision,
+            angular:1,
+        });
+
+        physic.add({ 
+            name:'axis_s_'+ n,
+            type:'box', 
+
+            mass:settings.massAxis*0.5,
+            friction:0.1,
+            size:[23*size, 23*size, 23*size],
+
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_av2' ),
+            material:debug ? undefined : mat.meca3,
+            geoRot:gr2,
+            geoSize:[size],
+
+            pos:pos3,
+            state:4,
+            group:buggyGroup, 
+            mask:buggyMask, 
+            angular:1,
+        });
+
+        physic.add({
+            name:'j_steering_'+n,
+            type:'joint_hinge',
+            body1:'axis'+n,
+            body2:'axis_s_'+n,
+            pos1:[0,0,0],
+            pos2:[0,0,0],
+            axe1:[0,1,0],
+            axe2:[0,1,0],
+            //limit:[0, 0],
+            //motor:[true, 3, 10],
+        });
+
+    } else {
+
+        physic.add({ 
+            name:'axis'+n,
+            type:'hardbox',
+
+            mass:settings.massAxis,
+            friction:0.1,
+            size:[23*size, 23*size, 23*size],
+
+            geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_axis_ar' ),
+            material:debug ? mat.blue : mat.meca3,
+            geoRot:gr2,
+            geoSize:[size],
+            
+            pos:pos2,
+            state:4,
+            group:buggyGroup, 
+            mask:buggyMask,
+        });
+
+    }
+
+    // joint to chassis
 
     physic.add({
         name:'ax_1_'+n,
@@ -356,7 +384,6 @@ function wheelAxis ( n ) {
         pos2:[ 0, 0, decal0[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
-        limit:limit,
     });
 
     physic.add({
@@ -368,9 +395,9 @@ function wheelAxis ( n ) {
         pos2:[ 0, 0, decal1[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
-        limit:limit,
     });
 
+    // joint to axis
 
     physic.add({
         name:'ax_1e_'+n,
@@ -381,7 +408,6 @@ function wheelAxis ( n ) {
         pos2:[ 0, 0, -decal0[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
-        limit:limit,
     });
 
     physic.add({
@@ -393,15 +419,11 @@ function wheelAxis ( n ) {
         pos2:[ 0, 0, -decal1[1]],
         axe1:[1,0,0],
         axe2:[1,0,0],
-        limit:limit,
     });
 
-    
-
-    
-
-
 };
+
+// SPRING
 
 function spring ( n ) {
 
@@ -430,7 +452,7 @@ function spring ( n ) {
         name:'bA'+n,
         type:'hardbox',
 
-        mass: settings.massSpring * 0.5,
+        mass:massTop,
         size:[17*size, 17*size, 22*size],
 
         geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_stop' ),
@@ -448,7 +470,7 @@ function spring ( n ) {
         name:'bB'+n,
         type:'hardbox',
 
-        mass:settings.massSpring * 0.5,
+        mass:massLow,
         size:[17*size, 17*size, 22*size],
         //size:[10*size, 10*size, 10*size],
 
@@ -507,11 +529,13 @@ function spring ( n ) {
         linLower: [ 0, 0, -springRange ],
         linUpper: [ 0, 0, springRange ],
 
-       //useA:true,
+        useA:true,
 
-        spring:[0,0,200,0,0,0],//stiffness // rigidité
-        damping:[0,0,1000,0,0,0],//[2,40000],// period 1 sec for !kG body // amortissement
+        // index means 0:translationX, 1:translationY, 2:translationZ
 
+        spring:[0,0,2,0,0,0],//stiffness
+        damping:[0,0,2000,0,0,0],//[2,40000],// period 1 sec for !kG body
+        //stiffness:[2,0.01],
         //feedback:true,
     });
 
@@ -524,6 +548,10 @@ function spring ( n ) {
 
 function wheel ( n ) {
 
+    // mass 
+    var massWheel = 10;
+    var massRoller = 10/8;
+
     var ext;
     var wSpeed = speed;
     var pz;
@@ -533,12 +561,12 @@ function wheel ( n ) {
 
     var wpos = [120*size, 50*size, 109.5*size];
 
-    var position = [n<2? wpos[0] : -wpos[0], wpos[1], (n==1 || n==3) ? -wpos[2] : wpos[2] ];
+    var position = [0,0,0];
 
-    /*if(n==0) position = [wpos[0],wpos[1],wpos[2]]
+    if(n==0) position = [wpos[0],wpos[1],wpos[2]]
     if(n==1) position = [wpos[0],wpos[1],-wpos[2]]
     if(n==2) position = [-wpos[0],wpos[1],wpos[2]]
-    if(n==3) position = [-wpos[0],wpos[1],-wpos[2]]*/
+    if(n==3) position = [-wpos[0],wpos[1],-wpos[2]]
 
     if(n==0 || n==3){ ext='L'; }
     else{ ext='R'; }
@@ -558,7 +586,7 @@ function wheel ( n ) {
         shape:view.getGeometry( 'mecanum', 'meca_wheel_shape' ),
         size:[size],
 
-        mass:settings.massWheel,
+        mass:massWheel,
         friction:0.1,
         
         //rot:[0,0,90],
@@ -582,7 +610,7 @@ function wheel ( n ) {
         
     });
 
-    // roller X8
+    // roller *8
 
     var radius = 39*size;
     var i = 8, angle, y, x, z;
@@ -590,7 +618,6 @@ function wheel ( n ) {
     var axe = [];
 
     while(i--){
-
         angle = -(45*i)*Math.torad;
         x = (radius * Math.cos(angle));
         y = (radius * Math.sin(angle));
@@ -617,12 +644,13 @@ function wheel ( n ) {
         }
 
         physic.add({ 
-
             name:n+'_rr_'+i,
             type:'convex',
             shape:view.getGeometry( 'mecanum', 'meca_roller_shape' ),
-            mass:settings.massRoller,
-            friction:settings.frictionRoller,
+
+            mass:massRoller,
+            //friction:0.7,
+            friction:0.7,
             size:[size],
             rot:axe,
             pos:[x+ position[0], y+ position[1], z],
@@ -657,7 +685,7 @@ function wheel ( n ) {
     // joint wheels
 
     var link = 'axis'+n;
-    //if(steeringAxis[n]) link = 'axis_s_'+n;
+    if(steeringAxis[n]) link = 'axis_s_'+n;
 
     physic.add({
         name:'jh'+n,
