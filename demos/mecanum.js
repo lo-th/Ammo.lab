@@ -159,18 +159,30 @@ function update() {
     var d;
     var ts = user.key[1] * acc;
     var rs = user.key[0] * acc;
-     
+    var rx = user.key[2] * acc;
+
+    if(ts===0) var ts = user.key[3] * acc;
+
+    //console.log(rx)
 
    // speed = user.key[0] * 5 + user.key[1] * 5;
 
     var i = 4, r=[];
     while(i--){
+        
+        
+
         if(Math.abs(ts)>Math.abs(rs)){
             s = ts;// translation
             //if(i==0 || i==3) s*=-1; 
         } else { 
             s = rs;// rotation
             if(i==1 || i==3) s*=-1; 
+        }
+
+        if(Math.abs(rx)>0){
+            if(i==0 || i==3) s=rx;
+            else s=-rx;
         }
         //r.push( [ 'jh'+i, 'motor', [ s, 100] ] );
         r.push( { name:'jh'+i, type:'motor',  targetVelocity:s, maxMotor:100 } );
