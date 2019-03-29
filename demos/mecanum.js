@@ -61,7 +61,7 @@ function demo() {
         type:'terrain',
         name:'ground',
         uv:50,
-        pos : [ 0, -10, 0 ], // terrain position
+        pos : [ 0, -30, 0 ], // terrain position
         size : [ 1200, 30, 1200 ], // terrain size in meter
         sample : [ 512, 512 ], // number of subdivision
         frequency : [0.016,0.05,0.2], // frequency of noise
@@ -76,7 +76,7 @@ function demo() {
     ground = physic.byName('ground');
 
 
-    view.moveCam({ theta:45, phi:20, distance:25, target:[0,2,0] });
+    view.moveCam({ theta:45, phi:20, distance:30, target:[0,-20,0] });
     view.load ( ['mecanum.sea'], afterLoad, true, true );
 
 };
@@ -195,7 +195,7 @@ function update() {
 
 function buildMecanum () {
 
-    var posY = ground.getHeight(0,0);
+    var posY = 0//ground.getHeight(0,0);
 
     // chassis
 
