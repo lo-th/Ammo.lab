@@ -380,7 +380,7 @@ function buggyMaterials () {
         roughness: 0.4,
         metalness: 0.6,
         map: view.texture( 'buggy/extra.jpg' ),
-        normalMap: view.texture( 'buggy/extra.jpg' ),
+        normalMap: view.texture( 'buggy/extra_n.jpg' ),
     });
 
     mat['pilote'] = view.material({
