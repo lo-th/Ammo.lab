@@ -63,6 +63,7 @@ function next(){
 
     editor.init( launch, isWithCode, '#308AFF', 'Ammo.lab' );
     editor.addExtraOption( physic.setMode );
+    view.setRefEditor( editor );
 
     physic.start();
 

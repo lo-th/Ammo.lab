@@ -24,7 +24,7 @@ function demo() {
     // infinie plane
     physic.add({type:'plane'});
 
-    demoType( 1 );
+    demoType( 5 );
 
     
 };

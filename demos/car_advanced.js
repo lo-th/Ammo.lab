@@ -321,9 +321,11 @@ function buggyMaterials () {
 
     mat['glass'] = view.material({
         name:'glass',
-        color: 0x3366ff,
+        roughness: 0.1,
+        metalness: 0.9,
+        color: 0xeeefff,
         transparent:true,
-        opacity:0.2,
+        opacity:0.3,
     });
 
     mat['body'] = view.material({

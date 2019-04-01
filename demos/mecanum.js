@@ -12,6 +12,9 @@ var settings = {
     frictionRoller: 1,
 
 }
+
+var size = 0.05;
+var debug = false;
 var mat = {};
 // ! \\ set car speed and direction
 var acc = 5;
@@ -19,10 +22,16 @@ var speed = 0;
 var translation = false;
 var rotation = true;
 
+var springs = [];
+var springsTop = [];
+var springsDown = [];
+var springDecal = 66*size//( 26 + 15.5 ) * size;
+var springRatio =  1/(34 * size);
+// spring min = 66 / max = 100
+//
+//34
 
-
-var size = 0.05;
-var debug = false;
+//38.487n // 58.487
 
 var geo = view.getGeo();
 var mat = view.getMat();
@@ -129,6 +138,14 @@ function initMaterials () {
         map: view.texture( 'meca_tools.jpg' ),
     });
 
+    mat['spring'] = view.material({
+        name:'spring',
+        color: 0x333333,
+        roughness: 0.2,
+        metalness: 0.8,
+        morphTargets: true,
+    });
+
     // debug
 
     mat['red'] = view.material({
@@ -192,7 +209,25 @@ function update() {
     // apply forces to bodys
     physic.forces( r );
 
+    springsDistance()
+
 };
+
+// springs morph update
+
+function springsDistance () {
+    
+    var i = 4, d = [];
+    while(i--){
+
+        d[i] = (springsTop[i].position.distanceTo( springsDown[i].position )) - springDecal;
+        springs[i].morphTargetInfluences[ 0 ] = ( 'max', d[i]*springRatio  ); 
+
+    }
+
+    console.log(d)
+
+}
 
 
 
@@ -383,7 +418,6 @@ function wheelAxis ( n ) {
         limit:limit,
     });
 
-
     physic.add({
         name:'ax_1e_'+n,
         type:'joint_hinge',
@@ -407,11 +441,6 @@ function wheelAxis ( n ) {
         axe2:[1,0,0],
         limit:limit,
     });
-
-    
-
-    
-
 
 };
 
@@ -438,7 +467,7 @@ function spring ( n ) {
 
     // object
 
-    physic.add({ 
+    springsTop[n] = physic.add({ 
         name:'bA'+n,
         type:'hardbox',
 
@@ -456,7 +485,7 @@ function spring ( n ) {
         mask:noCollision,
     });
 
-    physic.add({ 
+    springsDown[n] = physic.add({ 
         name:'bB'+n,
         type:'hardbox',
 
@@ -474,6 +503,10 @@ function spring ( n ) {
         group:buggyGroup, 
         mask:noCollision,
     });
+
+    springs[n] = new THREE.Mesh( view.getGeometry( 'mecanum', 'meca_spring' ), mat.spring );
+    springsTop[n].add( springs[n] );
+    if(side===-1) springs[n].rotation.x = 180*THREE.Math.DEG2RAD
 
     // joint
 
@@ -519,10 +552,9 @@ function spring ( n ) {
         linLower: [ 0, 0, -springRange ],
         linUpper: [ 0, 0, springRange ],
 
-       //useA:true,
-
+        // [ x, y, z, rx, ry, rz ]
         spring:[0,0,200,0,0,0],//stiffness // rigidité
-        damping:[0,0,1000,0,0,0],//[2,40000],// period 1 sec for !kG body // amortissement
+        damping:[0,0,1000,0,0,0],// period 1 sec for !kG body // amortissement
 
         //feedback:true,
     });

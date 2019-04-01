@@ -155,7 +155,7 @@ Object.assign( Constraint.prototype, {
 
 		}
 
-		//console.log( joint );
+		
 
 		// EXTRA SETTING
 
@@ -188,37 +188,36 @@ Object.assign( Constraint.prototype, {
 		}
 		if ( o.motor && joint.enableAngularMotor ) joint.enableAngularMotor( o.motor[ 0 ], o.motor[ 1 ], o.motor[ 2 ] );
 
+		// slider
 
-		// slider & dof
+		if ( joint.setLowerLinLimit ) {
+
+			if ( o.linLower ) joint.setLowerLinLimit( o.linLower * root.invScale );
+			if ( o.linUpper ) joint.setUpperLinLimit( o.linUpper * root.invScale );
+
+		}
+
+		if ( joint.setLowerAngLimit ) {
+
+			if ( o.angLower ) joint.setLowerAngLimit( o.angLower * math.torad );
+			if ( o.angUpper ) joint.setUpperAngLimit( o.angUpper * math.torad );
+			
+		}
+
+		// 6 dof
 
 		if ( joint.setLinearLowerLimit ) {
 
-			if ( o.linLower ) {
-
-				posA.fromArray( o.linLower ).multiplyScalar( root.invScale ); joint.setLinearLowerLimit( posA );
-
-			}
-			if ( o.linUpper ) {
-
-				posB.fromArray( o.linUpper ).multiplyScalar( root.invScale ); joint.setLinearUpperLimit( posB );
-
-			}
+			if ( o.linLower ) joint.setLinearLowerLimit( posA.fromArray( o.linLower ).multiplyScalar( root.invScale ));
+			if ( o.linUpper ) joint.setLinearUpperLimit( posB.fromArray( o.linUpper ).multiplyScalar( root.invScale ));
 
 		}
 
 		if ( joint.setAngularLowerLimit ) {
 
-			if ( o.angLower ) {
-
-				axeA.set( o.angLower[ 0 ] * math.torad, o.angLower[ 1 ] * math.torad, o.angLower[ 2 ] * math.torad ); joint.setAngularLowerLimit( axeA );
-
-			}
-			if ( o.angUpper ) {
-
-				axeB.set( o.angUpper[ 0 ] * math.torad, o.angUpper[ 1 ] * math.torad, o.angUpper[ 2 ] * math.torad ); joint.setAngularUpperLimit( axeB );
-
-			}
-
+			if ( o.angLower ) joint.setAngularLowerLimit( axeA.set( o.angLower[ 0 ] * math.torad, o.angLower[ 1 ] * math.torad, o.angLower[ 2 ] * math.torad ));
+			if ( o.angUpper ) joint.setAngularUpperLimit( axeB.set( o.angUpper[ 0 ] * math.torad, o.angUpper[ 1 ] * math.torad, o.angUpper[ 2 ] * math.torad ));
+			
 		}
 
 		// dof
@@ -282,6 +281,13 @@ Object.assign( Constraint.prototype, {
 		this.joints.push( joint );
 
 		map.set( name, joint );
+
+
+		/*if(o.type==='joint_spring_dof'){
+			var aa= []
+			joint.getFrameOffsetA().toArray(aa)
+			console.log( o.type, joint, aa );
+		}*/
 
 		// free math
 		posA.free();
