@@ -29,24 +29,28 @@ Object.assign( Vehicle.prototype, {
 	        var decal = 0.2;
 	        var ratio = 1 / decal;
 	        var radius = b.userData.radius;
-	        var steering = AR[ n + 8 ];
-
+	        var steering = AR[ n + 24 ];
+	        
 	        if ( b.userData.steeringWheel ) {
 
-	            b.userData.steeringWheel.rotation.y = - steering * 6;
+	            b.userData.steeringWheel.rotation.y = - steering * 15;
 
 			}
 
-
 	        if ( b.userData.isWithBrake ) {
+
+	        	var steeringR = AR[ n + 8 ];
+	            var steeringL = AR[ n + 16 ];
 
 	            k = j;
 
 	            while ( k -- ) {
 
-	                if ( k === 0 ) b.userData.b[ k ].rotation.y = steering;
-	                if ( k === 1 ) b.userData.b[ k ].rotation.y = Math.Pi - steering;
+	                if ( k === 0 ) b.userData.b[ k ].rotation.y = steeringL;
+	                if ( k === 1 ) b.userData.b[ k ].rotation.y = Math.Pi - steeringR;
 	                b.userData.b[ k ].position.y = radius - AR[ n + w + k ];
+
+	               
 
 	            }
 

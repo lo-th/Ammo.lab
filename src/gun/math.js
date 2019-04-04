@@ -18,6 +18,12 @@ var math = {
 	torad: Math.PI / 180,//0.0174532925199432957,
 	todeg: 180 / Math.PI,//57.295779513082320876,
 
+	clamp: function ( value, min, max ) {
+
+		return Math.max( min, Math.min( max, value ) );
+
+	},
+
 	eulerToQuadArray: function ( array, deg ) {
 
 		if ( deg ) array = math.vectomult( array, math.torad );

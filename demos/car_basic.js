@@ -3,6 +3,8 @@ var option = {
     restart:false,
     follow:true,
 
+    name:'car',
+
     gravity:-10,
 
     mass:600,
@@ -30,7 +32,7 @@ function demo() {
 
     //view.hideGrid();
 
-    view.addJoystick();
+    view.addJoystick({ sameAxis:true });
 
     physic.set({
         fps:60,

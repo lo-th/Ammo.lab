@@ -377,7 +377,7 @@ export var engine = ( function () {
 
 		setVehicle: function ( o ) {
 
-			vehicles.setData( o );
+			vehicles.setVehicle( o );
 
 		},
 

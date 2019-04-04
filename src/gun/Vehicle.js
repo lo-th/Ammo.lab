@@ -89,6 +89,15 @@ Object.assign( Vehicle.prototype, {
 
 	},
 
+	setVehicle: function ( o ){
+
+		if ( ! map.has( o.name ) ) return;
+		var car = map.get( o.name );
+
+		car.setData( o );
+
+	},
+
 	add: function ( o ) {
 
 		var name = o.name !== undefined ? o.name : 'car' + this.ID ++;
@@ -136,6 +145,8 @@ export { Vehicle };
 
 function Car( name, o, shape ) {
 
+	// http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+
 	this.name = name;
 
 	this.chassis = null;
@@ -143,7 +154,10 @@ function Car( name, o, shape ) {
 	this.steering = 0;
 	this.breaking = 0;
 	this.motor = 0;
+
 	this.gearRatio = [ - 1, 0, 2.3, 1.8, 1.3, 0.9, 0.5 ];
+	// acceleration / topSpeed
+
 
 	this.wheelBody = [];
 	this.wheelJoint = [];
@@ -162,7 +176,7 @@ function Car( name, o, shape ) {
 		// drive setting
 		engine: 1000,
 		acceleration: 10,
-		steering: 0.3, //Math.PI/6,
+		maxSteering: 24*math.torad, //Math.PI/6,
 		breaking: 100,
 		incSteering: 0.04,
 
@@ -231,6 +245,8 @@ Object.assign( Car.prototype, {
 			t.toArray( Ar, n + w + 1, scale );
 
 			if ( j === 0 ) Ar[ n + w ] = this.chassis.getWheelInfo( 0 ).get_m_steering();
+			if ( j === 1 ) Ar[ n + w ] = this.chassis.getWheelInfo( 1 ).get_m_steering();
+			if ( j === 2 ) Ar[ n + w ] = this.steering;//this.chassis.getWheelInfo( 0 ).get_m_steering();
 
 		}
 
@@ -240,34 +256,39 @@ Object.assign( Car.prototype, {
 
 		var data = this.data;
 
-		//var key = engine.getKey();
+		
 
-		this.steering -= data.incSteering * key[ 0 ];
+		// steering
 
+        if ( key[ 0 ] === 0 ) this.steering *= 0.9;
+        else this.steering -= data.incSteering * key[ 0 ];
+        //this.steering -= data.incSteering * key[ 0 ];
+        this.steering = math.clamp( this.steering, - data.maxSteering, data.maxSteering );
 
+        // engine
+        if ( key[ 1 ] === 0 ){ 
+        	this.motor = 0; 
+        	this.breaking = data.breaking;
+        } else {
+			this.motor -= data.acceleration * key[ 1 ];
+			this.breaking = 0;
+		}
+		this.motor = math.clamp( this.motor, - data.engine, data.engine );
+		//if ( this.motor > data.engine ) this.motor = data.engine;
+		//if ( this.motor < - data.engine ) this.motor = - data.engine;
 
-		if ( this.steering < - data.steering ) this.steering = - data.steering;
-		if ( this.steering > data.steering ) this.steering = data.steering;
+		/*if ( key[ 1 ] === 0 ) { // && key[1] == 0 ){
 
-		this.steering *= 0.9;
-
-		this.motor -= data.acceleration * key[ 1 ];
-		if ( this.motor > data.engine ) this.motor = data.engine;
-		if ( this.motor < - data.engine ) this.motor = - data.engine;
-
-		if ( key[ 1 ] == 0 ) { // && key[1] == 0 ){
-
-			if ( this.motor > 1 ) this.motor *= 0.9;
-			else if ( this.motor < - 1 ) this.motor *= 0.9;
+			if ( this.motor > 1 || this.motor < - 1 ) this.motor *= 0.9;
 			else {
 
 				this.motor = 0; this.breaking = data.breaking;
 
 			}
 
-		}
+		}*/
 
-		// Ackermann angle
+		// Ackermann steering principle 
 		var lng = (this.wpos[2]*2);
 		var w = this.wpos[0];
 		var turn_point = lng / Math.tan( this.steering );
@@ -281,6 +302,8 @@ Object.assign( Car.prototype, {
 
 		//console.log(Math.round(angle_r*math.todeg), Math.round(angle_l*math.todeg))
         //console.log(angle_r, angle_l)
+
+       // console.log(Math.round(this.steering*math.todeg))
 
 
 

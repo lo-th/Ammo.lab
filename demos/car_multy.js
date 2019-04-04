@@ -16,7 +16,7 @@ function demo () {
 
 function afterLoad () {
 
-    view.addJoystick();
+    view.addJoystick({ sameAxis:true });
 
     physic.set({
         fps:60,

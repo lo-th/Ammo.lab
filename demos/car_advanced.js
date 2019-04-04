@@ -4,7 +4,9 @@
 var option = {
 
     restart:false,
-    follow:true,
+    follow:false,
+
+    name:'buggy',
 
     hour:9,
     gravity:-10,
@@ -40,11 +42,11 @@ function demo() {
 
 	//cam ([-90, 0, 5]);
     //view.moveCam({ theta:-90, phi:0, distance:5, target:[0,1,0] });
-     view.moveCam({ theta:90, phi:0, distance:5, target:[0,1,0] });
+    view.moveCam({ theta:90, phi:0, distance:5, target:[0,1,0] });
 
     view.addSky({  hour:hour });
 
-    view.addJoystick();
+    view.addJoystick({ sameAxis:true });
 
     // world setting
     physic.set({

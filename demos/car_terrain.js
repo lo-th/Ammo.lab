@@ -6,6 +6,8 @@ var option = {
     restart:false,
     follow:true,
 
+    name:'buggy',
+
     hour:9,
     gravity:-10,
 
@@ -45,7 +47,7 @@ function demo() {
 
     view.addSky({ hour:9, hdr:true });
 
-    view.addJoystick();
+    view.addJoystick({ sameAxis:true });
     //view.debug()
 
     physic.set({
