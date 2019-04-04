@@ -43,7 +43,7 @@ function demo() {
     view.load ( ['track.sea'], afterLoad, true, true );
     //load ( 'gaz', afterLoad );
 
-    physic.post('setDrive', { name:'car' });
+    physic.drive( 'car' );
 
 };
 
