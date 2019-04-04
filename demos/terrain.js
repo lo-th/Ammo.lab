@@ -6,6 +6,8 @@ var option = {
     restart:false,
     follow:true,
 
+    name:'buggy',
+
     hour:9,
     gravity:-10,
 
@@ -45,7 +47,7 @@ function demo() {
 
     view.addSky({ hour:9, hdr:true });
 
-    view.addJoystick();
+    view.addJoystick({ sameAxis:true });
     //view.debug()
 
     physic.set({
@@ -96,6 +98,7 @@ function afterLoad () {
 
     makeBuggy();
 
+    //physic.post('setDrive', { name:'buggy' });
     physic.drive( 'buggy' );
 
 };
@@ -294,13 +297,11 @@ function applyOption () {
 
     if( hour !== option.hour ){ hour = option.hour; view.updateSky({hour:hour}); }
 
-    option.reset = option.restart ? true : false;
-    gravity( [ 0, option.gravity, 0 ] );
+    //option.reset = option.restart ? true : false;
+    physic.post( 'setGravity', { gravity:[ 0, option.gravity, 0 ] });
     physic.post( 'setVehicle', option );
-    //follow (option.follow ? 'car':'none', {distance:5});
 
-    if( option.follow) view.getControls().initFollow( physic.byName( 'buggy' ), {distance:5} );
-    else view.getControls().resetFollow();
+    follow( option.follow ? 'buggy' : 'none', {distance:5} );
 
 }
 
@@ -362,9 +363,11 @@ function buggyMaterials () {
 
     mat['glass'] = view.material({
         name:'glass',
-        color: 0x3366ff,
+        roughness: 0.1,
+        metalness: 0.9,
+        color: 0xeeefff,
         transparent:true,
-        opacity:0.2,
+        opacity:0.3,
     });
 
     mat['body'] = view.material({

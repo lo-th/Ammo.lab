@@ -297,13 +297,11 @@ function applyOption () {
 
     if( hour !== option.hour ){ hour = option.hour; view.updateSky({hour:hour}); }
 
-    option.reset = option.restart ? true : false;
-    gravity( [ 0, option.gravity, 0 ] );
+    //option.reset = option.restart ? true : false;
+    physic.post( 'setGravity', { gravity:[ 0, option.gravity, 0 ] });
     physic.post( 'setVehicle', option );
-    //follow (option.follow ? 'car':'none', {distance:5});
 
-    if( option.follow) view.getControls().initFollow( physic.byName( 'buggy' ), {distance:5} );
-    else view.getControls().resetFollow();
+    follow( option.follow ? 'buggy' : 'none', {distance:5} );
 
 }
 
