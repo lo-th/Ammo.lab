@@ -244,6 +244,8 @@ Object.assign( Car.prototype, {
 
 		this.steering -= data.incSteering * key[ 0 ];
 
+
+
 		if ( this.steering < - data.steering ) this.steering = - data.steering;
 		if ( this.steering > data.steering ) this.steering = data.steering;
 
@@ -265,11 +267,30 @@ Object.assign( Car.prototype, {
 
 		}
 
+		// Ackermann angle
+		var lng = (this.wpos[2]*2);
+		var w = this.wpos[0];
+		var turn_point = lng / Math.tan( this.steering );
+
+		var angle_l = Math.atan2( lng, w + turn_point);
+		var angle_r = Math.atan2( lng, -w + turn_point);
+		if(turn_point<0){
+			angle_l-=Math.PI;
+			angle_r-=Math.PI;
+		}
+
+		//console.log(Math.round(angle_r*math.todeg), Math.round(angle_l*math.todeg))
+        //console.log(angle_r, angle_l)
+
+
+
+
+
 		var i = data.nWheel;
 		while ( i -- ) {
 
-			if ( i == 0 ) this.chassis.setSteeringValue( this.steering, i );
-			if ( data.nWheel !== 2 && i == 1 ) this.chassis.setSteeringValue( this.steering, i );
+			if ( i == 0 ) this.chassis.setSteeringValue( angle_r, i );
+			if ( data.nWheel !== 2 && i == 1 ) this.chassis.setSteeringValue( angle_l, i );
 			this.chassis.applyEngineForce( this.motor, i );
 			this.chassis.setBrake( this.breaking, i );
 
@@ -462,6 +483,8 @@ Object.assign( Car.prototype, {
 			
 
 		}
+
+		this.wpos = wPos;
 
 
 

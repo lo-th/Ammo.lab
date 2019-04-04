@@ -111,7 +111,7 @@ Object.assign( RigidBody.prototype, {
 		}
 
 		o.type = o.type === undefined ? 'box' : o.type;
-		o.size = o.size === undefined ? [ 1, 1, 1 ] : o.size;
+		//o.size = o.size === undefined ? [ 1, 1, 1 ] : o.size;
 		o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
 		//o.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
 

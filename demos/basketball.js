@@ -152,7 +152,7 @@ function afterLoadGeometry () {
         drag:0.5,// Drag coefficient [0,+inf]
         lift:0.5,// Lift coefficient [0,+inf]
         matching: 0.3, // Pose matching coefficient [0,1]
-        vc: 0,// Volume conversation coefficient [0,+inf] def:0
+        volume: 0,// Volume conversation coefficient [0,+inf] def:0
 
         hardbess: 0,
         stiffness: 0.3,
@@ -163,19 +163,18 @@ function afterLoadGeometry () {
     });
 
     // get final vertrices
-    var n, topPoint = [];
+    var n, nodes = [];
     var v = physic.byName('net').geometry.realVertices;
     var lng = v.length/3;
     for( var i = 0; i<lng; i++ ){
         n = i * 3;
-        if( v[n+1] > 305 ) topPoint.push( i );
+        if( v[n+1] > -0.5 ) nodes.push( i );
+        //if( v[n+1] > 17 ) topPoint.push( i );
     }
 
 
     // attach to circle
-    for( var i = 0, l = topPoint.length; i<l; i++ ){
-        physic.anchor({ node:topPoint[i], soft:'net', body:'circle' });
-    }
+    physic.anchor({ nodes:nodes, soft:'net', body:'circle' });
 
     physic.postUpdate = update;
 

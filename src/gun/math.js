@@ -15,8 +15,8 @@ var math = {
 	V3: [],
 	M3: [],
 
-	torad: 0.0174532925199432957,
-	todeg: 57.295779513082320876,
+	torad: Math.PI / 180,//0.0174532925199432957,
+	todeg: 180 / Math.PI,//57.295779513082320876,
 
 	eulerToQuadArray: function ( array, deg ) {
 

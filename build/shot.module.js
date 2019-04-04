@@ -1595,7 +1595,7 @@ Object.assign( RigidBody.prototype, {
 		}
 
 		o.type = o.type === undefined ? 'box' : o.type;
-		o.size = o.size === undefined ? [ 1, 1, 1 ] : o.size;
+		//o.size = o.size === undefined ? [ 1, 1, 1 ] : o.size;
 		o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
 		//o.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
 
@@ -2029,6 +2029,25 @@ Object.assign( SoftBody.prototype, {
 		// delete old if same name
 		this.remove( name );
 
+		o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
+
+		// size
+	    o.size = o.size == undefined ? [ 1, 1, 1 ] : o.size;
+	    if ( o.size.length === 1 ) {
+
+			o.size[ 1 ] = o.size[ 0 ];
+
+		}
+	    if ( o.size.length === 2 ) {
+
+			o.size[ 2 ] = o.size[ 0 ];
+
+		}
+
+		// rotation is in degree
+	    o.rot = o.rot === undefined ? [ 0, 0, 0 ] : vectorad( o.rot );
+	    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
+
 		// material
 
 		var material;
@@ -2104,15 +2123,17 @@ function softMesh( o, material ) {
 	var g = o.shape.clone();
 	var pos = o.pos || [ 0, 0, 0 ];
 	var size = o.size || [ 1, 1, 1 ];
-	var rot = o.rot || [ 0, 0, 0 ];
+	//var rot = o.rot || [ 0, 0, 0 ];
 
-	g.translate( pos[ 0 ], pos[ 1 ], pos[ 2 ] );
+	
 	g.scale( size[ 0 ], size[ 1 ], size[ 2 ] );
-
+	//g.applyMatrix( new THREE.Matrix4().makeRotationFromQuaternion( new THREE.Quaternion().fromArray( o.quat ) ) );
+	//g.translate( pos[ 0 ], pos[ 1 ], pos[ 2 ] );
+	
 	//g.rotateX( rot[0] *= Math.degtorad );
 	//g.rotateY( rot[1] *= Math.degtorad );
 	//g.rotateZ( rot[2] *= Math.degtorad );
-	g.applyMatrix( new THREE.Matrix4().makeRotationY( rot[ 1 ] *= Math.torad ) );
+	//g.applyMatrix( new THREE.Matrix4().makeRotationY( rot[ 1 ] *= Math.torad ) );
 
 	geometryInfo( g );
 

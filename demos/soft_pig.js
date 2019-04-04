@@ -1,12 +1,23 @@
 function demo() {
 
     view.moveCam({ theta:90, phi:20, distance:40, target:[0,1,0] });
-    physic.set(); // reset default setting
+    physic.set({
+        fps:60,
+        substep:10,
+        gravity:[0,-10,0],
+    })
     view.load ( 'pig.sea', afterLoad, true );
 
 }
 
 function afterLoad () {
+
+    var matPig = view.material({
+        name:'pig',
+        roughness: 0.5,
+        metalness: 0.5,
+        color: 0xF9A195,
+    });
 
     physic.add({ type:'plane' }); // infinie plane
 
@@ -29,26 +40,29 @@ function afterLoad () {
 
             type:'softMesh',
             shape:view.getGeometry( 'pig', 'pig' ),
+            material: matPig,
             
             pos:[0,y,0],
-            size:[2,2,2],
+            size:[2.5],
             rot:[0,r,0],
 
-            mass:8,
+            mass:2,
             state:4,
 
-            viterations: 1,
-            piterations: 1,
+            viterations: 10,
+            piterations: 2,
             citerations: 1,
-            diterations: 2,
+            diterations: 4,
 
-            friction: 0.6,
-            dmping: 0.01,
-            pressure: 260,
-            stiffness: 0.6,
+            friction: 0.8,
+           //damping: 0.001,
+            pressure: 250,
+            stiffness: 0.9,
 
             margin:0.05,
-            fromfaces:true,
+            //fromfaces:true,
+            bendingConstraint:2,
+            cluster: 16,
 
         });
 

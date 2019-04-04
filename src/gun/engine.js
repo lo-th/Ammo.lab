@@ -355,10 +355,12 @@ export var engine = ( function () {
 
 		addAnchor: function ( o ) {
 
-			if ( ! map.has( o.soft ) || ! map.has( o.body ) ) return;
-			var collision = o.collision || false;
+			softBody.addAnchor( o );
+
+			//if ( ! map.has( o.soft ) || ! map.has( o.body ) ) return;
+			//var collision = o.collision || false;
 			//p1.fromArray(o.pos);
-			map.get( o.soft ).appendAnchor( o.node, map.get( o.body ), collision ? false : true, o.influence || 1 );
+			//map.get( o.soft ).appendAnchor( o.node, map.get( o.body ), collision ? false : true, o.influence || 1 );
 			//p1.free();
 
 		},
