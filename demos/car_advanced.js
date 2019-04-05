@@ -44,6 +44,7 @@ function demo() {
     view.moveCam({ theta:90, phi:0, distance:5, target:[0,1,0] });
 
     view.addSky({  hour:hour });
+    view.setShadowRange( 50, 150, 250 );
 
     view.addJoystick({ sameAxis:true });
 
@@ -172,6 +173,7 @@ function makeBuggy () {
         
         shape: view.getGeometry( 'buggy', 'h_shape' ),
         mesh: mesh,
+        noShadow : true,
         meshWheel: wheel,
         meshSusp: susp,
         meshBrake: brake,

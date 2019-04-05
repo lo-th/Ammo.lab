@@ -2920,8 +2920,10 @@
 		    mesh.userData.isWithSusp = isWithSusp;
 		    mesh.userData.isWithBrake = isWithBrake;
 
-		    mesh.castShadow = true;
-		    mesh.receiveShadow = true;
+		    if(o.noShadow === undefined ){
+		    	mesh.castShadow = true;
+		        mesh.receiveShadow = true;
+		    }
 		    mesh.name = name;
 
 		    if ( o.helper ) {
