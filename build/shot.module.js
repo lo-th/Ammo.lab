@@ -2914,6 +2914,10 @@ Object.assign( Vehicle.prototype, {
 	    mesh.userData.isWithSusp = isWithSusp;
 	    mesh.userData.isWithBrake = isWithBrake;
 
+	    mesh.castShadow = true;
+	    mesh.receiveShadow = true;
+	    mesh.name = name;
+
 	    if ( o.helper ) {
 
 	        mesh.userData.helper = new THREE.CarHelper( wPos, o.masscenter, deep );
@@ -2940,7 +2944,9 @@ Object.assign( Vehicle.prototype, {
 
 		this.cars.push( mesh );
 
-		map.set( name, mesh );
+		//map.set( name + '_body', mesh );
+
+		map.set( name , mesh );
 
 		root.post( 'add', o );
 
@@ -4865,6 +4871,8 @@ var engine = ( function () {
 	var tmpRemove = [];
 	var tmpAdd = [];
 
+	var oldFollow = '';
+
 	//var needUpdate = false;
 
 	var option = {
@@ -5199,6 +5207,7 @@ var engine = ( function () {
 
 			tmpRemove = [];
 			tmpAdd = [];
+			oldFollow = '';
 
 			if ( refView ) refView.reset( full );
 
@@ -5322,11 +5331,7 @@ var engine = ( function () {
 
 		},
 
-		byName: function ( name ) {
-
-			return map.get( name );
-
-		},
+		
 
 		
 
@@ -5369,8 +5374,9 @@ var engine = ( function () {
 
 		remove: function ( name, phy ) {
 
-			if ( ! map.has( name ) ) return;
+			//if ( ! map.has( name ) ) return;
 			var b = engine.byName( name );
+			if( b === null ) return;
 
 			switch( b.type ){
 
@@ -5402,6 +5408,17 @@ var engine = ( function () {
 		removeRay: function ( name ) {
 
 			rayCaster.remove( name );
+
+		},
+
+		//-----------------------------
+		// FIND OBJECT
+		//-----------------------------
+
+		byName: function ( name ) {
+
+			if ( ! map.has( name ) ) { engine.tell('no find object !!' ); return null; }
+			else return map.get( name );
 
 		},
 
@@ -5647,8 +5664,16 @@ var engine = ( function () {
 
 		addConnector: function ( o ) {
 
-			//console.log(o)
+			//if ( ! map.has( o.name ) ) { console.log('no find !!'); return;}
+			//var mesh = map.get( o.name );
+
 			var mesh = engine.byName( o.name );
+			if( mesh === null ) return;
+
+			// reste follow on drag
+			engine.testCurrentFollow( o.name );  
+
+
 			var p0 = new THREE.Vector3().fromArray( o.point );
 			var qB = mesh.quaternion.toArray();
 			var pos = engine.getLocalPoint( p0, mesh ).toArray();
@@ -5677,6 +5702,8 @@ var engine = ( function () {
 			engine.remove( 'dragger');
 			engine.removeConstraint( 'connector');
 
+			if( oldFollow !== '' ) engine.setCurrentFollow( oldFollow );
+
 		},
 
 		getLocalPoint: function (vector, mesh) {
@@ -5688,6 +5715,29 @@ var engine = ( function () {
 			var m0 = new THREE.Matrix4().compose( mesh.position, mesh.quaternion, s );
 			m1.getInverse( m0 );
 			return vector.applyMatrix4( m1 );
+
+		},
+
+		setCurrentFollow: function ( name, o ) {
+
+			if( !refView ) return;
+			var target = engine.byName( name );
+            if( target !== null ) refView.getControls().initFollow( target, o );
+            else refView.getControls().resetFollow();
+            oldFollow = '';
+
+		},
+
+
+		testCurrentFollow: function ( name ) {
+
+			oldFollow = '';
+			if( !refView ) return;
+			if( !refView.getControls().followTarget ) return;
+			if( refView.getControls().followTarget.name === name ){ 
+				refView.getControls().resetFollow();
+				oldFollow = name;
+			}
 
 		},
 

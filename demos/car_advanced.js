@@ -12,7 +12,7 @@ var option = {
     gravity:-10,
 
     mass:1300,
-    engine:1600,
+    engine:2000,
     acceleration:50,
     // car body physics
     friction: 0.6, 
@@ -21,13 +21,13 @@ var option = {
     angular: 0,
     // suspension
     s_stiffness: 15,
-    s_compression: 2.3,
+    s_compression: 2.3,//4.4
     s_damping: 2.4,
     s_force: 16000,
     s_travel: 0.4,
-    s_length: 0.2,
+    s_length: 0.2,//0.6
     // wheel
-    w_friction: 10.5,//1000,
+    w_friction: 10,//1000,
     w_roll: 0.1,
 
 }
@@ -40,7 +40,6 @@ var mat = {};
 
 function demo() {
 
-	//cam ([-90, 0, 5]);
     //view.moveCam({ theta:-90, phi:0, distance:5, target:[0,1,0] });
     view.moveCam({ theta:90, phi:0, distance:5, target:[0,1,0] });
 
@@ -258,7 +257,7 @@ function makeBuggy () {
         s_travel: { min:0.01, max:5, precision:2, color:0xCC88FF },
         s_length: { min:0.01, max:1, precision:2, color:0xCC88FF },
 
-        w_friction: { min:0, max:1000, precision:2, color:0xCCCC44 },
+        w_friction: { min:1, max:1000, precision:0, color:0xCCCC44 },
         w_roll: { min:0, max:1, precision:2, color:0xCCCC44 },
 
     });

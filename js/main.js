@@ -94,9 +94,7 @@ function launch ( name, full ) {
 
 function follow ( name, o ) { 
 
-    var target = physic.byName( name );
-    if( target !== undefined ) view.getControls().initFollow( target, o );
-    else view.getControls().resetFollow();
+    physic.setCurrentFollow( name, o );
 
 };
 

@@ -357,6 +357,10 @@ Object.assign( Vehicle.prototype, {
 	    mesh.userData.isWithSusp = isWithSusp;
 	    mesh.userData.isWithBrake = isWithBrake;
 
+	    mesh.castShadow = true;
+	    mesh.receiveShadow = true;
+	    mesh.name = name;
+
 	    if ( o.helper ) {
 
 	        mesh.userData.helper = new THREE.CarHelper( wPos, o.masscenter, deep );
@@ -383,7 +387,9 @@ Object.assign( Vehicle.prototype, {
 
 		this.cars.push( mesh );
 
-		map.set( name, mesh );
+		//map.set( name + '_body', mesh );
+
+		map.set( name , mesh );
 
 		root.post( 'add', o );
 

@@ -36,18 +36,18 @@ Object.assign( Vehicle.prototype, {
 	control: function ( name ) {
 
 		if ( ! map.has( name ) ) return;
-		var car = map.get( name );
+		var car = map.get( name + '_constuctor' );
 		car.drive( root.key );
 
 	},
 
-	setData: function ( o ) {
+	/*setData: function ( o ) {
 
 		if ( ! map.has( o.name ) ) return;
-		var car = map.get( o.name );
+		var car = map.get( o.name + '_constuctor' );
 		car.setData( o );
 
-	},
+	},*/
 
 	clear: function () {
 
@@ -64,8 +64,11 @@ Object.assign( Vehicle.prototype, {
 		Ammo.destroy( car.chassis );
 
 		//car.clear();
-		map.delete( car.name );
-		map.delete( car.name + '_body' );
+		//map.delete( car.name );
+		//map.delete( car.name + '_body' );
+
+		map.delete( car.name + '_constuctor' );
+		map.delete( car.name  );
 		map.delete( car.name + '_chassis' );
 
 	},
@@ -91,9 +94,8 @@ Object.assign( Vehicle.prototype, {
 
 	setVehicle: function ( o ){
 
-		if ( ! map.has( o.name ) ) return;
-		var car = map.get( o.name );
-
+		if ( ! map.has( o.name + '_constuctor' ) ) return;
+		var car = map.get( o.name + '_constuctor' );
 		car.setData( o );
 
 	},
@@ -131,8 +133,11 @@ Object.assign( Vehicle.prototype, {
 
 		this.cars.push( car );
 
-		map.set( name, car );
-		map.set( name + '_body', car.body );
+		//map.set( name, car );
+		//map.set( name + '_body', car.body );
+
+		map.set( name + '_constuctor', car  );
+		map.set( name , car.body );
 		map.set( name + '_chassis', car.chassis );
 
 	}
@@ -146,6 +151,7 @@ export { Vehicle };
 function Car( name, o, shape ) {
 
 	// http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+	// https://github.com/yanzuzu/BulletPhysic_Vehicle
 
 	this.name = name;
 
@@ -374,7 +380,7 @@ Object.assign( Car.prototype, {
 
 		// car body
 		this.body = new Ammo.btRigidBody( rbInfo );
-		this.body.name = this.name + '_body';
+		this.body.name = this.name;// + '_body';
 		this.body.isRigidBody = true;
 		this.body.isBody = true;
 
