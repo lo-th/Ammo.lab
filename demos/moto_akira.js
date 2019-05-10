@@ -59,8 +59,8 @@ function demo() {
 
     view.addJoystick({ sameAxis:true });
 
-    //view.addSky({  hour:option.hour });
-    view.addSky({  url:'photo.jpg', hdr:true, visible:false });
+    view.addSky({  hour:option.hour });
+    //view.addSky({  url:'photo.jpg', hdr:true, visible:false });
 
     view.setShadowRange( 10, 195, 205, debug );
 
