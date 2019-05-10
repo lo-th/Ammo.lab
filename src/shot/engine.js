@@ -177,7 +177,7 @@ export var engine = ( function () {
 				counts.maxBody * 8, // rigidbody
 				counts.maxContact, // contact
 				counts.maxCharacter * 8, // hero
-				counts.maxCar * 56, // cars
+				counts.maxCar * 64, // cars
 				counts.maxSoftPoint * 3, // soft point
 			];
 

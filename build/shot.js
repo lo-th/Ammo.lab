@@ -2580,19 +2580,27 @@
 
 			this.cars.forEach( function ( b, id ) {
 
-				n = N + ( id * 56 );
+				//num = b.userData.NumWheels;
+				var j = b.userData.NumWheels, w = 56, k, v;
+
+				n = N + ( id * 64 );//( id * ( num + 2 ) );//( id * 56 );
 		        b.userData.speed = AR[ n ];
+
+
+
 
 		        b.position.fromArray( AR, n + 1 );
 		        b.quaternion.fromArray( AR, n + 4 );
 
 
-		        var j = b.userData.NumWheels, w, k, v;
-		        var w = 8 * ( 4 + 1 );
+		        
+		        
 		        var decal = 0.2;
 		        var ratio = 1 / decal;
 		        var radius = b.userData.radius;
-		        var steering = AR[ n + 24 ];
+		        var steering = AR[ n + 8 ];
+
+		        b.userData.steering = steering;
 		        
 		        if ( b.userData.steeringWheel ) {
 
@@ -2613,8 +2621,6 @@
 		                if ( k === 1 ) b.userData.b[ k ].rotation.y = Math.Pi - steeringR;
 		                b.userData.b[ k ].position.y = radius - AR[ n + w + k ];
 
-		               
-
 		            }
 
 		        }
@@ -2626,7 +2632,6 @@
 		            while ( k -- ) {
 
 		                v = ( AR[ n + w + k ] ) * ratio;
-
 		                v = v > 1 ? 1 : v;
 		                v = v < - 1 ? - 1 : v;
 
@@ -2649,7 +2654,13 @@
 
 		        if ( b.userData.helper ) {
 
-		            if ( j == 4 ) {
+		        	if ( j === 2 ) {
+
+		                b.userData.helper.updateSuspension( AR[ n + w + 0 ], AR[ n + w + 0 ], AR[ n + w + 1 ], AR[ n + w + 1 ] );
+
+					}
+
+		            if ( j === 4 ) {
 
 		                b.userData.helper.updateSuspension( AR[ n + w + 0 ], AR[ n + w + 1 ], AR[ n + w + 2 ], AR[ n + w + 3 ] );
 
@@ -2658,6 +2669,9 @@
 				}
 
 		        while ( j -- ) {
+
+		        	// suspension info
+		            b.userData.suspension[ j ] = AR[ n + 56 + j ];
 
 		            w = 8 * ( j + 1 );
 		            b.userData.w[ j ].position.fromArray( AR, n + w + 1 );
@@ -2783,8 +2797,10 @@
 		    //this.byName[ o.name ] = mesh;
 
 		    mesh.userData.speed = 0;
+		    //mesh.userData.steering = 0;
+		    mesh.userData.NumWheels = o.nWheel || 4;
+		    mesh.userData.suspension = [0,0,0,0,0,0];
 		    mesh.userData.steering = 0;
-		    mesh.userData.NumWheels = o.nw || 4;
 		    mesh.userData.type = 'car';
 
 		    mesh.userData.steeringWheel = o.meshSteeringWheel || null;
@@ -2794,6 +2810,7 @@
 		    // wheels
 
 		    var radius = o.radius || 0.4;
+		    var radiusBack = o.radiusBack || radius;
 		    var deep = o.deep || 0.3;
 		    wPos = o.wPos || [ 1, - 0.25, 1.6 ];
 
@@ -2820,9 +2837,81 @@
 
 			}
 
-		    var i = o.nw || 4;
+		    //var i = o.nWheel || 4;
+		    var n = o.nWheel || 4, p, fw;
+		    var by = o.decalYBack || 0;
 
-		    while ( i -- ) {
+			for ( var i = 0; i < n; i ++ ) {
+
+				if ( i === 0 ) {
+
+					p = [ wPos[ 0 ], wPos[ 1 ], wPos[ 2 ] ]; fw = true;
+
+				}
+				if ( i === 1 ) {
+
+					p = [ - wPos[ 0 ], wPos[ 1 ], wPos[ 2 ] ]; fw = true;
+
+				}
+				if ( i === 2 ) {
+
+					p = [ - wPos[ 0 ], wPos[ 1 ], - wPos[ 2 ] ]; fw = false;
+
+				}
+				if ( i === 3 ) {
+
+					p = [ wPos[ 0 ], wPos[ 1 ], - wPos[ 2 ] ]; fw = false;
+
+				}
+				if ( i === 4 ) {
+
+					p = [ - wPos[ 0 ], wPos[ 1 ], - wPos[ 3 ] ]; fw = false;
+
+				}
+				if ( i === 5 ) {
+
+					p = [ wPos[ 0 ], wPos[ 1 ], - wPos[ 3 ] ]; fw = false;
+
+				}
+
+				if ( n === 2 ) { // moto
+
+					if ( i === 0 ) {
+
+						p = [ 0, wPos[ 1 ],  wPos[ 2 ] ]; fw = true;
+
+					}
+
+					if ( i === 1 ) {
+
+						p = [ 0, wPos[ 1 ] + by, - wPos[ 2 ] ]; fw = false;
+
+					}
+
+				}
+
+				if ( n === 3 ) { // moto
+
+					if ( i === 0 ) {
+
+						p = [ 0, wPos[ 1 ], wPos[ 2 ] ]; fw = true;
+
+					}
+
+					if ( i === 1 ) {
+
+						p = [ wPos[ 0 ], wPos[ 1 ] + by, - wPos[ 2 ] ]; fw = false;
+
+					}
+
+					if ( i === 2 ) {
+
+						p = [ -wPos[ 0 ], wPos[ 1 ] + by, - wPos[ 2 ] ]; fw = false;
+
+					}
+
+				}
+
 
 		        if ( o.meshBrake ) {
 
@@ -2892,7 +2981,12 @@
 
 
 
-		        if ( needScale ) w[ i ].scale.set( deep, radius, radius );
+		        if ( needScale ){
+
+		        	w[ i ].scale.set( deep, fw ? radius : radiusBack, fw ? radius : radiusBack );
+
+		        }
+
 		        //else w[i].material = this.mat.move;//mat.cars;
 
 		        w[ i ].material = wheelmat;
@@ -5002,7 +5096,7 @@
 					counts.maxBody * 8, // rigidbody
 					counts.maxContact, // contact
 					counts.maxCharacter * 8, // hero
-					counts.maxCar * 56, // cars
+					counts.maxCar * 64, // cars
 					counts.maxSoftPoint * 3, // soft point
 				];
 

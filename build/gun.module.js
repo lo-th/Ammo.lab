@@ -308,6 +308,13 @@ function mathExtend() {
 
 		},
 
+		multiplyArray: function ( ary ) {
+
+			this.setValue( this.x() * ary[0], this.y() * ary[1], this.z() * ary[2] );
+			return this;
+
+		},
+
 		fromArray: function ( array, offset, scale ) {
 
 			//if ( offset === undefined ) offset = 0;
@@ -2088,6 +2095,11 @@ Object.assign( LandScape.prototype, {
 * @author lth / https://github.com/lo-th/
 */
 
+// max 6 wheel
+// array structure
+// 0 _ body _ speed: 0, pos : 0,0,0, quat: 0,0,0,0 _8
+// 1 _ w0   _
+
 //--------------------------------------------------
 //  AMMO VEHICLE
 //--------------------------------------------------
@@ -2108,10 +2120,11 @@ Object.assign( Vehicle.prototype, {
 
 		this.cars.forEach( function ( car, id ) {
 
-			n = N + ( id * 56 );
+			n = N + ( id * 64 );
+			//n = N + ( id * ( car.data.nWheel + 2 ) )
 			car.step( AR, n, trans );
 
-		} );
+		});
 
 	},
 
@@ -2243,9 +2256,12 @@ function Car( name, o, shape ) {
 	this.gearRatio = [ - 1, 0, 2.3, 1.8, 1.3, 0.9, 0.5 ];
 	// acceleration / topSpeed
 
+	this.limitAngular = [1,1,1];
+
 
 	this.wheelBody = [];
 	this.wheelJoint = [];
+	this.wheelRadius = [];
 
 	this.isRay = true;
 
@@ -2254,9 +2270,9 @@ function Car( name, o, shape ) {
 		mass: 100,
 		wMass: 1,
 		// wheels
-		radius: 0.5,
+		//radius: 0.5,
 		wWidth: 0.25,
-		nWheel: 4,
+		nWheel: o.nWheel || 4,
 		wPos: [ 1, 0, 1.6 ], // wheels position on chassis
 		// drive setting
 		engine: 1000,
@@ -2276,8 +2292,9 @@ function Car( name, o, shape ) {
 		restitution: 0.1,
 		linear: 0,
 		angular: 0,
+		rolling: 0,
 		// auto compess
-		auto: false,
+		autoSuspension: false,
 		compValue: 0.2, //(lower than damp!)
 		dampValue: 0.3,
 		// suspension
@@ -2289,7 +2306,7 @@ function Car( name, o, shape ) {
 		s_length: 0.2,
 		// wheel
 		w_friction: 10.5, //1000,
-		w_roll: 0.1,
+		w_roll: 0.001,
 
 	};
 
@@ -2311,20 +2328,13 @@ Object.assign( Car.prototype, {
 
 		var j = this.data.nWheel, w, t;
 
-		if ( j === 4 ) {
-
-			w = 8 * ( 4 + 1 );
-			Ar[ n + w + 0 ] = this.chassis.getWheelInfo( 0 ).get_m_raycastInfo().get_m_suspensionLength() * scale;
-			Ar[ n + w + 1 ] = this.chassis.getWheelInfo( 1 ).get_m_raycastInfo().get_m_suspensionLength() * scale;
-			Ar[ n + w + 2 ] = this.chassis.getWheelInfo( 2 ).get_m_raycastInfo().get_m_suspensionLength() * scale;
-			Ar[ n + w + 3 ] = this.chassis.getWheelInfo( 3 ).get_m_raycastInfo().get_m_suspensionLength() * scale;
-
-		}
-
 		while ( j -- ) {
 
 			this.chassis.updateWheelTransform( j, true );
 			t = this.chassis.getWheelTransformWS( j );
+
+			// supension info
+			Ar[ n + 56 + j ] = this.chassis.getWheelInfo( j ).get_m_raycastInfo().get_m_suspensionLength() * scale;
 
 			w = 8 * ( j + 1 );
 			t.toArray( Ar, n + w + 1, scale );
@@ -2358,6 +2368,7 @@ Object.assign( Car.prototype, {
 			this.motor -= data.acceleration * key[ 1 ];
 			this.breaking = 0;
 		}
+
 		this.motor = math.clamp( this.motor, - data.engine, data.engine );
 		//if ( this.motor > data.engine ) this.motor = data.engine;
 		//if ( this.motor < - data.engine ) this.motor = - data.engine;
@@ -2373,35 +2384,45 @@ Object.assign( Car.prototype, {
 
 		}*/
 
-		// Ackermann steering principle 
-		var lng = (this.wpos[2]*2);
-		var w = this.wpos[0];
-		var turn_point = lng / Math.tan( this.steering );
+		// Ackermann steering principle
+		if ( data.nWheel > 3 ){
 
-		var angle_l = Math.atan2( lng, w + turn_point);
-		var angle_r = Math.atan2( lng, -w + turn_point);
-		if(turn_point<0){
-			angle_l-=Math.PI;
-			angle_r-=Math.PI;
+			var lng = (this.wpos[2]*2);
+			var w = this.wpos[0];
+			var turn_point = lng / Math.tan( this.steering );
+
+			var angle_l = Math.atan2( lng, w + turn_point);
+			var angle_r = Math.atan2( lng, -w + turn_point);
+			if(turn_point<0){
+				angle_l-=Math.PI;
+				angle_r-=Math.PI;
+			}
+
 		}
-
-		//console.log(Math.round(angle_r*math.todeg), Math.round(angle_l*math.todeg))
-        //console.log(angle_r, angle_l)
-
-       // console.log(Math.round(this.steering*math.todeg))
-
-
-
-
 
 		var i = data.nWheel;
 		while ( i -- ) {
 
-			if ( i == 0 ) this.chassis.setSteeringValue( angle_r, i );
-			if ( data.nWheel !== 2 && i == 1 ) this.chassis.setSteeringValue( angle_l, i );
+			if ( data.nWheel < 4 ){
+
+				if ( i === 0 ) this.chassis.setSteeringValue( this.steering, i );
+
+			} else {
+
+				if ( i === 0 ) this.chassis.setSteeringValue( angle_r, i );
+			    if ( i === 1 ) this.chassis.setSteeringValue( angle_l, i );
+
+			}
+
 			this.chassis.applyEngineForce( this.motor, i );
 			this.chassis.setBrake( this.breaking, i );
 
+		}
+
+		if(this.motor<1){
+			var v = this.body.getAngularVelocity();
+			v.multiplyArray( this.limitAngular );
+			this.body.setAngularVelocity(v);
 		}
 
 	},
@@ -2436,6 +2457,8 @@ Object.assign( Car.prototype, {
 
 		data.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
 		data.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
+
+		data.nWheel = o.nWheel || 4;
 
 		// car shape
 
@@ -2479,18 +2502,25 @@ Object.assign( Car.prototype, {
 		// wheels
 
 		var radius = o.radius || 0.4;
+		var radiusBack = o.radiusBack || radius;
 		var wPos = o.wPos || [ 1, 0, 1.6 ];
 
 		wPos = math.vectomult( wPos, root.invScale );
 		radius = radius * root.invScale;
+		radiusBack = radiusBack * root.invScale;
+
+
 
 		wPos[ 1 ] -= o.masscenter[ 1 ];
 
-		var n = o.nWheel || 4, p, fw;
+		var n = data.nWheel, p, fw;
+		var by = o.decalYBack || 0;
 
 		for ( var i = 0; i < n; i ++ ) {
 
-			if ( i === 2 && wPos[ 4 ] ) wPos[ 0 ] += wPos[ 4 ];
+
+
+			//if ( i === 2 && wPos[ 4 ] ) wPos[ 0 ] += wPos[ 4 ];
 			if ( i === 0 ) {
 
 				p = [ wPos[ 0 ], wPos[ 1 ], wPos[ 2 ] ]; fw = true;
@@ -2503,45 +2533,87 @@ Object.assign( Car.prototype, {
 			}
 			if ( i === 2 ) {
 
-				p = [ - wPos[ 0 ], wPos[ 1 ], - wPos[ 2 ] ]; fw = false;
+				p = [ - wPos[ 0 ], wPos[ 1 ] + by, - wPos[ 2 ] ]; fw = false;
 
 			}
 			if ( i === 3 ) {
 
-				p = [ wPos[ 0 ], wPos[ 1 ], - wPos[ 2 ] ]; fw = false;
+				p = [ wPos[ 0 ], wPos[ 1 ] + by, - wPos[ 2 ] ]; fw = false;
 
 			}
 			if ( i === 4 ) {
 
-				p = [ - wPos[ 0 ], wPos[ 1 ], - wPos[ 3 ] ]; fw = false;
+				p = [ - wPos[ 0 ], wPos[ 1 ] + by, - wPos[ 3 ] ]; fw = false;
 
 			}
 			if ( i === 5 ) {
 
-				p = [ wPos[ 0 ], wPos[ 1 ], - wPos[ 3 ] ]; fw = false;
+				p = [ wPos[ 0 ], wPos[ 1 ] + by, - wPos[ 3 ] ]; fw = false;
 
 			}
 
 			if ( n === 2 ) { // moto
 
-				if ( i == 1 ) {
+				if ( i === 0 ) {
 
-					p = [ - wPos[ 0 ], wPos[ 1 ], - wPos[ 2 ] ]; fw = false;
+					p = [ 0, wPos[ 1 ], wPos[ 2 ] ]; fw = true;
+
+				}
+
+				if ( i === 1 ) {
+
+					p = [ 0, wPos[ 1 ] + by, - wPos[ 2 ] ]; fw = false;
 
 				}
 
 			}
 
+			if ( n === 3 ) { // moto
+
+				if ( i === 0 ) {
+
+					p = [ 0, wPos[ 1 ], wPos[ 2 ] ]; fw = true;
+
+				}
+
+				if ( i === 1 ) {
+
+					p = [ wPos[ 0 ], wPos[ 1 ] + by, - wPos[ 2 ] ]; fw = false;
+
+				}
+
+				if ( i === 2 ) {
+
+					p = [ -wPos[ 0 ], wPos[ 1 ] + by, - wPos[ 2 ] ]; fw = false;
+
+				}
+
+			}
+
+			//console.log(p)
+
 			p1.fromArray( p ); // position
 			p2.setValue( 0, - 1, 0 ); // wheelDir
 			p3.setValue( - 1, 0, 0 ); // wheelAxe
 
-			if( this.isRay ){
+			/*var m = i*3;
+			if(o.wheelDir){
+				p2.setValue( o.wheelDir[m], o.wheelDir[m+1], o.wheelDir[m+2] );
+			}
+			if(o.wheelAxe){
+				p3.setValue( o.wheelAxe[m], o.wheelAxe[m+1], o.wheelAxe[m+2] );
+			}*/
+
+			//if( this.isRay ){
+
+				//console.log(fw ? radius : radiusBack)
 				
-				this.chassis.addWheel( p1, p2, p3, 1, radius, tuning, fw );
+				this.chassis.addWheel( p1, p2, p3, 1, fw ? radius : radiusBack, tuning, fw );
 			    this.chassis.setBrake( o.breaking || 100, i );
 
-			} else {
+			    this.wheelRadius.push(fw ? radius : radiusBack);
+
+			/*} else {
 
 				trans.identity();
 				trans.setOrigin( p1 );
@@ -2584,10 +2656,10 @@ Object.assign( Car.prototype, {
 				joint.setStiffness( 2, 40.0 );
 				*/
 
-				this.wheelJoint[i] = joint;
+			//	this.wheelJoint[i] = joint;
 
 
-			}
+			//}
 			
 
 		}
@@ -2670,17 +2742,34 @@ Object.assign( Car.prototype, {
 
 		}
 
+		// force value for bool
+		data.autoSuspension = o.autoSuspension || false;
+
 		// body
 		this.body.setFriction( data.friction );
 		this.body.setRestitution( data.restitution );
-		this.body.setDamping( data.linear, data.angular );
+		this.body.setDamping( data.linear, data.angular );// def 0,0
+		this.body.setRollingFriction( data.rolling );
 
-		if ( data.auto ) {
+		if ( o.limitAngular !== undefined ) this.limitAngular = o.limitAngular;
+
+		//console.log(this.body.getAngularVelocity().toArray())
+
+		var p1 = math.vector3();
+		if ( o.linearFactor !== undefined ) this.body.setLinearFactor( p1.fromArray( o.linearFactor ) );
+		if ( o.angularFactor !== undefined ) this.body.setAngularFactor( p1.fromArray( o.angularFactor ) );
+		p1.free();
+
+		//console.log( o.autoSuspension )
+
+
+		if ( data.autoSuspension ) {
 
 			var sqrt = Math.sqrt( data.s_stiffness );
 			data.s_compression = data.compValue * 2 * sqrt;
 			data.s_damping = data.dampValue * 2 * sqrt;
-
+            
+            //console.log( data.s_damping, data.s_compression )
 		}
 
 		var n = data.nWheel, w;
@@ -2694,13 +2783,15 @@ Object.assign( Car.prototype, {
 			w.set_m_wheelsDampingRelaxation( data.s_damping );
 
 			w.set_m_maxSuspensionTravelCm( data.s_travel * 100 * root.invScale );
-			w.set_m_maxSuspensionForce( data.s_force );
+			//console.log( 'travel', w.get_m_maxSuspensionTravelCm() );
+			
 			w.set_m_suspensionRestLength1( data.s_length * root.invScale );
+			w.set_m_maxSuspensionForce( data.s_force );
 
 			w.set_m_rollInfluence( data.w_roll );
 			w.set_m_frictionSlip( data.w_friction );
 
-			w.set_m_wheelsRadius( data.radius * root.invScale );
+			w.set_m_wheelsRadius( this.wheelRadius[ n ] );
 			//w.set_m_chassisConnectionPointCS( tmpPos1.fromArray(o.w_position) );
 
 		}

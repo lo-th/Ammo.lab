@@ -311,6 +311,13 @@ export function mathExtend() {
 
 		},
 
+		multiplyArray: function ( ary ) {
+
+			this.setValue( this.x() * ary[0], this.y() * ary[1], this.z() * ary[2] );
+			return this;
+
+		},
+
 		fromArray: function ( array, offset, scale ) {
 
 			//if ( offset === undefined ) offset = 0;

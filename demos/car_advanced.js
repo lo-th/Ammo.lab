@@ -44,7 +44,7 @@ function demo() {
     view.moveCam({ theta:90, phi:0, distance:5, target:[0,1,0] });
 
     view.addSky({  hour:hour });
-    view.setShadowRange( 50, 150, 250 );
+    view.setShadowRange( 30, 150, 250 );
 
     view.addJoystick({ sameAxis:true });
 
@@ -131,10 +131,10 @@ function makeBuggy () {
 
         if( m.name === 'h_steering_wheel' ) steeringWheel = m;
 
-    	m.castShadow = false;
-        m.receiveShadow = false;
+    	m.castShadow = true;//false;
+        m.receiveShadow = true;//false;
 
-        if( m.name === 'h_shadow' ){  m.material = mat.cshadow; m.castShadow = true; m.receiveShadow = false; }
+        if( m.name === 'h_shadow' ){  m.visible = false; m.material = mat.cshadow; m.castShadow = true; m.receiveShadow = false; }
 
     }
 
@@ -145,18 +145,18 @@ function makeBuggy () {
         if( m.name === 'h_pneu' ) m.material = mat.pneu;
         else m.material = mat.wheel;
 
-        m.castShadow = false;
-        m.receiveShadow = false;
+        m.castShadow = true;
+        m.receiveShadow = true;
 
     }
 
     mesh.material = mat.body;
-    mesh.receiveShadow = false;
-    mesh.castShadow = false;
+    //mesh.receiveShadow = false;
+    //mesh.castShadow = false;
 
     wheel.material = mat.wheel;
-    wheel.receiveShadow = false;
-    wheel.castShadow = false;
+    //wheel.receiveShadow = false;
+    //wheel.castShadow = false;
 
     // car physics
 
@@ -173,7 +173,7 @@ function makeBuggy () {
         
         shape: view.getGeometry( 'buggy', 'h_shape' ),
         mesh: mesh,
-        noShadow : true,
+        //noShadow : true,
         meshWheel: wheel,
         meshSusp: susp,
         meshBrake: brake,
