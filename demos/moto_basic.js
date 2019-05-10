@@ -1,37 +1,4 @@
-/*var option = {
 
-    restart:false,
-    follow:false,
-    hour:9,
-
-    name:'car',
-
-    gravity:-10,
-
-    mass:600,
-    engine:1000,
-    acceleration:10,
-    // car body physics
-    friction: 0.6, 
-    restitution: 0,
-    linear: 0, 
-    angular: 0,
-    // suspension
-    s_stiffness: 30,
-    s_compression: 4.4,
-    s_damping: 2.4,//2.4
-    s_travel: 5,
-    s_force: 6000,
-    s_length: 0.1,
-
-    //linearFactor:[0.9,0.9,0.9],
-
-    auto:true,
-    // wheel
-    w_friction: 100,//10.5,//1000,
-    w_roll: 0.3,
-
-}*/
 var option = {
 
     restart:false,
@@ -79,7 +46,7 @@ function demo() {
 
     view.addJoystick({ sameAxis:true });
 
-    view.addSky({  hour:option.hour });
+    //view.addSky({  hour:option.hour });
 
     physic.set({
         fps:60,
