@@ -652,12 +652,12 @@ Object.assign( Car.prototype, {
 		// copy value
 		for ( var i in o ) {
 
-			if ( data[ i ] ) data[ i ] = o[ i ];
+			if ( data[ i ] !== undefined ) data[ i ] = o[ i ];
 
 		}
 
 		// force value for bool
-		data.autoSuspension = o.autoSuspension || false;
+		//data.autoSuspension = o.autoSuspension || false;
 
 		// body
 		this.body.setFriction( data.friction );
