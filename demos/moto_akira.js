@@ -50,6 +50,8 @@ var bike, kaneda;
 var decalBikeY = 0.21;
 var base_q;//, q_steering = new THREE.Quaternion()
 var m1 = new THREE.Matrix4(), m2 = new THREE.Matrix4();
+var hour = option.hour;
+
 
 function demo() {
 
@@ -59,7 +61,7 @@ function demo() {
 
     view.addJoystick({ sameAxis:true });
 
-    view.addSky({  hour:option.hour });
+    view.addSky({ hour:option.hour, hdr:true,  });
     //view.addSky({  url:'photo.jpg', hdr:true, visible:false });
 
     view.setShadowRange( 10, 195, 205, debug );
@@ -101,6 +103,8 @@ function afterLoad () {
 
         base:option,
         function: applyOption,
+
+        hour: { min:0, max:24, precision:2, color:0xFFFF44 },
 
         restart: { type:'button', p:0, h:30, radius:10 },
         follow: { type:'bool' },
@@ -187,6 +191,8 @@ function applyOption () {//1.566
 
     
     option.reset = option.restart ? true : false;
+
+    if( hour !== option.hour ){ hour = option.hour; view.updateSky({hour:hour}); }
 
     if( option.reset ){
         physic.matrix( [{ name: option.name + '_body', pos:[0,1,0], rot:[0,90,0] }] );
