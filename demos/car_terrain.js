@@ -45,7 +45,7 @@ function demo() {
     
     view.addFog({exp:0.0025});
 
-    view.addSky({ hour:9, hdr:true });
+    view.addSky({ hour:9, hdr:true, cloud_covr:0.3, cloud_dens:40, groundColor:0x3b4c5a });
 
     view.addJoystick({ sameAxis:true });
     //view.debug()
