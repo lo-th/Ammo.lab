@@ -15,13 +15,13 @@ var option = {
     engine:2000,
     acceleration:100,
     // car body physics
-    friction: 0.6, 
+    friction: 0.1, 
     restitution: 0,
     linear: 0, 
     angular: 0,
     rolling: 0,
     // suspension
-    autoSuspension:false,
+    autoSuspension:true,
     s_stiffness: 153,
     s_compression: 2.3,
     s_damping: 2.4,//2.4
