@@ -81,7 +81,7 @@ function afterLoad () {
     makeBuggy()
     //drive('buggy')
 
-    physic.drive( 'buggy' );
+    physic.drive( option.name );
 
     view.update = update;
 
@@ -165,7 +165,7 @@ function makeBuggy () {
     physic.add ({ 
 
         type: 'car',
-        name:'buggy',
+        name: option.name,
         shapeType:'convex',
 
     	debug: false,
@@ -264,7 +264,7 @@ function makeBuggy () {
 
     });
 
-    buggyCar = physic.byName( 'buggy' );
+    buggyCar = physic.byName( option.name );
 
     // sound test
     /*var enginAudio = view.addSound( engineSound );
@@ -281,7 +281,7 @@ function applyOption () {
     
     option.reset = option.restart ? true : false;
     if( option.reset ){
-        physic.matrix( [{ name:'buggy_body', pos:[0,4,0], rot:[0,90,0] }] );
+        physic.matrix( [{ name:option.name, pos:[0,4,0], rot:[0,90,0] }] );
         option.reset = false;
     }
 

@@ -99,7 +99,7 @@ function afterLoad () {
     makeBuggy();
 
     //physic.post('setDrive', { name:'buggy' });
-    physic.drive( 'buggy' );
+    physic.drive( option.name );
 
 };
 
@@ -184,7 +184,7 @@ function makeBuggy () {
         helper: false,
 
         type:'car',
-        name:'buggy',
+        name: option.name,
         shapeType:'convex',
 
         shape: view.getGeometry( 'buggy', 'h_shape' ),
@@ -246,16 +246,16 @@ function makeBuggy () {
     });
 
     //follow camera
-    if( option.follow ) view.getControls().initFollow( physic.byName( 'buggy' ), {distance:5} );
+    if( option.follow ) view.getControls().initFollow( physic.byName( option.name ), {distance:5} );
     else view.getControls().resetFollow();
 
     // add option setting
     ui ({
 
-        base:option,
+        base: option,
         function: applyOption,
 
-        restart: { type:'button', p:0 },
+        //restart: { type:'button', p:0 },
         follow: { type:'bool' },
 
         hour: { min:0, max:24, precision:2, color:0xFFFF44 },
@@ -283,7 +283,7 @@ function makeBuggy () {
 
     });
 
-    buggyCar = physic.byName('buggy')//view.byName['buggy'];
+    buggyCar = physic.byName(option.name)//view.byName['buggy'];
 
     // sound test
     var enginAudio = view.addSound( engineSound )
@@ -343,7 +343,7 @@ function decale() {
 
     var p = view.followGroup.position;
 
-    physic.matrix( { name:'buggy_body', pos:[0,0,0], keepY:true, keepRot:true } );
+    physic.matrix( { name:option.name, pos:[0,0,0], keepY:true, keepRot:true } );
 
     var terrain = physic.byName('ground');
     terrain.local.x += p.x;

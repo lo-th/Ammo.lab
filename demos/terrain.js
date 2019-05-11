@@ -99,7 +99,7 @@ function afterLoad () {
     makeBuggy();
 
     //physic.post('setDrive', { name:'buggy' });
-    physic.drive( 'buggy' );
+    physic.drive( option.name );
 
 };
 
@@ -184,7 +184,7 @@ function makeBuggy () {
         helper: false,
 
         type:'car',
-        name:'buggy',
+        name:option.name,
         shapeType:'convex',
 
         shape: view.getGeometry( 'buggy', 'h_shape' ),
@@ -246,7 +246,7 @@ function makeBuggy () {
     });
 
     //follow camera
-    if( option.follow ) view.getControls().initFollow( physic.byName( 'buggy' ), {distance:5} );
+    if( option.follow ) view.getControls().initFollow( physic.byName( option.name ), {distance:5} );
     else view.getControls().resetFollow();
 
     // add option setting
@@ -301,7 +301,7 @@ function applyOption () {
     physic.post( 'setGravity', { gravity:[ 0, option.gravity, 0 ] });
     physic.post( 'setVehicle', option );
 
-    follow( option.follow ? 'buggy' : 'none', {distance:5} );
+    follow( option.follow ? option.name : 'none', {distance:5} );
 
 }
 
@@ -343,7 +343,7 @@ function decale() {
 
     var p = view.followGroup.position;
 
-    physic.matrix( { name:'buggy_body', pos:[0,0,0], keepY:true, keepRot:true } );
+    physic.matrix( { name:option.name, pos:[0,0,0], keepY:true, keepRot:true } );
 
     var terrain = physic.byName('ground');
     terrain.local.x += p.x;

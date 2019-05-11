@@ -43,7 +43,7 @@ function demo() {
     view.load ( ['track.sea'], afterLoad, true, true );
     //load ( 'gaz', afterLoad );
 
-    physic.drive( 'car' );
+    physic.drive( option.name );
 
 };
 
@@ -73,7 +73,7 @@ function afterLoad () {
     physic.add({ 
 
         type:'car',
-        name:'car',
+        name:option.name,
         shapeType:'box',
 
         helper: true,
@@ -123,7 +123,7 @@ function afterLoad () {
 
     });
 
-    follow ( option.follow ? 'car':'none' );
+    follow ( option.follow ? option.name:'none' );
 
     // add option setting
     ui ({
@@ -165,7 +165,7 @@ function applyOption () {
     option.reset = option.restart ? true : false;
 
     if( option.reset ){
-        physic.matrix( [{ name:'car_body', pos:[0,4,0], rot:[0,90,0] }] );
+        physic.matrix( [{ name:option.name, pos:[0,4,0], rot:[0,90,0] }] );
         option.reset = false;
     }
     
