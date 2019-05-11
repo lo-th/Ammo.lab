@@ -21,7 +21,7 @@ var option = {
     angular: 0,
     rolling: 0,
     // suspension
-    autoSuspension:true,
+    autoSuspension:false,
     s_stiffness: 153,
     s_compression: 2.3,
     s_damping: 2.4,//2.4
@@ -57,7 +57,7 @@ function demo() {
 
     //view.hideGrid();
 
-    view.moveCam({ theta:90, phi:0, distance:5, target:[0,1,0] });
+    view.moveCam({ theta:135, phi:10, distance:3, target:[0,0.5,0] });
 
     view.addJoystick({ sameAxis:true });
 
@@ -198,7 +198,7 @@ function applyOption () {//1.566
     if( hour !== option.hour ){ hour = option.hour; view.updateSky({hour:hour}); }
 
     if( option.reset ){
-        physic.matrix( [{ name: option.name + '_body', pos:[0,1,0], rot:[0,90,0] }] );
+        physic.matrix( [{ name: option.name, pos:[0,1,0], rot:[0,90,0] }] );
         option.reset = false;
     }
 

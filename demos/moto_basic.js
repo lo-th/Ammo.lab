@@ -5,7 +5,7 @@ var option = {
     follow:false,
     hour:9,
 
-    name:'car',
+    name:'moto',
 
     gravity:-10,
 
@@ -58,7 +58,7 @@ function demo() {
     view.load ( [ 'track.sea' ], afterLoad, true, true );
     //load ( 'gaz', afterLoad );
 
-    physic.drive( 'car' );
+    physic.drive( option.name );
 
 };
 
@@ -148,7 +148,7 @@ function afterLoad () {
 
     });
 
-    follow ( option.follow ? 'car':'none' );
+    follow ( option.follow ? option.name:'none' );
 
     // add option setting
     ui ({
@@ -192,15 +192,13 @@ function applyOption () {
     option.reset = option.restart ? true : false;
 
     if( option.reset ){
-        physic.matrix( [{ name:'car_body', pos:[0,4,0], rot:[0,90,0] }] );
+        physic.matrix( [{ name:option.name, pos:[0,4,0], rot:[0,90,0] }] );
         option.reset = false;
     }
-
-    console.log(option)
     
     physic.post( 'setGravity', { gravity:[ 0, option.gravity, 0 ] });
     physic.post( 'setVehicle', option );
 
-    physic.drive( 'car' );
+    physic.drive( option.name );
 
 }
