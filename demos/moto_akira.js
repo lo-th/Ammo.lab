@@ -561,11 +561,11 @@ function initMaterials () {
 
     mat['tires'] = view.material({
         name:'tires',
-        roughness: 0.8,
-        metalness: 0.3,
+        roughness: 0.6,
+        metalness: 0.5,
         map: view.texture( 'kaneda/tires_c.jpg'),
         normalMap: view.texture( 'kaneda/tires_n.jpg'),
-        normalScale:new THREE.Vector2( 2, 2 ),         
+        //normalScale:new THREE.Vector2( 2, 2 ),         
     });
 
     mat['kaneda'] = view.material({
