@@ -23,6 +23,8 @@ Object.assign( Vehicle.prototype, {
 			n = N + ( id * 64 );//( id * ( num + 2 ) );//( id * 56 );
 	        b.userData.speed = AR[ n ];
 
+	        b.userData.wr = [ AR[ n + 62 ], AR[ n + 63 ] ];
+
 
 
 
@@ -237,6 +239,7 @@ Object.assign( Vehicle.prototype, {
 	    //mesh.userData.steering = 0;
 	    mesh.userData.NumWheels = o.nWheel || 4;
 	    mesh.userData.suspension = [0,0,0,0,0,0];
+	    mesh.userData.wr = [0,0];
 	    mesh.userData.steering = 0;
 	    mesh.userData.type = 'car';
 

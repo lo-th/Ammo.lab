@@ -2351,6 +2351,9 @@
 
 			}
 
+			Ar[ n + 62 ] = this.chassis.getWheelInfo( 0 ).m_rotation;
+			Ar[ n + 63 ] = this.chassis.getWheelInfo( 1 ).m_rotation;
+
 		},
 
 		drive: function ( key ) {

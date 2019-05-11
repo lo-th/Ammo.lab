@@ -164,10 +164,13 @@ function update () {
 
     //console.log( frame );
 
-    var r = (data.speed*THREE.Math.DEG2RAD*0.8)
+    //var r = (data.speed*THREE.Math.DEG2RAD*0.8)
 
-    tire_front.rotation.x += r;
-    tire_back.rotation.z -= r;
+    tire_front.rotation.x = data.wr[0];
+    tire_back.rotation.z = -data.wr[1];
+
+    //tire_front.rotation.x += r;
+    //tire_back.rotation.z -= r;
 
     var sav = option.susp_av*2.61;
 
