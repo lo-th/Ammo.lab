@@ -4,7 +4,7 @@ var debug = false;
 var option = {
 
     restart:false,
-    follow: false,
+    follow: true,
     hour:9,
 
     name:'moto',
@@ -57,7 +57,7 @@ function demo() {
 
     //view.hideGrid();
 
-    view.moveCam({ theta:135, phi:10, distance:3, target:[0,0.5,0] });
+    //view.moveCam({ theta:135, phi:10, distance:3, target:[0,0,0] });
 
     view.addJoystick({ sameAxis:true });
 
@@ -76,7 +76,7 @@ function demo() {
     view.load ( [ 'kaneda.sea', 'track.sea' ], afterLoad, true, true );
     //load ( 'gaz', afterLoad );
 
-    physic.drive( option.name );
+    
 
 };
 
@@ -96,7 +96,7 @@ function afterLoad () {
 
     initKaneda();
 
-    follow ( option.follow ? option.name : 'none', { distance:4 } );
+    
 
     // add option setting
     ui ({
@@ -141,6 +141,10 @@ function afterLoad () {
 
 
     view.update = update;
+
+    physic.drive( option.name );
+
+    follow ( option.follow ? option.name : 'none', { distance:4, decal:[0,0.3,0] } );
 
 };
 
@@ -204,7 +208,7 @@ function applyOption () {//1.566
 
     frontShell( option.open_shell );
 
-    follow ( option.follow ? option.name : 'none', { distance:4 } );
+    follow ( option.follow ? option.name : 'none', { distance:4, decal:[0,0.3,0] } );
     
     physic.post( 'setGravity', { gravity:[ 0, option.gravity, 0 ] });
     physic.post( 'setVehicle', option );

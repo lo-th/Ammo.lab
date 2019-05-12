@@ -283,10 +283,16 @@ export var engine = ( function () {
 			} t.n ++; // FPS
 			engine.tell();
 
-			if ( refView ) refView.needUpdate( true );
-			
 			engine.update();
 
+			if ( refView ){
+			    //refView.update();
+			    refView.updateIntern();
+                refView.controler.follow(); 
+				//refView.needUpdate( true );
+			}
+			
+			
 			engine.stepRemove();
         	engine.stepAdd();
 

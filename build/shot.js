@@ -5205,10 +5205,16 @@
 				} t.n ++; // FPS
 				exports.engine.tell();
 
-				if ( refView ) refView.needUpdate( true );
-				
 				exports.engine.update();
 
+				if ( refView ){
+				    //refView.update();
+				    refView.updateIntern();
+	                refView.controler.follow(); 
+					//refView.needUpdate( true );
+				}
+				
+				
 				exports.engine.stepRemove();
 	        	exports.engine.stepAdd();
 
