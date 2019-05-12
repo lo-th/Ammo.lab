@@ -140,7 +140,7 @@ function afterLoad () {
     });
 
 
-    view.update = update;
+    view.updateIntern = update;
 
     physic.drive( option.name );
 

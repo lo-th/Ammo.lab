@@ -1823,6 +1823,7 @@
 		    if ( mesh ) {
 
 		    	mesh.type = o.mass === 0 && ! o.kinematic ? 'solid' : 'body';
+		    	if( o.kinematic ) mesh.type = 'kinematic';
 
 		    	//if ( o.mass === 0 && ! o.kinematic ) mesh.isSolid = true;
 		    	//if ( o.kinematic ) mesh.isKinemmatic = true;
@@ -5178,6 +5179,7 @@
 			},
 
 			postUpdate: function () {},
+			pastUpdate: function () {},
 
 			update: function () {
 
@@ -5206,6 +5208,7 @@
 				exports.engine.tell();
 
 				exports.engine.update();
+				exports.engine.pastUpdate();
 
 				if ( refView ){
 				    //refView.update();

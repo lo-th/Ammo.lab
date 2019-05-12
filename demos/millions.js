@@ -216,7 +216,7 @@ function startSimulation () {
             friction: 0.5, restitution: 0.0
         });
 
-        physic.postUpdate = update; 
+        physic.pastUpdate = update; 
 
     }, 6000 );
 
@@ -272,7 +272,7 @@ function update () {
 
     bodys.forEach( function ( b, id ) {
 
-    	if( game === 'wantBall' && b.isBody && ball.indexOf(b.name) === -1 ){
+    	if( game === 'wantBall' && b.type === 'body' && ball.indexOf(b.name) === -1 ){
     		if( b.position.y < -54 ) haveBall( b.name );
     	}
 

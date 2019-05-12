@@ -256,6 +256,7 @@ export var engine = ( function () {
 		},
 
 		postUpdate: function () {},
+		pastUpdate: function () {},
 
 		update: function () {
 
@@ -284,6 +285,7 @@ export var engine = ( function () {
 			engine.tell();
 
 			engine.update();
+			engine.pastUpdate();
 
 			if ( refView ){
 			    //refView.update();
