@@ -18,7 +18,8 @@ var demos = [
     'mecanum', 'drone', 'millions', 'basketball', 'mecabot',
     'compound', 'tower', 
     'break_glass', 'break_round',
-    'rayTest'
+    'rayTest',
+    'terrain_road'
 ];
 
 demos.sort();

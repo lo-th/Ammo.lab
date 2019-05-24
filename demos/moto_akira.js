@@ -4,7 +4,7 @@ var debug = false;
 var option = {
 
     restart:false,
-    follow: true,
+    follow: false,
     hour:9,
 
     name:'moto',
@@ -29,9 +29,6 @@ var option = {
     s_length: 0.03,
     s_travel: 0.06,
 
-    //linearFactor:[0.9,0.9,0.9],
-
-    //auto:true,
     // wheel
     w_friction: 100,//10.5,//1000,
     w_roll: 0.3,
@@ -57,7 +54,7 @@ function demo() {
 
     //view.hideGrid();
 
-    //view.moveCam({ theta:135, phi:10, distance:3, target:[0,0,0] });
+    view.moveCam({ theta:-90, phi:30, distance:3, target:[0,0,0] });
 
     view.addJoystick({ sameAxis:true });
 
