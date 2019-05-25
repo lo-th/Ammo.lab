@@ -127,8 +127,10 @@ float ca( in vec3 r,in vec3 s,in float t ){
 
 vec3 makeSky( in vec3 r, in vec3 s, out float t){
 
-    int SAMPLE = int( nSample );
-    int STEP = int ( iteration ) ;
+    //int SAMPLE = int( nSample );
+    //int STEP = int ( iteration ) ;
+    const int SAMPLE = 128;
+    const int STEP = 8;
 	
 	float u,v,w,x,y,z,A,B,C,m,F;
 	vec3 p = normalize( lightdir );
