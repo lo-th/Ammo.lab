@@ -35,6 +35,7 @@ export var engine = ( function () {
 	var refView = null;
 
 	var isBuffer = false;
+	var isPause = false;
 	//var isPause = false;
 	var stepNext = false;
 
@@ -234,6 +235,8 @@ export var engine = ( function () {
 
 		start: function () {
 
+			if( isPause ) return;
+
 			//console.log('start', t.timerate );
 
 			stepNext = true;
@@ -383,6 +386,8 @@ export var engine = ( function () {
 
 			//console.log('reset', full);
 
+			isPause = false;
+
 			oldMode = currentMode;
 			engine.setMode( '' );
 
@@ -407,6 +412,22 @@ export var engine = ( function () {
 			engine.post( 'reset', { full: full } );
 
 		},
+
+		pause: function () {
+
+			isPause = true;
+
+		},
+
+		play: function () {
+
+			if(isPause){
+				
+				isPause = false;
+				engine.start();
+
+			}
+		}, 
 
 		stop: function () {
 

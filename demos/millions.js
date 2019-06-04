@@ -10,6 +10,9 @@ var game = 'start';
 var ball = [];
 var tmpCanvas = document.createElement('canvas');
 tmpCanvas.width = tmpCanvas.height = 128;
+var yellow = false;
+
+var timer;
 
 function demo() {
 
@@ -29,20 +32,29 @@ function demo() {
 
     })
 
+    physic.pause();
+
+    view.resetCallBack = extraReset;
+
     view.load ( ['million.sea'], afterLoadGeometry, true, true );
 
-};
+}
+
+function extraReset () {
+
+    clearTimeout( timer );
+
+}
 
 function afterLoadGeometry () {
 
-    physic.stop();
-
     makeBigMAchine();
     makeLittleMAchine();
+    makeBall();
 
-    addBall();
+    //startSimulation();
 
-    setTimeout( startSimulation, 3000 );
+    timer = setTimeout( startSimulation, 3000 );
 
 }
 
@@ -151,7 +163,7 @@ function makeLittleMAchine () {
 
 }
 
-function addBall () {
+function makeBall () {
 
     // add red balls
     
@@ -213,7 +225,7 @@ function addBall () {
 
 function startSimulation () {
     
-    setTimeout( function(){ 
+    timer = setTimeout( function(){ 
 
         physic.add({ 
             name:'close', type:'mesh', mass:0, material:'static',//, material:'hide',
@@ -223,15 +235,15 @@ function startSimulation () {
 
         physic.pastUpdate = update; 
 
+        timer = setTimeout( wantBall, 6000 );
+
     }, 6000 );
 
-    physic.start();
-
-    setTimeout( wantBall, 8000 );
+    physic.play();
 
 }
 
-var yellow = false;
+
 
 function wantBall () {
 
@@ -249,10 +261,10 @@ function haveBall ( name ) {
 	ball.push(name);
 
 	if(ball.length<5){
-		setTimeout( wantBall, 6000 );
+		timer = setTimeout( wantBall, 6000 );
 	} else if(ball.length<7){
         yellow = true;
-        setTimeout( wantBall, 6000 );
+        timer = setTimeout( wantBall, 6000 );
     } else {
 		console.log( ball );
 	}
@@ -315,7 +327,7 @@ function createTexture ( n, y ){
 	ctx.fillStyle = "#000000";
 	ctx.textAlign = "center";
 	ctx.font = 'bold 48px Arial';
-	ctx.fillText(n, 64, 80);
+	ctx.fillText( n, 64, 80 );
 
     var img = new Image(128, 128);
     img.src = tmpCanvas.toDataURL( 'image/png' );

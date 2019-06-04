@@ -4960,6 +4960,7 @@
 		var refView = null;
 
 		var isBuffer = false;
+		var isPause = false;
 		//var isPause = false;
 		var stepNext = false;
 
@@ -5157,6 +5158,8 @@
 
 			start: function () {
 
+				if( isPause ) return;
+
 				//console.log('start', t.timerate );
 
 				stepNext = true;
@@ -5306,6 +5309,8 @@
 
 				//console.log('reset', full);
 
+				isPause = false;
+
 				oldMode = currentMode;
 				exports.engine.setMode( '' );
 
@@ -5330,6 +5335,22 @@
 				exports.engine.post( 'reset', { full: full } );
 
 			},
+
+			pause: function () {
+
+				isPause = true;
+
+			},
+
+			play: function () {
+
+				if(isPause){
+					
+					isPause = false;
+					exports.engine.start();
+
+				}
+			}, 
 
 			stop: function () {
 
