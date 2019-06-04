@@ -52,8 +52,6 @@ function afterLoadGeometry () {
     makeLittleMAchine();
     makeBall();
 
-    //startSimulation();
-
     timer = setTimeout( startSimulation, 3000 );
 
 }
@@ -224,6 +222,8 @@ function makeBall () {
 };
 
 function startSimulation () {
+
+    physic.play();
     
     timer = setTimeout( function(){ 
 
@@ -239,11 +239,7 @@ function startSimulation () {
 
     }, 6000 );
 
-    physic.play();
-
 }
-
-
 
 function wantBall () {
 

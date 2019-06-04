@@ -5309,6 +5309,9 @@
 
 				//console.log('reset', full);
 
+				exports.engine.postUpdate = function(){};
+				exports.engine.pastUpdate = function(){};
+
 				isPause = false;
 
 				oldMode = currentMode;
@@ -5321,8 +5324,6 @@
 
 				// remove tmp material
 				while ( root.tmpMat.length > 0 ) root.tmpMat.pop().dispose();
-
-				exports.engine.postUpdate = function () {};
 
 				tmpRemove = [];
 				tmpAdd = [];

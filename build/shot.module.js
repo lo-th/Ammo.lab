@@ -5303,6 +5303,9 @@ var engine = ( function () {
 
 			//console.log('reset', full);
 
+			engine.postUpdate = function(){};
+			engine.pastUpdate = function(){};
+
 			isPause = false;
 
 			oldMode = currentMode;
@@ -5315,8 +5318,6 @@ var engine = ( function () {
 
 			// remove tmp material
 			while ( root.tmpMat.length > 0 ) root.tmpMat.pop().dispose();
-
-			engine.postUpdate = function () {};
 
 			tmpRemove = [];
 			tmpAdd = [];
