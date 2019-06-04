@@ -8,6 +8,8 @@
 var r = 0;
 var game = 'start';
 var ball = [];
+var tmpCanvas = document.createElement('canvas');
+tmpCanvas.width = tmpCanvas.height = 128;
 
 function demo() {
 
@@ -15,7 +17,7 @@ function demo() {
 
     view.addSky({url:'photo.jpg', hdr:true });
 
-    view.moveCam({ theta:-15, phi:0, distance:160, target:[34,-16,0] });
+    view.moveCam({ theta:-15, phi:0, distance:200, target:[34,-16,0] });
 
     physic.set({
 
@@ -33,11 +35,14 @@ function demo() {
 
 function afterLoadGeometry () {
 
+    physic.stop();
+
     makeBigMAchine();
     makeLittleMAchine();
 
     addBall();
-    startSimulation();
+
+    setTimeout( startSimulation, 3000 );
 
 }
 
@@ -220,6 +225,8 @@ function startSimulation () {
 
     }, 6000 );
 
+    physic.start();
+
     setTimeout( wantBall, 8000 );
 
 }
@@ -282,10 +289,9 @@ function update () {
 
 function createTexture ( n, y ){
 
-	var c = document.createElement('canvas');
-	c.width = c.height = 128;
+	ctx = tmpCanvas.getContext("2d");
 
-	ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, 128, 128);
 
 	ctx.beginPath();
 	ctx.rect(0, 0, 128, 128);
@@ -311,7 +317,10 @@ function createTexture ( n, y ){
 	ctx.font = 'bold 48px Arial';
 	ctx.fillText(n, 64, 80);
 
-	t = new THREE.Texture( c );
+    var img = new Image(128, 128);
+    img.src = tmpCanvas.toDataURL( 'image/png' );
+
+	var t = new THREE.Texture( img );
 	t.needsUpdate = true;
 	t.flipY = false;
 
