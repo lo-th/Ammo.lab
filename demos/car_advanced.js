@@ -63,6 +63,8 @@ function demo() {
     // load buggy 3d model
     view.load ( [ 'buggy.sea', 'track.sea', engineSound+'.mp3' ], afterLoad, true, true );
 
+    //view.load ( [ 'buggy_draco.sea', 'track.sea', engineSound+'.mp3' ], afterLoad, true, true );
+
 };
 
 function afterLoad () {
@@ -95,10 +97,12 @@ function makeBuggy () {
 
     // car mesh
 
-    var mesh = view.getMesh( 'buggy', 'h_chassis' );
-    var wheel = view.getMesh( 'buggy', 'h_wheel' );
-    var susp = view.getMesh( 'buggy', 'h_susp_base' );
-    var brake = view.getMesh( 'buggy', 'h_brake' );
+    var refName = 'buggy';
+
+    var mesh = view.getMesh( refName, 'h_chassis' );
+    var wheel = view.getMesh( refName, 'h_wheel' );
+    var susp = view.getMesh( refName, 'h_susp_base' );
+    var brake = view.getMesh( refName, 'h_brake' );
     var steeringWheel;
 
     brake.material = mat.wheel;
@@ -171,7 +175,7 @@ function makeBuggy () {
     	debug: false,
 
         
-        shape: view.getGeometry( 'buggy', 'h_shape' ),
+        shape: view.getGeometry( refName, 'h_shape' ),
         mesh: mesh,
         //noShadow : true,
         meshWheel: wheel,
@@ -325,17 +329,19 @@ function buggyMaterials () {
 
     mat['glass'] = view.material({
         name:'glass',
-        roughness: 0.1,
-        metalness: 0.9,
+        roughness: 0.0,
+        metalness: 1.0,
         color: 0xeeefff,
         transparent:true,
         opacity:0.3,
+        premultipliedAlpha: true,
     });
 
     mat['body'] = view.material({
         name:'body',
         roughness: 0.2,
-        metalness: 0.8,
+        metalness: 0.9,
+        envMapIntensity: 1.35,
         map: view.texture( 'buggy/body.jpg' ),
     });
 

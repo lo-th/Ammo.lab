@@ -408,7 +408,6 @@ export var engine = ( function () {
 
 			if ( refView ) refView.reset( full );
 
-
 			// clear physic object;
 			engine.post( 'reset', { full: full } );
 
@@ -422,12 +421,10 @@ export var engine = ( function () {
 
 		play: function () {
 
-			if(isPause){
-				
-				isPause = false;
-				engine.start();
-
-			}
+			if( !isPause ) return
+			isPause = false;
+			engine.start();
+			
 		}, 
 
 		stop: function () {

@@ -5331,7 +5331,6 @@
 
 				if ( refView ) refView.reset( full );
 
-
 				// clear physic object;
 				exports.engine.post( 'reset', { full: full } );
 
@@ -5345,12 +5344,10 @@
 
 			play: function () {
 
-				if(isPause){
-					
-					isPause = false;
-					exports.engine.start();
-
-				}
+				if( !isPause ) return
+				isPause = false;
+				exports.engine.start();
+				
 			}, 
 
 			stop: function () {
