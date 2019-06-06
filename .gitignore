@@ -2,3 +2,4 @@ node_modules
 _idea
 desktop.ini
 index_dev.html
+package-lock.json
