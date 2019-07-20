@@ -2,13 +2,14 @@
 import { math } from './math.js';
 import { root, map } from './root.js';
 
-/**
-* @author lth / https://github.com/lo-th/
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    GUN - CONSTRAINT JOINT
 */
-
-//--------------------------------------------------
-//  AMMO CONSTRAINT JOINT
-//--------------------------------------------------
 
 function Constraint() {
 
@@ -47,7 +48,9 @@ Object.assign( Constraint.prototype, {
 
 	remove: function ( name ) {
 
-		if ( ! map.has( name ) ) return;
+		//console.log( 'remove_'+ name );
+
+		if ( !map.has( name ) ) return;
 		var j = map.get( name );
 		var n = this.joints.indexOf( j );
 		if ( n !== - 1 ) {
@@ -72,7 +75,7 @@ Object.assign( Constraint.prototype, {
 		if ( o.body1 ) o.b1 = o.body1;
 		if ( o.body2 ) o.b2 = o.body2;
 
-		if ( ! map.has( o.b1 ) || ! map.has( o.b2 ) ) return;
+		if ( ! map.has( o.b1 ) || ! map.has( o.b2 ) ){ console.log( '! not find body' ); return;}
 
 		var b1 = map.get( o.b1 );
 		var b2 = map.get( o.b2 );
@@ -171,7 +174,7 @@ Object.assign( Constraint.prototype, {
 		// 4 / 5 _ relaxation  0->1, recommend to stay near 1.  the lower the value, the less the constraint will fight velocities which violate the angular limits.
 		if ( o.limit && joint.setLimit ) {
 
-			if ( o.type === 'joint_hinge' || o.type === 'joint' ) joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] || 0.9, o.limit[ 3 ] || 0.3, o.limit[ 4 ] || 1.0 );
+			if ( o.type === 'joint_hinge' || o.type === 'joint' ) joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] !==undefined ? o.limit[ 2 ] : 0.9, o.limit[ 3 ] !==undefined ? o.limit[ 3 ] : 0.3, o.limit[ 4 ] !==undefined ? o.limit[ 4 ] : 1.0 );
 			if ( o.type === 'joint_conetwist' ) {
 
 				//console.log(joint)
@@ -286,8 +289,10 @@ Object.assign( Constraint.prototype, {
 		/*if(o.type==='joint_spring_dof'){
 			var aa= []
 			joint.getFrameOffsetA().toArray(aa)
-			console.log( o.type, joint, aa );
+			
 		}*/
+
+		//console.log( o.type, joint );
 
 		// free math
 		posA.free();

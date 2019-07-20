@@ -1,6 +1,6 @@
 // ROOT reference of engine
 
-export var REVISION = '002';
+export var REVISION = '003';
 
 export var root = {
 
@@ -10,6 +10,16 @@ export var root = {
 	ArMax: 0,
 	key: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
 
+	flow:{
+		matrix:{},
+		force:{},
+		option:{},
+		ray:[],
+		terrain:[],
+		vehicle:[],
+		key:[],
+	},
+
 	post: null, // send to worker
 	extraGeo: [], // array of extra geometry to delete
 
@@ -18,7 +28,8 @@ export var root = {
 	mat: {}, // materials object
 	geo: {}, // geometrys object
 
-	torad: 0.0174532925199432957,
+	torad: Math.PI / 180,
+
 
 };
 

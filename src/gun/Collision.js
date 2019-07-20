@@ -1,13 +1,14 @@
 /*global Ammo*/
 import { root, map } from './root.js';
 
-/**
-* @author lth / https://github.com/lo-th/
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    GUN - COLLISION
 */
-
-//--------------------------------------------------
-//  AMMO CHARACTER
-//--------------------------------------------------
 
 function Collision() {
 
@@ -32,7 +33,7 @@ Object.assign( Collision.prototype, {
 			else root.world.contactTest( pair.a, pair.f );
 			AR[ n ] = pair.result;
 
-		} );
+		});
 
 	},
 
@@ -100,6 +101,8 @@ function Pair( a, b, name ) {
 	this.name = name;
 
 	this.result = 0;
+
+	this.type = 'collision';
 
 	this.pa = [ 0, 0, 0 ];
 	this.pb = [ 0, 0, 0 ];

@@ -36,10 +36,10 @@ function ragdoll (id, x, y, z) {
         { type:type, size:[0.2,0.1,0.15], pos:[p.x,p.y+0.1,p.z], mass:mass,  name:'spine3_'+id },
         { type:"sphere", size:[0.1,0.1,0.1], pos:[p.x,p.y+0.3,p.z], mass:mass,  name:'head'+id },
 
-        { type:"joint", b1:'pelvis'+id, b2:'spine1_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20], collision:collision, spring:spring },
-        { type:"joint", b1:'spine1_'+id, b2:'spine2_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20], collision:collision, spring:spring },
-        { type:"joint", b1:'spine2_'+id, b2:'spine3_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20], collision:collision, spring:spring },
-        { type:"joint", b1:'spine3_'+id, b2:'head'+id,  pos1:[0,0.05,0], pos2:[0,-0.1,0], limit:[2,20], collision:collision, spring:spring },
+        { type:"joint", b1:'pelvis'+id, b2:'spine1_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20].concat(spring), collision:collision },
+        { type:"joint", b1:'spine1_'+id, b2:'spine2_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20].concat(spring), collision:collision },
+        { type:"joint", b1:'spine2_'+id, b2:'spine3_'+id, pos1:[0,0.05,0], pos2:[0,-0.05,0], limit:[2,20].concat(spring), collision:collision },
+        { type:"joint", b1:'spine3_'+id, b2:'head'+id,  pos1:[0,0.05,0], pos2:[0,-0.1,0], limit:[2,20].concat(spring), collision:collision },
 
         //arm
 

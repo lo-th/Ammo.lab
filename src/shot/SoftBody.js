@@ -2,6 +2,15 @@
 import { geometryInfo, ConvexGeometry } from './Geometry.js';
 import { root, map, vectorad } from './root.js';
 
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    SHOT - SOFTBODY
+*/
+
 function SoftBody() {
 
 	this.ID = 0;

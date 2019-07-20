@@ -299,7 +299,8 @@ function applyOption () {
 
     //option.reset = option.restart ? true : false;
     physic.post( 'setGravity', { gravity:[ 0, option.gravity, 0 ] });
-    physic.post( 'setVehicle', option );
+    //physic.post( 'setVehicle', option );
+    physic.setVehicle( option );
 
     follow( option.follow ? option.name : 'none', {distance:5} );
 

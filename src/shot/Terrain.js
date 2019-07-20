@@ -1,6 +1,16 @@
 /*global THREE*/
 import { root, map } from './root.js';
 
+
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    SHOT - TERRAIN
+*/
+
 function Terrain() {
 
 	this.ID = 0;
@@ -13,12 +23,14 @@ Object.assign( Terrain.prototype, {
 
 	step: function () {
 
+		root.flow.terrain = [];
+
 		this.terrains.forEach( function ( t ) {
 
 			if ( t.needsUpdate ) {
 
 			    t.updateGeometry();
-				root.post( 'setTerrain', { name: t.name, heightData: t.heightData } );
+				root.flow.terrain.push( { name: t.name, heightData: t.heightData } );
 				t.needsUpdate = false;
 
 			}

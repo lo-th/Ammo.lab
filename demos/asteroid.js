@@ -57,7 +57,7 @@ function demo () {
 
     physic.byName( 'planet' ).castShadow = true
 
-    physic.postUpdate = update;
+    physic.prevUpdate = update;
 
 };
 

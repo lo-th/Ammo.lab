@@ -1,6 +1,15 @@
 /*global THREE*/
 import { root, map } from './root.js';
 
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    SHOT - RAY
+*/
+
 function RayCaster() {
 
 	this.ID = 0;
@@ -12,28 +21,24 @@ Object.assign( RayCaster.prototype, {
 
 	step: function () {
 
-		if ( ! this.rays.length ) return;
+		var i = this.rays.length;
+		var j = root.flow.ray.length;
 
-		var raytest = [];
+		if ( !i ) return;
 
-		this.rays.forEach( function ( r ) {
+		if( i===j ){
+	        while( j-- ) this.rays[j].update( root.flow.ray[j] );
+		}
+
+		root.flow.ray = [];
+
+		this.rays.forEach( function ( r, id ) {
 
 			r.updateMatrixWorld();
-			raytest.push( { origin: r.origin, dest: r.dest, group: r.group, mask: r.mask } );
+			root.flow.ray.push( { origin: r.origin, dest: r.dest, group: r.group, mask: r.mask, precision:r.precision } );
+		
+		});
 
-		} );
-
-		root.post( 'rayCast', raytest );
-
-	},
-
-	receive: function ( o ) {
-
-		var i = this.rays.length;
-		if ( ! i ) return;
-		if ( i !== o.length ) return;
-
-		while ( i -- ) this.rays[ i ].update( o[ i ] );
 
 	},
 
@@ -73,12 +78,19 @@ Object.assign( RayCaster.prototype, {
 		this.remove( o.name );
 
 		var ray = new Ray( o );
+		if( o.visible !== undefined ) ray.visible = o.visible;
 
 		if ( o.parent !== undefined ) o.parent.add( ray );
 	    else root.container.add( ray );
 
 		this.rays.push( ray );
 		map.set( o.name, ray );
+
+		// send to worker
+		delete( o.callback );
+		delete( o.parent );
+	    root.post( 'add', o );
+
 		return ray;
 
 	},
@@ -94,11 +106,14 @@ export { RayCaster };
 
 function Ray( o ) {
 
-
 	THREE.Line.call( this );
 
+	this.type = 'ray';
+
 	this.name = o.name;
-	this.visible = o.visible !== undefined ? o.visible : true;
+	this.enabled = o.enabled !== undefined ? o.enabled : true;
+
+	this.precision =  o.precision !== undefined ? o.precision : 1;
 
 	this.callback = o.callback || function () {};
 
@@ -113,6 +128,7 @@ function Ray( o ) {
 	this.start = new THREE.Vector3().fromArray( o.start || [ 0, 0, 0 ] );
 	this.end = new THREE.Vector3().fromArray( o.end || [ 0, 10, 0 ] );
 	//this.direction = new THREE.Vector3();
+	this.maxDistance = this.start.distanceTo( this.end );
 
 	// tmp
 	this.tmp = new THREE.Vector3();
@@ -121,7 +137,7 @@ function Ray( o ) {
 
 	// color
 	this.c1 = [ 0.1, 0.1, 0.1 ];
-	this.c2 = [ 0.1, 1.0, 0.1 ];
+	this.c2 = [ 1.0, 0.1, 0.1 ];
 
 	// geometry
 
@@ -138,6 +154,8 @@ function Ray( o ) {
 	this.material.vertexColors = THREE.VertexColors;
 
 	this.base = false;
+
+	this.info = { hit:false, name:'', distance:0 };
 
 	this.upGeo();
 
@@ -171,7 +189,6 @@ Ray.prototype = Object.assign( Object.create( THREE.Line.prototype ), {
 	updateMatrixWorld: function ( force ) {
 
 		THREE.Line.prototype.updateMatrixWorld.call( this, force );
-
 		this.tmp.copy( this.start ).applyMatrix4( this.matrixWorld );
 		this.tmp.toArray( this.origin, 0 );
 		this.tmp.copy( this.end ).applyMatrix4( this.matrixWorld );
@@ -182,7 +199,7 @@ Ray.prototype = Object.assign( Object.create( THREE.Line.prototype ), {
 
 	upGeo: function ( hit ) {
 
-		if ( ! this.visible ) return;
+		if ( ! this.enabled ) return;
 
 		var v = this.vertices;
 		var c = this.colors;
@@ -228,7 +245,6 @@ Ray.prototype = Object.assign( Object.create( THREE.Line.prototype ), {
 
 			this.geometry.attributes.position.needsUpdate = true;
 	     	this.geometry.attributes.color.needsUpdate = true;
-
 			this.isBase = true;
 
 		}
@@ -237,14 +253,20 @@ Ray.prototype = Object.assign( Object.create( THREE.Line.prototype ), {
 
 	update: function ( o ) {
 
+		this.info.hit = o.hit;
+		this.info.name = o.name || '';
+		this.info.distance = 0;
+
 		if ( o.hit ) {
 
 			//this.callback( o );
 
-			if ( this.visible ) {
+			if ( this.enabled ) {
 
 				this.tmp.fromArray( o.point ).applyMatrix4( this.inv );
 				var d = this.tmp.distanceTo( this.end );
+				o.distance = this.maxDistance - d;
+				this.info.distance = o.distance;
 				this.tmp.toArray( this.local, 0 );
 			    this.normal.fromArray( o.normal );
 			    this.tmp.addScaledVector( this.normal, d );

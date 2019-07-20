@@ -4,7 +4,7 @@ var debug = false;
 var option = {
 
     restart:false,
-    follow: false,
+    follow: true,
     hour:9,
 
     name:'moto',
@@ -137,7 +137,7 @@ function afterLoad () {
     });
 
 
-    view.updateIntern = update;
+    view.update = update;
 
     physic.drive( option.name );
 

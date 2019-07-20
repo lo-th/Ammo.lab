@@ -1455,7 +1455,7 @@
 
 	// ROOT reference of engine
 
-	var REVISION = '002';
+	var REVISION = '003';
 
 	var root = {
 
@@ -1465,6 +1465,16 @@
 		ArMax: 0,
 		key: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
 
+		flow:{
+			matrix:{},
+			force:{},
+			option:{},
+			ray:[],
+			terrain:[],
+			vehicle:[],
+			key:[],
+		},
+
 		post: null, // send to worker
 		extraGeo: [], // array of extra geometry to delete
 
@@ -1473,7 +1483,8 @@
 		mat: {}, // materials object
 		geo: {}, // geometrys object
 
-		torad: 0.0174532925199432957,
+		torad: Math.PI / 180,
+
 
 	};
 
@@ -1491,6 +1502,15 @@
 	}
 
 	/*global THREE*/
+
+	/**   _   _____ _   _
+	*    | | |_   _| |_| |
+	*    | |_ _| | |  _  |
+	*    |___|_|_| |_| |_|
+	*    @author lo.th / https://github.com/lo-th
+	*
+	*    SHOT - RIGIDBODY
+	*/
 
 	function RigidBody() {
 
@@ -1529,8 +1549,12 @@
 
 				}
 
-				b.position.fromArray( AR, n + 1 );
+				if( b.enabled ){
+					b.position.fromArray( AR, n + 1 );
 		            b.quaternion.fromArray( AR, n + 4 );
+				}
+
+				
 		        //}
 
 			} );
@@ -1547,7 +1571,6 @@
 
 		destroy: function ( b ) {
 
-
 			if ( b.parent ) b.parent.remove( b );
 			map.delete( b.name );
 
@@ -1559,6 +1582,10 @@
 			var b = map.get( name );
 			var solid = b.type === 'solid' ? true : false;
 			var n = solid ? this.solids.indexOf( b ) : this.bodys.indexOf( b );
+
+
+
+			//console.log('remove SHOT', name, n )
 
 			if ( n !== - 1 ) {
 
@@ -1639,6 +1666,8 @@
 		    o.rot = o.rot === undefined ? [ 0, 0, 0 ] : vectorad( o.rot );
 		    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
 
+		    
+
 		    if ( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotA ) ) ).toArray();
 		    if ( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotB ) ) ).toArray();
 
@@ -1646,7 +1675,7 @@
 		    if ( o.angLower ) o.angLower = vectorad( o.angLower );
 
 		    var mesh = null;
-
+		    var noMesh = o.noMesh !== undefined ? o.noMesh : false; 
 
 		    if ( o.type === 'plane' ) {
 
@@ -1655,6 +1684,8 @@
 		        return;
 
 			}
+
+
 
 		    // material
 
@@ -1738,7 +1769,7 @@
 
 		        } else {
 
-		            mesh = new THREE.Mesh( o.shape, material );
+		            if ( !noMesh ) mesh = new THREE.Mesh( o.shape, material );
 		            //extraGeo.push(mesh.geometry);
 
 				}
@@ -1779,6 +1810,8 @@
 		    if ( o.type === 'highsphere' ) o.type = 'sphere';
 
 
+
+
 		    if ( mesh ) {
 
 		        if ( ! customGeo ) mesh.scale.fromArray( o.size );
@@ -1794,6 +1827,7 @@
 		        mesh.updateMatrix();
 
 		        mesh.name = o.name;
+		        mesh.enabled = true;
 		        //mesh.type = 'rigidbody';
 
 		        if ( o.parent !== undefined ) o.parent.add( mesh );
@@ -1822,8 +1856,8 @@
 
 		    if ( mesh ) {
 
-		    	mesh.type = o.mass === 0 && ! o.kinematic ? 'solid' : 'body';
-		    	if( o.kinematic ) mesh.type = 'kinematic';
+		    	mesh.type = o.mass === 0 && !o.kinematic ? 'solid' : 'body';
+		    	//if( o.kinematic ) mesh.type = 'kinematic';
 
 		    	//if ( o.mass === 0 && ! o.kinematic ) mesh.isSolid = true;
 		    	//if ( o.kinematic ) mesh.isKinemmatic = true;
@@ -1841,6 +1875,15 @@
 	} );
 
 	/*global THREE*/
+
+	/**   _   _____ _   _
+	*    | | |_   _| |_| |
+	*    | |_ _| | |  _  |
+	*    |___|_|_| |_| |_|
+	*    @author lo.th / https://github.com/lo-th
+	*
+	*    SHOT - SOFTBODY
+	*/
 
 	function SoftBody() {
 
@@ -2433,6 +2476,16 @@
 
 	/*global THREE*/
 
+
+	/**   _   _____ _   _
+	*    | | |_   _| |_| |
+	*    | |_ _| | |  _  |
+	*    |___|_|_| |_| |_|
+	*    @author lo.th / https://github.com/lo-th
+	*
+	*    SHOT - TERRAIN
+	*/
+
 	function Terrain() {
 
 		this.ID = 0;
@@ -2445,12 +2498,14 @@
 
 		step: function () {
 
+			root.flow.terrain = [];
+
 			this.terrains.forEach( function ( t ) {
 
 				if ( t.needsUpdate ) {
 
 				    t.updateGeometry();
-					root.post( 'setTerrain', { name: t.name, heightData: t.heightData } );
+					root.flow.terrain.push( { name: t.name, heightData: t.heightData } );
 					t.needsUpdate = false;
 
 				}
@@ -2565,6 +2620,15 @@
 	} );
 
 	/*global THREE*/
+
+	/**   _   _____ _   _
+	*    | | |_   _| |_| |
+	*    | |_ _| | |  _  |
+	*    |___|_|_| |_| |_|
+	*    @author lo.th / https://github.com/lo-th
+	*
+	*    SHOT - VEHICLE
+	*/
 
 	function Vehicle() {
 
@@ -3062,6 +3126,15 @@
 
 	/*global THREE*/
 
+	/**   _   _____ _   _
+	*    | | |_   _| |_| |
+	*    | |_ _| | |  _  |
+	*    |___|_|_| |_| |_|
+	*    @author lo.th / https://github.com/lo-th
+	*
+	*    SHOT - CHARACTER
+	*/
+
 	function Character() {
 
 		this.ID = 0;
@@ -3239,6 +3312,15 @@
 
 	} );
 
+	/**   _   _____ _   _
+	*    | | |_   _| |_| |
+	*    | |_ _| | |  _  |
+	*    |___|_|_| |_| |_|
+	*    @author lo.th / https://github.com/lo-th
+	*
+	*    SHOT - COLLISION
+	*/
+
 	function Collision() {
 
 		this.ID = 0;
@@ -3252,9 +3334,10 @@
 
 			this.pairs.forEach( function ( pair, id ) {
 
+				pair.hit = AR[ N + id ] ? AR[ N + id ] : 0;
 				pair.callback( AR[ N + id ] || 0 );
-
-			} );
+				
+			});
 
 		},
 
@@ -3300,30 +3383,31 @@
 			this.pairs.push( pair );
 
 			delete ( o.callback );
-			//o.callback = null;
 
 			map.set( name, pair );
 
 			root.post( 'add', o );
 
+			return pair;
+
+
 		},
 
+	});
 
 
-
-	} );
-
-
-	//--------------------------------------------------
+	//-------------------------------------------
 	//
 	//  CONTACT CLASS
 	//
-	//--------------------------------------------------
+	//-------------------------------------------
 
 	function Pair( name, callback ) {
 
 		this.name = name;
-		this.callback = callback;
+		this.callback = callback || function(){};
+		this.type = 'collision';
+		this.hit = 0;
 
 	}
 
@@ -3332,6 +3416,7 @@
 		clear: function () {
 
 			this.name = null;
+			this.hit = 0;
 			this.callback = null;
 
 		}
@@ -3339,6 +3424,15 @@
 	} );
 
 	/*global THREE*/
+
+	/**   _   _____ _   _
+	*    | | |_   _| |_| |
+	*    | |_ _| | |  _  |
+	*    |___|_|_| |_| |_|
+	*    @author lo.th / https://github.com/lo-th
+	*
+	*    SHOT - RAY
+	*/
 
 	function RayCaster() {
 
@@ -3351,28 +3445,24 @@
 
 		step: function () {
 
-			if ( ! this.rays.length ) return;
+			var i = this.rays.length;
+			var j = root.flow.ray.length;
 
-			var raytest = [];
+			if ( !i ) return;
 
-			this.rays.forEach( function ( r ) {
+			if( i===j ){
+		        while( j-- ) this.rays[j].update( root.flow.ray[j] );
+			}
+
+			root.flow.ray = [];
+
+			this.rays.forEach( function ( r, id ) {
 
 				r.updateMatrixWorld();
-				raytest.push( { origin: r.origin, dest: r.dest, group: r.group, mask: r.mask } );
+				root.flow.ray.push( { origin: r.origin, dest: r.dest, group: r.group, mask: r.mask, precision:r.precision } );
+			
+			});
 
-			} );
-
-			root.post( 'rayCast', raytest );
-
-		},
-
-		receive: function ( o ) {
-
-			var i = this.rays.length;
-			if ( ! i ) return;
-			if ( i !== o.length ) return;
-
-			while ( i -- ) this.rays[ i ].update( o[ i ] );
 
 		},
 
@@ -3412,12 +3502,19 @@
 			this.remove( o.name );
 
 			var ray = new Ray( o );
+			if( o.visible !== undefined ) ray.visible = o.visible;
 
 			if ( o.parent !== undefined ) o.parent.add( ray );
 		    else root.container.add( ray );
 
 			this.rays.push( ray );
 			map.set( o.name, ray );
+
+			// send to worker
+			delete( o.callback );
+			delete( o.parent );
+		    root.post( 'add', o );
+
 			return ray;
 
 		},
@@ -3430,11 +3527,14 @@
 
 	function Ray( o ) {
 
-
 		THREE.Line.call( this );
 
+		this.type = 'ray';
+
 		this.name = o.name;
-		this.visible = o.visible !== undefined ? o.visible : true;
+		this.enabled = o.enabled !== undefined ? o.enabled : true;
+
+		this.precision =  o.precision !== undefined ? o.precision : 1;
 
 		this.callback = o.callback || function () {};
 
@@ -3449,6 +3549,7 @@
 		this.start = new THREE.Vector3().fromArray( o.start || [ 0, 0, 0 ] );
 		this.end = new THREE.Vector3().fromArray( o.end || [ 0, 10, 0 ] );
 		//this.direction = new THREE.Vector3();
+		this.maxDistance = this.start.distanceTo( this.end );
 
 		// tmp
 		this.tmp = new THREE.Vector3();
@@ -3457,7 +3558,7 @@
 
 		// color
 		this.c1 = [ 0.1, 0.1, 0.1 ];
-		this.c2 = [ 0.1, 1.0, 0.1 ];
+		this.c2 = [ 1.0, 0.1, 0.1 ];
 
 		// geometry
 
@@ -3474,6 +3575,8 @@
 		this.material.vertexColors = THREE.VertexColors;
 
 		this.base = false;
+
+		this.info = { hit:false, name:'', distance:0 };
 
 		this.upGeo();
 
@@ -3507,7 +3610,6 @@
 		updateMatrixWorld: function ( force ) {
 
 			THREE.Line.prototype.updateMatrixWorld.call( this, force );
-
 			this.tmp.copy( this.start ).applyMatrix4( this.matrixWorld );
 			this.tmp.toArray( this.origin, 0 );
 			this.tmp.copy( this.end ).applyMatrix4( this.matrixWorld );
@@ -3518,7 +3620,7 @@
 
 		upGeo: function ( hit ) {
 
-			if ( ! this.visible ) return;
+			if ( ! this.enabled ) return;
 
 			var v = this.vertices;
 			var c = this.colors;
@@ -3564,7 +3666,6 @@
 
 				this.geometry.attributes.position.needsUpdate = true;
 		     	this.geometry.attributes.color.needsUpdate = true;
-
 				this.isBase = true;
 
 			}
@@ -3573,14 +3674,20 @@
 
 		update: function ( o ) {
 
+			this.info.hit = o.hit;
+			this.info.name = o.name || '';
+			this.info.distance = 0;
+
 			if ( o.hit ) {
 
 				//this.callback( o );
 
-				if ( this.visible ) {
+				if ( this.enabled ) {
 
 					this.tmp.fromArray( o.point ).applyMatrix4( this.inv );
 					var d = this.tmp.distanceTo( this.end );
+					o.distance = this.maxDistance - d;
+					this.info.distance = o.distance;
 					this.tmp.toArray( this.local, 0 );
 				    this.normal.fromArray( o.normal );
 				    this.tmp.addScaledVector( this.normal, d );
@@ -4953,21 +5060,22 @@
 
 		var URL = window.URL || window.webkitURL;
 		var Time = typeof performance === 'undefined' ? Date : performance;
-		var t = { now: 0, delta: 0, then: 0, inter: 0, tmp: 0, n: 0, timerate: 0, autoFps: false };
+		var t = { now: 0, delta: 0, then: 0, deltaTime:0, inter: 0, tmp: 0, n: 0, timerate: 0, autoFps: false };
 
-		//var timer = undefined;
-		var interval = null;
+		var timer = null;
+
 		var refView = null;
 
 		var isBuffer = false;
 		var isPause = false;
-		//var isPause = false;
 		var stepNext = false;
 
 		var currentMode = '';
 		var oldMode = '';
 
-		var PI90 = 1.570796326794896;
+		var PI90 = Math.PI * 0.5;
+		var torad = Math.PI / 180;
+		var todeg = 180 / Math.PI;
 
 		var rigidBody, softBody, terrains, vehicles, character, collision, rayCaster;
 
@@ -4979,8 +5087,6 @@
 		var tmpAdd = [];
 
 		var oldFollow = '';
-
-		//var needUpdate = false;
 
 		var option = {
 
@@ -4995,6 +5101,27 @@
 		};
 
 		exports.engine = {
+
+			message: function ( e ) {
+
+				var data = e.data;
+				if ( data.Ar ) root.Ar = data.Ar;
+				if ( data.flow ) root.flow = data.flow;
+
+				switch ( data.m ) {
+
+					case 'initEngine': exports.engine.initEngine(); break;
+					case 'start': exports.engine.start(); break;
+					case 'step': exports.engine.step(); break;
+
+					case 'moveSolid': exports.engine.moveSolid( data.o ); break;
+					case 'ellipsoid': exports.engine.ellipsoidMesh( data.o ); break;
+
+					case 'makeBreak': exports.engine.makeBreak( data.o ); break;
+
+				}
+
+			},
 
 			init: function ( Callback, Type, Option, Counts ) {
 
@@ -5117,32 +5244,6 @@
 
 			},
 
-			message: function ( e ) {
-
-				var data = e.data;
-				if ( data.Ar ) root.Ar = data.Ar;
-				//if( data.contacts ) contacts = data.contacts;
-
-				switch ( data.m ) {
-
-					case 'initEngine': exports.engine.initEngine(); break;
-					case 'start': exports.engine.start(); break;
-					case 'step': exports.engine.step(); break;
-						//
-						//case 'terrain': terrains.upGeo( data.o.name ); break;
-
-					case 'moveSolid': exports.engine.moveSolid( data.o ); break;
-					case 'ellipsoid': exports.engine.ellipsoidMesh( data.o ); break;
-
-					case 'makeBreak': exports.engine.makeBreak( data.o ); break;
-
-					case 'rayCast': rayCaster.receive( data.o ); break;
-
-				}
-
-			},
-
-
 			initEngine: function () {
 
 				URL.revokeObjectURL( blob );
@@ -5156,9 +5257,11 @@
 
 			},
 
-			start: function () {
+			start: function ( noAutoUpdate ) {
 
 				if( isPause ) return;
+
+				exports.engine.stop();
 
 				//console.log('start', t.timerate );
 
@@ -5169,33 +5272,39 @@
 
 				//engine.sendData( 0 );
 
-				//if ( !timer ) timer = requestAnimationFrame( engine.sendData );
 				t.then = Time.now();
-				if ( interval ) clearInterval( interval );
-				interval = setInterval( exports.engine.sendData, t.timerate );
 
+
+				if( !noAutoUpdate ){
+
+					timer = setInterval( exports.engine.sendData, t.timerate );
+
+				}
 
 				// test ray
 				exports.engine.setMode( oldMode );
-				//this.addRayCamera();
 
 			},
 
+			prevUpdate: function () {},
 			postUpdate: function () {},
 			pastUpdate: function () {},
 
 			update: function () {
 
-				exports.engine.postUpdate();
+				exports.engine.postUpdate( t.delta );
 
 				terrains.step();
-				rayCaster.step();
-
+				
 				rigidBody.step( root.Ar, root.ArPos[ 0 ] );
 				collision.step( root.Ar, root.ArPos[ 1 ] );
 				character.step( root.Ar, root.ArPos[ 2 ] );
 				vehicles.step( root.Ar, root.ArPos[ 3 ] );
 				softBody.step( root.Ar, root.ArPos[ 4 ] );
+
+				rayCaster.step();
+
+				exports.engine.pastUpdate( t.delta );
 
 			},
 
@@ -5208,16 +5317,22 @@
 					t.tmp = t.now; t.fps = t.n; t.n = 0;
 
 				} t.n ++; // FPS
+
 				exports.engine.tell();
 
-				exports.engine.update();
-				exports.engine.pastUpdate();
-
 				if ( refView ){
-				    //refView.update();
-				    refView.updateIntern();
-	                refView.controler.follow(); 
-					//refView.needUpdate( true );
+
+					{
+
+						exports.engine.update();
+						refView.controler.follow();
+
+					}
+
+				} else {
+
+					exports.engine.update();
+
 				}
 				
 				
@@ -5228,18 +5343,27 @@
 
 			},
 
-			sendData: function () {
+			sendData: function ( stamp ) {
 
-				if ( refView ) if ( refView.pause ) exports.engine.stop();
+				if ( refView ) if ( refView.pause ) { exports.engine.stop(); return; }
+	        	
+	        	{
 
-	        	if ( ! stepNext ) return;
+	        		if ( !stepNext ) return;
 
-				t.now = Time.now();
-				t.delta = ( t.now - t.then ) * 0.001;
-	        	t.then = t.now;
+	        		t.now = Time.now();
+				    t.delta = ( t.now - t.then ) * 0.001;
+	        	    t.then = t.now;
 
-	        	if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta, key: exports.engine.getKey() }, Ar: root.Ar }, [ root.Ar.buffer ] );
-				else worker.postMessage( { m: 'step', o: { delta: t.delta, key: exports.engine.getKey() } } );
+	        	}
+
+	        	root.flow.key = exports.engine.getKey();
+	        	
+
+	        	exports.engine.prevUpdate( t.delta );
+
+	        	if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta }, flow: root.flow, Ar: root.Ar }, [ root.Ar.buffer ] );
+				else worker.postMessage( { m: 'step', o: { delta: t.delta }, flow: root.flow, Ar: root.Ar } );
 
 				stepNext = false;
 
@@ -5257,7 +5381,7 @@
 
 				if( tmpAdd.length === 0 ) return;
 				//this.post( 'setAdd', tmpAdd );
-				while ( tmpAdd.length > 0 ) this.add( tmpAdd.pop() );
+				while ( tmpAdd.length > 0 ) this.add( tmpAdd.shift() );
 
 			},
 
@@ -5270,25 +5394,13 @@
 
 			},
 
-			getFps: function () {
-
-				return t.fps;
-
-			},
-			getDelta: function () {
-
-				return t.delta;
-
-			},
+			getFps: function () { return t.fps; },
+			getDelta: function () { return t.delta; },
+			getKey: function () { return [ 0, 0, 0, 0, 0, 0, 0, 0 ]; },
 
 			tell: function () {},
 			log: function () {},
 
-			getKey: function () {
-
-				return [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-			},
 
 			set: function ( o ) {
 
@@ -5311,6 +5423,7 @@
 
 				exports.engine.postUpdate = function(){};
 				exports.engine.pastUpdate = function(){};
+				exports.engine.prevUpdate = function(){};
 
 				isPause = false;
 
@@ -5352,10 +5465,12 @@
 
 			stop: function () {
 
-				if ( interval ) {
+				if ( !timer ) return;
 
-					clearInterval( interval );
-					interval = null;
+				{
+
+					clearInterval( timer );
+					timer = null;
 
 				}
 
@@ -5402,38 +5517,65 @@
 
 			},
 
+			setVehicle: function ( o ) {
+
+				root.flow.vehicle.push( o );
+
+			},
+
 			drive: function ( name ) {
 
 				this.post( 'setDrive', name );
 
 			},
+
 			move: function ( name ) {
 
 				this.post( 'setMove', name );
 
 			},
 
+			//-----------------------------
+			//
+			//  FLOW
+			//
+			//-----------------------------
+
+			clearFlow: function () {
+
+				root.flow = { matrix:{}, force:{}, option:{}, ray:[], terrain:[], vehicle:[] };
+
+			},
 
 			forces: function ( o ) {
 
-				this.post( 'setForces', o );
+				if( o.constructor !== Array ) o = [ o ];
+
+				var i = o.length;
+
+				while( i-- ) root.flow.force[o[i].name] = o[i];
 
 			},
-			option: function ( o ) {
 
-				this.post( 'setOption', o );
+			options: function ( o ) {
+
+				if( o.constructor !== Array ) o = [ o ];
+
+				var i = o.length;
+
+				while( i-- ) root.flow.option[o[i].name] = o[i];
 
 			},
-			removes: function ( o ) {
 
-				tmpRemove = tmpRemove.concat( o );
-
-			},
 			matrix: function ( o ) {
 
-				this.post( 'setMatrix', o );
+				if( o.constructor !== Array ) o = [ o ];
 
-			}, //if( o.constructor !== Array ) o = [ o ];
+				var i = o.length;
+
+				while( i-- ) root.flow.matrix[o[i].name] = o[i];
+
+			},
 
 			anchor: function ( o ) {
 
@@ -5446,8 +5588,6 @@
 				this.post( 'addBreakable', o );
 
 			},
-
-			//rayCast: function ( o ) { this.post('rayCast', o ); },
 
 			moveSolid: function ( o ) {
 
@@ -5464,14 +5604,9 @@
 
 			},
 
-			
-
-			
-
 			initObject: function () {
 
 				rigidBody = new RigidBody();
-				//constraint = new Constraint();
 				softBody = new SoftBody();
 				terrains = new Terrain();
 				vehicles = new Vehicle();
@@ -5479,15 +5614,17 @@
 				collision = new Collision();
 				rayCaster = new RayCaster();
 
-				// auto define basic function
-				//if(!refView) this.defaultRoot();
-
 			},
 
-
-
+			//-----------------------------
+			//
+			//  CLEAR
+			//
+			//-----------------------------
 
 			clear: function () {
+
+				exports.engine.clearFlow();
 
 				rigidBody.clear();
 				collision.clear();
@@ -5502,10 +5639,15 @@
 			},
 
 			//-----------------------------
-			// REMOVE
+			//
+			//  REMOVE
+			//
 			//-----------------------------
 
 			remove: function ( name, phy ) {
+
+			    // remove physics 
+				if( !phy ) this.post( 'remove', name );
 
 				//if ( ! map.has( name ) ) return;
 				var b = exports.engine.byName( name );
@@ -5525,27 +5667,28 @@
 					    terrains.remove( name );
 					break;
 
+					case 'collision' :
+					    collision.remove( name );
+					break;
+
+					case 'ray' :
+					    rayCaster.remove( name );
+					break;
+
 				}
 
-				// remove physics 
-				if( !phy ) this.post( 'remove', name );
-
 			},
 
-			removeConstraint: function ( name ) {
+			removes: function ( o ) {
 
-				this.post( 'remove', name );
-
-			},
-
-			removeRay: function ( name ) {
-
-				rayCaster.remove( name );
+				tmpRemove = tmpRemove.concat( o );
 
 			},
 
 			//-----------------------------
-			// FIND OBJECT
+			//
+			//  FIND OBJECT
+			//
 			//-----------------------------
 
 			byName: function ( name ) {
@@ -5556,7 +5699,9 @@
 			},
 
 			//-----------------------------
-			// ADD
+			//
+			//  ADD
+			//
 			//-----------------------------
 
 			addGroup: function ( list ) {
@@ -5575,7 +5720,7 @@
 				else if ( prev === 'soft' ) softBody.add( o );
 				else if ( type === 'terrain' ) terrains.add( o );
 				else if ( type === 'character' ) character.add( o );
-				else if ( type === 'collision' ) collision.add( o );
+				else if ( type === 'collision' ) return collision.add( o );
 				else if ( type === 'car' ) vehicles.add( o );
 				else if ( type === 'ray' ) return rayCaster.add( o );
 				else return rigidBody.add( o );
@@ -5629,7 +5774,11 @@
 
 			},
 
-			// BREAKABLE
+			//-----------------------------
+			//
+			//  BREAKABLE
+			//
+			//-----------------------------
 
 			makeBreak: function ( o ) {
 
@@ -5685,9 +5834,11 @@
 
 			},
 
+			//-----------------------------
+			//
 			// EXTRA MODE
-
-
+			//
+			//-----------------------------
 
 			setMode: function ( mode ) {
 
@@ -5695,6 +5846,7 @@
 
 					if ( currentMode === 'picker' ) exports.engine.removeRayCamera();
 					if ( currentMode === 'shoot' ) exports.engine.removeShootCamera();
+					if ( currentMode === 'lock' ) exports.engine.removeLockCamera();
 
 				}
 
@@ -5702,6 +5854,17 @@
 
 				if ( currentMode === 'picker' ) exports.engine.addRayCamera();
 				if ( currentMode === 'shoot' ) exports.engine.addShootCamera();
+				if ( currentMode === 'lock' ) exports.engine.addLockCamera();
+
+			},
+
+			// CAMERA LOCK
+
+			addLockCamera: function () {
+
+			},
+
+			removeLockCamera: function () {
 
 			},
 
@@ -5717,21 +5880,21 @@
 
 			// CAMERA RAY
 
-			removeRayCamera: function () {
-
-				if ( ! refView ) return;
-				exports.engine.removeRay( 'cameraRay' );
-				refView.removeRay();
-				exports.engine.log();
-
-			},
-
 			addRayCamera: function () {
 
 				if ( ! refView ) return;
 
 				ray = exports.engine.add( { name: 'cameraRay', type: 'ray', callback: exports.engine.onRay, mask: 1, visible: false } );// only move body
 				refView.activeRay( exports.engine.updateRayCamera, false );
+
+			},
+
+			removeRayCamera: function () {
+
+				if ( ! refView ) return;
+				exports.engine.remove( 'cameraRay' );
+				refView.removeRay();
+				exports.engine.log();
 
 			},
 
@@ -5812,7 +5975,9 @@
 				var pos = exports.engine.getLocalPoint( p0, mesh ).toArray();
 
 				exports.engine.add({ 
-					name:'dragger', type:'sphere', size:[0.1], 
+					name:'dragger', 
+					type:'sphere', 
+					size:[0.2], 
 					pos:o.point,
 					quat: qB, 
 					mass:0, 
@@ -5832,8 +5997,8 @@
 
 			removeConnector: function () {
 
-				exports.engine.remove( 'dragger');
-				exports.engine.removeConstraint( 'connector');
+				exports.engine.remove( 'dragger' );
+				exports.engine.remove( 'connector' );
 
 				if( oldFollow !== '' ) exports.engine.setCurrentFollow( oldFollow );
 

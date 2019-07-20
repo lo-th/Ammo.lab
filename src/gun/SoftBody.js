@@ -2,13 +2,14 @@
 import { math } from './math.js';
 import { root, map } from './root.js';
 
-/**
-* @author lth / https://github.com/lo-th/
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    GUN - SOFTBODY
 */
-
-//--------------------------------------------------
-//  AMMO SOFTBODY
-//--------------------------------------------------
 
 function SoftBody() {
 

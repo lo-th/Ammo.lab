@@ -170,7 +170,8 @@ function applyOption () {
     }
     
     physic.post( 'setGravity', { gravity:[ 0, option.gravity, 0 ] });
-    physic.post( 'setVehicle', option );
+    //physic.post( 'setVehicle', option );
+    physic.setVehicle( option );
 
     physic.drive( 'car' );
 

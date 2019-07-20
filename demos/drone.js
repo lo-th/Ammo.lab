@@ -85,7 +85,6 @@ function afterLoadGeometry () {
 
     follow ('drone');
 
-
     physic.postUpdate = update;
 
 }

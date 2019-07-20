@@ -1,6 +1,15 @@
 /*global THREE*/
 import { root, map } from './root.js';
 
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    SHOT - CHARACTER
+*/
+
 function Character() {
 
 	this.ID = 0;

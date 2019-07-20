@@ -821,6 +821,13 @@ function wheel ( n ) {
             if(i==7) { axe = [35.264, 30, -35.264 ];  axis = [0.783,-0.783,1]; }
         }
 
+        var e = new THREE.Euler(axe[0]*Math.torad, axe[1]*Math.torad, axe[2]*Math.torad);
+        var axistest = new THREE.Vector3(0,0,1).applyEuler( e ).normalize().toArray();
+
+        //console.log( axis, axistest )
+
+        axis = axistest
+
         physic.add({ 
 
             name:n+'_rr_'+i,

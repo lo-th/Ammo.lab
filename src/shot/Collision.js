@@ -1,5 +1,14 @@
 import { root, map } from './root.js';
 
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    SHOT - COLLISION
+*/
+
 function Collision() {
 
 	this.ID = 0;
@@ -13,9 +22,10 @@ Object.assign( Collision.prototype, {
 
 		this.pairs.forEach( function ( pair, id ) {
 
+			pair.hit = AR[ N + id ] ? AR[ N + id ] : 0;
 			pair.callback( AR[ N + id ] || 0 );
-
-		} );
+			
+		});
 
 	},
 
@@ -61,33 +71,34 @@ Object.assign( Collision.prototype, {
 		this.pairs.push( pair );
 
 		delete ( o.callback );
-		//o.callback = null;
 
 		map.set( name, pair );
 
 		root.post( 'add', o );
 
+		return pair;
+
+
 	},
 
-
-
-
-} );
+});
 
 
 export { Collision };
 
 
-//--------------------------------------------------
+//-------------------------------------------
 //
 //  CONTACT CLASS
 //
-//--------------------------------------------------
+//-------------------------------------------
 
 function Pair( name, callback ) {
 
 	this.name = name;
-	this.callback = callback;
+	this.callback = callback || function(){};
+	this.type = 'collision';
+	this.hit = 0;
 
 }
 
@@ -96,6 +107,7 @@ Object.assign( Pair.prototype, {
 	clear: function () {
 
 		this.name = null;
+		this.hit = 0;
 		this.callback = null;
 
 	}

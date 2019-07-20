@@ -155,7 +155,7 @@ function initSkeleton () {
 
     // extra loop
     view.update = update;
-    physic.postUpdate = update2;
+    physic.prevUpdate = update2;
 
 }
 

@@ -2,18 +2,14 @@
 import { math } from './math.js';
 import { root, map } from './root.js';
 
-/**
-* @author lth / https://github.com/lo-th/
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    GUN - VEHICLE
 */
-
-// max 6 wheel
-// array structure
-// 0 _ body _ speed: 0, pos : 0,0,0, quat: 0,0,0,0 _8
-// 1 _ w0   _
-
-//--------------------------------------------------
-//  AMMO VEHICLE
-//--------------------------------------------------
 
 function Vehicle() {
 
@@ -25,7 +21,13 @@ function Vehicle() {
 
 Object.assign( Vehicle.prototype, {
 
+
+
 	step: function ( AR, N ) {
+
+		var i = root.flow.vehicle.length;
+	    while( i-- ) this.setData( root.flow.vehicle[i] );
+	    root.flow.vehicle = [];
 
 		var n, trans = this.trans;
 
@@ -43,7 +45,7 @@ Object.assign( Vehicle.prototype, {
 
 		if ( ! map.has( name ) ) return;
 		var car = map.get( name + '_constuctor' );
-		car.drive( root.key );
+		car.drive( root.flow.key );
 
 	},
 
@@ -98,7 +100,7 @@ Object.assign( Vehicle.prototype, {
 
 	},
 
-	setVehicle: function ( o ){
+	setData: function ( o ){
 
 		if ( ! map.has( o.name + '_constuctor' ) ) return;
 		var car = map.get( o.name + '_constuctor' );

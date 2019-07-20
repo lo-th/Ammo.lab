@@ -28,23 +28,22 @@ export var engine = ( function () {
 
 	var URL = window.URL || window.webkitURL;
 	var Time = typeof performance === 'undefined' ? Date : performance;
-	var t = { now: 0, delta: 0, then: 0, inter: 0, tmp: 0, n: 0, timerate: 0, autoFps: false };
+	var t = { now: 0, delta: 0, then: 0, deltaTime:0, inter: 0, tmp: 0, n: 0, timerate: 0, autoFps: false };
 
-	//var timer = undefined;
-	var interval = null;
+	var timer = null;
+
 	var refView = null;
 
 	var isBuffer = false;
 	var isPause = false;
-	//var isPause = false;
 	var stepNext = false;
 
 	var currentMode = '';
 	var oldMode = '';
 
-	var PI90 = 1.570796326794896;
-	var torad = 0.0174532925199432957;
-	var todeg = 57.295779513082320876;
+	var PI90 = Math.PI * 0.5;
+	var torad = Math.PI / 180;
+	var todeg = 180 / Math.PI;
 
 	var rigidBody, softBody, terrains, vehicles, character, collision, rayCaster;
 
@@ -57,7 +56,8 @@ export var engine = ( function () {
 
 	var oldFollow = '';
 
-	//var needUpdate = false;
+	var isInternUpdate = false;
+	var isRequestAnimationFrame = false;
 
 	var option = {
 
@@ -72,6 +72,27 @@ export var engine = ( function () {
 	};
 
 	engine = {
+
+		message: function ( e ) {
+
+			var data = e.data;
+			if ( data.Ar ) root.Ar = data.Ar;
+			if ( data.flow ) root.flow = data.flow;
+
+			switch ( data.m ) {
+
+				case 'initEngine': engine.initEngine(); break;
+				case 'start': engine.start(); break;
+				case 'step': engine.step(); break;
+
+				case 'moveSolid': engine.moveSolid( data.o ); break;
+				case 'ellipsoid': engine.ellipsoidMesh( data.o ); break;
+
+				case 'makeBreak': engine.makeBreak( data.o ); break;
+
+			}
+
+		},
 
 		init: function ( Callback, Type, Option, Counts ) {
 
@@ -194,32 +215,6 @@ export var engine = ( function () {
 
 		},
 
-		message: function ( e ) {
-
-			var data = e.data;
-			if ( data.Ar ) root.Ar = data.Ar;
-			//if( data.contacts ) contacts = data.contacts;
-
-			switch ( data.m ) {
-
-				case 'initEngine': engine.initEngine(); break;
-				case 'start': engine.start(); break;
-				case 'step': engine.step(); break;
-					//
-					//case 'terrain': terrains.upGeo( data.o.name ); break;
-
-				case 'moveSolid': engine.moveSolid( data.o ); break;
-				case 'ellipsoid': engine.ellipsoidMesh( data.o ); break;
-
-				case 'makeBreak': engine.makeBreak( data.o ); break;
-
-				case 'rayCast': rayCaster.receive( data.o ); break;
-
-			}
-
-		},
-
-
 		initEngine: function () {
 
 			URL.revokeObjectURL( blob );
@@ -233,9 +228,11 @@ export var engine = ( function () {
 
 		},
 
-		start: function () {
+		start: function ( noAutoUpdate ) {
 
 			if( isPause ) return;
+
+			engine.stop();
 
 			//console.log('start', t.timerate );
 
@@ -246,33 +243,39 @@ export var engine = ( function () {
 
 			//engine.sendData( 0 );
 
-			//if ( !timer ) timer = requestAnimationFrame( engine.sendData );
 			t.then = Time.now();
-			if ( interval ) clearInterval( interval );
-			interval = setInterval( engine.sendData, t.timerate );
 
+
+			if( !noAutoUpdate ){
+
+				timer = isRequestAnimationFrame ? requestAnimationFrame( engine.sendData ) : setInterval( engine.sendData, t.timerate );
+
+			}
 
 			// test ray
 			engine.setMode( oldMode );
-			//this.addRayCamera();
 
 		},
 
+		prevUpdate: function () {},
 		postUpdate: function () {},
 		pastUpdate: function () {},
 
 		update: function () {
 
-			engine.postUpdate();
+			engine.postUpdate( t.delta );
 
 			terrains.step();
-			rayCaster.step();
-
+			
 			rigidBody.step( root.Ar, root.ArPos[ 0 ] );
 			collision.step( root.Ar, root.ArPos[ 1 ] );
 			character.step( root.Ar, root.ArPos[ 2 ] );
 			vehicles.step( root.Ar, root.ArPos[ 3 ] );
 			softBody.step( root.Ar, root.ArPos[ 4 ] );
+
+			rayCaster.step();
+
+			engine.pastUpdate( t.delta );
 
 		},
 
@@ -285,16 +288,26 @@ export var engine = ( function () {
 				t.tmp = t.now; t.fps = t.n; t.n = 0;
 
 			} t.n ++; // FPS
+
 			engine.tell();
 
-			engine.update();
-			engine.pastUpdate();
-
 			if ( refView ){
-			    //refView.update();
-			    refView.updateIntern();
-                refView.controler.follow(); 
-				//refView.needUpdate( true );
+
+				if( isInternUpdate ){ 
+
+					refView.isNeedUpdate = true;
+
+				} else {
+
+					engine.update();
+					refView.controler.follow();
+
+				}
+
+			} else {
+
+				engine.update();
+
 			}
 			
 			
@@ -305,18 +318,39 @@ export var engine = ( function () {
 
 		},
 
-		sendData: function () {
+		sendData: function ( stamp ) {
 
-			if ( refView ) if ( refView.pause ) engine.stop();
+			if ( refView ) if ( refView.pause ) { engine.stop(); return; }
+        	
+        	if( isRequestAnimationFrame ){
 
-        	if ( ! stepNext ) return;
+        		timer = requestAnimationFrame( engine.sendData );
+        		t.now = stamp === undefined ? Time.now() : stamp;
+        		t.deltaTime = t.now - t.then;
+        		t.delta = t.deltaTime * 0.001;
+        		
+        		if ( t.deltaTime < t.timerate ) return;
+        		if ( !stepNext ) return;
 
-			t.now = Time.now();
-			t.delta = ( t.now - t.then ) * 0.001;
-        	t.then = t.now;
+        		t.then = t.now - ( t.deltaTime % t.timerate );
 
-        	if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta, key: engine.getKey() }, Ar: root.Ar }, [ root.Ar.buffer ] );
-			else worker.postMessage( { m: 'step', o: { delta: t.delta, key: engine.getKey() } } );
+        	} else {
+
+        		if ( !stepNext ) return;
+
+        		t.now = Time.now();
+			    t.delta = ( t.now - t.then ) * 0.001;
+        	    t.then = t.now;
+
+        	}
+
+        	root.flow.key = engine.getKey();
+        	
+
+        	engine.prevUpdate( t.delta );
+
+        	if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta }, flow: root.flow, Ar: root.Ar }, [ root.Ar.buffer ] );
+			else worker.postMessage( { m: 'step', o: { delta: t.delta }, flow: root.flow, Ar: root.Ar } );
 
 			stepNext = false;
 
@@ -334,7 +368,7 @@ export var engine = ( function () {
 
 			if( tmpAdd.length === 0 ) return;
 			//this.post( 'setAdd', tmpAdd );
-			while ( tmpAdd.length > 0 ) this.add( tmpAdd.pop() );
+			while ( tmpAdd.length > 0 ) this.add( tmpAdd.shift() );
 
 		},
 
@@ -345,27 +379,17 @@ export var engine = ( function () {
 			root.geo = v.getGeo();
 			root.container = v.getScene();
 
-		},
-
-		getFps: function () {
-
-			return t.fps;
+			if( isInternUpdate ) refView.updateIntern = engine.update;
 
 		},
-		getDelta: function () {
 
-			return t.delta;
-
-		},
+		getFps: function () { return t.fps; },
+		getDelta: function () { return t.delta; },
+		getKey: function () { return [ 0, 0, 0, 0, 0, 0, 0, 0 ]; },
 
 		tell: function () {},
 		log: function () {},
 
-		getKey: function () {
-
-			return [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-		},
 
 		set: function ( o ) {
 
@@ -388,6 +412,7 @@ export var engine = ( function () {
 
 			engine.postUpdate = function(){}
 			engine.pastUpdate = function(){}
+			engine.prevUpdate = function(){}
 
 			isPause = false;
 
@@ -429,10 +454,17 @@ export var engine = ( function () {
 
 		stop: function () {
 
-			if ( interval ) {
+			if ( !timer ) return;
 
-				clearInterval( interval );
-				interval = null;
+			if( isRequestAnimationFrame ){
+	                
+                window.cancelAnimationFrame( timer );
+                timer = null;
+
+			} else {
+
+				clearInterval( timer );
+				timer = null;
 
 			}
 
@@ -479,38 +511,65 @@ export var engine = ( function () {
 
 		},
 
+		setVehicle: function ( o ) {
+
+			root.flow.vehicle.push( o );
+
+		},
+
 		drive: function ( name ) {
 
 			this.post( 'setDrive', name );
 
 		},
+
 		move: function ( name ) {
 
 			this.post( 'setMove', name );
 
 		},
 
+		//-----------------------------
+		//
+		//  FLOW
+		//
+		//-----------------------------
+
+		clearFlow: function () {
+
+			root.flow = { matrix:{}, force:{}, option:{}, ray:[], terrain:[], vehicle:[] };
+
+		},
 
 		forces: function ( o ) {
 
-			this.post( 'setForces', o );
+			if( o.constructor !== Array ) o = [ o ];
+
+			var i = o.length;
+
+			while( i-- ) root.flow.force[o[i].name] = o[i];
 
 		},
-		option: function ( o ) {
 
-			this.post( 'setOption', o );
+		options: function ( o ) {
+
+			if( o.constructor !== Array ) o = [ o ];
+
+			var i = o.length;
+
+			while( i-- ) root.flow.option[o[i].name] = o[i];
 
 		},
-		removes: function ( o ) {
 
-			tmpRemove = tmpRemove.concat( o );
-
-		},
 		matrix: function ( o ) {
 
-			this.post( 'setMatrix', o );
+			if( o.constructor !== Array ) o = [ o ];
 
-		}, //if( o.constructor !== Array ) o = [ o ];
+			var i = o.length;
+
+			while( i-- ) root.flow.matrix[o[i].name] = o[i];
+
+		},
 
 		anchor: function ( o ) {
 
@@ -523,8 +582,6 @@ export var engine = ( function () {
 			this.post( 'addBreakable', o );
 
 		},
-
-		//rayCast: function ( o ) { this.post('rayCast', o ); },
 
 		moveSolid: function ( o ) {
 
@@ -541,14 +598,9 @@ export var engine = ( function () {
 
 		},
 
-		
-
-		
-
 		initObject: function () {
 
 			rigidBody = new RigidBody();
-			//constraint = new Constraint();
 			softBody = new SoftBody();
 			terrains = new Terrain();
 			vehicles = new Vehicle();
@@ -556,15 +608,17 @@ export var engine = ( function () {
 			collision = new Collision();
 			rayCaster = new RayCaster();
 
-			// auto define basic function
-			//if(!refView) this.defaultRoot();
-
 		},
 
-
-
+		//-----------------------------
+		//
+		//  CLEAR
+		//
+		//-----------------------------
 
 		clear: function () {
+
+			engine.clearFlow();
 
 			rigidBody.clear();
 			collision.clear();
@@ -579,10 +633,15 @@ export var engine = ( function () {
 		},
 
 		//-----------------------------
-		// REMOVE
+		//
+		//  REMOVE
+		//
 		//-----------------------------
 
 		remove: function ( name, phy ) {
+
+		    // remove physics 
+			if( !phy ) this.post( 'remove', name );
 
 			//if ( ! map.has( name ) ) return;
 			var b = engine.byName( name );
@@ -602,27 +661,28 @@ export var engine = ( function () {
 				    terrains.remove( name );
 				break;
 
+				case 'collision' :
+				    collision.remove( name );
+				break;
+
+				case 'ray' :
+				    rayCaster.remove( name );
+				break;
+
 			}
 
-			// remove physics 
-			if( !phy ) this.post( 'remove', name );
-
 		},
 
-		removeConstraint: function ( name ) {
+		removes: function ( o ) {
 
-			this.post( 'remove', name );
-
-		},
-
-		removeRay: function ( name ) {
-
-			rayCaster.remove( name );
+			tmpRemove = tmpRemove.concat( o );
 
 		},
 
 		//-----------------------------
-		// FIND OBJECT
+		//
+		//  FIND OBJECT
+		//
 		//-----------------------------
 
 		byName: function ( name ) {
@@ -633,7 +693,9 @@ export var engine = ( function () {
 		},
 
 		//-----------------------------
-		// ADD
+		//
+		//  ADD
+		//
 		//-----------------------------
 
 		addGroup: function ( list ) {
@@ -652,7 +714,7 @@ export var engine = ( function () {
 			else if ( prev === 'soft' ) softBody.add( o );
 			else if ( type === 'terrain' ) terrains.add( o );
 			else if ( type === 'character' ) character.add( o );
-			else if ( type === 'collision' ) collision.add( o );
+			else if ( type === 'collision' ) return collision.add( o );
 			else if ( type === 'car' ) vehicles.add( o );
 			else if ( type === 'ray' ) return rayCaster.add( o );
 			else return rigidBody.add( o );
@@ -706,7 +768,11 @@ export var engine = ( function () {
 
 		},
 
-		// BREAKABLE
+		//-----------------------------
+		//
+		//  BREAKABLE
+		//
+		//-----------------------------
 
 		makeBreak: function ( o ) {
 
@@ -762,9 +828,11 @@ export var engine = ( function () {
 
 		},
 
+		//-----------------------------
+		//
 		// EXTRA MODE
-
-
+		//
+		//-----------------------------
 
 		setMode: function ( mode ) {
 
@@ -772,6 +840,7 @@ export var engine = ( function () {
 
 				if ( currentMode === 'picker' ) engine.removeRayCamera();
 				if ( currentMode === 'shoot' ) engine.removeShootCamera();
+				if ( currentMode === 'lock' ) engine.removeLockCamera();
 
 			}
 
@@ -779,6 +848,17 @@ export var engine = ( function () {
 
 			if ( currentMode === 'picker' ) engine.addRayCamera();
 			if ( currentMode === 'shoot' ) engine.addShootCamera();
+			if ( currentMode === 'lock' ) engine.addLockCamera();
+
+		},
+
+		// CAMERA LOCK
+
+		addLockCamera: function () {
+
+		},
+
+		removeLockCamera: function () {
 
 		},
 
@@ -794,21 +874,21 @@ export var engine = ( function () {
 
 		// CAMERA RAY
 
-		removeRayCamera: function () {
-
-			if ( ! refView ) return;
-			engine.removeRay( 'cameraRay' );
-			refView.removeRay();
-			engine.log();
-
-		},
-
 		addRayCamera: function () {
 
 			if ( ! refView ) return;
 
 			ray = engine.add( { name: 'cameraRay', type: 'ray', callback: engine.onRay, mask: 1, visible: false } );// only move body
 			refView.activeRay( engine.updateRayCamera, false );
+
+		},
+
+		removeRayCamera: function () {
+
+			if ( ! refView ) return;
+			engine.remove( 'cameraRay' );
+			refView.removeRay();
+			engine.log();
 
 		},
 
@@ -889,7 +969,9 @@ export var engine = ( function () {
 			var pos = engine.getLocalPoint( p0, mesh ).toArray();
 
 			engine.add({ 
-				name:'dragger', type:'sphere', size:[0.1], 
+				name:'dragger', 
+				type:'sphere', 
+				size:[0.2], 
 				pos:o.point,
 				quat: qB, 
 				mass:0, 
@@ -909,8 +991,8 @@ export var engine = ( function () {
 
 		removeConnector: function () {
 
-			engine.remove( 'dragger');
-			engine.removeConstraint( 'connector');
+			engine.remove( 'dragger' );
+			engine.remove( 'connector' );
 
 			if( oldFollow !== '' ) engine.setCurrentFollow( oldFollow );
 

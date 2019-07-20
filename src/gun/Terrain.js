@@ -2,13 +2,14 @@
 import { math } from './math.js';
 import { root, map } from './root.js';
 
-/**
-* @author lth / https://github.com/lo-th/
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    GUN - TERRAIN
 */
-
-//--------------------------------------------------
-//  AMMO TERRAIN
-//--------------------------------------------------
 
 function Terrain() {
 
@@ -20,6 +21,10 @@ function Terrain() {
 Object.assign( Terrain.prototype, {
 
 	step: function () {
+
+		var i = root.flow.terrain.length;
+		while( i-- ) this.setData( root.flow.terrain[i] );
+		root.flow.terrain = [];
 
 		this.terrains.forEach( function ( b ) {
 

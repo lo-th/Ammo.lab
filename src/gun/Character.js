@@ -2,13 +2,14 @@
 import { math } from './math.js';
 import { root, map } from './root.js';
 
-/**
-* @author lth / https://github.com/lo-th/
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    GUN - CHARACTER
 */
-
-//--------------------------------------------------
-//  AMMO CHARACTER
-//--------------------------------------------------
 
 function Character() {
 
@@ -36,7 +37,7 @@ Object.assign( Character.prototype, {
 
 		if ( ! map.has( name ) ) return;
 		var hero = map.get( name );
-		hero.move( root.key );
+		hero.move( root.flow.key );
 		hero.setAngle( root.angle );
 
 	},

@@ -2,13 +2,14 @@
 import { math } from './math.js';
 import { root, map } from './root.js';
 
-/**
-* @author lth / https://github.com/lo-th/
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    GUN - RIGIDBODY
 */
-
-//--------------------------------------------------
-//  AMMO RIGIDBODY
-//--------------------------------------------------
 
 // ___________________________STATE
 //  1  : ACTIVE
@@ -66,8 +67,11 @@ Object.assign( RigidBody.prototype, {
 
 			n = N + ( id * 8 );
 			AR[ n ] = b.getLinearVelocity().length() * 9.8; // speed km/h
-			b.getMotionState().getWorldTransform( trans );
-			trans.toArray( AR, n + 1, scale );
+
+			//b.getMotionState().getWorldTransform( trans );
+			//trans.toArray( AR, n + 1, scale );
+
+			b.getWorldTransform().toArray( AR, n + 1, scale );
 
 		} );
 
@@ -126,13 +130,20 @@ Object.assign( RigidBody.prototype, {
 		if ( o.bounce !== undefined ) o.restitution = o.bounce;
 
 		var mass = o.mass === undefined ? 0 : o.mass;
-		var isKinematic = o.kinematic || false;
 
+		var isKinematic = o.kinematic || false;
+		var isGhost = o.ghost || false;
+
+		if( isGhost ) mass = 0;
+
+		var p0 = math.vector3();
 		var p1 = math.vector3();
 		var p2 = math.vector3();
 		var p3 = math.vector3();
 		var p4 = math.vector3();
 		var trans = math.transform();
+
+		var noMesh = o.noMesh !== undefined ? o.noMesh : false;
 
 		if ( isKinematic ) {
 
@@ -151,6 +162,7 @@ Object.assign( RigidBody.prototype, {
 
 			o.pos = math.vectomult( o.pos, root.invScale );
 			o.size = math.vectomult( o.size, root.invScale );
+			if( o.masscenter !== undefined ) o.masscenter = math.vectomult( o.masscenter, root.invScale );
 
 		}
 
@@ -236,6 +248,7 @@ Object.assign( RigidBody.prototype, {
 				break;
 
 			case 'mesh':
+
 				var mTriMesh = new Ammo.btTriangleMesh();
 				var removeDuplicateVertices = true;
 				var vx = o.v;
@@ -262,6 +275,7 @@ Object.assign( RigidBody.prototype, {
 				break;
 
 			case 'convex':
+
 				shape = new Ammo.btConvexHullShape();
 				var vx = o.v;
 				for ( var i = 0, fMax = vx.length; i < fMax; i += 3 ) {
@@ -284,19 +298,21 @@ Object.assign( RigidBody.prototype, {
 
 		if ( extra == 'isShape' ) return shape;
 
+
+		// apply position and rotation
+		trans.identity().fromArray( o.pos.concat( o.quat ) );
+
 		if ( extra == 'isGhost' ) {
 
 			var ghost = new Ammo.btGhostObject();
 			ghost.setCollisionShape( shape );
-			ghost.setCollisionFlags( o.flag || 1 );
+			ghost.setCollisionFlags( o.flag || 4 );
+			ghost.setWorldTransform( trans );
 			//o.f = new Ammo.btGhostPairCallback();
 			//world.getPairCache().setInternalGhostPairCallback( o.f );
 			return ghost;
 
 		}
-
-		// apply position and rotation
-		trans.identity().fromArray( o.pos.concat( o.quat ) );
 
 		p1.setValue( 0, 0, 0 );
 
@@ -314,10 +330,47 @@ Object.assign( RigidBody.prototype, {
 		// prevents rounded shapes, such as spheres, cylinders and capsules from rolling forever.
 		if ( o.rolling !== undefined ) rbInfo.set_m_rollingFriction( o.rolling );
 
+		var body
 
+		if( o.masscenter ){
 
+			// move center of mass
+			p0.fromArray( o.masscenter ).negate();
+			trans.setIdentity();
+			trans.setOrigin( p0 );
+			body = new Ammo.btCompoundShape();
+			body.addChildShape( trans, shape );
 
-		var body = new Ammo.btRigidBody( rbInfo );
+			// mass of vehicle in kg
+			trans.identity().fromArray( o.pos.concat( o.quat ) );
+			p0.setValue( 0, 0, 0 );
+			body.calculateLocalInertia( mass, p0 );
+			var motionState = new Ammo.btDefaultMotionState( trans );
+			var rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, body, p0 );
+
+		}  else {
+
+			if( isGhost ){ 
+
+				//console.log(shape)
+				body = new Ammo.btGhostObject();
+				body.setCollisionShape( shape );
+				body.setWorldTransform( trans );
+				o.flag = o.flag || 4;
+				body.setCollisionFlags( o.flag );
+				
+				//body.callback = new Ammo.btGhostPairCallback();
+				body.isGhost = true;
+
+				//console.log( body, body.isStaticObject(), body.isKinematicObject() );
+			}
+			else {
+				body = new Ammo.btRigidBody( rbInfo );
+				if ( isKinematic ) body.isKinematic = true;
+			}
+
+		}
+
 
 		//body.isRigidBody = true;
 
@@ -327,7 +380,7 @@ Object.assign( RigidBody.prototype, {
 
 		// TODO  body.setCenterOfMassTransform()
 
-		if ( mass === 0 && ! isKinematic ) {
+		if ( mass === 0 && !isKinematic ) {
 
 			body.setCollisionFlags( o.flag || 1 );
 			root.world.addCollisionObject( body, o.group || 2, o.mask || - 1 );
@@ -338,6 +391,8 @@ Object.assign( RigidBody.prototype, {
 
 		} else {
 
+			//console.log(body)
+
 			body.setCollisionFlags( o.flag || 0 );
 			body.setActivationState( o.state || 1 );
 
@@ -345,10 +400,15 @@ Object.assign( RigidBody.prototype, {
 
 			root.world.addRigidBody( body, o.group || 1, o.mask || - 1 );
 
-			if ( isKinematic ) body.isKinematic = true;
+			//if ( isKinematic ) body.isKinematic = true;
 			//else body.isBody = true;
-			body.type = 'body';
-			this.bodys.push( body );
+			if( !noMesh ) {
+                body.type = 'body';
+			    this.bodys.push( body );
+			} else {
+				body.type = 'body';
+			    this.solids.push( body );
+			}
 
 		}
 
@@ -365,11 +425,14 @@ Object.assign( RigidBody.prototype, {
 
 		map.set( name, body );
 
+		//console.log(name, body)
+
 		Ammo.destroy( rbInfo );
 
 		this.applyOption( body, o );
 
 		trans.free();
+		p0.free();
 		p1.free();
 		p2.free();
 		p3.free();
@@ -383,25 +446,39 @@ Object.assign( RigidBody.prototype, {
 
 		var p1 = math.vector3();
 
-		if ( o.flag !== undefined ) b.setCollisionFlags( o.flag );
+		if ( o.flag !== undefined ){ 
+			b.setCollisionFlags( o.flag ); 
+			b.isKinematic = o.flag === 2 ? true : false; 
+		}
+
 		if ( o.state !== undefined ) b.setActivationState( o.state );
+		if ( o.activate !== undefined ) b.activate();
+
 		// change group and mask collision
-		if ( o.group !== undefined ) b.getBroadphaseProxy().set_m_collisionFilterGroup( o.group );
-		if ( o.mask !== undefined ) b.getBroadphaseProxy().set_m_collisionFilterMask( o.mask );
+	    if(!b.isGhost){
+	    	
+			if ( o.group !== undefined ) b.getBroadphaseProxy().set_m_collisionFilterGroup( o.group );
+			if ( o.mask !== undefined ) b.getBroadphaseProxy().set_m_collisionFilterMask( o.mask );
+			if ( o.damping !== undefined ) b.setDamping( o.damping[ 0 ], o.damping[ 1 ] );
+			if ( o.sleeping !== undefined ) b.setSleepingThresholds( o.sleeping[ 0 ], o.sleeping[ 1 ] );
+
+        }
 
 		if ( o.friction !== undefined ) b.setFriction( o.friction );
 		if ( o.restitution !== undefined ) b.setRestitution( o.restitution );
-		if ( o.damping !== undefined ) b.setDamping( o.damping[ 0 ], o.damping[ 1 ] );
 		if ( o.rollingFriction !== undefined ) b.setRollingFriction( o.rollingFriction );
-		if ( o.sleeping !== undefined ) b.setSleepingThresholds( o.sleeping[ 0 ], o.sleeping[ 1 ] );
+		
+    
 
 		// TODO try this setting
-		if ( o.linearVelocity !== undefined ) b.setLinearVelocity( p1.fromArray( o.linearVelocity ) );
+		if ( o.linearVelocity !== undefined ) b.setLinearVelocity( p1.fromArray( o.linearVelocity, 0, root.invScale ) );
 		if ( o.angularVelocity !== undefined ) b.setAngularVelocity( p1.fromArray( o.angularVelocity ) );
 		if ( o.linearFactor !== undefined ) b.setLinearFactor( p1.fromArray( o.linearFactor ) );
 		if ( o.angularFactor !== undefined ) b.setAngularFactor( p1.fromArray( o.angularFactor ) );
 		//if ( o.linearFactor !== undefined ) b.setLinearFactor( o.linearFactor );
 		//if ( o.angularFactor !== undefined ) b.setAngularFactor( o.angularFactor );
+
+		if ( o.threshold !== undefined ) b.setCcdMotionThreshold( o.threshold );
 
 		if ( o.anisotropic !== undefined ) b.setAnisotropicFriction( o.anisotropic[ 0 ], o.anisotropic[ 1 ] );
 		if ( o.massProps !== undefined ) b.setMassProps( o.massProps[ 0 ], o.massProps[ 1 ] );

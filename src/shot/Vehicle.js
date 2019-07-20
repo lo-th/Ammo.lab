@@ -2,6 +2,15 @@
 import { geometryInfo } from './Geometry.js';
 import { root, map } from './root.js';
 
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    SHOT - VEHICLE
+*/
+
 function Vehicle() {
 
 	this.ID = 0;

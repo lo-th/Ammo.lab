@@ -2,6 +2,15 @@
 import { Capsule, geometryInfo } from './Geometry.js';
 import { root, map, vectorad } from './root.js';
 
+/**   _   _____ _   _
+*    | | |_   _| |_| |
+*    | |_ _| | |  _  |
+*    |___|_|_| |_| |_|
+*    @author lo.th / https://github.com/lo-th
+*
+*    SHOT - RIGIDBODY
+*/
+
 function RigidBody() {
 
 	this.ID = 0;
@@ -39,8 +48,12 @@ Object.assign( RigidBody.prototype, {
 
 			}
 
-			b.position.fromArray( AR, n + 1 );
+			if( b.enabled ){
+				b.position.fromArray( AR, n + 1 );
 	            b.quaternion.fromArray( AR, n + 4 );
+			}
+
+			
 	        //}
 
 		} );
@@ -57,7 +70,6 @@ Object.assign( RigidBody.prototype, {
 
 	destroy: function ( b ) {
 
-
 		if ( b.parent ) b.parent.remove( b );
 		map.delete( b.name );
 
@@ -69,6 +81,10 @@ Object.assign( RigidBody.prototype, {
 		var b = map.get( name );
 		var solid = b.type === 'solid' ? true : false;
 		var n = solid ? this.solids.indexOf( b ) : this.bodys.indexOf( b );
+
+
+
+		//console.log('remove SHOT', name, n )
 
 		if ( n !== - 1 ) {
 
@@ -149,6 +165,8 @@ Object.assign( RigidBody.prototype, {
 	    o.rot = o.rot === undefined ? [ 0, 0, 0 ] : vectorad( o.rot );
 	    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
 
+	    
+
 	    if ( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotA ) ) ).toArray();
 	    if ( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotB ) ) ).toArray();
 
@@ -156,7 +174,7 @@ Object.assign( RigidBody.prototype, {
 	    if ( o.angLower ) o.angLower = vectorad( o.angLower );
 
 	    var mesh = null;
-
+	    var noMesh = o.noMesh !== undefined ? o.noMesh : false; 
 
 	    if ( o.type === 'plane' ) {
 
@@ -165,6 +183,8 @@ Object.assign( RigidBody.prototype, {
 	        return;
 
 		}
+
+
 
 	    // material
 
@@ -248,7 +268,7 @@ Object.assign( RigidBody.prototype, {
 
 	        } else {
 
-	            mesh = new THREE.Mesh( o.shape, material );
+	            if ( !noMesh ) mesh = new THREE.Mesh( o.shape, material );
 	            //extraGeo.push(mesh.geometry);
 
 			}
@@ -289,6 +309,8 @@ Object.assign( RigidBody.prototype, {
 	    if ( o.type === 'highsphere' ) o.type = 'sphere';
 
 
+
+
 	    if ( mesh ) {
 
 	        if ( ! customGeo ) mesh.scale.fromArray( o.size );
@@ -304,6 +326,7 @@ Object.assign( RigidBody.prototype, {
 	        mesh.updateMatrix();
 
 	        mesh.name = o.name;
+	        mesh.enabled = true;
 	        //mesh.type = 'rigidbody';
 
 	        if ( o.parent !== undefined ) o.parent.add( mesh );
@@ -332,8 +355,8 @@ Object.assign( RigidBody.prototype, {
 
 	    if ( mesh ) {
 
-	    	mesh.type = o.mass === 0 && ! o.kinematic ? 'solid' : 'body';
-	    	if( o.kinematic ) mesh.type = 'kinematic';
+	    	mesh.type = o.mass === 0 && !o.kinematic ? 'solid' : 'body';
+	    	//if( o.kinematic ) mesh.type = 'kinematic';
 
 	    	//if ( o.mass === 0 && ! o.kinematic ) mesh.isSolid = true;
 	    	//if ( o.kinematic ) mesh.isKinemmatic = true;
