@@ -12,6 +12,9 @@ var tmpCanvas = document.createElement('canvas');
 tmpCanvas.width = tmpCanvas.height = 128;
 var yellow = false;
 
+var open1 = false;
+var open2 = false;
+
 var timer;
 
 function demo() {
@@ -233,7 +236,7 @@ function startSimulation () {
             friction: 0.5, restitution: 0.0
         });
 
-        physic.pastUpdate = update; 
+        physic.postUpdate = update; 
 
         timer = setTimeout( wantBall, 6000 );
 
@@ -243,20 +246,24 @@ function startSimulation () {
 
 function wantBall () {
 
-    if( yellow ) physic.matrix( [{ name:'block2', pos:[ 85, -48.7, -10 ] }] );
-    else physic.matrix( [{ name:'block', pos:[ 0, -48.7, -10 ] }] );
 	game = 'wantBall';
+
+    if( yellow ) open2 = true;
+    else open1 = true;
+	
 
 }
 
 function haveBall ( name ) {
 
-	if( yellow ) physic.matrix( [{ name:'block2', pos:[ 85, -48.7, 0 ] }] );
-    else physic.matrix( [{ name:'block', pos:[ 0, -48.7, 0 ] }] );
 	game = 'haveBall';
+
+	open1 = false;
+	open2 = false;
+	
 	ball.push(name);
 
-	if(ball.length<5){
+	if( ball.length<5 ){
 		timer = setTimeout( wantBall, 6000 );
 	} else if(ball.length<7){
         yellow = true;
@@ -265,21 +272,25 @@ function haveBall ( name ) {
 		console.log( ball );
 	}
 
-
 }
 
 function update () {
 
 	r+=1;
 
-    physic.matrix([
+	var mtx = [
 
         { name:'pale1', pos:[0,0,0],    rot:[0,0,r+45], noVelocity:true },
         { name:'pale2', pos:[0,0,0],    rot:[0,0,-r],   noVelocity:true },
         { name:'pale3', pos:[85,-18,0], rot:[0,0,r+45], noVelocity:true },
         { name:'pale4', pos:[85,-18,0], rot:[0,0,-r],   noVelocity:true },
 
-    ]);
+        { name:'block', pos:[ 0, -48.7, open1 ? -10 : 0 ] },
+        { name:'block2', pos:[ 85, -48.7, open2 ? -10 : 0  ]}
+
+    ];
+
+    physic.matrix( mtx );
 
     var x = [];
     // get list of rigidbody

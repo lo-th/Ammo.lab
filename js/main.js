@@ -44,6 +44,7 @@ function initAmmo () {
 
     physic = SHOT.engine;
     physic.init( next );
+    //physic.init( next, 'wasm' );
 
     // test
     //view.updateIntern = physic.update;

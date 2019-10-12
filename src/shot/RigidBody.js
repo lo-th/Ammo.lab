@@ -204,9 +204,10 @@ Object.assign( RigidBody.prototype, {
 
 	    // geometry
 
+	    var m, g;
+
 	    if ( o.type === 'compound' ) {
 
-	    	var m, g;
 		    for ( var i = 0; i < o.shapes.length; i ++ ) {
 
 	    		g = o.shapes[ i ];
@@ -235,7 +236,7 @@ Object.assign( RigidBody.prototype, {
 
 	    		//mesh = new THREE.Group();
 	    		mesh.material = material;// TODO fix
-		    	var m, g;
+		    	
 		    	for ( var i = 0; i < o.shapes.length; i ++ ) {
 
 		    		g = o.shapes[ i ];

@@ -507,7 +507,7 @@ export var engine = ( function () {
 				case 'motor' : case 7 : b.enableAngularMotor( o.enable || true, o.targetVelocity, o.maxMotor ); break; // bool, targetVelocity float, maxMotorImpulse float
                // case 'motorTarget' : case 8 : b.setMotorTarget(  q.fromArray( o.target ), o.scale || 1 );
                 case 'motorTarget' : case 8 : b.setMotorTarget(   o.target, o.axis || -1 );
-                case 'setLimit' : case 8 : b.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] || 0.9, o.limit[ 3 ] || 0.3, o.limit[ 4 ] || 1.0 );
+                case 'setLimit' : case 9 : b.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] || 0.9, o.limit[ 3 ] || 0.3, o.limit[ 4 ] || 1.0 );
 			}
 
 			p1.free();
@@ -580,26 +580,12 @@ export var engine = ( function () {
 
 			}
 
-			
-
-			//if ( b.isKinematic ) b.getMotionState().setWorldTransform( t );
-
-
-			///else b.setWorldTransform( t );
-
-			 /*b.getMotionState().setWorldTransform( t );
-			 b.setWorldTransform( t );
-			 b.activate();*/
-
-			
 
 			if ( o.velocity && !b.isGhost ) {
 
-				var p1 = math.vector3();
 				if( o.velocity[0] ) b.setLinearVelocity( p1.fromArray( o.velocity[0], 0, root.invScale ) );
 				if( o.velocity[1] ) b.setAngularVelocity( p1.fromArray( o.velocity[1] ) );
 				
-
 			}
 
 			if ( o.noVelocity && !b.isGhost ) {
@@ -621,15 +607,11 @@ export var engine = ( function () {
 				
 			}
 
-			
-
 			if ( b.type === 'body' ) b.activate();
-			if ( b.type === 'solid' ) self.postMessage( { m: 'moveSolid', o: { name: name, pos: math.vectomult( o.pos, root.scale ), quat: o.quat } } );
+			if ( b.type === 'solid' ) self.postMessage( { m: 'moveSolid', o: { name: name, pos: o.pos, quat: o.quat } } );
 
 			t.free();
 			p1.free();
-
-
 
 		},
 

@@ -1699,9 +1699,10 @@ Object.assign( RigidBody.prototype, {
 
 	    // geometry
 
+	    var m, g;
+
 	    if ( o.type === 'compound' ) {
 
-	    	var m, g;
 		    for ( var i = 0; i < o.shapes.length; i ++ ) {
 
 	    		g = o.shapes[ i ];
@@ -1730,7 +1731,7 @@ Object.assign( RigidBody.prototype, {
 
 	    		//mesh = new THREE.Group();
 	    		mesh.material = material;// TODO fix
-		    	var m, g;
+		    	
 		    	for ( var i = 0; i < o.shapes.length; i ++ ) {
 
 		    		g = o.shapes[ i ];
@@ -5145,24 +5146,36 @@ var engine = ( function () {
 			t.autoFps = option.autoFps;
 
 			type = Type || 'LZMA';
-			if ( type === 'LZMA' ) {
 
-				engine.load( option );
+			switch( type ) {
 
-			} else {
+				case 'min' : 
+				    engine.load( "./build/ammo.hex", true );
+				break;
 
-				blob = document.location.href.replace( /\/[^/]*$/, "/" ) + ( type === 'WASM' ? "./build/ammo.wasm.js" : "./build/ammo.js" );
-				engine.startWorker();
+				case 'LZMA' : case 'lzma' : case 'compact' :
+				    engine.load( "./build/ammo.hex" );
+				break;
+
+				case 'WASM': case 'wasm':
+				    blob = document.location.href.replace( /\/[^/]*$/, "/" ) + "./build/ammo.wasm.js";
+				    engine.startWorker();
+				break;
+
+				case 'BASIC': case 'basic':
+				    blob = document.location.href.replace( /\/[^/]*$/, "/" ) + "./build/ammo.js";
+				    engine.startWorker();
+				break;
 
 			}
 
 		},
 
-		load: function () {
+		load: function ( link, isMin ) {
 
 			var xhr = new XMLHttpRequest();
 			xhr.responseType = "arraybuffer";
-			xhr.open( 'GET', "./build/ammo.hex", true );
+			xhr.open( 'GET', link, true );
 
 			xhr.onreadystatechange = function () {
 
@@ -5171,11 +5184,11 @@ var engine = ( function () {
 					if ( xhr.status === 200 || xhr.status === 0 ) {
 
 						blob = URL.createObjectURL( new Blob( [ LZMAdecompact( xhr.response ) ], { type: 'application/javascript' } ) );
-						engine.startWorker();
+						engine.startWorker( isMin );
 
 					} else {
 
-						console.error( "Couldn't load [" + "./build/ammo.hex" + "] [" + xhr.status + "]" );
+						console.error( "Couldn't load [" + link + "] [" + xhr.status + "]" );
 
 					}
 
@@ -5187,11 +5200,13 @@ var engine = ( function () {
 
 		},
 
-		startWorker: function () {
+		startWorker: function ( isMin ) {
+
+			isMin = isMin || false;
 
 			//blob = document.location.href.replace(/\/[^/]*$/,"/") + "./build/ammo.js" ;
 
-			worker = new Worker( './build/gun.js' );
+			worker = new Worker( isMin ? './build/gun.min.js' : './build/gun.js' );
 			worker.postMessage = worker.webkitPostMessage || worker.postMessage;
 			worker.onmessage = engine.message;
 
@@ -5754,6 +5769,7 @@ var engine = ( function () {
 				sleep: new THREE.MeshLambertMaterial( { color: 0x1188FF, name: 'sleep', wireframe: wire } ),
 				basic: new THREE.MeshLambertMaterial( { color: 0x111111, name: 'basic', wireframe: wire } ),
 				static: new THREE.MeshLambertMaterial( { color: 0x1111FF, name: 'static', wireframe: wire } ),
+				bones: new THREE.MeshLambertMaterial( { color: 0x11FF11, name: 'bones', wireframe: wire } ),
 				kinematic: new THREE.MeshLambertMaterial( { color: 0x11FF11, name: 'kinematic', wireframe: wire } ),
 
 			};
