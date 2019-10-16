@@ -5,10 +5,14 @@ export var root = {
 	Ar: null,
 	ArPos: null,
 
+	matrix:[],
+	force:[],
+	option:[],
+
 	flow:{
-		matrix:{},
-		force:{},
-		option:{},
+		//matrix:{},
+		//force:{},
+		//option:{},
 		ray:[],
 		terrain:[],
 		vehicle:[],

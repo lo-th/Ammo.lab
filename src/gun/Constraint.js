@@ -16,16 +16,31 @@ function Constraint() {
 	this.ID = 0;
 	this.joints = [];
 
+	this.t1 = new Ammo.btTransform();
+	this.t2 = new Ammo.btTransform();
+
+
+
 }
 
 Object.assign( Constraint.prototype, {
 
 	step: function ( AR, N ) {
 
+		var n, t1 = this.t1, t2 = this.t2, p1, p2, scale = root.scale;
+
 		this.joints.forEach( function ( b, id ) {
 
-			var n = N + ( id * 4 );
-			AR[ n ] = b.ntype;
+			n = N + ( id * 14 );
+
+			t1.copy( b.b1.getWorldTransform() ).multiply( b.formA ).toArray( AR, n , scale );
+			t2.copy( b.b2.getWorldTransform() ).multiply( b.formB ).toArray( AR, n + 7, scale );
+
+			/*p1 = t1.getOrigin();
+			p2 = t2.getOrigin();
+			
+			p1.toArray( AR, n , scale );
+			p2.toArray( AR, n+3 , scale );*/
 
 		} );
 
@@ -41,6 +56,8 @@ Object.assign( Constraint.prototype, {
 	destroy: function ( j ) {
 
 		root.world.removeConstraint( j );
+		Ammo.destroy( j.formA );
+		Ammo.destroy( j.formB );
 		Ammo.destroy( j );
 		map.delete( j.name );
 
@@ -64,8 +81,6 @@ Object.assign( Constraint.prototype, {
 
 	add: function ( o ) {
 
-
-
 		var name = o.name !== undefined ? o.name : 'joint' + this.ID ++;
 
 		// delete old if same name
@@ -84,6 +99,8 @@ Object.assign( Constraint.prototype, {
 		b2.activate();
 		//console.log(b2)
 
+		var tmpPos = math.vector3();
+
 		var posA = math.vector3().fromArray( o.pos1 || [ 0, 0, 0 ] ).multiplyScalar( root.invScale );
 		var posB = math.vector3().fromArray( o.pos2 || [ 0, 0, 0 ] ).multiplyScalar( root.invScale );
 
@@ -93,7 +110,7 @@ Object.assign( Constraint.prototype, {
 		var formA = math.transform().identity();
 		var formB = math.transform().identity();
 
-		if ( o.type !== "joint_p2p" && o.type !== "joint_hinge" && o.type !== "joint" ) {
+		//if ( o.type !== "joint_p2p" && o.type !== "joint_hinge" && o.type !== "joint" ) {
 
 			var local = o.local !== undefined ? o.local : true;
 
@@ -103,14 +120,17 @@ Object.assign( Constraint.prototype, {
 				// frame A
 				t.identity();
 				t.setOrigin( posA );
-				t.eulerFromArray( o.axe1 || [ 1, 0, 0 ] );
-				b1.getMotionState().getWorldTransform( formA );
+				//t.quartenionFromAxis( o.axe1 || [ 1, 0, 0 ] );
+				//t.setFromDirection( o.axe1 || [ 1, 0, 0 ], 90*math.torad );
+				//b1.getMotionState().getWorldTransform( formA );
 				formA.getInverse().multiply( t );
 
 				// frame B
 				t.identity();
 				t.setOrigin( posB );
-				t.eulerFromArray( o.axe2 || [ 1, 0, 0 ] );
+
+				//t.quartenionFromAxis( o.axe2 || [ 1, 0, 0 ], 90*math.torad  );
+				//t.setFromDirection( o.axe2 || [ 1, 0, 0 ] );
 				b2.getMotionState().getWorldTransform( formB );
 				formB.getInverse().multiply( t );
 
@@ -120,17 +140,29 @@ Object.assign( Constraint.prototype, {
 
 				// frame A
 				formA.setOrigin( posA );
-				if ( o.quatA ) formA.quaternionFromArray( o.quatA );
-				else if ( o.axe1 ) formA.eulerFromArray( o.axe1 );
+				if ( o.quatA !== undefined ) formA.quaternionFromArray( o.quatA );
+				//else if ( o.axe1 ) formA.setFromUnitVectors( o.axe1 ); 
+				else if ( o.axe1 ) formA.quartenionFromAxis( o.axe1 );  
+				//else if ( o.axe1 ) formA.quartenionFromAxisAngle( o.axe1, 90*math.torad  );
+				//else if ( o.axe1 ) formA.setFromDirection( o.axe1 );
+				//else if ( o.axe1 ) formA.eulerFromArrayZYX( o.axe1 );
+				//else if ( o.axe1 ) formA.makeRotationDir( o.axe1 );
+				//else if ( o.axe1 ) formA.getBasis() * axeA;
 
 				// frame B
 				formB.setOrigin( posB );
-				if ( o.quatB ) formB.quaternionFromArray( o.quatB );
-				else if ( o.axe2 ) formA.eulerFromArray( o.axe2 );
+				if ( o.quatB !== undefined ) formB.quaternionFromArray( o.quatB );
+				//else if ( o.axe2 ) formB.setFromUnitVectors( o.axe2 );
+				else if ( o.axe2 ) formB.quartenionFromAxis( o.axe2 );
+				//else if ( o.axe2 ) formB.quartenionFromAxisAngle( o.axe2, 90*math.torad );
+				//else if ( o.axe2 ) formB.setFromDirection( o.axe2 );
+				//else if ( o.axe2 ) formB.eulerFromArrayZYX( o.axe2 );
+				//else if ( o.axe2 ) formB.makeRotationDir( o.axe2 );
+				//else if ( o.axe2 ) formB.getBasis() * axeB;
 
 			}
 
-		}
+		//}
 
 		// use fixed frame A for linear llimits useLinearReferenceFrameA
 		var useA = o.useA !== undefined ? o.useA : true;
@@ -158,6 +190,12 @@ Object.assign( Constraint.prototype, {
 
 		}
 
+		joint.b1 = b1;
+		joint.b2 = b2;
+
+		joint.formA = formA.clone();
+		joint.formB = formB.clone();
+
 		
 
 		// EXTRA SETTING
@@ -165,6 +203,10 @@ Object.assign( Constraint.prototype, {
 		if ( o.breaking && joint.setBreakingImpulseThreshold ) joint.setBreakingImpulseThreshold( o.breaking );
 
 		// hinge
+
+		// Lowerlimit	==	Upperlimit	->	axis	is	locked.
+		// Lowerlimit	>	Upperlimit	->	axis	is	free
+		// Lowerlimit	<	Upperlimit	->	axis	it	limited	in	that	range	
 
 		// 0 _ limite min / swingSpan1
 		// 1 _ limite max / swingSpan2
@@ -174,7 +216,7 @@ Object.assign( Constraint.prototype, {
 		// 4 / 5 _ relaxation  0->1, recommend to stay near 1.  the lower the value, the less the constraint will fight velocities which violate the angular limits.
 		if ( o.limit && joint.setLimit ) {
 
-			if ( o.type === 'joint_hinge' || o.type === 'joint' ) joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] !==undefined ? o.limit[ 2 ] : 0.9, o.limit[ 3 ] !==undefined ? o.limit[ 3 ] : 0.3, o.limit[ 4 ] !==undefined ? o.limit[ 4 ] : 1.0 );
+			if ( o.type === 'joint_hinge' || o.type === 'joint' || o.type === 'joint_hinge_ref') joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] !==undefined ? o.limit[ 2 ] : 0.9, o.limit[ 3 ] !==undefined ? o.limit[ 3 ] : 0.3, o.limit[ 4 ] !==undefined ? o.limit[ 4 ] : 1.0 );
 			if ( o.type === 'joint_conetwist' ) {
 
 				//console.log(joint)
@@ -189,27 +231,27 @@ Object.assign( Constraint.prototype, {
 			}
 
 		}
-		if ( o.motor && joint.enableAngularMotor ) joint.enableAngularMotor( o.motor[ 0 ], o.motor[ 1 ], o.motor[ 2 ] );
+		
 
-		// slider
+		// slider & dof
 
-		if ( joint.setLowerLinLimit ) {
+	    if( joint.setLinearLowerLimit ){
 
-			if ( o.linLower ) joint.setLowerLinLimit( o.linLower * root.invScale );
-			if ( o.linUpper ) joint.setUpperLinLimit( o.linUpper * root.invScale );
+	        if( o.linLower ) joint.setLinearLowerLimit( tmpPos.fromArray( o.linLower ).multiplyScalar( root.invScale ) );
+	        if( o.linUpper ) joint.setLinearUpperLimit( tmpPos.fromArray( o.linUpper ).multiplyScalar( root.invScale ) );
 
-		}
+	    }
 
-		if ( joint.setLowerAngLimit ) {
+	    if( joint.setAngularLowerLimit ){
 
-			if ( o.angLower ) joint.setLowerAngLimit( o.angLower * math.torad );
-			if ( o.angUpper ) joint.setUpperAngLimit( o.angUpper * math.torad );
-			
-		}
+	        if( o.angLower ) joint.setAngularLowerLimit( tmpPos.fromArray( o.angLower ).multiplyScalar( math.torad ) );
+	        if( o.angUpper ) joint.setAngularUpperLimit( tmpPos.fromArray( o.angUpper ).multiplyScalar( math.torad ) );
+
+	    }
 
 		// 6 dof
 
-		if ( joint.setLinearLowerLimit ) {
+		/*if ( joint.setLinearLowerLimit ) {
 
 			if ( o.linLower ) joint.setLinearLowerLimit( posA.fromArray( o.linLower ).multiplyScalar( root.invScale ));
 			if ( o.linUpper ) joint.setLinearUpperLimit( posB.fromArray( o.linUpper ).multiplyScalar( root.invScale ));
@@ -221,11 +263,13 @@ Object.assign( Constraint.prototype, {
 			if ( o.angLower ) joint.setAngularLowerLimit( axeA.set( o.angLower[ 0 ] * math.torad, o.angLower[ 1 ] * math.torad, o.angLower[ 2 ] * math.torad ));
 			if ( o.angUpper ) joint.setAngularUpperLimit( axeB.set( o.angUpper[ 0 ] * math.torad, o.angUpper[ 1 ] * math.torad, o.angUpper[ 2 ] * math.torad ));
 			
-		}
+		}*/
 
-		// dof
 
-		if ( o.feedback ) joint.enableFeedback( o.feedback );
+		if ( o.motor && joint.enableAngularMotor ) joint.enableAngularMotor( o.motor[ 0 ], o.motor[ 1 ], o.motor[ 2 ] );
+
+		if ( o.feedback ) joint.enableFeedback( o.feedback );//
+		//joint.enableFeedback( o.feedback );
 		//if(o.param) joint.setParam( o.param[0], o.param[1], o.param[1] );//
 
 		if ( o.angularOnly && joint.setAngularOnly ) joint.setAngularOnly( o.angularOnly );
@@ -251,6 +295,9 @@ Object.assign( Constraint.prototype, {
 
 		}
 
+		// spring dof
+	    // < 3 position 
+	    // > 3 rotation
 		if ( o.spring && joint.enableSpring && joint.setStiffness ) {
 
 			for ( var i = 0; i < 6; i ++ ) {
@@ -274,7 +321,6 @@ Object.assign( Constraint.prototype, {
 
 		var collision = o.collision !== undefined ? o.collision : false;
 
-
 		joint.isJoint = true;
 		joint.name = name;
 		joint.nType = n;
@@ -285,16 +331,12 @@ Object.assign( Constraint.prototype, {
 
 		map.set( name, joint );
 
+		console.log( o.type, joint, formB.getBasis() );
 
-		/*if(o.type==='joint_spring_dof'){
-			var aa= []
-			joint.getFrameOffsetA().toArray(aa)
-			
-		}*/
-
-		//console.log( o.type, joint );
+		//console.log( formB.getInverse() );
 
 		// free math
+		tmpPos.free();
 		posA.free();
 		posB.free();
 		axeA.free();

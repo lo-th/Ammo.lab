@@ -11,9 +11,9 @@ export var root = {
 	key: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
 
 	flow:{
-		matrix:{},
-		force:{},
-		option:{},
+		//matrix:{},
+		//force:{},
+		//option:{},
 		ray:[],
 		terrain:[],
 		vehicle:[],

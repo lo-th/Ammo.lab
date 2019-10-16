@@ -71,7 +71,19 @@ Object.assign( RigidBody.prototype, {
 			//b.getMotionState().getWorldTransform( trans );
 			//trans.toArray( AR, n + 1, scale );
 
+			//if ( b.isKinematic ){ b.getMotionState().getWorldTransform( trans ); trans.toArray( AR, n + 1, scale ); }
+			//else 
+
+			// the position at the end of the last physics tick
+
+			//b.getMotionState().getWorldTransform( trans );
+            //trans.toArray( AR, n + 1, scale )
+
+
+			// non-interpolated position 
 			b.getWorldTransform().toArray( AR, n + 1, scale );
+
+				;
 
 		} );
 

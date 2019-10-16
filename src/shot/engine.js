@@ -1,5 +1,6 @@
 /*global THREE*/
 import { RigidBody } from './RigidBody.js';
+import { Constraint } from './Constraint.js'
 import { SoftBody } from './SoftBody.js';
 import { Terrain } from './Terrain.js';
 import { Vehicle } from './Vehicle.js';
@@ -28,7 +29,7 @@ export var engine = ( function () {
 
 	var URL = window.URL || window.webkitURL;
 	var Time = typeof performance === 'undefined' ? Date : performance;
-	var t = { now: 0, delta: 0, then: 0, deltaTime:0, inter: 0, tmp: 0, n: 0, timerate: 0, autoFps: false };
+	var t = { now: 0, delta: 0, then: 0, deltaTime:0, inter: 0, tmp: 0, n: 0, timerate: 0 };
 
 	var timer = null;
 
@@ -45,7 +46,7 @@ export var engine = ( function () {
 	var torad = Math.PI / 180;
 	var todeg = 180 / Math.PI;
 
-	var rigidBody, softBody, terrains, vehicles, character, collision, rayCaster;
+	var rigidBody, softBody, terrains, vehicles, character, collision, rayCaster, constraint;
 
 	var convexBreaker = null;
 	var ray = null;
@@ -57,7 +58,7 @@ export var engine = ( function () {
 	var oldFollow = '';
 
 	var isInternUpdate = false;
-	var isRequestAnimationFrame = false;
+	//var isRequestAnimationFrame = false;
 
 	var option = {
 
@@ -69,9 +70,14 @@ export var engine = ( function () {
 		broadphase: 2,
 		soft: true,
 
+		animFrame : false,
+		fixed: false,
+
 	};
 
 	engine = {
+
+		link : "./build/gun.js",
 
 		message: function ( e ) {
 
@@ -111,15 +117,17 @@ export var engine = ( function () {
 				substep: Option.substep || 2,
 				broadphase: Option.broadphase || 2,
 				soft: Option.soft !== undefined ? Option.soft : true,
-				fixed: Option.fixed !== undefined ? Option.fixed : false,
-				//autoFps : Option.autoFps !== undefined ? Option.autoFps : false,
-
 				//penetration: Option.penetration || 0.0399,
+
+				fixed: Option.fixed !== undefined ? Option.fixed : false,
+				animFrame: Option.animFrame !== undefined ? Option.animFrame : false,
+
+				jointDebug : Option.jointDebug !== undefined ? Option.jointDebug : false,
 
 			};
 
 			t.timerate = ( 1 / option.fps ) * 1000;
-			t.autoFps = option.autoFps;
+			//t.autoFps = option.autoFps;
 
 			type = Type || 'LZMA';
 
@@ -144,6 +152,21 @@ export var engine = ( function () {
 				break;
 
 			}
+
+		},
+
+		set: function ( o ) {
+
+			o = o || option;
+			t.timerate = o.fps !== undefined ? ( 1 / o.fps ) * 1000 : t.timerate;
+			//t.autoFps = o.autoFps !== undefined ? o.autoFps : false;
+
+			option.fixed = o.fixed || false;
+			option.animFrame = o.animFrame || false;
+			option.jointDebug = o.jointDebug || false;
+
+
+			this.post( 'set', o );
 
 		},
 
@@ -182,7 +205,7 @@ export var engine = ( function () {
 
 			//blob = document.location.href.replace(/\/[^/]*$/,"/") + "./build/ammo.js" ;
 
-			worker = new Worker( isMin ? './build/gun.min.js' : './build/gun.js' );
+			worker = new Worker( isMin ? './build/gun.min.js' : engine.link );
 			worker.postMessage = worker.webkitPostMessage || worker.postMessage;
 			worker.onmessage = engine.message;
 
@@ -207,6 +230,7 @@ export var engine = ( function () {
 				maxCharacter: Counts.maxCharacter || 10,
 				maxCar: Counts.maxCar || 14,
 				maxSoftPoint: Counts.maxSoftPoint || 8192,
+				maxJoint: Counts.maxJoint || 1000,
 			};
 
 			root.ArLng = [
@@ -215,6 +239,7 @@ export var engine = ( function () {
 				counts.maxCharacter * 8, // hero
 				counts.maxCar * 64, // cars
 				counts.maxSoftPoint * 3, // soft point
+				counts.maxJoint * 14, // joint point
 			];
 
 			root.ArPos = [
@@ -223,9 +248,10 @@ export var engine = ( function () {
 				root.ArLng[ 0 ] + root.ArLng[ 1 ],
 				root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ],
 				root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ] + root.ArLng[ 3 ],
+				root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ] + root.ArLng[ 3 ] + root.ArLng[ 4 ],
 			];
 
-			root.ArMax = root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ] + root.ArLng[ 3 ] + root.ArLng[ 4 ];
+			root.ArMax = root.ArLng[ 0 ] + root.ArLng[ 1 ] + root.ArLng[ 2 ] + root.ArLng[ 3 ] + root.ArLng[ 4 ] + root.ArLng[ 5 ];
 
 		},
 
@@ -262,7 +288,9 @@ export var engine = ( function () {
 
 			if( !noAutoUpdate ){
 
-				timer = isRequestAnimationFrame ? requestAnimationFrame( engine.sendData ) : setInterval( engine.sendData, t.timerate );
+				timer = option.animFrame ? requestAnimationFrame( engine.sendData ) : setInterval( engine.sendData, t.timerate );
+
+				//console.log( option.animFrame )
 
 			}
 
@@ -279,13 +307,14 @@ export var engine = ( function () {
 
 			engine.postUpdate( t.delta );
 
-			terrains.step();
-			
 			rigidBody.step( root.Ar, root.ArPos[ 0 ] );
 			collision.step( root.Ar, root.ArPos[ 1 ] );
 			character.step( root.Ar, root.ArPos[ 2 ] );
 			vehicles.step( root.Ar, root.ArPos[ 3 ] );
 			softBody.step( root.Ar, root.ArPos[ 4 ] );
+			if( option.jointDebug ) constraint.step( root.Ar, root.ArPos[ 5 ] );
+
+			terrains.step();
 
 			rayCaster.step();
 
@@ -336,31 +365,40 @@ export var engine = ( function () {
 
 			if ( refView ) if ( refView.pause ) { engine.stop(); return; }
         	
-        	if( isRequestAnimationFrame ){
+        	if( option.animFrame ){
 
         		timer = requestAnimationFrame( engine.sendData );
         		t.now = stamp === undefined ? Time.now() : stamp;
         		t.deltaTime = t.now - t.then;
         		t.delta = t.deltaTime * 0.001;
-        		
-        		if ( t.deltaTime < t.timerate ) return;
-        		if ( !stepNext ) return;
 
-        		t.then = t.now - ( t.deltaTime % t.timerate );
+        		if ( t.deltaTime > t.timerate ){
+
+        			t.then = t.now - ( t.deltaTime % t.timerate );
+        				
+        			engine.sendStep();
+        			
+        		}
+        		
 
         	} else {
-
-        		if ( !stepNext ) return;
 
         		t.now = Time.now();
 			    t.delta = ( t.now - t.then ) * 0.001;
         	    t.then = t.now;
 
+        	    engine.sendStep();
+
         	}
 
-        	root.flow.key = engine.getKey();
-        	
 
+		},
+
+		sendStep: function () {
+
+			if ( !stepNext ) return;
+
+			root.flow.key = engine.getKey();
         	engine.prevUpdate( t.delta );
 
         	if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta }, flow: root.flow, Ar: root.Ar }, [ root.Ar.buffer ] );
@@ -369,6 +407,10 @@ export var engine = ( function () {
 			stepNext = false;
 
 		},
+
+		
+
+		/////////
 
 		stepRemove: function () {
 
@@ -405,14 +447,7 @@ export var engine = ( function () {
 		log: function () {},
 
 
-		set: function ( o ) {
-
-			o = o || option;
-			t.timerate = o.fps !== undefined ? ( 1 / o.fps ) * 1000 : t.timerate;
-			t.autoFps = o.autoFps !== undefined ? o.autoFps : false;
-			this.post( 'set', o );
-
-		},
+		
 
 		post: function ( m, o ) {
 
@@ -468,19 +503,12 @@ export var engine = ( function () {
 
 		stop: function () {
 
-			if ( !timer ) return;
+			if ( timer === null ) return;
 
-			if( isRequestAnimationFrame ){
-	                
-                window.cancelAnimationFrame( timer );
-                timer = null;
-
-			} else {
-
-				clearInterval( timer );
-				timer = null;
-
-			}
+			if( option.animFrame ) window.cancelAnimationFrame( timer );
+			else clearInterval( timer );
+			
+			timer = null;
 
 		},
 
@@ -545,43 +573,43 @@ export var engine = ( function () {
 
 		//-----------------------------
 		//
+		//  DIRECT
+		//
+		//-----------------------------
+
+		// if( o.constructor !== Array ) o = [ o ];
+
+		forces: function ( o, direct ) {
+
+			direct = direct || false;
+			engine.post( direct ? 'directForces' : 'setForces', o );
+
+		},
+
+		options: function ( o, direct ) {
+
+			direct = direct || false;
+			engine.post( direct ? 'directOptions' : 'setOptions', o );
+
+		},
+
+		matrix: function ( o, direct ) {
+
+			direct = direct || false;
+			engine.post( direct ? 'directMatrix' : 'setMatrix', o );
+
+		},
+
+		//-----------------------------
+		//
 		//  FLOW
 		//
 		//-----------------------------
 
 		clearFlow: function () {
 
-			root.flow = { matrix:{}, force:{}, option:{}, ray:[], terrain:[], vehicle:[] };
-
-		},
-
-		forces: function ( o ) {
-
-			if( o.constructor !== Array ) o = [ o ];
-
-			var i = o.length;
-
-			while( i-- ) root.flow.force[o[i].name] = o[i];
-
-		},
-
-		options: function ( o ) {
-
-			if( o.constructor !== Array ) o = [ o ];
-
-			var i = o.length;
-
-			while( i-- ) root.flow.option[o[i].name] = o[i];
-
-		},
-
-		matrix: function ( o ) {
-
-			if( o.constructor !== Array ) o = [ o ];
-
-			var i = o.length;
-
-			while( i-- ) root.flow.matrix[o[i].name] = o[i];
+			root.flow = { ray:[], terrain:[], vehicle:[] };
+			//root.flow = { matrix:{}, force:{}, option:{}, ray:[], terrain:[], vehicle:[] };
 
 		},
 
@@ -621,6 +649,7 @@ export var engine = ( function () {
 			character = new Character();
 			collision = new Collision();
 			rayCaster = new RayCaster();
+			constraint = new Constraint();
 
 		},
 
@@ -641,6 +670,7 @@ export var engine = ( function () {
 			character.clear();
 			softBody.clear();
 			rayCaster.clear();
+			constraint.clear();
 
 			while ( root.extraGeo.length > 0 ) root.extraGeo.pop().dispose();
 
@@ -724,7 +754,7 @@ export var engine = ( function () {
 			var type = o.type === undefined ? 'box' : o.type;
 			var prev = type.substring( 0, 4 );
 
-			if ( prev === 'join' ) root.post( 'add', o );
+			if ( prev === 'join' ) return constraint.add( o );
 			else if ( prev === 'soft' ) softBody.add( o );
 			else if ( type === 'terrain' ) terrains.add( o );
 			else if ( type === 'character' ) character.add( o );
@@ -769,11 +799,24 @@ export var engine = ( function () {
 				basic: new THREE.MeshLambertMaterial( { color: 0x111111, name: 'basic', wireframe: wire } ),
 				static: new THREE.MeshLambertMaterial( { color: 0x1111FF, name: 'static', wireframe: wire } ),
 				bones: new THREE.MeshLambertMaterial( { color: 0x11FF11, name: 'bones', wireframe: wire } ),
-				kinematic: new THREE.MeshLambertMaterial( { color: 0x11FF11, name: 'kinematic', wireframe: wire } ),
+				kinematic: new THREE.MeshLambertMaterial( { color: 0xFF8811, name: 'kinematic', wireframe: wire } ),
 
 			};
 
 			root.container = new THREE.Group();
+
+			root.destroy = function ( b ) {
+
+		        var m;
+		        while( b.children.length > 0 ) {
+		            m = b.children.pop();
+		            while( m.children.length > 0 ) m.remove( m.children.pop() );
+		            b.remove( m );
+		        }
+
+		        if ( b.parent ) b.parent.remove( b );
+
+		    }
 
 		},
 

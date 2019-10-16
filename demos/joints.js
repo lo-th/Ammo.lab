@@ -1,6 +1,6 @@
 var option = {
 
-    type:[0,1,2,3,4,5],
+    type:[0,1,2,3,4,5,6],
 
 }
 
@@ -19,12 +19,15 @@ function demo() {
 
     view.moveCam({ theta:0, phi:0, distance:30, target:[0,20,0] });
 
-    physic.set();
+    physic.set({
+        jointDebug: true,
+        gravity:[0,-1,0],
+    });
 
     // infinie plane
     physic.add({type:'plane'});
 
-    demoType( 5 );
+    demoType( 2 );
 
     
 };
@@ -36,7 +39,7 @@ function demoType ( n ) {
 
     for ( var i = 0; i < num; i++) {
         x = (i*2) - mid;
-        physic.add({ type:'box', name:'box' + i, mass: 1, pos:[x,20,0], size:[2], kinematic: i === 0 ? true : false, neverSleep:true });
+        physic.add({ type:'box', name:'box' + i, mass: 0.1, pos:[x,20,0], size:[2], kinematic: i === 0 ? true : false, neverSleep:true });
     }
 
     switch( n ){
@@ -50,26 +53,42 @@ function demoType ( n ) {
             physic.add({ 
                 type:'joint_hinge', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1),
                 pos1:[1,0,0], pos2:[-1,0,0], 
-               // axe1:[1,0,0], axe2:[1,0,0], 
+                axe1:[1,0,0], axe2:[1,0,0], 
                 //axe1:[0,1,0], axe2:[0,1,0],
-                axe1:[0,0,1], axe2:[0,0,1],
-                limit:[-10,10,0.9,0.3, 1], 
+                //axe1:[0,0,1], axe2:[0,0,1],
+
+                limit:[-30,30,0.9,0.3, 1], 
                 collision:false,
-                useA:false,
+                useA:true,
             })
         }
         break;
         case 2:
         for ( var i = 0; i < num-1; i++) {
-            physic.add({ type:'joint_conetwist', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), pos1:[1,0,0], pos2:[-1,0,0], axe1:[1,0,0], axe2:[1,0,0], limit:[0, 20, 20], collision:false })
+            physic.add({ 
+                type:'joint_hinge_ref', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1),
+                pos1:[1,0,0], pos2:[-1,0,0], 
+                axe1:[1,0,0], axe2:[1,0,0], 
+                //axe1:[0,1,0], axe2:[0,1,0],
+                //axe1:[0,0,1], axe2:[0,0,1],
+                
+                limit:[-30,30,0.9,0.3, 1], 
+                collision:false,
+                useA:true,
+            })
         }
         break;
         case 3:
         for ( var i = 0; i < num-1; i++) {
-            physic.add({ type:'joint_slider', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), pos1:[1,0,0], pos2:[-1,0,0], axe1:[1,0,0], axe2:[1,0,0], limit:[0, 20, 20], collision:false })
+            physic.add({ type:'joint_conetwist', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), pos1:[1,0,0], pos2:[-1,0,0], axe1:[1,0,0], axe2:[1,0,0], limit:[0, 20, 20], collision:false })
         }
         break;
         case 4:
+        for ( var i = 0; i < num-1; i++) {
+            physic.add({ type:'joint_slider', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), pos1:[1,0,0], pos2:[-1,0,0], axe1:[1,0,0], axe2:[1,0,0], limit:[0, 20, 20], collision:false })
+        }
+        break;
+        case 5:
         for ( var i = 0; i < num-1; i++) {
             physic.add({ 
                 type:'joint_dof', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), 
@@ -82,7 +101,7 @@ function demoType ( n ) {
             })
         }
         break;
-        case 5:
+        case 6:
         for ( var i = 0; i < num-1; i++) {
             physic.add({ 
                 type:'joint_spring_dof', name:'joint'+i, b1:'box'+i, b2:'box'+(i+1), 

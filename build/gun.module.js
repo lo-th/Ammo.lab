@@ -41,7 +41,8 @@ var math = {
 		while ( math.T.length > 0 ) Ammo.destroy( math.T.pop() );
 		while ( math.Q.length > 0 ) Ammo.destroy( math.Q.pop() );
 		while ( math.V3.length > 0 ) Ammo.destroy( math.V3.pop() );
-		while ( math.M3.length > 0 ) Ammo.destroy( math.M3.pop() );
+		//while ( math.M3.length > 0 ) Ammo.destroy( math.M3.pop() );
+		math.M3 = [];
 
 	},
 
@@ -83,7 +84,7 @@ var math = {
 
 	matrix3: function () {
 
-		return ( math.M3.length > 0 ) ? math.M3.pop() : new Ammo.btMatrix3x3();
+		return ( math.M3.length > 0 ) ? math.M3.pop() : new Matrix3();//new Ammo.btMatrix3x3();
 
 	},
 
@@ -149,6 +150,142 @@ function mathExtend() {
 			offset = offset || 0;
 
 			var q = math.quaternion().setFromEuler( array, offset );
+			this.setRotation( q );
+			q.free();
+
+			return this;
+
+		},
+
+		eulerFromArrayZYX: function ( array, offset ) {
+
+			offset = offset || 0;
+			this.getBasis().setEulerZYX( array[offset], array[offset+1] ,array[offset+2] );
+			return this;
+
+		},
+
+		getRow: function ( n ) {
+
+			return this.getBasis().getRow( n );
+
+		},
+
+		/*setFromUnitVectors:  function ( axis ) {
+
+			var center = math.vector3(0,0,0);
+			var dir = math.vector3().fromArray( axis );
+			var up = math.vector3(0,1,0);
+
+			var q = math.quaternion().setFromUnitVectors( up, dir );
+
+			this.setRotation( q );
+
+			q.free();
+			center.free();
+			dir.free();
+		    up.free();
+		},*/
+
+		makeRotationDir: function ( axis ) {
+
+			var dir = math.vector3().fromArray( axis );
+			var up = math.vector3(0,1,0);
+
+
+			var xaxis = math.vector3().cross( up, dir ).normalize();
+			var yaxis = math.vector3().cross( dir, xaxis ).normalize();
+
+			var m3 = math.matrix3();
+
+			var q = m3.setV3( xaxis, yaxis, dir ).toQuaternion().normalize();
+
+			this.setRotation( q );
+
+		    m3.free();
+		    q.free();
+			dir.free();
+		    up.free();
+		    xaxis.free();
+		    yaxis.free();
+
+		},
+
+		setFromDirection: function ( axis ) {
+
+			var dir = math.vector3().fromArray( axis );
+			var axe = math.vector3();
+			var q = math.quaternion();
+
+		    if( dir.y() > 0.99999 ){
+
+		        q.set( 0, 0, 0, 1 ); 
+
+		    } else if ( dir.y() < - 0.99999 ) {
+
+		    	q.set( 1, 0, 0, 0 );
+
+		    } else {
+		    	axe.set( dir.z(), 0, - dir.x() );
+		        var radians = Math.acos( dir.y() );
+		        q.setFromAxisAngle( axe.toArray(), radians );
+		    }
+
+		    this.setRotation( q );
+
+		    dir.free();
+		    axe.free();
+		    q.free();
+
+		    return this;
+
+		},
+
+		/*setFromDirection: function ( axis ) {
+
+			var zAxis = math.vector3().fromArray( axis );
+			var xAxis = math.vector3(1, 0, 0);
+			var yAxis = math.vector3(0, 1, 0);
+
+			// Handle the singularity (i.e. bone pointing along negative Z-Axis)...
+		    if( zAxis.z() < -0.9999999 ){
+		        xAxis.set(1, 0, 0); // ...in which case positive X runs directly to the right...
+		        yAxis.set(0, 1, 0); // ...and positive Y runs directly upwards.
+		    } else {
+		        var a = 1/(1 + zAxis.z());
+		        var b = -zAxis.x() * zAxis.y() * a;           
+		        xAxis.set( 1 - zAxis.x() * zAxis.x() * a, b, -zAxis.x() ).normalize();
+		        yAxis.set( b, 1 - zAxis.y() * zAxis.y() * a, -zAxis.y() ).normalize();
+		    }
+
+		    var m3 = math.matrix3();
+		    var q = m3.setV3( xAxis, yAxis, zAxis ).toQuaternion();
+
+		    this.setRotation( q );
+
+		    m3.free();
+		    xAxis.free();
+		    yAxis.free();
+		    zAxis.free();
+		    q.free();
+
+		    return this;
+
+		},*/
+
+		quartenionFromAxis: function ( array ) {
+
+			var q = math.quaternion().setFromAxis( array );
+			this.setRotation( q );
+			q.free();
+
+			return this;
+
+		},
+
+		quartenionFromAxisAngle: function ( array, angle ) {
+
+			var q = math.quaternion().setFromAxisAngle( array, angle );
 			this.setRotation( q );
 			q.free();
 
@@ -242,6 +379,8 @@ function mathExtend() {
 
 		},
 
+		
+
 		clone: function () {
 
 			var t = math.transform();
@@ -249,6 +388,15 @@ function mathExtend() {
 			t.setOrigin( this.getOrigin() );
 			t.setRotation( this.getRotation() );
 			return t;
+
+		},
+
+		copy: function ( t ) {
+
+			
+			this.setOrigin( t.getOrigin() );
+			this.setRotation( t.getRotation() );
+			return this;
 
 		},
 
@@ -308,6 +456,16 @@ function mathExtend() {
 
 		},
 
+		cross: function ( a, b ) {
+
+			var ax = a.x(), ay = a.y(), az = a.z();
+		    var bx = b.x(), by = b.y(), bz = b.z();
+
+		    this.set(  ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx );
+		    return this;
+
+		},
+
 		multiplyScalar: function ( scale ) {
 
 			this.setValue( this.x() * scale, this.y() * scale, this.z() * scale );
@@ -332,6 +490,25 @@ function mathExtend() {
 			return this;
 
 		},
+
+		divideScalar: function ( scalar ) {
+
+			return this.multiplyScalar( 1 / scalar );
+
+		},
+
+		length: function () {
+
+			return Math.sqrt( this.x() * this.x() + this.y() * this.y() + this.z() * this.z() );
+
+		},
+
+		normalize: function () {
+
+			return this.divideScalar( this.length() || 1 );
+
+		},
+
 
 		toArray: function ( array, offset, scale ) {
 
@@ -429,6 +606,26 @@ function mathExtend() {
 			array[ offset + 3 ] = this.w();
 
 			return array;
+
+		},
+
+		setFromAxis: function ( axis ) {
+
+			var angle = Math.atan2( axis[ 0 ], axis[ 2 ] );
+			var halfAngle = angle * 0.5;
+
+			if( angle === 0 ){
+
+				angle = Math.atan2( axis[ 1 ], axis[ 2 ] );
+			    halfAngle = angle * 0.5;
+
+				this.setValue(   1 * Math.sin( halfAngle ), 0, 0, Math.cos( halfAngle ) );
+
+		    } else {
+		    	this.setValue(  0, 1 * Math.sin( halfAngle ), 0, Math.cos( halfAngle )  );
+		    }
+			
+			return this;
 
 		},
 
@@ -542,6 +739,94 @@ function mathExtend() {
 
 		},
 
+		/*setFromUnitVectors: function ( vFrom, vTo ) {
+
+			// assumes direction vectors vFrom and vTo are normalized
+
+			var EPS = 0.000001;
+
+			var r = vFrom.dot( vTo ) + 1;
+
+			if ( r < EPS ) {
+
+				r = 0;
+
+				if ( Math.abs( vFrom.x() ) > Math.abs( vFrom.z() ) ) {
+
+					this.set( - vFrom.y(), vFrom.x(), 0, r );
+
+				} else {
+
+					this.set( 0, - vFrom.z(), vFrom.y(), r );
+
+				}
+
+			} else {
+
+				// crossVectors( vFrom, vTo ); // inlined to avoid cyclic dependency on Vector3
+
+				this.set( 
+					vFrom.y() * vTo.z() - vFrom.z() * vTo.y(),
+					vFrom.z() * vTo.x() - vFrom.x() * vTo.z(),
+					vFrom.x() * vTo.y() - vFrom.y() * vTo.x(),
+					r
+				);
+
+			}
+
+			return this.normalize();
+
+		},*/
+
+		length: function () {
+
+			return Math.sqrt( this.x() * this.x() + this.y() * this.y() + this.z() * this.z() + this.w() * this.w() );
+
+		},
+
+		normalize: function () {
+
+			var l = this.length();
+
+			if ( l === 0 ) {
+
+				this.set(0,0,0,1);
+
+			} else {
+
+				l = 1 / l;
+				this.set( this.x() * l, this.y() * l, this.z() * l, this.w() * l );
+
+			}
+
+			return this;
+
+		},
+
+		multiply: function ( q ) {
+
+			return this.multiplyQuaternions( this, q );
+
+		},
+
+		multiplyQuaternions: function ( a, b ) {
+
+			var qax = a.x(), qay = a.y(), qaz = a.z(), qaw = a.w();
+			var qbx = b.x(), qby = b.y(), qbz = b.z(), qbw = b.w();
+
+			this.set( 
+
+				qax * qbw + qaw * qbx + qay * qbz - qaz * qby, 
+				qay * qbw + qaw * qby + qaz * qbx - qax * qbz,
+				qaz * qbw + qaw * qbz + qax * qby - qay * qbx,
+				qaw * qbw - qax * qbx - qay * qby - qaz * qbz
+
+			);
+
+			return this;
+
+		},
+
 		clone: function () {
 
 			return math.quaternion().set( this.x(), this.y(), this.z(), this.w() );
@@ -557,7 +842,7 @@ function mathExtend() {
 	} );
 
 
-	Ammo.btMatrix3x3.prototype = Object.assign( Object.create( Ammo.btMatrix3x3.prototype ), {
+	/*Ammo.btMatrix3x3.prototype = Object.assign( Object.create( Ammo.btMatrix3x3.prototype ), {
 
     	set: function ( n11, n12, n13, n21, n22, n23, n31, n32, n33 ) {
 
@@ -710,9 +995,199 @@ function mathExtend() {
 
 	    },
 
-	} );
+	} );*/
 
 }
+
+// MATRIX3
+
+function Matrix3 () {
+
+	this.elements = [
+
+		1, 0, 0,
+		0, 1, 0,
+		0, 0, 1
+
+	];
+
+}
+
+Object.assign( Matrix3.prototype, {
+
+	set: function ( n11, n12, n13, n21, n22, n23, n31, n32, n33 ) {
+
+        var te = this.elements;
+
+        te[ 0 ] = n11; te[ 1 ] = n21; te[ 2 ] = n31;
+        te[ 3 ] = n12; te[ 4 ] = n22; te[ 5 ] = n32;
+        te[ 6 ] = n13; te[ 7 ] = n23; te[ 8 ] = n33;
+
+        return this;
+
+    },
+
+    setV3: function ( xAxis, yAxis, zAxis ) {
+
+		var te = this.elements;
+
+	    te[ 0 ] = xAxis.x();
+	    te[ 3 ] = xAxis.y(); 
+	    te[ 6 ] = xAxis.z();
+	        
+	    te[ 1 ] = yAxis.x();
+	    te[ 4 ] = yAxis.y(); 
+	    te[ 7 ] = yAxis.z();
+	        
+	    te[ 2 ] = zAxis.x();
+	    te[ 5 ] = zAxis.y(); 
+	    te[ 8 ] = zAxis.z();
+
+	    return this;
+
+	},
+
+    transpose: function () {
+
+        var tmp, m = this.elements;
+
+        tmp = m[ 1 ]; m[ 1 ] = m[ 3 ]; m[ 3 ] = tmp;
+        tmp = m[ 2 ]; m[ 2 ] = m[ 6 ]; m[ 6 ] = tmp;
+        tmp = m[ 5 ]; m[ 5 ] = m[ 7 ]; m[ 7 ] = tmp;
+
+        return this;
+
+    },
+
+    fromArray: function ( array, offset ) {
+
+        if ( offset === undefined ) offset = 0;
+
+        for ( var i = 0; i < 9; i ++ ) {
+
+            this.elements[ i ] = array[ i + offset ];
+
+        }
+
+        return this;
+
+    },
+
+    multiply: function ( mtx ) {
+
+        var v10 = this.row( 0 );
+        var v11 = this.row( 1 );
+        var v12 = this.row( 2 );
+
+        var v20 = mtx.column( 0 );
+        var v21 = mtx.column( 1 );
+        var v22 = mtx.column( 2 );
+
+        var m = this.elements;
+
+        m[ 0 ] = v10.dot( v20 );
+        m[ 1 ] = v10.dot( v21 );
+        m[ 2 ] = v10.dot( v22 );
+        m[ 3 ] = v11.dot( v20 );
+        m[ 4 ] = v11.dot( v21 );
+        m[ 5 ] = v11.dot( v22 );
+        m[ 6 ] = v12.dot( v20 );
+        m[ 7 ] = v12.dot( v21 );
+        m[ 8 ] = v12.dot( v22 );
+
+        v10.free();
+        v11.free();
+        v12.free();
+        v20.free();
+        v21.free();
+        v22.free();
+
+        return this;
+
+    },
+
+    multiplyByVector3: function ( v ) {
+
+        var v0 = this.row( 0 );
+        var v1 = this.row( 1 );
+        var v2 = this.row( 2 );
+        var v4 = math.vector3().set( v0.dot( v ), v1.dot( v ), v2.dot( v ) );
+        v0.free();
+        v1.free();
+        v2.free();
+        return v4;
+
+    },
+
+    toQuaternion: function () {
+
+        var m = this.elements;
+
+        var t = m[ 0 ] + m[ 4 ] + m[ 8 ];
+        var s, x, y, z, w;
+
+        if ( t > 0 ) {
+
+            s = Math.sqrt( t + 1.0 ) * 2;
+            w = 0.25 * s;
+            x = ( m[ 7 ] - m[ 5 ] ) / s;
+            y = ( m[ 2 ] - m[ 6 ] ) / s;
+            z = ( m[ 3 ] - m[ 1 ] ) / s;
+
+        } else if ( ( m[ 0 ] > m[ 4 ] ) && ( m[ 0 ] > m[ 8 ] ) ) {
+
+            s = Math.sqrt( 1.0 + m[ 0 ] - m[ 4 ] - m[ 8 ] ) * 2;
+            w = ( m[ 7 ] - m[ 5 ] ) / s;
+            x = 0.25 * s;
+            y = ( m[ 1 ] + m[ 3 ] ) / s;
+            z = ( m[ 2 ] + m[ 6 ] ) / s;
+
+        } else if ( m[ 4 ] > m[ 8 ] ) {
+
+            s = Math.sqrt( 1.0 + m[ 4 ] - m[ 0 ] - m[ 8 ] ) * 2;
+            w = ( m[ 2 ] - m[ 6 ] ) / s;
+            x = ( m[ 1 ] + m[ 3 ] ) / s;
+            y = 0.25 * s;
+            z = ( m[ 5 ] + m[ 7 ] ) / s;
+
+        } else {
+
+            s = Math.sqrt( 1.0 + m[ 8 ] - m[ 0 ] - m[ 4 ] ) * 2;
+            w = ( m[ 3 ] - m[ 1 ] ) / s;
+            x = ( m[ 2 ] + m[ 6 ] ) / s;
+            y = ( m[ 5 ] + m[ 7 ] ) / s;
+            z = 0.25 * s;
+
+        }
+
+        var q = math.quaternion().set( x, y, z, w );
+        return q;
+
+    },
+
+    row: function ( i ) {
+
+        var m = this.elements;
+        var n = i * 3;
+        return math.vector3().set( m[ n ], m[ n + 1 ], m[ n + 2 ] );
+
+    },
+
+    column: function ( i ) {
+
+        var m = this.elements;
+        return math.vector3().set( m[ i ], m[ i + 3 ], m[ i + 6 ] );
+
+    },
+
+    free: function () {
+
+        math.freeMatrix3( this );
+
+    },
+
+
+});
 
 // ROOT reference of engine worker
 
@@ -721,10 +1196,14 @@ var root = {
 	Ar: null,
 	ArPos: null,
 
+	matrix:[],
+	force:[],
+	option:[],
+
 	flow:{
-		matrix:{},
-		force:{},
-		option:{},
+		//matrix:{},
+		//force:{},
+		//option:{},
 		ray:[],
 		terrain:[],
 		vehicle:[],
@@ -816,6 +1295,16 @@ Object.assign( RigidBody.prototype, {
 			//b.getMotionState().getWorldTransform( trans );
 			//trans.toArray( AR, n + 1, scale );
 
+			//if ( b.isKinematic ){ b.getMotionState().getWorldTransform( trans ); trans.toArray( AR, n + 1, scale ); }
+			//else 
+
+			// the position at the end of the last physics tick
+
+			//b.getMotionState().getWorldTransform( trans );
+            //trans.toArray( AR, n + 1, scale )
+
+
+			// non-interpolated position 
 			b.getWorldTransform().toArray( AR, n + 1, scale );
 
 		} );
@@ -1256,16 +1745,31 @@ function Constraint() {
 	this.ID = 0;
 	this.joints = [];
 
+	this.t1 = new Ammo.btTransform();
+	this.t2 = new Ammo.btTransform();
+
+
+
 }
 
 Object.assign( Constraint.prototype, {
 
 	step: function ( AR, N ) {
 
+		var n, t1 = this.t1, t2 = this.t2, scale = root.scale;
+
 		this.joints.forEach( function ( b, id ) {
 
-			var n = N + ( id * 4 );
-			AR[ n ] = b.ntype;
+			n = N + ( id * 14 );
+
+			t1.copy( b.b1.getWorldTransform() ).multiply( b.formA ).toArray( AR, n , scale );
+			t2.copy( b.b2.getWorldTransform() ).multiply( b.formB ).toArray( AR, n + 7, scale );
+
+			/*p1 = t1.getOrigin();
+			p2 = t2.getOrigin();
+			
+			p1.toArray( AR, n , scale );
+			p2.toArray( AR, n+3 , scale );*/
 
 		} );
 
@@ -1281,6 +1785,8 @@ Object.assign( Constraint.prototype, {
 	destroy: function ( j ) {
 
 		root.world.removeConstraint( j );
+		Ammo.destroy( j.formA );
+		Ammo.destroy( j.formB );
 		Ammo.destroy( j );
 		map.delete( j.name );
 
@@ -1304,8 +1810,6 @@ Object.assign( Constraint.prototype, {
 
 	add: function ( o ) {
 
-
-
 		var name = o.name !== undefined ? o.name : 'joint' + this.ID ++;
 
 		// delete old if same name
@@ -1324,6 +1828,8 @@ Object.assign( Constraint.prototype, {
 		b2.activate();
 		//console.log(b2)
 
+		var tmpPos = math.vector3();
+
 		var posA = math.vector3().fromArray( o.pos1 || [ 0, 0, 0 ] ).multiplyScalar( root.invScale );
 		var posB = math.vector3().fromArray( o.pos2 || [ 0, 0, 0 ] ).multiplyScalar( root.invScale );
 
@@ -1333,7 +1839,7 @@ Object.assign( Constraint.prototype, {
 		var formA = math.transform().identity();
 		var formB = math.transform().identity();
 
-		if ( o.type !== "joint_p2p" && o.type !== "joint_hinge" && o.type !== "joint" ) {
+		//if ( o.type !== "joint_p2p" && o.type !== "joint_hinge" && o.type !== "joint" ) {
 
 			var local = o.local !== undefined ? o.local : true;
 
@@ -1343,14 +1849,17 @@ Object.assign( Constraint.prototype, {
 				// frame A
 				t.identity();
 				t.setOrigin( posA );
-				t.eulerFromArray( o.axe1 || [ 1, 0, 0 ] );
-				b1.getMotionState().getWorldTransform( formA );
+				//t.quartenionFromAxis( o.axe1 || [ 1, 0, 0 ] );
+				//t.setFromDirection( o.axe1 || [ 1, 0, 0 ], 90*math.torad );
+				//b1.getMotionState().getWorldTransform( formA );
 				formA.getInverse().multiply( t );
 
 				// frame B
 				t.identity();
 				t.setOrigin( posB );
-				t.eulerFromArray( o.axe2 || [ 1, 0, 0 ] );
+
+				//t.quartenionFromAxis( o.axe2 || [ 1, 0, 0 ], 90*math.torad  );
+				//t.setFromDirection( o.axe2 || [ 1, 0, 0 ] );
 				b2.getMotionState().getWorldTransform( formB );
 				formB.getInverse().multiply( t );
 
@@ -1360,17 +1869,29 @@ Object.assign( Constraint.prototype, {
 
 				// frame A
 				formA.setOrigin( posA );
-				if ( o.quatA ) formA.quaternionFromArray( o.quatA );
-				else if ( o.axe1 ) formA.eulerFromArray( o.axe1 );
+				if ( o.quatA !== undefined ) formA.quaternionFromArray( o.quatA );
+				//else if ( o.axe1 ) formA.setFromUnitVectors( o.axe1 ); 
+				else if ( o.axe1 ) formA.quartenionFromAxis( o.axe1 );  
+				//else if ( o.axe1 ) formA.quartenionFromAxisAngle( o.axe1, 90*math.torad  );
+				//else if ( o.axe1 ) formA.setFromDirection( o.axe1 );
+				//else if ( o.axe1 ) formA.eulerFromArrayZYX( o.axe1 );
+				//else if ( o.axe1 ) formA.makeRotationDir( o.axe1 );
+				//else if ( o.axe1 ) formA.getBasis() * axeA;
 
 				// frame B
 				formB.setOrigin( posB );
-				if ( o.quatB ) formB.quaternionFromArray( o.quatB );
-				else if ( o.axe2 ) formA.eulerFromArray( o.axe2 );
+				if ( o.quatB !== undefined ) formB.quaternionFromArray( o.quatB );
+				//else if ( o.axe2 ) formB.setFromUnitVectors( o.axe2 );
+				else if ( o.axe2 ) formB.quartenionFromAxis( o.axe2 );
+				//else if ( o.axe2 ) formB.quartenionFromAxisAngle( o.axe2, 90*math.torad );
+				//else if ( o.axe2 ) formB.setFromDirection( o.axe2 );
+				//else if ( o.axe2 ) formB.eulerFromArrayZYX( o.axe2 );
+				//else if ( o.axe2 ) formB.makeRotationDir( o.axe2 );
+				//else if ( o.axe2 ) formB.getBasis() * axeB;
 
 			}
 
-		}
+		//}
 
 		// use fixed frame A for linear llimits useLinearReferenceFrameA
 		var useA = o.useA !== undefined ? o.useA : true;
@@ -1398,6 +1919,12 @@ Object.assign( Constraint.prototype, {
 
 		}
 
+		joint.b1 = b1;
+		joint.b2 = b2;
+
+		joint.formA = formA.clone();
+		joint.formB = formB.clone();
+
 		
 
 		// EXTRA SETTING
@@ -1405,6 +1932,10 @@ Object.assign( Constraint.prototype, {
 		if ( o.breaking && joint.setBreakingImpulseThreshold ) joint.setBreakingImpulseThreshold( o.breaking );
 
 		// hinge
+
+		// Lowerlimit	==	Upperlimit	->	axis	is	locked.
+		// Lowerlimit	>	Upperlimit	->	axis	is	free
+		// Lowerlimit	<	Upperlimit	->	axis	it	limited	in	that	range	
 
 		// 0 _ limite min / swingSpan1
 		// 1 _ limite max / swingSpan2
@@ -1414,7 +1945,7 @@ Object.assign( Constraint.prototype, {
 		// 4 / 5 _ relaxation  0->1, recommend to stay near 1.  the lower the value, the less the constraint will fight velocities which violate the angular limits.
 		if ( o.limit && joint.setLimit ) {
 
-			if ( o.type === 'joint_hinge' || o.type === 'joint' ) joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] !==undefined ? o.limit[ 2 ] : 0.9, o.limit[ 3 ] !==undefined ? o.limit[ 3 ] : 0.3, o.limit[ 4 ] !==undefined ? o.limit[ 4 ] : 1.0 );
+			if ( o.type === 'joint_hinge' || o.type === 'joint' || o.type === 'joint_hinge_ref') joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] !==undefined ? o.limit[ 2 ] : 0.9, o.limit[ 3 ] !==undefined ? o.limit[ 3 ] : 0.3, o.limit[ 4 ] !==undefined ? o.limit[ 4 ] : 1.0 );
 			if ( o.type === 'joint_conetwist' ) {
 
 				//console.log(joint)
@@ -1429,27 +1960,27 @@ Object.assign( Constraint.prototype, {
 			}
 
 		}
-		if ( o.motor && joint.enableAngularMotor ) joint.enableAngularMotor( o.motor[ 0 ], o.motor[ 1 ], o.motor[ 2 ] );
+		
 
-		// slider
+		// slider & dof
 
-		if ( joint.setLowerLinLimit ) {
+	    if( joint.setLinearLowerLimit ){
 
-			if ( o.linLower ) joint.setLowerLinLimit( o.linLower * root.invScale );
-			if ( o.linUpper ) joint.setUpperLinLimit( o.linUpper * root.invScale );
+	        if( o.linLower ) joint.setLinearLowerLimit( tmpPos.fromArray( o.linLower ).multiplyScalar( root.invScale ) );
+	        if( o.linUpper ) joint.setLinearUpperLimit( tmpPos.fromArray( o.linUpper ).multiplyScalar( root.invScale ) );
 
-		}
+	    }
 
-		if ( joint.setLowerAngLimit ) {
+	    if( joint.setAngularLowerLimit ){
 
-			if ( o.angLower ) joint.setLowerAngLimit( o.angLower * math.torad );
-			if ( o.angUpper ) joint.setUpperAngLimit( o.angUpper * math.torad );
-			
-		}
+	        if( o.angLower ) joint.setAngularLowerLimit( tmpPos.fromArray( o.angLower ).multiplyScalar( math.torad ) );
+	        if( o.angUpper ) joint.setAngularUpperLimit( tmpPos.fromArray( o.angUpper ).multiplyScalar( math.torad ) );
+
+	    }
 
 		// 6 dof
 
-		if ( joint.setLinearLowerLimit ) {
+		/*if ( joint.setLinearLowerLimit ) {
 
 			if ( o.linLower ) joint.setLinearLowerLimit( posA.fromArray( o.linLower ).multiplyScalar( root.invScale ));
 			if ( o.linUpper ) joint.setLinearUpperLimit( posB.fromArray( o.linUpper ).multiplyScalar( root.invScale ));
@@ -1461,11 +1992,13 @@ Object.assign( Constraint.prototype, {
 			if ( o.angLower ) joint.setAngularLowerLimit( axeA.set( o.angLower[ 0 ] * math.torad, o.angLower[ 1 ] * math.torad, o.angLower[ 2 ] * math.torad ));
 			if ( o.angUpper ) joint.setAngularUpperLimit( axeB.set( o.angUpper[ 0 ] * math.torad, o.angUpper[ 1 ] * math.torad, o.angUpper[ 2 ] * math.torad ));
 			
-		}
+		}*/
 
-		// dof
 
-		if ( o.feedback ) joint.enableFeedback( o.feedback );
+		if ( o.motor && joint.enableAngularMotor ) joint.enableAngularMotor( o.motor[ 0 ], o.motor[ 1 ], o.motor[ 2 ] );
+
+		if ( o.feedback ) joint.enableFeedback( o.feedback );//
+		//joint.enableFeedback( o.feedback );
 		//if(o.param) joint.setParam( o.param[0], o.param[1], o.param[1] );//
 
 		if ( o.angularOnly && joint.setAngularOnly ) joint.setAngularOnly( o.angularOnly );
@@ -1491,6 +2024,9 @@ Object.assign( Constraint.prototype, {
 
 		}
 
+		// spring dof
+	    // < 3 position 
+	    // > 3 rotation
 		if ( o.spring && joint.enableSpring && joint.setStiffness ) {
 
 			for ( var i = 0; i < 6; i ++ ) {
@@ -1514,7 +2050,6 @@ Object.assign( Constraint.prototype, {
 
 		var collision = o.collision !== undefined ? o.collision : false;
 
-
 		joint.isJoint = true;
 		joint.name = name;
 		joint.nType = n;
@@ -1525,16 +2060,12 @@ Object.assign( Constraint.prototype, {
 
 		map.set( name, joint );
 
+		console.log( o.type, joint, formB.getBasis() );
 
-		/*if(o.type==='joint_spring_dof'){
-			var aa= []
-			joint.getFrameOffsetA().toArray(aa)
-			
-		}*/
-
-		//console.log( o.type, joint );
+		//console.log( formB.getInverse() );
 
 		// free math
+		tmpPos.free();
 		posA.free();
 		posB.free();
 		axeA.free();
@@ -3639,6 +4170,8 @@ var engine = ( function () {
 	var isSoft = false;
 	//var gravity = null;
 
+	var jointDebug = false;
+
 	var solver, solverSoft, collisionConfig, dispatcher, broadphase;
 
 	var tmpRemove = [];
@@ -3651,6 +4184,8 @@ var engine = ( function () {
 	var numBreak = 0;
 
 	var ray = null;
+
+	var tmpT, tmpP;
 
 
 
@@ -3699,6 +4234,7 @@ var engine = ( function () {
 			//root.key = o.key;
 
 
+			
 
 			//tmpRemove = tmpRemove.concat( o.remove );
 			this.stepRemove();
@@ -3706,9 +4242,11 @@ var engine = ( function () {
 			vehicles.control( carName );
 			character.control( heroName );
 
-			this.stepOption();
-			this.stepForces();
+
 			this.stepMatrix();
+			this.stepOptions();
+			this.stepForces();
+			
 			
 			terrains.step();
 
@@ -3717,14 +4255,15 @@ var engine = ( function () {
 
 			delta = o.delta;
 
-			if ( fixed ) root.world.stepSimulation( delta, substep, timestep );
-			else root.world.stepSimulation( delta, substep );
+			if ( fixed ) root.world.stepSimulation( timestep, substep );//root.world.stepSimulation( delta, substep, timestep );
+			else root.world.stepSimulation( delta, substep, timestep );
 
 			rigidBody.step( Ar, ArPos[ 0 ] );
 			collision.step( Ar, ArPos[ 1 ] );
 			character.step( Ar, ArPos[ 2 ] );
 			vehicles.step( Ar, ArPos[ 3 ] );
 			softBody.step( Ar, ArPos[ 4 ] );
+			if( jointDebug ) constraint.step( Ar, ArPos[ 5 ] );
 
 			raycaster.step();
 
@@ -3735,7 +4274,8 @@ var engine = ( function () {
 
 		clearFlow: function () {
 
-			root.flow = { matrix:{}, force:{}, option:{}, ray:[], terrain:[], vehicle:[] };
+			//root.flow = { matrix:{}, force:{}, option:{}, ray:[], terrain:[], vehicle:[] };
+			root.flow = { ray:[], terrain:[], vehicle:[] };
 
 		},
 
@@ -3749,6 +4289,10 @@ var engine = ( function () {
 			this.clearFlow();
 			
 			tmpRemove = [];
+
+			root.matrix = [];
+			root.option = [];
+			root.force = [];
 
 			rigidBody.clear();
 			constraint.clear();
@@ -3800,7 +4344,6 @@ var engine = ( function () {
 
 			isBuffer = o.isBuffer || false;
 
-			//ArLng = o.settings[ 0 ];
 			ArPos = o.ArPos;
 			ArMax = o.ArMax;
 
@@ -3817,7 +4360,6 @@ var engine = ( function () {
 
 			Ammo().then( function ( Ammo ) {
 
-				//console.log(Module)
 
 				mathExtend();
 
@@ -3834,6 +4376,9 @@ var engine = ( function () {
 				raycaster = new RayCaster();
 
 				ray = new Ammo.ClosestRayResultCallback();
+
+				tmpT = math.transform();
+				tmpP = math.vector3();
 
 				vehicles.addExtra = rigidBody.add;
 
@@ -4031,6 +4576,8 @@ var engine = ( function () {
 			substep = o.substep !== undefined ? o.substep : 2;
 			fixed = o.fixed !== undefined ? o.fixed : false;
 
+			jointDebug = o.jointDebug !== undefined ? o.jointDebug : false;
+
 			damped = 3.0 * timestep;
 
 			// penetration
@@ -4052,14 +4599,30 @@ var engine = ( function () {
 		//
 		//-----------------------------
 
-		stepForces: function () {
-			
-			for( var n in root.flow.force ) this.applyForces( n, root.flow.force[n] );
-			root.flow.force = {};
+		setForces: function ( o ) { 
+
+			root.force = root.force.concat( o ); 
 
 		},
 
-		applyForces: function ( name, o ) {
+		directForces: function ( o ) {
+
+			this.setForces( o );
+			this.stepForces();
+
+		},
+
+		stepForces: function () {
+
+			var i = root.force.length;
+			while( i-- ) this.applyForces( root.force[i] );
+			root.force = [];
+
+		},
+
+		applyForces: function ( o ) {
+
+			var name = o.name;
 
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
@@ -4103,20 +4666,36 @@ var engine = ( function () {
 		//
 		//-----------------------------
 
-		stepMatrix: function () {
+		setMatrix: function ( o ) { 
 
-			for( var n in root.flow.matrix ) this.applyMatrix( n, root.flow.matrix[n] );
-			root.flow.matrix = {};
+			root.matrix = root.matrix.concat( o ); 
 
 		},
 
-		applyMatrix: function ( name, o ) {
+		directMatrix: function ( o ) {
+
+			this.setMatrix( o );
+			this.stepMatrix();
+
+		},
+
+		stepMatrix: function () {
+
+			var i = root.matrix.length;
+			while( i-- ) this.applyMatrix( root.matrix[i] );
+			root.matrix = [];
+
+		},
+
+		applyMatrix: function ( o ) {
+
+			var name = o.name;
 
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
 
-			var t = math.transform();
-			var p1 = math.vector3();
+			var t = tmpT; //math.transform();
+			var p1 = tmpP; //math.vector3();
 
 			//if ( b.isKinematic ) t = b.getMotionState().getWorldTransform();
 			//else  t = b.getWorldTransform();
@@ -4153,6 +4732,8 @@ var engine = ( function () {
 
 			}
 
+			//https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=11079
+
 			if( o.clamped !== undefined ){
 
 				var clamped = ( delta > damped ) ? 1.0 : delta / damped; // clamp to 1.0 to enforce stability
@@ -4160,7 +4741,6 @@ var engine = ( function () {
 				b.setLinearVelocity( p1 );
 
 			}
-
 
 			if ( o.velocity && !b.isGhost ) {
 
@@ -4188,11 +4768,11 @@ var engine = ( function () {
 				
 			}
 
-			if ( b.type === 'body' ) b.activate();
+			if ( b.type === 'body' && !b.isKinematic ) b.activate();
 			if ( b.type === 'solid' ) self.postMessage( { m: 'moveSolid', o: { name: name, pos: o.pos, quat: o.quat } } );
 
-			t.free();
-			p1.free();
+			//t.free();
+			//p1.free();
 
 		},
 
@@ -4235,14 +4815,30 @@ var engine = ( function () {
 		//  4096 : GROUP6
 		//  8192 : GROUP7
 
-		stepOption: function () {
+		setOptions: function ( o ) { 
 
-			for( var n in root.flow.option ) this.applyOption( n, root.flow.option[n] );
-			root.flow.option = {};
+			root.option = root.option.concat( o ); 
 
 		},
 
-		applyOption: function ( name, o ) {
+		directOptions: function ( o ) {
+
+			this.setOptions( o );
+			this.stepOptions();
+
+		},
+
+		stepOptions: function () {
+
+			var i = root.option.length;
+			while( i-- ) this.applyOption( root.option[i] );
+			root.option = [];
+
+		},
+
+		applyOption: function ( o ) {
+
+			var name = o.name;
 
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );

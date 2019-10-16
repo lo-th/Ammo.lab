@@ -41,7 +41,8 @@ var math = {
 		while ( math.T.length > 0 ) Ammo.destroy( math.T.pop() );
 		while ( math.Q.length > 0 ) Ammo.destroy( math.Q.pop() );
 		while ( math.V3.length > 0 ) Ammo.destroy( math.V3.pop() );
-		while ( math.M3.length > 0 ) Ammo.destroy( math.M3.pop() );
+		//while ( math.M3.length > 0 ) Ammo.destroy( math.M3.pop() );
+		math.M3 = [];
 
 	},
 
@@ -83,7 +84,7 @@ var math = {
 
 	matrix3: function () {
 
-		return ( math.M3.length > 0 ) ? math.M3.pop() : new Ammo.btMatrix3x3();
+		return ( math.M3.length > 0 ) ? math.M3.pop() : new Matrix3();//new Ammo.btMatrix3x3();
 
 	},
 
@@ -152,6 +153,142 @@ export function mathExtend() {
 			offset = offset || 0;
 
 			var q = math.quaternion().setFromEuler( array, offset );
+			this.setRotation( q );
+			q.free();
+
+			return this;
+
+		},
+
+		eulerFromArrayZYX: function ( array, offset ) {
+
+			offset = offset || 0;
+			this.getBasis().setEulerZYX( array[offset], array[offset+1] ,array[offset+2] );
+			return this;
+
+		},
+
+		getRow: function ( n ) {
+
+			return this.getBasis().getRow( n );
+
+		},
+
+		/*setFromUnitVectors:  function ( axis ) {
+
+			var center = math.vector3(0,0,0);
+			var dir = math.vector3().fromArray( axis );
+			var up = math.vector3(0,1,0);
+
+			var q = math.quaternion().setFromUnitVectors( up, dir );
+
+			this.setRotation( q );
+
+			q.free();
+			center.free();
+			dir.free();
+		    up.free();
+		},*/
+
+		makeRotationDir: function ( axis ) {
+
+			var dir = math.vector3().fromArray( axis );
+			var up = math.vector3(0,1,0);
+
+
+			var xaxis = math.vector3().cross( up, dir ).normalize();
+			var yaxis = math.vector3().cross( dir, xaxis ).normalize();
+
+			var m3 = math.matrix3();
+
+			var q = m3.setV3( xaxis, yaxis, dir ).toQuaternion().normalize();
+
+			this.setRotation( q );
+
+		    m3.free();
+		    q.free();
+			dir.free();
+		    up.free();
+		    xaxis.free();
+		    yaxis.free();
+
+		},
+
+		setFromDirection: function ( axis ) {
+
+			var dir = math.vector3().fromArray( axis );
+			var axe = math.vector3();
+			var q = math.quaternion();
+
+		    if( dir.y() > 0.99999 ){
+
+		        q.set( 0, 0, 0, 1 ); 
+
+		    } else if ( dir.y() < - 0.99999 ) {
+
+		    	q.set( 1, 0, 0, 0 );
+
+		    } else {
+		    	axe.set( dir.z(), 0, - dir.x() )
+		        var radians = Math.acos( dir.y() );
+		        q.setFromAxisAngle( axe.toArray(), radians );
+		    }
+
+		    this.setRotation( q );
+
+		    dir.free();
+		    axe.free();
+		    q.free();
+
+		    return this;
+
+		},
+
+		/*setFromDirection: function ( axis ) {
+
+			var zAxis = math.vector3().fromArray( axis );
+			var xAxis = math.vector3(1, 0, 0);
+			var yAxis = math.vector3(0, 1, 0);
+
+			// Handle the singularity (i.e. bone pointing along negative Z-Axis)...
+		    if( zAxis.z() < -0.9999999 ){
+		        xAxis.set(1, 0, 0); // ...in which case positive X runs directly to the right...
+		        yAxis.set(0, 1, 0); // ...and positive Y runs directly upwards.
+		    } else {
+		        var a = 1/(1 + zAxis.z());
+		        var b = -zAxis.x() * zAxis.y() * a;           
+		        xAxis.set( 1 - zAxis.x() * zAxis.x() * a, b, -zAxis.x() ).normalize();
+		        yAxis.set( b, 1 - zAxis.y() * zAxis.y() * a, -zAxis.y() ).normalize();
+		    }
+
+		    var m3 = math.matrix3();
+		    var q = m3.setV3( xAxis, yAxis, zAxis ).toQuaternion();
+
+		    this.setRotation( q );
+
+		    m3.free();
+		    xAxis.free();
+		    yAxis.free();
+		    zAxis.free();
+		    q.free();
+
+		    return this;
+
+		},*/
+
+		quartenionFromAxis: function ( array ) {
+
+			var q = math.quaternion().setFromAxis( array );
+			this.setRotation( q );
+			q.free();
+
+			return this;
+
+		},
+
+		quartenionFromAxisAngle: function ( array, angle ) {
+
+			var q = math.quaternion().setFromAxisAngle( array, angle );
 			this.setRotation( q );
 			q.free();
 
@@ -245,6 +382,8 @@ export function mathExtend() {
 
 		},
 
+		
+
 		clone: function () {
 
 			var t = math.transform();
@@ -252,6 +391,15 @@ export function mathExtend() {
 			t.setOrigin( this.getOrigin() );
 			t.setRotation( this.getRotation() );
 			return t;
+
+		},
+
+		copy: function ( t ) {
+
+			
+			this.setOrigin( t.getOrigin() );
+			this.setRotation( t.getRotation() );
+			return this;
 
 		},
 
@@ -311,6 +459,16 @@ export function mathExtend() {
 
 		},
 
+		cross: function ( a, b ) {
+
+			var ax = a.x(), ay = a.y(), az = a.z();
+		    var bx = b.x(), by = b.y(), bz = b.z();
+
+		    this.set(  ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx );
+		    return this;
+
+		},
+
 		multiplyScalar: function ( scale ) {
 
 			this.setValue( this.x() * scale, this.y() * scale, this.z() * scale );
@@ -335,6 +493,25 @@ export function mathExtend() {
 			return this;
 
 		},
+
+		divideScalar: function ( scalar ) {
+
+			return this.multiplyScalar( 1 / scalar );
+
+		},
+
+		length: function () {
+
+			return Math.sqrt( this.x() * this.x() + this.y() * this.y() + this.z() * this.z() );
+
+		},
+
+		normalize: function () {
+
+			return this.divideScalar( this.length() || 1 );
+
+		},
+
 
 		toArray: function ( array, offset, scale ) {
 
@@ -432,6 +609,26 @@ export function mathExtend() {
 			array[ offset + 3 ] = this.w();
 
 			return array;
+
+		},
+
+		setFromAxis: function ( axis ) {
+
+			var angle = Math.atan2( axis[ 0 ], axis[ 2 ] );
+			var halfAngle = angle * 0.5;
+
+			if( angle === 0 ){
+
+				angle = Math.atan2( axis[ 1 ], axis[ 2 ] );
+			    halfAngle = angle * 0.5
+
+				this.setValue(   1 * Math.sin( halfAngle ), 0, 0, Math.cos( halfAngle ) );
+
+		    } else {
+		    	this.setValue(  0, 1 * Math.sin( halfAngle ), 0, Math.cos( halfAngle )  );
+		    }
+			
+			return this;
 
 		},
 
@@ -545,6 +742,94 @@ export function mathExtend() {
 
 		},
 
+		/*setFromUnitVectors: function ( vFrom, vTo ) {
+
+			// assumes direction vectors vFrom and vTo are normalized
+
+			var EPS = 0.000001;
+
+			var r = vFrom.dot( vTo ) + 1;
+
+			if ( r < EPS ) {
+
+				r = 0;
+
+				if ( Math.abs( vFrom.x() ) > Math.abs( vFrom.z() ) ) {
+
+					this.set( - vFrom.y(), vFrom.x(), 0, r );
+
+				} else {
+
+					this.set( 0, - vFrom.z(), vFrom.y(), r );
+
+				}
+
+			} else {
+
+				// crossVectors( vFrom, vTo ); // inlined to avoid cyclic dependency on Vector3
+
+				this.set( 
+					vFrom.y() * vTo.z() - vFrom.z() * vTo.y(),
+					vFrom.z() * vTo.x() - vFrom.x() * vTo.z(),
+					vFrom.x() * vTo.y() - vFrom.y() * vTo.x(),
+					r
+				);
+
+			}
+
+			return this.normalize();
+
+		},*/
+
+		length: function () {
+
+			return Math.sqrt( this.x() * this.x() + this.y() * this.y() + this.z() * this.z() + this.w() * this.w() );
+
+		},
+
+		normalize: function () {
+
+			var l = this.length();
+
+			if ( l === 0 ) {
+
+				this.set(0,0,0,1);
+
+			} else {
+
+				l = 1 / l;
+				this.set( this.x() * l, this.y() * l, this.z() * l, this.w() * l );
+
+			}
+
+			return this;
+
+		},
+
+		multiply: function ( q ) {
+
+			return this.multiplyQuaternions( this, q );
+
+		},
+
+		multiplyQuaternions: function ( a, b ) {
+
+			var qax = a.x(), qay = a.y(), qaz = a.z(), qaw = a.w();
+			var qbx = b.x(), qby = b.y(), qbz = b.z(), qbw = b.w();
+
+			this.set( 
+
+				qax * qbw + qaw * qbx + qay * qbz - qaz * qby, 
+				qay * qbw + qaw * qby + qaz * qbx - qax * qbz,
+				qaz * qbw + qaw * qbz + qax * qby - qay * qbx,
+				qaw * qbw - qax * qbx - qay * qby - qaz * qbz
+
+			)
+
+			return this;
+
+		},
+
 		clone: function () {
 
 			return math.quaternion().set( this.x(), this.y(), this.z(), this.w() );
@@ -560,7 +845,7 @@ export function mathExtend() {
 	} );
 
 
-	Ammo.btMatrix3x3.prototype = Object.assign( Object.create( Ammo.btMatrix3x3.prototype ), {
+	/*Ammo.btMatrix3x3.prototype = Object.assign( Object.create( Ammo.btMatrix3x3.prototype ), {
 
     	set: function ( n11, n12, n13, n21, n22, n23, n31, n32, n33 ) {
 
@@ -713,6 +998,198 @@ export function mathExtend() {
 
 	    },
 
-	} );
+	} );*/
 
 }
+
+// MATRIX3
+
+function Matrix3 () {
+
+	this.elements = [
+
+		1, 0, 0,
+		0, 1, 0,
+		0, 0, 1
+
+	];
+
+}
+
+Object.assign( Matrix3.prototype, {
+
+	set: function ( n11, n12, n13, n21, n22, n23, n31, n32, n33 ) {
+
+        var te = this.elements;
+
+        te[ 0 ] = n11; te[ 1 ] = n21; te[ 2 ] = n31;
+        te[ 3 ] = n12; te[ 4 ] = n22; te[ 5 ] = n32;
+        te[ 6 ] = n13; te[ 7 ] = n23; te[ 8 ] = n33;
+
+        return this;
+
+    },
+
+    setV3: function ( xAxis, yAxis, zAxis ) {
+
+		var te = this.elements;
+
+	    te[ 0 ] = xAxis.x();
+	    te[ 3 ] = xAxis.y(); 
+	    te[ 6 ] = xAxis.z();
+	        
+	    te[ 1 ] = yAxis.x();
+	    te[ 4 ] = yAxis.y(); 
+	    te[ 7 ] = yAxis.z();
+	        
+	    te[ 2 ] = zAxis.x();
+	    te[ 5 ] = zAxis.y(); 
+	    te[ 8 ] = zAxis.z();
+
+	    return this;
+
+	},
+
+    transpose: function () {
+
+        var tmp, m = this.elements;
+
+        tmp = m[ 1 ]; m[ 1 ] = m[ 3 ]; m[ 3 ] = tmp;
+        tmp = m[ 2 ]; m[ 2 ] = m[ 6 ]; m[ 6 ] = tmp;
+        tmp = m[ 5 ]; m[ 5 ] = m[ 7 ]; m[ 7 ] = tmp;
+
+        return this;
+
+    },
+
+    fromArray: function ( array, offset ) {
+
+        if ( offset === undefined ) offset = 0;
+
+        for ( var i = 0; i < 9; i ++ ) {
+
+            this.elements[ i ] = array[ i + offset ];
+
+        }
+
+        return this;
+
+    },
+
+    multiply: function ( mtx ) {
+
+        var v10 = this.row( 0 );
+        var v11 = this.row( 1 );
+        var v12 = this.row( 2 );
+
+        var v20 = mtx.column( 0 );
+        var v21 = mtx.column( 1 );
+        var v22 = mtx.column( 2 );
+
+        var m = this.elements;
+
+        m[ 0 ] = v10.dot( v20 );
+        m[ 1 ] = v10.dot( v21 );
+        m[ 2 ] = v10.dot( v22 );
+        m[ 3 ] = v11.dot( v20 );
+        m[ 4 ] = v11.dot( v21 );
+        m[ 5 ] = v11.dot( v22 );
+        m[ 6 ] = v12.dot( v20 );
+        m[ 7 ] = v12.dot( v21 );
+        m[ 8 ] = v12.dot( v22 );
+
+        v10.free();
+        v11.free();
+        v12.free();
+        v20.free();
+        v21.free();
+        v22.free();
+
+        return this;
+
+    },
+
+    multiplyByVector3: function ( v ) {
+
+        var v0 = this.row( 0 );
+        var v1 = this.row( 1 );
+        var v2 = this.row( 2 );
+        var v4 = math.vector3().set( v0.dot( v ), v1.dot( v ), v2.dot( v ) );
+        v0.free();
+        v1.free();
+        v2.free();
+        return v4;
+
+    },
+
+    toQuaternion: function () {
+
+        var m = this.elements;
+
+        var t = m[ 0 ] + m[ 4 ] + m[ 8 ];
+        var s, x, y, z, w;
+
+        if ( t > 0 ) {
+
+            s = Math.sqrt( t + 1.0 ) * 2;
+            w = 0.25 * s;
+            x = ( m[ 7 ] - m[ 5 ] ) / s;
+            y = ( m[ 2 ] - m[ 6 ] ) / s;
+            z = ( m[ 3 ] - m[ 1 ] ) / s;
+
+        } else if ( ( m[ 0 ] > m[ 4 ] ) && ( m[ 0 ] > m[ 8 ] ) ) {
+
+            s = Math.sqrt( 1.0 + m[ 0 ] - m[ 4 ] - m[ 8 ] ) * 2;
+            w = ( m[ 7 ] - m[ 5 ] ) / s;
+            x = 0.25 * s;
+            y = ( m[ 1 ] + m[ 3 ] ) / s;
+            z = ( m[ 2 ] + m[ 6 ] ) / s;
+
+        } else if ( m[ 4 ] > m[ 8 ] ) {
+
+            s = Math.sqrt( 1.0 + m[ 4 ] - m[ 0 ] - m[ 8 ] ) * 2;
+            w = ( m[ 2 ] - m[ 6 ] ) / s;
+            x = ( m[ 1 ] + m[ 3 ] ) / s;
+            y = 0.25 * s;
+            z = ( m[ 5 ] + m[ 7 ] ) / s;
+
+        } else {
+
+            s = Math.sqrt( 1.0 + m[ 8 ] - m[ 0 ] - m[ 4 ] ) * 2;
+            w = ( m[ 3 ] - m[ 1 ] ) / s;
+            x = ( m[ 2 ] + m[ 6 ] ) / s;
+            y = ( m[ 5 ] + m[ 7 ] ) / s;
+            z = 0.25 * s;
+
+        }
+
+        var q = math.quaternion().set( x, y, z, w );
+        return q;
+
+    },
+
+    row: function ( i ) {
+
+        var m = this.elements;
+        var n = i * 3;
+        return math.vector3().set( m[ n ], m[ n + 1 ], m[ n + 2 ] );
+
+    },
+
+    column: function ( i ) {
+
+        var m = this.elements;
+        return math.vector3().set( m[ i ], m[ i + 3 ], m[ i + 6 ] );
+
+    },
+
+    free: function () {
+
+        math.freeMatrix3( this );
+
+    },
+
+
+});
+
+export { Matrix3 };

@@ -56,6 +56,8 @@ export var engine = ( function () {
 	var isSoft = false;
 	//var gravity = null;
 
+	var jointDebug = false;
+
 	var solver, solverSoft, collisionConfig, dispatcher, broadphase;
 
 	var tmpRemove = [];
@@ -69,6 +71,8 @@ export var engine = ( function () {
 	var numBreak = 0;
 
 	var ray = null;
+
+	var tmpT, tmpP;
 
 
 
@@ -117,6 +121,7 @@ export var engine = ( function () {
 			//root.key = o.key;
 
 
+			
 
 			//tmpRemove = tmpRemove.concat( o.remove );
 			this.stepRemove();
@@ -124,9 +129,11 @@ export var engine = ( function () {
 			vehicles.control( carName );
 			character.control( heroName );
 
-			this.stepOption();
-			this.stepForces();
+
 			this.stepMatrix();
+			this.stepOptions();
+			this.stepForces();
+			
 			
 			terrains.step();
 
@@ -135,14 +142,15 @@ export var engine = ( function () {
 
 			delta = o.delta;
 
-			if ( fixed ) root.world.stepSimulation( delta, substep, timestep );
-			else root.world.stepSimulation( delta, substep );
+			if ( fixed ) root.world.stepSimulation( timestep, substep );//root.world.stepSimulation( delta, substep, timestep );
+			else root.world.stepSimulation( delta, substep, timestep );
 
 			rigidBody.step( Ar, ArPos[ 0 ] );
 			collision.step( Ar, ArPos[ 1 ] );
 			character.step( Ar, ArPos[ 2 ] );
 			vehicles.step( Ar, ArPos[ 3 ] );
 			softBody.step( Ar, ArPos[ 4 ] );
+			if( jointDebug ) constraint.step( Ar, ArPos[ 5 ] );
 
 			raycaster.step();
 
@@ -153,7 +161,8 @@ export var engine = ( function () {
 
 		clearFlow: function () {
 
-			root.flow = { matrix:{}, force:{}, option:{}, ray:[], terrain:[], vehicle:[] };
+			//root.flow = { matrix:{}, force:{}, option:{}, ray:[], terrain:[], vehicle:[] };
+			root.flow = { ray:[], terrain:[], vehicle:[] };
 
 		},
 
@@ -168,6 +177,10 @@ export var engine = ( function () {
 			
 			tmpRemove = [];
 			tmpAdd = [];
+
+			root.matrix = [];
+			root.option = [];
+			root.force = [];
 
 			rigidBody.clear();
 			constraint.clear();
@@ -219,7 +232,6 @@ export var engine = ( function () {
 
 			isBuffer = o.isBuffer || false;
 
-			//ArLng = o.settings[ 0 ];
 			ArPos = o.ArPos;
 			ArMax = o.ArMax;
 
@@ -236,7 +248,6 @@ export var engine = ( function () {
 
 			Ammo().then( function ( Ammo ) {
 
-				//console.log(Module)
 
 				mathExtend();
 
@@ -253,6 +264,9 @@ export var engine = ( function () {
 				raycaster = new RayCaster();
 
 				ray = new Ammo.ClosestRayResultCallback();
+
+				tmpT = math.transform();
+				tmpP = math.vector3();
 
 				vehicles.addExtra = rigidBody.add;
 
@@ -450,6 +464,8 @@ export var engine = ( function () {
 			substep = o.substep !== undefined ? o.substep : 2;
 			fixed = o.fixed !== undefined ? o.fixed : false;
 
+			jointDebug = o.jointDebug !== undefined ? o.jointDebug : false;
+
 			damped = 3.0 * timestep;
 
 			// penetration
@@ -471,14 +487,30 @@ export var engine = ( function () {
 		//
 		//-----------------------------
 
-		stepForces: function () {
-			
-			for( var n in root.flow.force ) this.applyForces( n, root.flow.force[n] );
-			root.flow.force = {};
+		setForces: function ( o ) { 
+
+			root.force = root.force.concat( o ); 
 
 		},
 
-		applyForces: function ( name, o ) {
+		directForces: function ( o ) {
+
+			this.setForces( o );
+			this.stepForces();
+
+		},
+
+		stepForces: function () {
+
+			var i = root.force.length;
+			while( i-- ) this.applyForces( root.force[i] );
+			root.force = [];
+
+		},
+
+		applyForces: function ( o ) {
+
+			var name = o.name;
 
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
@@ -522,20 +554,36 @@ export var engine = ( function () {
 		//
 		//-----------------------------
 
-		stepMatrix: function () {
+		setMatrix: function ( o ) { 
 
-			for( var n in root.flow.matrix ) this.applyMatrix( n, root.flow.matrix[n] );
-			root.flow.matrix = {};
+			root.matrix = root.matrix.concat( o ); 
 
 		},
 
-		applyMatrix: function ( name, o ) {
+		directMatrix: function ( o ) {
+
+			this.setMatrix( o );
+			this.stepMatrix();
+
+		},
+
+		stepMatrix: function () {
+
+			var i = root.matrix.length;
+			while( i-- ) this.applyMatrix( root.matrix[i] );
+			root.matrix = [];
+
+		},
+
+		applyMatrix: function ( o ) {
+
+			var name = o.name;
 
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
 
-			var t = math.transform();
-			var p1 = math.vector3();
+			var t = tmpT; //math.transform();
+			var p1 = tmpP; //math.vector3();
 
 			//if ( b.isKinematic ) t = b.getMotionState().getWorldTransform();
 			//else  t = b.getWorldTransform();
@@ -572,6 +620,8 @@ export var engine = ( function () {
 
 			}
 
+			//https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=11079
+
 			if( o.clamped !== undefined ){
 
 				var clamped = ( delta > damped ) ? 1.0 : delta / damped; // clamp to 1.0 to enforce stability
@@ -579,7 +629,6 @@ export var engine = ( function () {
 				b.setLinearVelocity( p1 );
 
 			}
-
 
 			if ( o.velocity && !b.isGhost ) {
 
@@ -607,11 +656,11 @@ export var engine = ( function () {
 				
 			}
 
-			if ( b.type === 'body' ) b.activate();
+			if ( b.type === 'body' && !b.isKinematic ) b.activate();
 			if ( b.type === 'solid' ) self.postMessage( { m: 'moveSolid', o: { name: name, pos: o.pos, quat: o.quat } } );
 
-			t.free();
-			p1.free();
+			//t.free();
+			//p1.free();
 
 		},
 
@@ -654,14 +703,30 @@ export var engine = ( function () {
 		//  4096 : GROUP6
 		//  8192 : GROUP7
 
-		stepOption: function () {
+		setOptions: function ( o ) { 
 
-			for( var n in root.flow.option ) this.applyOption( n, root.flow.option[n] );
-			root.flow.option = {};
+			root.option = root.option.concat( o ); 
 
 		},
 
-		applyOption: function ( name, o ) {
+		directOptions: function ( o ) {
+
+			this.setOptions( o );
+			this.stepOptions();
+
+		},
+
+		stepOptions: function () {
+
+			var i = root.option.length;
+			while( i-- ) this.applyOption( root.option[i] );
+			root.option = [];
+
+		},
+
+		applyOption: function ( o ) {
+
+			var name = o.name;
 
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );

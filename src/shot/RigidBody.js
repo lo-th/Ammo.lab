@@ -70,8 +70,8 @@ Object.assign( RigidBody.prototype, {
 
 	destroy: function ( b ) {
 
-		if ( b.parent ) b.parent.remove( b );
 		map.delete( b.name );
+		root.destroy( b );
 
 	},
 
@@ -330,8 +330,16 @@ Object.assign( RigidBody.prototype, {
 	        mesh.enabled = true;
 	        //mesh.type = 'rigidbody';
 
-	        if ( o.parent !== undefined ) o.parent.add( mesh );
-	        else root.container.add( mesh );
+	        if ( o.parent !== undefined ){ 
+
+	        	o.parent.add( mesh );
+	        	o.parent = null;
+
+	        } else { 
+
+	        	root.container.add( mesh );
+	        	
+	        }
 
 	    }
 

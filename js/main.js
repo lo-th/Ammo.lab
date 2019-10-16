@@ -36,6 +36,7 @@ var isWithCode = false;
 function init(){
 
     view = new View();
+    intro.init('Ammo: Kripken | Lab: 3th');
     view.init( initAmmo );
 
 }
@@ -44,16 +45,13 @@ function initAmmo () {
 
     physic = SHOT.engine;
     physic.init( next );
-    //physic.init( next, 'wasm' );
-
-    // test
-    //view.updateIntern = physic.update;
     
 }
 
 function next(){
 
-    //intro.clear();
+    intro.clear();
+    
     physic.setView( view );
     physic.log = editor.log;
     physic.tell = function () { editor.tell( 'three '+ view.getFps() + ' / ammo ' + physic.getFps() );  }
@@ -69,7 +67,7 @@ function next(){
     editor.addExtraOption( physic.setMode );
     view.setRefEditor( editor );
 
-    physic.start();
+    //physic.start();
 
     ready();
 
