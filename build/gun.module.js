@@ -2060,7 +2060,7 @@ Object.assign( Constraint.prototype, {
 
 		map.set( name, joint );
 
-		console.log( o.type, joint, formB.getBasis() );
+		//console.log( o.type, joint, formB.getBasis() );
 
 		//console.log( formB.getInverse() );
 
