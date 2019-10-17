@@ -12,15 +12,15 @@ var demos = [
     'basic', 'terrain', 'terrainPlus', 'supermaket', 'collision', 'ragdoll',
     'car_advanced', 'car_basic','car_multy', 'car_Breakers', 'car_terrain',
     'moto_basic','moto_akira',
-    'kinematics', 'kineBody',
+    'kinematics', 'kinem_body','kinem_test',
     'soft_cloth', 'soft_rope', 'soft_rope2', 'soft_box', 'soft_pig', 'soft_ball', 'soft_convex',// 'soft_basic', // ,
     'character', 'joints', 'empty',  'asteroid', 'point2point', 'contact', 'testmesh', 'water',
     'mecanum', 'drone', 'millions', 'basketball',
     'compound', 'tower', 
     'break_glass', 'break_round',
     'rayTest',
-    'ghost', 'fps',
-    'test_kinect',
+    'ghost', 
+    'fps',
 ];
 
 demos.sort();
