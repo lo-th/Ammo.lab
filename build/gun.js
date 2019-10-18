@@ -42,6 +42,12 @@
 
 		},
 
+		getLength: function () {
+
+			return ( 'T:'+math.T.length+' Q:'+math.Q.length+' V:'+math.V3.length );
+
+		},
+
 		destroy: function () {
 
 			while ( math.T.length > 0 ) Ammo.destroy( math.T.pop() );
@@ -617,6 +623,27 @@
 
 			setFromAxis: function ( axis ) {
 
+				if (axis[ 2 ] > 0.99999) this.setValue( 0, 0, 0, 1 );
+				else if (axis[ 2 ] < -0.99999) this.setValue( 1, 0, 0, 0 );
+				else {
+					/*var p = math.vector3().set( axis[ 1 ], axis[ 0 ], 0 ).normalize();
+					var ax = p.toArray();
+					p.free();*/
+
+					var ax = [ axis[ 1 ], axis[ 0 ], 0 ];
+
+					var r = Math.acos(axis[ 2 ]);
+					this.setFromAxisAngle( ax, r );
+				}
+
+
+				return this;
+
+				 
+
+				/*var val1 = [0,0,0,1]
+				var val2 = [0,0,0,1]
+
 				var angle = Math.atan2( axis[ 0 ], axis[ 2 ] );
 				var halfAngle = angle * 0.5;
 
@@ -625,21 +652,42 @@
 					angle = Math.atan2( axis[ 1 ], axis[ 2 ] );
 				    halfAngle = angle * 0.5;
 
-					this.setValue(   1 * Math.sin( halfAngle ), 0, 0, Math.cos( halfAngle ) );
+				    val1 = [ 1 * Math.sin( halfAngle ), 0, 0, Math.cos( halfAngle ) ]
+
+					//this.setValue(   1 * Math.sin( halfAngle ), 0, 0, Math.cos( halfAngle ) );
 
 			    } else {
-			    	this.setValue(  0, 1 * Math.sin( halfAngle ), 0, Math.cos( halfAngle )  );
+			    	val1 = [ 0, 1 * Math.sin( halfAngle ), 0, Math.cos( halfAngle ) ]
+			    	//this.setValue(  0, 1 * Math.sin( halfAngle ), 0, Math.cos( halfAngle )  );
 			    }
 				
-				return this;
+				//return this;
+
+
+				var a = axis[0];
+			    var b = axis[1];
+			    var c = axis[2];
+
+			    var x = 0;
+			    var y = 0;
+			    var z = 1;
+
+			    var dot = a * x + b * y + c * z;
+			    var w1 = b * z - c * y;
+			    var w2 = c * x - a * z;
+			    var w3 = a * y - b * x;
+
+			    val2 = [ 1, w2, w3, dot + Math.sqrt(dot * dot + w1 * w1 + w2 * w2 + w3 * w3) ];
+
+			    return this.fromArray( val1 ).normalize();*/
 
 			},
 
 			setFromAxisAngle: function ( axis, angle ) {
 
-				var halfAngle = angle * 0.5, s = Math.sin( halfAngle );
+				var halfAngle = angle * 0.5;
+				var s = Math.sin( halfAngle );
 				this.setValue( axis[ 0 ] * s, axis[ 1 ] * s, axis[ 2 ] * s, Math.cos( halfAngle ) );
-
 				return this;
 
 			},
@@ -796,16 +844,14 @@
 
 				if ( l === 0 ) {
 
-					this.set(0,0,0,1);
+					return this.set(0,0,0,1);
 
 				} else {
 
 					l = 1 / l;
-					this.set( this.x() * l, this.y() * l, this.z() * l, this.w() * l );
+					return this.set( this.x() * l, this.y() * l, this.z() * l, this.w() * l );
 
 				}
-
-				return this;
 
 			},
 
@@ -1201,6 +1247,8 @@
 
 		Ar: null,
 		ArPos: null,
+
+		constraintDebug: false,
 
 		matrix:[],
 		force:[],
@@ -1754,8 +1802,6 @@
 		this.t1 = new Ammo.btTransform();
 		this.t2 = new Ammo.btTransform();
 
-
-
 	}
 
 	Object.assign( Constraint.prototype, {
@@ -1768,8 +1814,10 @@
 
 				n = N + ( id * 14 );
 
-				t1.copy( b.b1.getWorldTransform() ).multiply( b.formA ).toArray( AR, n , scale );
-				t2.copy( b.b2.getWorldTransform() ).multiply( b.formB ).toArray( AR, n + 7, scale );
+
+
+				t1.copy( map.get( b.b1 ).getWorldTransform() ).multiply( b.formA ).toArray( AR, n , scale );
+				t2.copy( map.get( b.b2 ).getWorldTransform() ).multiply( b.formB ).toArray( AR, n + 7, scale );
 
 				/*p1 = t1.getOrigin();
 				p2 = t2.getOrigin();
@@ -1791,10 +1839,14 @@
 		destroy: function ( j ) {
 
 			root.world.removeConstraint( j );
-			Ammo.destroy( j.formA );
-			Ammo.destroy( j.formB );
+			j.formA.free();
+			j.formB.free();
+			//Ammo.destroy( j.formA );
+			//Ammo.destroy( j.formB );
 			Ammo.destroy( j );
 			map.delete( j.name );
+
+			//console.log( 'delete', j.name )
 
 		},
 
@@ -1816,7 +1868,9 @@
 
 		add: function ( o ) {
 
-			var name = o.name !== undefined ? o.name : 'joint' + this.ID ++;
+			o.name = o.name !== undefined ? o.name : 'joint' + this.ID ++;
+
+			var name = o.name;
 
 			// delete old if same name
 			this.remove( name );
@@ -1925,8 +1979,8 @@
 
 			}
 
-			joint.b1 = b1;
-			joint.b2 = b2;
+			joint.b1 = o.b1;//b1;
+			joint.b2 = o.b2;//b2;
 
 			joint.formA = formA.clone();
 			joint.formB = formB.clone();
@@ -1943,27 +1997,44 @@
 			// Lowerlimit	>	Upperlimit	->	axis	is	free
 			// Lowerlimit	<	Upperlimit	->	axis	it	limited	in	that	range	
 
-			// 0 _ limite min / swingSpan1
-			// 1 _ limite max / swingSpan2
-			// 2 _ twistSpan
-			// 2 / 3 _ softness   0->1, recommend ~0.8->1  describes % of limits where movement is free.  beyond this softness %, the limit is gradually enforced until the "hard" (1.0) limit is reached.
-			// 3 / 4 _ bias  0->1?, recommend 0.3 +/-0.3 or so.   strength with which constraint resists zeroth order (angular, not angular velocity) limit violation.
-			// 4 / 5 _ relaxation  0->1, recommend to stay near 1.  the lower the value, the less the constraint will fight velocities which violate the angular limits.
+			
 			if ( o.limit && joint.setLimit ) {
 
+				// 0 _ limite min
+				// 1 _ limite max
+				// 2 _ softness   0->1, recommend ~0.8->1  describes % of limits where movement is free.  beyond this softness %, the limit is gradually enforced until the "hard" (1.0) limit is reached.
+				// 3 _ bias  0->1?, recommend 0.3 +/-0.3 or so.   strength with which constraint resists zeroth order (angular, not angular velocity) limit violation.
+				// 4 _ relaxation  0->1, recommend to stay near 1.  the lower the value, the less the constraint will fight velocities which violate the angular limits.
+
 				if ( o.type === 'joint_hinge' || o.type === 'joint' || o.type === 'joint_hinge_ref') joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] !==undefined ? o.limit[ 2 ] : 0.9, o.limit[ 3 ] !==undefined ? o.limit[ 3 ] : 0.3, o.limit[ 4 ] !==undefined ? o.limit[ 4 ] : 1.0 );
+
+				// 0 _ swingSpan1
+				// 1 _ swingSpan2
+				// 2 _ twistSpan
+				// 3 _ softness   0->1, recommend ~0.8->1  describes % of limits where movement is free.  beyond this softness %, the limit is gradually enforced until the "hard" (1.0) limit is reached.
+				// 4 _ bias  0->1?, recommend 0.3 +/-0.3 or so.   strength with which constraint resists zeroth order (angular, not angular velocity) limit violation.
+				// 5 _ relaxation  0->1, recommend to stay near 1.  the lower the value, the less the constraint will fight velocities which violate the angular limits.
 				if ( o.type === 'joint_conetwist' ) {
 
-					//console.log(joint)
+					// don't work !!!
+					//joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] * math.torad, o.limit[ 3 ] !==undefined ? o.limit[ 3 ] : 0.9, o.limit[ 4 ] !==undefined ? o.limit[ 4 ] : 0.3, o.limit[ 5 ] !==undefined ? o.limit[ 5 ] : 1.0 );
 
-					joint.setLimit( 3, o.limit[ 0 ] * math.torad );//m_twistSpan // x
-					joint.setLimit( 4, o.limit[ 2 ] * math.torad );//m_swingSpan2 // z
-					joint.setLimit( 5, o.limit[ 1 ] * math.torad );//m_swingSpan1 // y
-
-
-					//joint.setLimit( o.limit[1]*math.torad, o.limit[2]*math.torad, o.limit[0]*math.torad, o.limit[3] || 0.9, o.limit[4] || 0.3, o.limit[5] || 1.0 );
+					joint.setLimit( 3, o.limit[ 2 ] * math.torad );//m_twistSpan // x
+					joint.setLimit( 4, o.limit[ 1 ] * math.torad );//m_swingSpan2 // z
+					joint.setLimit( 5, o.limit[ 0 ] * math.torad );//m_swingSpan1 // y
 
 				}
+
+				
+
+			}
+
+			if ( o.limit && o.type === 'joint_slider' ) {
+
+				if( o.limit[ 0 ] ) joint.setLowerLinLimit( o.limit[ 0 ] * root.invScale );
+	            if( o.limit[ 1 ] ) joint.setUpperLinLimit( o.limit[ 1 ] * root.invScale );
+		        if( o.limit[ 2 ] ) joint.setLowerAngLimit( o.limit[ 2 ] * math.torad );
+		        if( o.limit[ 3 ] ) joint.setUpperAngLimit( o.limit[ 3 ] * math.torad );
 
 			}
 			
@@ -2062,13 +2133,13 @@
 			joint.type = 'joint';
 
 			root.world.addConstraint( joint, collision ? false : true );
+
 			this.joints.push( joint );
 
+			// add to map
 			map.set( name, joint );
 
-			//console.log( o.type, joint, formB.getBasis() );
-
-			//console.log( formB.getInverse() );
+			//console.log( o.type, joint );
 
 			// free math
 			tmpPos.free();
@@ -2080,10 +2151,41 @@
 			formB.free();
 			o = null;
 
+
+			//console.log( math.getLength() );
+
 		}
 
 
 	} );
+
+
+	function Joint( o ) {
+
+		this.type = 'constraint';
+		this.name = o.name;
+
+
+
+	}
+
+	Object.assign( Joint.prototype, {
+
+		step: function ( n, AR ){
+
+		},
+
+		init: function ( o ){
+
+
+		},
+
+		clear: function (){
+
+
+		},
+
+	});
 
 	/*global Ammo*/
 
@@ -4410,7 +4512,7 @@
 					case 'solid': case 'body' : rigidBody.remove( name ); break;
 					case 'soft': softBody.remove( name ); break;
 					case 'terrain': terrains.remove( name ); break;
-					case 'joint': constraint.remove( name ); break;
+					case 'joint': case 'constraint' : constraint.remove( name ); break;
 					case 'collision': collision.remove( name ); break;
 					case 'ray': raycaster.remove( name ); break;
 
@@ -4427,6 +4529,13 @@
 			stepRemove: function () {
 
 				while ( tmpRemove.length > 0 ) this.remove( tmpRemove.pop() );
+
+			},
+
+			directRemoves: function ( o ) {
+
+				this.setRemove( o );
+				this.stepRemove();
 
 			},
 
@@ -4584,6 +4693,8 @@
 
 				jointDebug = o.jointDebug !== undefined ? o.jointDebug : false;
 
+				root.constraintDebug = jointDebug;
+
 				damped = 3.0 * timestep;
 
 				// penetration
@@ -4700,7 +4811,7 @@
 				if ( ! map.has( name ) ) return;
 				var b = map.get( name );
 
-				var t = tmpT; //math.transform();
+				var t = tmpT.identity(); //math.transform();
 				var p1 = tmpP; //math.vector3();
 
 				//if ( b.isKinematic ) t = b.getMotionState().getWorldTransform();

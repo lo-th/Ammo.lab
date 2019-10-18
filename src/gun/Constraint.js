@@ -19,8 +19,6 @@ function Constraint() {
 	this.t1 = new Ammo.btTransform();
 	this.t2 = new Ammo.btTransform();
 
-
-
 }
 
 Object.assign( Constraint.prototype, {
@@ -33,8 +31,10 @@ Object.assign( Constraint.prototype, {
 
 			n = N + ( id * 14 );
 
-			t1.copy( b.b1.getWorldTransform() ).multiply( b.formA ).toArray( AR, n , scale );
-			t2.copy( b.b2.getWorldTransform() ).multiply( b.formB ).toArray( AR, n + 7, scale );
+
+
+			t1.copy( map.get( b.b1 ).getWorldTransform() ).multiply( b.formA ).toArray( AR, n , scale );
+			t2.copy( map.get( b.b2 ).getWorldTransform() ).multiply( b.formB ).toArray( AR, n + 7, scale );
 
 			/*p1 = t1.getOrigin();
 			p2 = t2.getOrigin();
@@ -56,10 +56,14 @@ Object.assign( Constraint.prototype, {
 	destroy: function ( j ) {
 
 		root.world.removeConstraint( j );
-		Ammo.destroy( j.formA );
-		Ammo.destroy( j.formB );
+		j.formA.free();
+		j.formB.free();
+		//Ammo.destroy( j.formA );
+		//Ammo.destroy( j.formB );
 		Ammo.destroy( j );
 		map.delete( j.name );
+
+		//console.log( 'delete', j.name )
 
 	},
 
@@ -81,7 +85,9 @@ Object.assign( Constraint.prototype, {
 
 	add: function ( o ) {
 
-		var name = o.name !== undefined ? o.name : 'joint' + this.ID ++;
+		o.name = o.name !== undefined ? o.name : 'joint' + this.ID ++;
+
+		var name = o.name;
 
 		// delete old if same name
 		this.remove( name );
@@ -190,8 +196,8 @@ Object.assign( Constraint.prototype, {
 
 		}
 
-		joint.b1 = b1;
-		joint.b2 = b2;
+		joint.b1 = o.b1//b1;
+		joint.b2 = o.b2//b2;
 
 		joint.formA = formA.clone();
 		joint.formB = formB.clone();
@@ -208,27 +214,44 @@ Object.assign( Constraint.prototype, {
 		// Lowerlimit	>	Upperlimit	->	axis	is	free
 		// Lowerlimit	<	Upperlimit	->	axis	it	limited	in	that	range	
 
-		// 0 _ limite min / swingSpan1
-		// 1 _ limite max / swingSpan2
-		// 2 _ twistSpan
-		// 2 / 3 _ softness   0->1, recommend ~0.8->1  describes % of limits where movement is free.  beyond this softness %, the limit is gradually enforced until the "hard" (1.0) limit is reached.
-		// 3 / 4 _ bias  0->1?, recommend 0.3 +/-0.3 or so.   strength with which constraint resists zeroth order (angular, not angular velocity) limit violation.
-		// 4 / 5 _ relaxation  0->1, recommend to stay near 1.  the lower the value, the less the constraint will fight velocities which violate the angular limits.
+		
 		if ( o.limit && joint.setLimit ) {
 
+			// 0 _ limite min
+			// 1 _ limite max
+			// 2 _ softness   0->1, recommend ~0.8->1  describes % of limits where movement is free.  beyond this softness %, the limit is gradually enforced until the "hard" (1.0) limit is reached.
+			// 3 _ bias  0->1?, recommend 0.3 +/-0.3 or so.   strength with which constraint resists zeroth order (angular, not angular velocity) limit violation.
+			// 4 _ relaxation  0->1, recommend to stay near 1.  the lower the value, the less the constraint will fight velocities which violate the angular limits.
+
 			if ( o.type === 'joint_hinge' || o.type === 'joint' || o.type === 'joint_hinge_ref') joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] !==undefined ? o.limit[ 2 ] : 0.9, o.limit[ 3 ] !==undefined ? o.limit[ 3 ] : 0.3, o.limit[ 4 ] !==undefined ? o.limit[ 4 ] : 1.0 );
+
+			// 0 _ swingSpan1
+			// 1 _ swingSpan2
+			// 2 _ twistSpan
+			// 3 _ softness   0->1, recommend ~0.8->1  describes % of limits where movement is free.  beyond this softness %, the limit is gradually enforced until the "hard" (1.0) limit is reached.
+			// 4 _ bias  0->1?, recommend 0.3 +/-0.3 or so.   strength with which constraint resists zeroth order (angular, not angular velocity) limit violation.
+			// 5 _ relaxation  0->1, recommend to stay near 1.  the lower the value, the less the constraint will fight velocities which violate the angular limits.
 			if ( o.type === 'joint_conetwist' ) {
 
-				//console.log(joint)
+				// don't work !!!
+				//joint.setLimit( o.limit[ 0 ] * math.torad, o.limit[ 1 ] * math.torad, o.limit[ 2 ] * math.torad, o.limit[ 3 ] !==undefined ? o.limit[ 3 ] : 0.9, o.limit[ 4 ] !==undefined ? o.limit[ 4 ] : 0.3, o.limit[ 5 ] !==undefined ? o.limit[ 5 ] : 1.0 );
 
-				joint.setLimit( 3, o.limit[ 0 ] * math.torad );//m_twistSpan // x
-				joint.setLimit( 4, o.limit[ 2 ] * math.torad );//m_swingSpan2 // z
-				joint.setLimit( 5, o.limit[ 1 ] * math.torad );//m_swingSpan1 // y
-
-
-				//joint.setLimit( o.limit[1]*math.torad, o.limit[2]*math.torad, o.limit[0]*math.torad, o.limit[3] || 0.9, o.limit[4] || 0.3, o.limit[5] || 1.0 );
+				joint.setLimit( 3, o.limit[ 2 ] * math.torad );//m_twistSpan // x
+				joint.setLimit( 4, o.limit[ 1 ] * math.torad );//m_swingSpan2 // z
+				joint.setLimit( 5, o.limit[ 0 ] * math.torad );//m_swingSpan1 // y
 
 			}
+
+			
+
+		}
+
+		if ( o.limit && o.type === 'joint_slider' ) {
+
+			if( o.limit[ 0 ] ) joint.setLowerLinLimit( o.limit[ 0 ] * root.invScale );
+            if( o.limit[ 1 ] ) joint.setUpperLinLimit( o.limit[ 1 ] * root.invScale );
+	        if( o.limit[ 2 ] ) joint.setLowerAngLimit( o.limit[ 2 ] * math.torad );
+	        if( o.limit[ 3 ] ) joint.setUpperAngLimit( o.limit[ 3 ] * math.torad );
 
 		}
 		
@@ -327,13 +350,13 @@ Object.assign( Constraint.prototype, {
 		joint.type = 'joint';
 
 		root.world.addConstraint( joint, collision ? false : true );
+
 		this.joints.push( joint );
 
+		// add to map
 		map.set( name, joint );
 
-		//console.log( o.type, joint, formB.getBasis() );
-
-		//console.log( formB.getInverse() );
+		//console.log( o.type, joint );
 
 		// free math
 		tmpPos.free();
@@ -345,6 +368,9 @@ Object.assign( Constraint.prototype, {
 		formB.free();
 		o = null;
 
+
+		//console.log( math.getLength() );
+
 	}
 
 
@@ -352,3 +378,31 @@ Object.assign( Constraint.prototype, {
 
 
 export { Constraint };
+
+
+function Joint( o ) {
+
+	this.type = 'constraint';
+	this.name = o.name;
+
+
+
+}
+
+Object.assign( Joint.prototype, {
+
+	step: function ( n, AR ){
+
+	},
+
+	init: function ( o ){
+
+
+	},
+
+	clear: function (){
+
+
+	},
+
+});

@@ -13,15 +13,15 @@ import { root, map, vectorad } from './root.js';
 function Constraint() {
 
 	this.ID = 0;
-	this.joint = [];
+	this.joints = [];
 
-	this.mat0 =new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, depthTest: false, depthWrite: false, transparent: true });
+	/*this.mat0 =new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, depthTest: false, depthWrite: false, transparent: true });
 	this.mat1 = new THREE.MeshBasicMaterial({ wireframe:true, color:0x00ff00, depthTest:false, depthWrite:true }); 
 	this.mat2 = new THREE.MeshBasicMaterial({ wireframe:true, color:0xffff00, depthTest:false, depthWrite:true }); 
 
 	this.g = new THREE.ConeBufferGeometry(0.1,0.2,6);
 	this.g.translate( 0, 0.1, 0 );
-	this.g.rotateZ( -Math.PI*0.5 );
+	this.g.rotateZ( -Math.PI*0.5 );*/
 
 }
 
@@ -29,39 +29,14 @@ Object.assign( Constraint.prototype, {
 
 	step: function ( AR, N ) {
 
+		if( !root.constraintDebug ) return;
+
 		var n;
 
-		this.joint.forEach( function ( b, id ) {
+		this.joints.forEach( function ( j, id ) {
 			
 			n = N + ( id * 14 );
-			b.visible = true;
-
-			var p = b.userData.pos.array;
-
-			p[0] = AR[n];
-			p[1] = AR[n+1];
-			p[2] = AR[n+2];
-
-			p[3] = AR[n+7];
-			p[4] = AR[n+8];
-			p[5] = AR[n+9];
-
-			b.userData.pos.needsUpdate = true;
-
-			//var b1 = map.get( b.userData.b1 );
-
-			//b.position.copy( b1.position );
-	        //b.quaternion.copy( b1.quaternion );
-
-	        b.userData.p1.position.fromArray( AR, n );
-	        b.userData.p1.quaternion.fromArray( AR, n + 3 );
-
-	        b.userData.p2.position.fromArray( AR, n + 7 );
-	        b.userData.p2.quaternion.fromArray( AR, n + 10 )
-
-	        //b.userData.p1.position.fromArray( AR, n )
-	        //b.userData.p2.position.fromArray( AR, n+3 )
-
+			j.step( n, AR );
 
 		});
 
@@ -69,89 +44,152 @@ Object.assign( Constraint.prototype, {
 
 	clear: function () {
 
-		while ( this.joint.length > 0 ) this.destroy( this.joint.pop() );
+		while ( this.joints.length > 0 ) this.destroy( this.joints.pop() );
 		this.ID = 0;
 
 	},
 
-	destroy: function ( b ) {
+	destroy: function ( j ) {
 
-		map.delete( b.name );
-		root.destroy( b );
+		map.delete( j.name );
+		j.clear();
+		//root.destroy( b );
 
 	},
 
 	remove: function ( name ) {
 
 		if ( ! map.has( name ) ) return;
-		var b = map.get( name );
+		var j = map.get( name );
 
-		var n = this.joint.indexOf( b );
-		this.joint.splice( n, 1 );
-		this.destroy( b );
+		var n = this.joints.indexOf( j );
+		this.joints.splice( n, 1 );
+		this.destroy( j );
 
 	},
 
 	add: function ( o ) {
 
 		o.name = o.name !== undefined ? o.name : 'joint' + this.ID ++;
+
 		// delete old if same name
 		this.remove( o.name );
 
-		var vertices = new Float32Array([ 0, 0, 0,	1, 0, 0 ]);
-		var colors = new Float32Array([ 0, 1, 0, 1, 1, 0 ]);
+		var joint = new Joint( o );
+		this.joints.push( joint );
 
-		var geometry = new THREE.BufferGeometry();
-		geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-		geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
-
-
-		var mesh = new THREE.Line( geometry, this.mat0 );//new THREE.Group();
-		mesh.name = o.name;
-
-		var p1 = new THREE.Mesh( this.g, this.mat1 );
-		//p1.position.fromArray(o.pos1 || [0,0,0]);
-		mesh.add(p1);
-
-		var p2 = new THREE.Mesh( this.g, this.mat2 );
-		//p2.position.fromArray(o.pos2 || [0,0,0]);
-		mesh.add( p2 );
-         
-        //mesh.frustumCulled = false;
-		//p1.frustumCulled = false;
-		//p2.frustumCulled = false;
-
-		//mesh.userData.b1 = o.b1;
-		//mesh.userData.b2 = o.b2;
-
-		mesh.userData.p1 = p1;
-		mesh.userData.p2 = p2;
-		mesh.userData.pos = mesh.geometry.attributes.position;
-
-		mesh.visible = false;
-
-		if ( o.parent !== undefined ){ 
-
-			o.parent.add( mesh );
-			o.parent = null;
-
-		} else {
-
-	    	root.container.add( mesh );
-
-	    }
+		// add to map
+		map.set( joint.name, joint );
 
 		// send to worker
+		if ( o.parent !== undefined ) o.parent = null;
 	    root.post( 'add', o );
 
-	    this.joint.push( mesh );
-
-	    map.set( o.name, mesh );
-
-	    return mesh;
+	    return joint;
 
 	},
 
 });
 
 export { Constraint };
+
+
+function Joint( o ) {
+
+	this.type = 'constraint';
+	this.name = o.name;
+
+	this.isMesh = false;
+	
+	if( root.constraintDebug ) this.init( o );
+
+}
+
+Object.assign( Joint.prototype, {
+
+	step: function ( n, AR ){
+
+		if( !this.isMesh ) return;
+
+		if(!this.mesh.visible) this.mesh.visible = true;
+
+		var p = this.pos.array;
+
+		p[0] = AR[n];
+		p[1] = AR[n+1];
+		p[2] = AR[n+2];
+
+		p[3] = AR[n+7];
+		p[4] = AR[n+8];
+		p[5] = AR[n+9];
+
+		this.pos.needsUpdate = true;
+
+        this.p1.position.fromArray( AR, n );
+        this.p1.quaternion.fromArray( AR, n + 3 );
+
+        this.p2.position.fromArray( AR, n + 7 );
+        this.p2.quaternion.fromArray( AR, n + 10 )
+
+	},
+
+	init: function ( o ){
+
+		var vertices = new Float32Array([ 0, 0, 0,	0, 0, 0 ]);
+		var colors = new Float32Array([ 0, 1, 0, 1, 1, 0 ]);
+
+		var geometry = new THREE.BufferGeometry();
+		geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+		geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
+
+		this.mesh = new THREE.Line( geometry, root.mat.jointLine );
+		this.mesh.name = o.name;
+
+		this.p1 = new THREE.Mesh( root.geo.joint, root.mat.jointP1 );
+		this.p2 = new THREE.Mesh( root.geo.joint, root.mat.jointP2 );
+
+		this.p1.receiveShadow = false;
+	    this.p1.castShadow = false;
+	    this.p2.receiveShadow = false;
+	    this.p2.castShadow = false;
+	    this.mesh.receiveShadow = false;
+	    this.mesh.castShadow = false;
+
+		this.mesh.add( this.p1 );
+		this.mesh.add( this.p2 );
+         
+        this.mesh.frustumCulled = false;
+
+		this.pos = this.mesh.geometry.attributes.position;
+
+		this.mesh.visible = false;
+
+		if ( o.parent !== undefined ){ 
+
+			o.parent.add( this.mesh );
+			o.parent = null;
+
+		} else {
+
+	    	root.container.add( this.mesh );
+
+	    }
+
+		this.isMesh = true;
+
+	},
+
+	clear: function (){
+
+		if( !this.isMesh ) return;
+
+		this.mesh.geometry.dispose();
+		root.destroy( this.mesh );
+		this.mesh = null;
+		this.p1 = null;
+		this.p2 = null;
+		this.isMesh = false;
+
+	},
+
+});

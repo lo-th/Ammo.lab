@@ -5,6 +5,8 @@ export var root = {
 	Ar: null,
 	ArPos: null,
 
+	constraintDebug: false,
+
 	matrix:[],
 	force:[],
 	option:[],

@@ -10,6 +10,8 @@ export var root = {
 	ArMax: 0,
 	key: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
 
+	constraintDebug: false,
+
 	flow:{
 		//matrix:{},
 		//force:{},

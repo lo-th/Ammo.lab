@@ -1465,6 +1465,8 @@
 		ArMax: 0,
 		key: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
 
+		constraintDebug: false,
+
 		flow:{
 			//matrix:{},
 			//force:{},
@@ -1897,15 +1899,15 @@
 	function Constraint() {
 
 		this.ID = 0;
-		this.joint = [];
+		this.joints = [];
 
-		this.mat0 =new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, depthTest: false, depthWrite: false, transparent: true });
+		/*this.mat0 =new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, depthTest: false, depthWrite: false, transparent: true });
 		this.mat1 = new THREE.MeshBasicMaterial({ wireframe:true, color:0x00ff00, depthTest:false, depthWrite:true }); 
 		this.mat2 = new THREE.MeshBasicMaterial({ wireframe:true, color:0xffff00, depthTest:false, depthWrite:true }); 
 
 		this.g = new THREE.ConeBufferGeometry(0.1,0.2,6);
 		this.g.translate( 0, 0.1, 0 );
-		this.g.rotateZ( -Math.PI*0.5 );
+		this.g.rotateZ( -Math.PI*0.5 );*/
 
 	}
 
@@ -1913,39 +1915,14 @@
 
 		step: function ( AR, N ) {
 
+			if( !root.constraintDebug ) return;
+
 			var n;
 
-			this.joint.forEach( function ( b, id ) {
+			this.joints.forEach( function ( j, id ) {
 				
 				n = N + ( id * 14 );
-				b.visible = true;
-
-				var p = b.userData.pos.array;
-
-				p[0] = AR[n];
-				p[1] = AR[n+1];
-				p[2] = AR[n+2];
-
-				p[3] = AR[n+7];
-				p[4] = AR[n+8];
-				p[5] = AR[n+9];
-
-				b.userData.pos.needsUpdate = true;
-
-				//var b1 = map.get( b.userData.b1 );
-
-				//b.position.copy( b1.position );
-		        //b.quaternion.copy( b1.quaternion );
-
-		        b.userData.p1.position.fromArray( AR, n );
-		        b.userData.p1.quaternion.fromArray( AR, n + 3 );
-
-		        b.userData.p2.position.fromArray( AR, n + 7 );
-		        b.userData.p2.quaternion.fromArray( AR, n + 10 );
-
-		        //b.userData.p1.position.fromArray( AR, n )
-		        //b.userData.p2.position.fromArray( AR, n+3 )
-
+				j.step( n, AR );
 
 			});
 
@@ -1953,86 +1930,149 @@
 
 		clear: function () {
 
-			while ( this.joint.length > 0 ) this.destroy( this.joint.pop() );
+			while ( this.joints.length > 0 ) this.destroy( this.joints.pop() );
 			this.ID = 0;
 
 		},
 
-		destroy: function ( b ) {
+		destroy: function ( j ) {
 
-			map.delete( b.name );
-			root.destroy( b );
+			map.delete( j.name );
+			j.clear();
+			//root.destroy( b );
 
 		},
 
 		remove: function ( name ) {
 
 			if ( ! map.has( name ) ) return;
-			var b = map.get( name );
+			var j = map.get( name );
 
-			var n = this.joint.indexOf( b );
-			this.joint.splice( n, 1 );
-			this.destroy( b );
+			var n = this.joints.indexOf( j );
+			this.joints.splice( n, 1 );
+			this.destroy( j );
 
 		},
 
 		add: function ( o ) {
 
 			o.name = o.name !== undefined ? o.name : 'joint' + this.ID ++;
+
 			// delete old if same name
 			this.remove( o.name );
 
-			var vertices = new Float32Array([ 0, 0, 0,	1, 0, 0 ]);
+			var joint = new Joint( o );
+			this.joints.push( joint );
+
+			// add to map
+			map.set( joint.name, joint );
+
+			// send to worker
+			if ( o.parent !== undefined ) o.parent = null;
+		    root.post( 'add', o );
+
+		    return joint;
+
+		},
+
+	});
+
+
+	function Joint( o ) {
+
+		this.type = 'constraint';
+		this.name = o.name;
+
+		this.isMesh = false;
+		
+		if( root.constraintDebug ) this.init( o );
+
+	}
+
+	Object.assign( Joint.prototype, {
+
+		step: function ( n, AR ){
+
+			if( !this.isMesh ) return;
+
+			if(!this.mesh.visible) this.mesh.visible = true;
+
+			var p = this.pos.array;
+
+			p[0] = AR[n];
+			p[1] = AR[n+1];
+			p[2] = AR[n+2];
+
+			p[3] = AR[n+7];
+			p[4] = AR[n+8];
+			p[5] = AR[n+9];
+
+			this.pos.needsUpdate = true;
+
+	        this.p1.position.fromArray( AR, n );
+	        this.p1.quaternion.fromArray( AR, n + 3 );
+
+	        this.p2.position.fromArray( AR, n + 7 );
+	        this.p2.quaternion.fromArray( AR, n + 10 );
+
+		},
+
+		init: function ( o ){
+
+			var vertices = new Float32Array([ 0, 0, 0,	0, 0, 0 ]);
 			var colors = new Float32Array([ 0, 1, 0, 1, 1, 0 ]);
 
 			var geometry = new THREE.BufferGeometry();
 			geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
 			geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
 
+			this.mesh = new THREE.Line( geometry, root.mat.jointLine );
+			this.mesh.name = o.name;
 
-			var mesh = new THREE.Line( geometry, this.mat0 );//new THREE.Group();
-			mesh.name = o.name;
+			this.p1 = new THREE.Mesh( root.geo.joint, root.mat.jointP1 );
+			this.p2 = new THREE.Mesh( root.geo.joint, root.mat.jointP2 );
 
-			var p1 = new THREE.Mesh( this.g, this.mat1 );
-			//p1.position.fromArray(o.pos1 || [0,0,0]);
-			mesh.add(p1);
+			this.p1.receiveShadow = false;
+		    this.p1.castShadow = false;
+		    this.p2.receiveShadow = false;
+		    this.p2.castShadow = false;
+		    this.mesh.receiveShadow = false;
+		    this.mesh.castShadow = false;
 
-			var p2 = new THREE.Mesh( this.g, this.mat2 );
-			//p2.position.fromArray(o.pos2 || [0,0,0]);
-			mesh.add( p2 );
+			this.mesh.add( this.p1 );
+			this.mesh.add( this.p2 );
 	         
-	        //mesh.frustumCulled = false;
-			//p1.frustumCulled = false;
-			//p2.frustumCulled = false;
+	        this.mesh.frustumCulled = false;
 
-			//mesh.userData.b1 = o.b1;
-			//mesh.userData.b2 = o.b2;
+			this.pos = this.mesh.geometry.attributes.position;
 
-			mesh.userData.p1 = p1;
-			mesh.userData.p2 = p2;
-			mesh.userData.pos = mesh.geometry.attributes.position;
-
-			mesh.visible = false;
+			this.mesh.visible = false;
 
 			if ( o.parent !== undefined ){ 
 
-				o.parent.add( mesh );
+				o.parent.add( this.mesh );
 				o.parent = null;
 
 			} else {
 
-		    	root.container.add( mesh );
+		    	root.container.add( this.mesh );
 
 		    }
 
-			// send to worker
-		    root.post( 'add', o );
+			this.isMesh = true;
 
-		    this.joint.push( mesh );
+		},
 
-		    map.set( o.name, mesh );
+		clear: function (){
 
-		    return mesh;
+			if( !this.isMesh ) return;
+
+			this.mesh.geometry.dispose();
+			root.destroy( this.mesh );
+			this.mesh = null;
+			this.p1 = null;
+			this.p2 = null;
+			this.isMesh = false;
 
 		},
 
@@ -5265,6 +5305,7 @@
 
 			animFrame : false,
 			fixed: false,
+			jointDebug: false,
 
 		};
 
@@ -5358,6 +5399,7 @@
 				option.animFrame = o.animFrame || false;
 				option.jointDebug = o.jointDebug || false;
 
+				root.constraintDebug = option.jointDebug;
 
 				this.post( 'set', o );
 
@@ -5505,7 +5547,7 @@
 				character.step( root.Ar, root.ArPos[ 2 ] );
 				vehicles.step( root.Ar, root.ArPos[ 3 ] );
 				softBody.step( root.Ar, root.ArPos[ 4 ] );
-				if( option.jointDebug ) constraint.step( root.Ar, root.ArPos[ 5 ] );
+				constraint.step( root.Ar, root.ArPos[ 5 ] );
 
 				terrains.step();
 
@@ -5620,8 +5662,8 @@
 			setView: function ( v ) {
 
 				refView = v;
-				root.mat = v.getMat();
-				root.geo = v.getGeo();
+				root.mat = Object.assign( {}, root.mat, v.getMat() );
+				root.geo = Object.assign( {}, root.geo, v.getGeo() );//v.getGeo();
 				root.container = v.getScene();
 
 			},
@@ -5900,6 +5942,10 @@
 					    rayCaster.remove( name );
 					break;
 
+					case 'constraint':
+					    constraint.remove( name );
+					break;
+
 				}
 
 			},
@@ -5907,6 +5953,12 @@
 			removes: function ( o ) {
 
 				tmpRemove = tmpRemove.concat( o );
+
+			},
+
+			removesDirect: function ( o ) {
+
+				this.post( 'directRemoves', o );
 
 			},
 
@@ -5967,11 +6019,15 @@
 					highsphere: new THREE.SphereBufferGeometry( 1, 32, 24 ),
 					cylinder: new THREE.CylinderBufferGeometry( 1, 1, 1, 12, 1 ),
 					hardcylinder: new THREE.CylinderBufferGeometry( 1, 1, 1, 12, 1 ),
+					joint: new THREE.ConeBufferGeometry( 0.1,0.2, 4 ),
 				};
 
 				geo.circle.rotateX( - PI90 );
 				geo.plane.rotateX( - PI90 );
 				geo.wheel.rotateZ( - PI90 );
+
+				 geo.joint.translate( 0, 0.1, 0 );
+				 geo.joint.rotateZ( -Math.PI*0.5 );
 
 				root.geo = geo;
 
@@ -5987,6 +6043,11 @@
 					static: new THREE.MeshLambertMaterial( { color: 0x1111FF, name: 'static', wireframe: wire } ),
 					bones: new THREE.MeshLambertMaterial( { color: 0x11FF11, name: 'bones', wireframe: wire } ),
 					kinematic: new THREE.MeshLambertMaterial( { color: 0xFF8811, name: 'kinematic', wireframe: wire } ),
+
+
+					jointLine: new THREE.LineBasicMaterial( { name: 'jointLine', vertexColors: THREE.VertexColors, depthTest: false, depthWrite: false, transparent: true }),
+					jointP1: new THREE.MeshBasicMaterial({ name: 'jointP1', color:0x00FF00, depthTest:false, depthWrite:true, wireframe:true }),
+					jointP2: new THREE.MeshBasicMaterial({ name: 'jointP2', color:0xFFFF00, depthTest:false, depthWrite:true, wireframe:true }), 
 
 				};
 

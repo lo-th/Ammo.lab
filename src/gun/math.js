@@ -36,6 +36,12 @@ var math = {
 
 	},
 
+	getLength: function () {
+
+		return ( 'T:'+math.T.length+' Q:'+math.Q.length+' V:'+math.V3.length );
+
+	},
+
 	destroy: function () {
 
 		while ( math.T.length > 0 ) Ammo.destroy( math.T.pop() );
@@ -614,29 +620,71 @@ export function mathExtend() {
 
 		setFromAxis: function ( axis ) {
 
+			if (axis[ 2 ] > 0.99999) this.setValue( 0, 0, 0, 1 );
+			else if (axis[ 2 ] < -0.99999) this.setValue( 1, 0, 0, 0 );
+			else {
+				/*var p = math.vector3().set( axis[ 1 ], axis[ 0 ], 0 ).normalize();
+				var ax = p.toArray();
+				p.free();*/
+
+				var ax = [ axis[ 1 ], axis[ 0 ], 0 ];
+
+				var r = Math.acos(axis[ 2 ]);
+				this.setFromAxisAngle( ax, r );
+			}
+
+
+			return this;
+
+			 
+
+			/*var val1 = [0,0,0,1]
+			var val2 = [0,0,0,1]
+
 			var angle = Math.atan2( axis[ 0 ], axis[ 2 ] );
 			var halfAngle = angle * 0.5;
 
 			if( angle === 0 ){
 
 				angle = Math.atan2( axis[ 1 ], axis[ 2 ] );
-			    halfAngle = angle * 0.5
+			    halfAngle = angle * 0.5;
 
-				this.setValue(   1 * Math.sin( halfAngle ), 0, 0, Math.cos( halfAngle ) );
+			    val1 = [ 1 * Math.sin( halfAngle ), 0, 0, Math.cos( halfAngle ) ]
+
+				//this.setValue(   1 * Math.sin( halfAngle ), 0, 0, Math.cos( halfAngle ) );
 
 		    } else {
-		    	this.setValue(  0, 1 * Math.sin( halfAngle ), 0, Math.cos( halfAngle )  );
+		    	val1 = [ 0, 1 * Math.sin( halfAngle ), 0, Math.cos( halfAngle ) ]
+		    	//this.setValue(  0, 1 * Math.sin( halfAngle ), 0, Math.cos( halfAngle )  );
 		    }
 			
-			return this;
+			//return this;
+
+
+			var a = axis[0];
+		    var b = axis[1];
+		    var c = axis[2];
+
+		    var x = 0;
+		    var y = 0;
+		    var z = 1;
+
+		    var dot = a * x + b * y + c * z;
+		    var w1 = b * z - c * y;
+		    var w2 = c * x - a * z;
+		    var w3 = a * y - b * x;
+
+		    val2 = [ 1, w2, w3, dot + Math.sqrt(dot * dot + w1 * w1 + w2 * w2 + w3 * w3) ];
+
+		    return this.fromArray( val1 ).normalize();*/
 
 		},
 
 		setFromAxisAngle: function ( axis, angle ) {
 
-			var halfAngle = angle * 0.5, s = Math.sin( halfAngle );
+			var halfAngle = angle * 0.5;
+			var s = Math.sin( halfAngle );
 			this.setValue( axis[ 0 ] * s, axis[ 1 ] * s, axis[ 2 ] * s, Math.cos( halfAngle ) );
-
 			return this;
 
 		},
@@ -793,16 +841,14 @@ export function mathExtend() {
 
 			if ( l === 0 ) {
 
-				this.set(0,0,0,1);
+				return this.set(0,0,0,1);
 
 			} else {
 
 				l = 1 / l;
-				this.set( this.x() * l, this.y() * l, this.z() * l, this.w() * l );
+				return this.set( this.x() * l, this.y() * l, this.z() * l, this.w() * l );
 
 			}
-
-			return this;
 
 		},
 

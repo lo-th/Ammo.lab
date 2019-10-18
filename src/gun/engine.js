@@ -292,7 +292,7 @@ export var engine = ( function () {
 				case 'solid': case 'body' : rigidBody.remove( name ); break;
 				case 'soft': softBody.remove( name ); break;
 				case 'terrain': terrains.remove( name ); break;
-				case 'joint': constraint.remove( name ); break;
+				case 'joint': case 'constraint' : constraint.remove( name ); break;
 				case 'collision': collision.remove( name ); break;
 				case 'ray': raycaster.remove( name ); break;
 
@@ -309,6 +309,13 @@ export var engine = ( function () {
 		stepRemove: function () {
 
 			while ( tmpRemove.length > 0 ) this.remove( tmpRemove.pop() );
+
+		},
+
+		directRemoves: function ( o ) {
+
+			this.setRemove( o );
+			this.stepRemove();
 
 		},
 
@@ -466,6 +473,8 @@ export var engine = ( function () {
 
 			jointDebug = o.jointDebug !== undefined ? o.jointDebug : false;
 
+			root.constraintDebug = jointDebug;
+
 			damped = 3.0 * timestep;
 
 			// penetration
@@ -582,7 +591,7 @@ export var engine = ( function () {
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
 
-			var t = tmpT; //math.transform();
+			var t = tmpT.identity(); //math.transform();
 			var p1 = tmpP; //math.vector3();
 
 			//if ( b.isKinematic ) t = b.getMotionState().getWorldTransform();

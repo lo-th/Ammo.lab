@@ -72,6 +72,7 @@ export var engine = ( function () {
 
 		animFrame : false,
 		fixed: false,
+		jointDebug: false,
 
 	};
 
@@ -165,6 +166,7 @@ export var engine = ( function () {
 			option.animFrame = o.animFrame || false;
 			option.jointDebug = o.jointDebug || false;
 
+			root.constraintDebug = option.jointDebug;
 
 			this.post( 'set', o );
 
@@ -312,7 +314,7 @@ export var engine = ( function () {
 			character.step( root.Ar, root.ArPos[ 2 ] );
 			vehicles.step( root.Ar, root.ArPos[ 3 ] );
 			softBody.step( root.Ar, root.ArPos[ 4 ] );
-			if( option.jointDebug ) constraint.step( root.Ar, root.ArPos[ 5 ] );
+			constraint.step( root.Ar, root.ArPos[ 5 ] );
 
 			terrains.step();
 
@@ -431,8 +433,8 @@ export var engine = ( function () {
 		setView: function ( v ) {
 
 			refView = v;
-			root.mat = v.getMat();
-			root.geo = v.getGeo();
+			root.mat = Object.assign( {}, root.mat, v.getMat() );
+			root.geo = Object.assign( {}, root.geo, v.getGeo() );//v.getGeo();
 			root.container = v.getScene();
 
 			if( isInternUpdate ) refView.updateIntern = engine.update;
@@ -713,6 +715,10 @@ export var engine = ( function () {
 				    rayCaster.remove( name );
 				break;
 
+				case 'constraint':
+				    constraint.remove( name );
+				break;
+
 			}
 
 		},
@@ -720,6 +726,12 @@ export var engine = ( function () {
 		removes: function ( o ) {
 
 			tmpRemove = tmpRemove.concat( o );
+
+		},
+
+		removesDirect: function ( o ) {
+
+			this.post( 'directRemoves', o );
 
 		},
 
@@ -780,11 +792,15 @@ export var engine = ( function () {
 				highsphere: new THREE.SphereBufferGeometry( 1, 32, 24 ),
 				cylinder: new THREE.CylinderBufferGeometry( 1, 1, 1, 12, 1 ),
 				hardcylinder: new THREE.CylinderBufferGeometry( 1, 1, 1, 12, 1 ),
+				joint: new THREE.ConeBufferGeometry( 0.1,0.2, 4 ),
 			};
 
 			geo.circle.rotateX( - PI90 );
 			geo.plane.rotateX( - PI90 );
 			geo.wheel.rotateZ( - PI90 );
+
+			 geo.joint.translate( 0, 0.1, 0 );
+			 geo.joint.rotateZ( -Math.PI*0.5 );
 
 			root.geo = geo;
 
@@ -800,6 +816,11 @@ export var engine = ( function () {
 				static: new THREE.MeshLambertMaterial( { color: 0x1111FF, name: 'static', wireframe: wire } ),
 				bones: new THREE.MeshLambertMaterial( { color: 0x11FF11, name: 'bones', wireframe: wire } ),
 				kinematic: new THREE.MeshLambertMaterial( { color: 0xFF8811, name: 'kinematic', wireframe: wire } ),
+
+
+				jointLine: new THREE.LineBasicMaterial( { name: 'jointLine', vertexColors: THREE.VertexColors, depthTest: false, depthWrite: false, transparent: true }),
+				jointP1: new THREE.MeshBasicMaterial({ name: 'jointP1', color:0x00FF00, depthTest:false, depthWrite:true, wireframe:true }),
+				jointP2: new THREE.MeshBasicMaterial({ name: 'jointP2', color:0xFFFF00, depthTest:false, depthWrite:true, wireframe:true }), 
 
 			};
 

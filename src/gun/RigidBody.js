@@ -83,8 +83,6 @@ Object.assign( RigidBody.prototype, {
 			// non-interpolated position 
 			b.getWorldTransform().toArray( AR, n + 1, scale );
 
-				;
-
 		} );
 
 	},
