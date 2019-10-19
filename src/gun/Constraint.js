@@ -295,7 +295,7 @@ Object.assign( Constraint.prototype, {
 		//joint.enableFeedback( o.feedback );
 		//if(o.param) joint.setParam( o.param[0], o.param[1], o.param[1] );//
 
-		if ( o.angularOnly && joint.setAngularOnly ) joint.setAngularOnly( o.angularOnly );
+		if ( o.angularOnly && joint.setAngularOnly ) joint.setAngularOnly( o.angularOnly ? 1 : 0 );
 		if ( o.enableMotor && joint.enableMotor ) joint.enableMotor( o.enableMotor );
 		if ( o.maxMotorImpulse && joint.setMaxMotorImpulse ) joint.setMaxMotorImpulse( o.maxMotorImpulse );
 		if ( o.motorTarget && joint.setMotorTarget ) {

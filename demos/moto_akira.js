@@ -61,7 +61,7 @@ function demo() {
     view.addSky({ hour:option.hour, hdr:true, cloud_covr:0.6, cloud_dens:60, groundColor:0x373737 });
     //view.addSky({  url:'photo.jpg', hdr:true, visible:false });
 
-    view.setShadowRange( 10, 195, 205, debug );
+    view.setShadowRange( 10, 195, 205, debug, 1000 );
 
     physic.set({
         fps:60,

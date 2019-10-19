@@ -124,6 +124,8 @@ function demoType ( n ) {
                 limit:[-30,30,0.9,0.3, 1], 
                 collision:false,
                 useA:true,
+
+                //angularOnly:true,
             })
         }
         break;
