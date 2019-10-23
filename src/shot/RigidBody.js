@@ -314,7 +314,20 @@ Object.assign( RigidBody.prototype, {
 
 	    if ( mesh ) {
 
-	        if ( ! customGeo ) mesh.scale.fromArray( o.size );
+	        if ( !customGeo ){ 
+	        	mesh.scale.fromArray( o.size );
+
+	        	// ! add to group to avoid matrix scale
+	        	var tmp = mesh;
+	        	mesh = new THREE.Group();
+	        	mesh.add( tmp );
+
+	        	Object.defineProperty( mesh, 'material', {
+				    get: function() { return mesh.children[0].material; },
+				    set: function( value ) { mesh.children[0].material = value; }
+				});
+
+	        }
 
 	        // out of view on start
 	        //mesh.position.set(0,-1000000,0);

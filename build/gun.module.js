@@ -4812,6 +4812,8 @@ var engine = ( function () {
 			//else  t = b.getWorldTransform();
 			//b.getWorldTransform ( t );
 
+			if( o.rot === undefined || o.quat === undefined ) o.keepRot = true;
+
 			if ( o.keepX || o.keepY || o.keepZ || o.keepRot ) { // keep original position
 
 				b.getMotionState().getWorldTransform( t );
