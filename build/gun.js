@@ -4777,6 +4777,17 @@
 
 			},
 
+			/*
+			For anyone looking how to apply a force local/relative to btRigidBody in ammo.js, here's how:
+			let transform = new Ammo.btTransform();
+			body.getMotionState().getWorldTransform(transform);
+			let relativeForce = new Ammo.btVector3(0,0, 1000);
+			let relativeTransform = new Ammo.btTransform();
+			relativeTransform.setOrigin(relativeForce);
+			let relativeForce = (transform.op_mul(relativeTransform)).getOrigin();
+			body.applyForce(relativeForce, transform.getOrigin());
+			*/
+
 			//-----------------------------
 			//
 			//   MATRIX
@@ -4818,7 +4829,7 @@
 				//else  t = b.getWorldTransform();
 				//b.getWorldTransform ( t );
 
-				if( o.rot === undefined || o.quat === undefined ) o.keepRot = true;
+				if( o.rot === undefined && o.quat === undefined ) o.keepRot = true;
 
 				if ( o.keepX || o.keepY || o.keepZ || o.keepRot ) { // keep original position
 
