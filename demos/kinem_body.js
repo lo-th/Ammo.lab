@@ -29,7 +29,8 @@ function demo() {
 function initAnimation ( result ){
 
     var bvhLoader = new THREE.BVHLoader();
-    var result = bvhLoader.parseData( pool.get('action') );
+    var result = bvhLoader.parse( pool.get('action') );
+    //var result = bvhLoader.parseData( pool.get('action') );
 
     var skeleton = result.skeleton;
     bones = skeleton.bones;
