@@ -69,6 +69,7 @@ function next(){
     editor.addExtraOption( physic.setMode );
     //view.setRefEditor( editor );
     view.setEditor( editor );
+    view.setUser( user );
     view.unPause = unPause;
 
     //physic.start();
