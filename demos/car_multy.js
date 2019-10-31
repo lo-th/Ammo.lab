@@ -9,6 +9,7 @@ var option = {
 function demo () {
 
     view.moveCam({ theta:0, phi:10, distance:30, target:[0,1,0] });
+    view.setSky({ url:'river.jpg' });
     view.load ( 'cars.sea', afterLoad, true );
     physic.set();
 
@@ -29,12 +30,15 @@ function afterLoad () {
     physic.add({type:'plane'});
 
     carMat = view.material({
+        
         name:'extra',
-        roughness: 0.4,
-        metalness: 0.6,
+        roughness: 0.2,
+        metalness: 0.8,
         map: view.texture( 'cars.png' ),
         transparent:true,
         side: THREE.DoubleSide,
+        premultipliedAlpha: true,
+
     });
 
     // create cars

@@ -395,7 +395,7 @@ export function softCloth( o, material ) {
 	var max = div[ 0 ] * div[ 1 ];
 
 	var g = new THREE.PlaneBufferGeometry( size[ 0 ], size[ 2 ], div[ 0 ] - 1, div[ 1 ] - 1 );
-	g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
+	g.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
 	g.rotateX( - Math.PI90 );
 	//g.translate( -size[0]*0.5, 0, -size[2]*0.5 );
 
@@ -555,16 +555,16 @@ export function ellipsoid( o ) {
 	var g = new THREE.BufferGeometry();//.fromDirectGeometry( gt );
 
 	g.setIndex( new THREE.BufferAttribute( indices, 1 ) );
-	g.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-	g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
-	g.addAttribute( 'order', new THREE.BufferAttribute( order, 1 ) );
+	g.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+	g.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
+	g.setAttribute( 'order', new THREE.BufferAttribute( order, 1 ) );
 
-	//g.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
+	//g.setAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
 
 	if ( gt.uvs ) {
 
 		var uvs = new Float32Array( gt.uvs.length * 2 );
-		g.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ).copyVector2sArray( gt.uvs ), 2 );
+		g.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ).copyVector2sArray( gt.uvs ), 2 );
 
 	}
 
@@ -577,7 +577,7 @@ export function ellipsoid( o ) {
 	gt.dispose();
 
 
-	//g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
+	//g.setAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
 	var mesh = new THREE.Mesh( g, root.mat.soft );
 
 	//mesh.idx = view.setIdx( softs.length, 'softs' );

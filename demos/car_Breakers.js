@@ -3,6 +3,8 @@ function demo() {
     view.moveCam({ theta:45, phi:15, distance:25, target:[0,1,0] });
     view.load ( 'cars.sea', afterLoad, true );
 
+    view.setShadow( { size:50, near:100, far:250 } );
+
     physic.set();
     
 };
@@ -42,7 +44,7 @@ function afterLoad () {
         metalness: 0.6,
         map: view.texture( 'cars.png' ),
         transparent:true,
-        side: THREE.DoubleSide,
+        //side: THREE.DoubleSide,
     });
 
     for (var i = 0; i < 200; i++){

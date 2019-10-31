@@ -203,7 +203,7 @@ Object.assign( RigidBody.prototype, {
 				break;
 
 			case 'capsule':
-				shape = new Ammo.btCapsuleShape( o.size[ 0 ], o.size[ 1 ] * 0.5 );
+				shape = new Ammo.btCapsuleShape( o.size[ 0 ], o.size[ 1 ] );
 				break;
 
 			case 'compound':
@@ -242,7 +242,7 @@ Object.assign( RigidBody.prototype, {
 							s = new Ammo.btConeShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
 							break;
 						case 'capsule':
-							s = new Ammo.btCapsuleShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
+							s = new Ammo.btCapsuleShape( g.size[ 0 ], g.size[ 1 ] );
 							break;
 
 					}

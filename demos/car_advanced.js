@@ -44,7 +44,7 @@ function demo() {
     view.moveCam({ theta:90, phi:0, distance:5, target:[0,1,0] });
 
     view.addSky({  hour:hour });
-    view.setShadowRange( 30, 150, 250 );
+    view.setShadow( { size:30, near:150, far:250 } );
 
     view.addJoystick({ sameAxis:true });
 

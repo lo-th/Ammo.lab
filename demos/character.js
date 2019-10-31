@@ -34,7 +34,7 @@ function afterLoad () {
     physic.add({ type:'mesh', shape:view.getGeometry('track', 'track'), density:0, friction:0.6, restitution:0.1 });
 
     //physic.add({ type:'character', name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5) ), scale:0.07, debug:false });
-    physic.add({ type:'character', name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5)), scale:0.07, debug:false, material:heroMat });
+    physic.add({ type:'character', name:'bob', rot:[0,90,0], mesh:view.getMesh('heros', 'hero_0' + Math.randInt(1, 5)), scale:0.07, debug:true, material:heroMat });
 
 
     follow('bob', {  height:0.3, acceleration: 0.05, speed:10, distance:3 } );

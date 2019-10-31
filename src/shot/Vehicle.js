@@ -463,10 +463,11 @@ Object.assign( Vehicle.prototype, {
 	    mesh.userData.isWithSusp = isWithSusp;
 	    mesh.userData.isWithBrake = isWithBrake;
 
-	    if(o.noShadow === undefined ){
+	    if( o.noShadow === undefined ){
 	    	mesh.castShadow = true;
 	        mesh.receiveShadow = true;
 	    }
+	    
 	    mesh.name = name;
 
 	    if ( o.helper ) {

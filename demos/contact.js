@@ -1,3 +1,4 @@
+var mat = view.getMat();
 
 function demo() {
 
@@ -17,9 +18,6 @@ function demo() {
 
     // load buggy 3d model
     view.load ( ['ping_pong.mp3'], afterLoad, true, true );
-
-
-    
 
 };
 
@@ -52,7 +50,7 @@ function onContact1 ( b ){
     var pos = m.userData.oldpos;
 
     var d = pos.distanceTo( m.position );
-    m.material = b ? view.mat.contactOn : view.mat.contactOff;
+    m.material = b ? mat.contactOn : mat.contactOff;
     if( b && d>0.05 && !audio.isPlaying ) audio.play();
 
     pos.copy( m.position );
@@ -66,7 +64,7 @@ function onContact2 ( b ){
     var pos = m.userData.oldpos;
 
     var d = pos.distanceTo( m.position );
-    m.material = b ? view.mat.contactOn : view.mat.contactOff;
+    m.material = b ? mat.contactOn : mat.contactOff;
     if(b && d>0.05 && !audio.isPlaying ) audio.play();
 
     pos.copy( m.position );

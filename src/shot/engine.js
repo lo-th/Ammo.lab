@@ -57,7 +57,7 @@ export var engine = ( function () {
 
 	var oldFollow = '';
 
-	var isInternUpdate = false;
+	//var isInternUpdate = false;
 	//var isRequestAnimationFrame = false;
 
 	var option = {
@@ -336,24 +336,9 @@ export var engine = ( function () {
 
 			engine.tell();
 
-			if ( refView ){
+			engine.update();
 
-				if( isInternUpdate ){ 
-
-					refView.isNeedUpdate = true;
-
-				} else {
-
-					engine.update();
-					refView.controler.follow();
-
-				}
-
-			} else {
-
-				engine.update();
-
-			}
+			if ( root.controler ) root.controler.follow();
 			
 			
 			engine.stepRemove();
@@ -435,9 +420,10 @@ export var engine = ( function () {
 			refView = v;
 			root.mat = Object.assign( {}, root.mat, v.getMat() );
 			root.geo = Object.assign( {}, root.geo, v.getGeo() );//v.getGeo();
-			root.container = v.getScene();
+			root.container = v.getContent();
+			root.controler = v.getControler();
 
-			if( isInternUpdate ) refView.updateIntern = engine.update;
+			//if( isInternUpdate ) refView.updateIntern = engine.update;
 
 		},
 

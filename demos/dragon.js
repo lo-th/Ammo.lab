@@ -7,8 +7,8 @@ var debug = false;
 function demo() {
 
     view.moveCam({ theta:0, phi:0, distance:25, target:[-3,0,0] });
-    view.addSky({ url:'red.jpg', hdr:true });
-    view.setShadowRange( 50, 170, 220, false, 100, -8 );
+    view.setSky({ url:'red.jpg', hdr:true, visible:true });
+    view.setShadow( { size:50, near:170, far:220, groundSize:100, groundY:-8 } );
     view.hideGrid( true );
     
 
@@ -62,9 +62,6 @@ function makeDragon () {
     var dragon = view.getMesh('dragon', 'dragon');
     dragon.material = dragon_material;
     var skeleton = dragon.skeleton;
-
-    //dragon.castShadow = false;
-    //dragon.receiveShadow = false;
 
     var transform = new THREE.Matrix4().makeTranslation( -1, 0, 0 );
     
@@ -136,7 +133,7 @@ function makeDragon () {
     dragon.setTimeScale( 0.5 );
     dragon.play('move');
 
-    view.extraMesh.add( dragon );
+    view.addMesh( dragon );
     dragons.push( dragon );
 
 }

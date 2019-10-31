@@ -16,7 +16,7 @@ function demo() {
 
     view.moveCam({ theta:20, phi:40, distance:100, target:[0,20,0] });
 
-    view.addSky({ url:'photo.jpg', hdr:true });
+    view.setSky({ url:'photo.jpg', hdr:true });
 
     physic.set();
 
@@ -29,8 +29,8 @@ function demo() {
 function initAnimation ( result ){
 
     var bvhLoader = new THREE.BVHLoader();
-    var result = bvhLoader.parse( pool.get('action') );
-    //var result = bvhLoader.parseData( pool.get('action') );
+    //var result = bvhLoader.parse( pool.get('action') );
+    var result = bvhLoader.parseData( pool.get('action') );
 
     var skeleton = result.skeleton;
     bones = skeleton.bones;

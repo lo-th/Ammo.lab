@@ -145,8 +145,8 @@ function Ray( o ) {
 	this.colors = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 	this.local = [ 0, 0, 0, 0, 0, 0 ];
 
-	this.geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( this.vertices, 3 ) );
-	this.geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( this.colors, 3 ) );
+	this.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( this.vertices, 3 ) );
+	this.geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( this.colors, 3 ) );
 	this.vertices = this.geometry.attributes.position.array;
 	this.colors = this.geometry.attributes.color.array;
 

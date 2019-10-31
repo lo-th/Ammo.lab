@@ -25,7 +25,7 @@ export function geometryInfo( g, type ) {
 
 	if ( withColor ) {
 
-		g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( totalVertices * 3 ), 3 ) );
+		g.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( totalVertices * 3 ), 3 ) );
 		var cc = g.attributes.color.array;
 
 		i = totalVertices;
@@ -141,34 +141,41 @@ export function geometryInfo( g, type ) {
 * CAPSULE GEOMETRY
 */
 
-function Capsule( Radius, Height, SRadius, H ) {
+function Capsule( radius, height, radialSegments, heightSegments ) {
 
 	THREE.BufferGeometry.call( this );
 
-	this.type = 'CapsuleBufferGeometry';
+	this.type = 'Capsule';
 
-	var radius = Radius || 1;
-	var height = Height || 1;
+	radius = radius || 1;
+    height = height || 1;
 
-	var sRadius = SRadius || 12;
-	var sHeight = Math.floor( sRadius * 0.5 );// SHeight || 6;
-	var h = H || 1;
-	var o0 = Math.PI * 2;
-	var o1 = Math.PI * 0.5;
-	var g = new THREE.Geometry();
-	var m0 = new THREE.CylinderGeometry( radius, radius, height, sRadius, h, true );
-	var m1 = new THREE.SphereGeometry( radius, sRadius, sHeight, 0, o0, 0, o1 );
-	var m2 = new THREE.SphereGeometry( radius, sRadius, sHeight, 0, o0, o1, o1 );
-	var mtx0 = new THREE.Matrix4().makeTranslation( 0, 0, 0 );
-	if ( SRadius === 6 ) mtx0.makeRotationY( 30 * 0.0174532925199432957 );
-	var mtx1 = new THREE.Matrix4().makeTranslation( 0, height * 0.5, 0 );
-	var mtx2 = new THREE.Matrix4().makeTranslation( 0, - height * 0.5, 0 );
-	g.merge( m0, mtx0 );
-	g.merge( m1, mtx1 );
-	g.merge( m2, mtx2 );
-	g.mergeVertices();
+    radialSegments = Math.floor( radialSegments ) || 12;
+    var sHeight = Math.floor( radialSegments * 0.5 );
 
-	this.fromGeometry( g );
+    heightSegments = Math.floor( heightSegments ) || 1;
+    var o0 = Math.PI * 2;
+    var o1 = Math.PI * 0.5;
+    var g = new THREE.Geometry();
+    var m0 = new THREE.CylinderGeometry( radius, radius, height, radialSegments, heightSegments, true );
+    var m1 = new THREE.SphereGeometry( radius, radialSegments, sHeight, 0, o0, 0, o1);
+    var m2 = new THREE.SphereGeometry( radius, radialSegments, sHeight, 0, o0, o1, o1);
+    var mtx0 = new THREE.Matrix4().makeTranslation( 0,0,0 );
+    if(radialSegments===6) mtx0.makeRotationY(30*0.0174532925199432957);
+    var mtx1 = new THREE.Matrix4().makeTranslation(0, height*0.5,0);
+    var mtx2 = new THREE.Matrix4().makeTranslation(0, -height*0.5,0);
+    g.merge( m0, mtx0);
+    g.merge( m1, mtx1);
+    g.merge( m2, mtx2);
+    g.mergeVertices();
+
+    m0.dispose();
+    m1.dispose();
+    m2.dispose();
+
+    this.fromGeometry( g );
+
+    g.dispose();
 
 }
 
@@ -237,8 +244,8 @@ function ConvexBufferGeometry( points ) {
 
 	// build geometry
 
-	this.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-	this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+	this.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	this.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
 
 }
 

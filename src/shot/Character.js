@@ -1,6 +1,6 @@
 /*global THREE*/
 import { root, map } from './root.js';
-
+import { Capsule } from './Geometry.js';
 /**   _   _____ _   _
 *    | | |_   _| |_| |
 *    | |_ _| | |  _  |
@@ -88,8 +88,12 @@ Object.assign( Character.prototype, {
 		// delete old if same name
 		this.remove( name );
 
-		o.size = o.size == undefined ? [ 0.25, 2, 2 ] : o.size;
-	    if ( o.size.length == 1 ) {
+		o.scale  = o.scale || 1;
+
+		o.size = o.size == undefined ? [ 0.25, 2 ] : o.size;
+
+		
+	    /*if ( o.size.length == 1 ) {
 
 			o.size[ 1 ] = o.size[ 0 ];
 
@@ -98,7 +102,20 @@ Object.assign( Character.prototype, {
 
 			o.size[ 2 ] = o.size[ 0 ];
 
-		}
+		}*/
+
+		if ( o.mesh ) {
+
+			var gm = o.mesh.geometry;
+
+	    	var h = (Math.abs(gm.boundingBox.max.y)+Math.abs(gm.boundingBox.min.y))*o.scale;
+	    	var py = -(Math.abs(gm.boundingBox.max.y)-Math.abs(gm.boundingBox.min.y))*o.scale*0.5; // ?
+	        o.size[ 1 ] = h;
+
+	    }
+
+	    // The total height is height+2*radius, so the height is just the height between the center of each 'sphere' of the capsule caps
+	    o.size[ 1 ] = o.size[ 1 ] - ( o.size[ 0 ]*2 );
 
 	    o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
 	    o.rot = o.rot == undefined ? [ 0, 0, 0 ] : Math.vectorad( o.rot );
@@ -116,7 +133,7 @@ Object.assign( Character.prototype, {
 
 		}
 
-	    var g = new THREE.CapsuleBufferGeometry( o.size[ 0 ], o.size[ 1 ] * 0.5, 6 );
+	    var g = new Capsule( o.size[ 0 ], o.size[ 1 ], 6 );
 
 	    var mesh = new THREE.Group();//o.mesh || new THREE.Mesh( g );
 
@@ -128,18 +145,23 @@ Object.assign( Character.prototype, {
 
 	    }
 
+
 	    if ( o.mesh ) {
 
 	        var model = o.mesh;
 	        model.material = material;
-	        model.scale.multiplyScalar( o.scale || 1 );
-	        model.position.set( 0, 0, 0 );
+	        model.scale.multiplyScalar( o.scale );
+	        model.position.set( 0, py, 0 );
 
 	        model.setTimeScale( 0.5 );
 	        model.play( 0 );
 
 	        mesh.add( model );
 	        mesh.skin = model;
+
+	        
+
+
 
 	        //this.extraGeo.push( mesh.skin.geometry );
 
@@ -171,6 +193,9 @@ Object.assign( Character.prototype, {
 
 	    if ( o.material ) delete ( o.material );
 	    if ( o.mesh ) delete ( o.mesh );
+	    if ( o.scale ) delete ( o.scale );
+	    
+
 
 	    root.container.add( mesh );
 		this.heroes.push( mesh );

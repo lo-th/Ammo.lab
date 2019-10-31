@@ -21,7 +21,7 @@ function demo() {
 
     view.hideGrid();
 
-    view.addSky({url:'photo.jpg', hdr:true });
+    view.addSky({url:'photo.jpg', hdr:true, visible:true });
 
     view.moveCam({ theta:-15, phi:0, distance:200, target:[34,-16,0] });
 

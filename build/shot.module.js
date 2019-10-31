@@ -1238,7 +1238,7 @@ function geometryInfo( g, type ) {
 
 	{
 
-		g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( totalVertices * 3 ), 3 ) );
+		g.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( totalVertices * 3 ), 3 ) );
 		var cc = g.attributes.color.array;
 
 		i = totalVertices;
@@ -1347,34 +1347,41 @@ function geometryInfo( g, type ) {
 * CAPSULE GEOMETRY
 */
 
-function Capsule( Radius, Height, SRadius, H ) {
+function Capsule( radius, height, radialSegments, heightSegments ) {
 
 	THREE.BufferGeometry.call( this );
 
-	this.type = 'CapsuleBufferGeometry';
+	this.type = 'Capsule';
 
-	var radius = Radius || 1;
-	var height = Height || 1;
+	radius = radius || 1;
+    height = height || 1;
 
-	var sRadius = SRadius || 12;
-	var sHeight = Math.floor( sRadius * 0.5 );// SHeight || 6;
-	var h = H || 1;
-	var o0 = Math.PI * 2;
-	var o1 = Math.PI * 0.5;
-	var g = new THREE.Geometry();
-	var m0 = new THREE.CylinderGeometry( radius, radius, height, sRadius, h, true );
-	var m1 = new THREE.SphereGeometry( radius, sRadius, sHeight, 0, o0, 0, o1 );
-	var m2 = new THREE.SphereGeometry( radius, sRadius, sHeight, 0, o0, o1, o1 );
-	var mtx0 = new THREE.Matrix4().makeTranslation( 0, 0, 0 );
-	if ( SRadius === 6 ) mtx0.makeRotationY( 30 * 0.0174532925199432957 );
-	var mtx1 = new THREE.Matrix4().makeTranslation( 0, height * 0.5, 0 );
-	var mtx2 = new THREE.Matrix4().makeTranslation( 0, - height * 0.5, 0 );
-	g.merge( m0, mtx0 );
-	g.merge( m1, mtx1 );
-	g.merge( m2, mtx2 );
-	g.mergeVertices();
+    radialSegments = Math.floor( radialSegments ) || 12;
+    var sHeight = Math.floor( radialSegments * 0.5 );
 
-	this.fromGeometry( g );
+    heightSegments = Math.floor( heightSegments ) || 1;
+    var o0 = Math.PI * 2;
+    var o1 = Math.PI * 0.5;
+    var g = new THREE.Geometry();
+    var m0 = new THREE.CylinderGeometry( radius, radius, height, radialSegments, heightSegments, true );
+    var m1 = new THREE.SphereGeometry( radius, radialSegments, sHeight, 0, o0, 0, o1);
+    var m2 = new THREE.SphereGeometry( radius, radialSegments, sHeight, 0, o0, o1, o1);
+    var mtx0 = new THREE.Matrix4().makeTranslation( 0,0,0 );
+    if(radialSegments===6) mtx0.makeRotationY(30*0.0174532925199432957);
+    var mtx1 = new THREE.Matrix4().makeTranslation(0, height*0.5,0);
+    var mtx2 = new THREE.Matrix4().makeTranslation(0, -height*0.5,0);
+    g.merge( m0, mtx0);
+    g.merge( m1, mtx1);
+    g.merge( m2, mtx2);
+    g.mergeVertices();
+
+    m0.dispose();
+    m1.dispose();
+    m2.dispose();
+
+    this.fromGeometry( g );
+
+    g.dispose();
 
 }
 
@@ -1439,8 +1446,8 @@ function ConvexBufferGeometry( points ) {
 
 	// build geometry
 
-	this.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-	this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+	this.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	this.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
 
 }
 
@@ -1478,6 +1485,7 @@ var root = {
 	tmpMat: [], // tmp materials
 	mat: {}, // materials object
 	geo: {}, // geometrys object
+	controler: null,
 
 	torad: Math.PI / 180,
 
@@ -1739,10 +1747,13 @@ Object.assign( RigidBody.prototype, {
 		    		g = o.shapes[ i ];
 		    		if ( g.type === 'box' ) g.type = 'hardbox';
 		    		if ( g.type === 'cylinder' ) g.type = 'hardcylinder';
-		    		m = new THREE.Mesh( g.type === 'capsule' ? new Capsule( o.size[ 0 ], o.size[ 1 ] * 0.5 ) : root.geo[ g.type ], o.debug ? root.mat.debug : material );
+		    		m = new THREE.Mesh( g.type === 'capsule' ? new Capsule( o.size[ 0 ], o.size[ 1 ] ) : root.geo[ g.type ], o.debug ? root.mat.debug : material );
 		    		m.scale.fromArray( g.size );
 		    		m.position.fromArray( g.pos );
 	                m.quaternion.fromArray( g.quat );
+
+	                //m.receiveShadow = true;
+	        		//m.castShadow = true;
 
 		    		mesh.add( m );
 
@@ -1774,7 +1785,7 @@ Object.assign( RigidBody.prototype, {
 	    } else {
 
 	    	if ( o.type === 'box' && o.mass === 0 && ! o.kinematic ) o.type = 'hardbox';
-	    	if ( o.type === 'capsule' ) o.geometry = new Capsule( o.size[ 0 ], o.size[ 1 ] * 0.5 );
+	    	if ( o.type === 'capsule' ) o.geometry = new Capsule( o.size[ 0 ], o.size[ 1 ] );
 	    	if ( o.type === 'realbox' || o.type === 'realhardbox' ) o.geometry = new THREE.BoxBufferGeometry( o.size[ 0 ], o.size[ 1 ], o.size[ 2 ] );
 	    	if ( o.type === 'realsphere' ) o.geometry = new THREE.SphereBufferGeometry( o.size[ 0 ], 16, 12 );
 	    	if ( o.type === 'realcylinder' ) o.geometry = new THREE.CylinderBufferGeometry( o.size[ 0 ], o.size[ 0 ], o.size[ 1 ] * 0.5, 12, 1 );
@@ -1811,7 +1822,7 @@ Object.assign( RigidBody.prototype, {
 
 	    if ( mesh ) {
 
-	        if ( !customGeo ){ 
+	        if ( !customGeo && !mesh.isGroup ){ 
 	        	mesh.scale.fromArray( o.size );
 
 	        	// ! add to group to avoid matrix scale
@@ -1819,10 +1830,7 @@ Object.assign( RigidBody.prototype, {
 	        	mesh = new THREE.Group();
 	        	mesh.add( tmp );
 
-	        	Object.defineProperty( mesh, 'material', {
-				    get: function() { return mesh.children[0].material; },
-				    set: function( value ) { mesh.children[0].material = value; }
-				});
+	        	
 
 	        }
 
@@ -1830,9 +1838,6 @@ Object.assign( RigidBody.prototype, {
 	        //mesh.position.set(0,-1000000,0);
 	        mesh.position.fromArray( o.pos );
 	        mesh.quaternion.fromArray( o.quat );
-
-	        mesh.receiveShadow = true;
-	        mesh.castShadow = o.mass === 0 && ! o.kinematic ? false : true;
 
 	        mesh.updateMatrix();
 
@@ -1848,6 +1853,53 @@ Object.assign( RigidBody.prototype, {
 	        } else { 
 
 	        	root.container.add( mesh );
+	        	
+	        }
+
+	        // shadow
+	        if( o.noShadow === undefined ){
+
+	        	if( mesh.isGroup ){
+
+	        		/*Object.defineProperty( mesh, 'material', {
+					    get: function() { return this.children[0].material; },
+					    set: function( value ) { 
+					    	var i = this.children.length;
+					    	while(i--) this.children[i].material = value; 
+					    }
+					});*/
+
+					Object.defineProperty( mesh, 'receiveShadow', {
+					    get: function() { return this.children[0].receiveShadow; },
+					    set: function( value ) { 
+					    	var i = this.children.length;
+					    	while(i--) this.children[i].receiveShadow = value; 
+					    }
+					});
+
+					Object.defineProperty( mesh, 'castShadow', {
+					    get: function() { return this.children[0].castShadow; },
+					    set: function( value ) { 
+					    	var i = this.children.length;
+					    	while(i--) this.children[i].castShadow = value; 
+					    }
+					});
+
+	        		/*var j = mesh.children.length;
+	        		while(j--){
+	        			mesh.children[j].receiveShadow = true;
+	        			mesh.children[j].castShadow = o.mass === 0 && !o.kinematic ? false : true;
+	        		}*/
+
+	        	} 
+
+	        	
+	        	mesh.receiveShadow = true;
+	        	mesh.castShadow = o.mass === 0 && !o.kinematic ? false : true;
+	        	
+
+	        	//console.log('??')
+
 	        	
 	        }
 
@@ -2477,7 +2529,7 @@ function softCloth( o, material ) {
 	var max = div[ 0 ] * div[ 1 ];
 
 	var g = new THREE.PlaneBufferGeometry( size[ 0 ], size[ 2 ], div[ 0 ] - 1, div[ 1 ] - 1 );
-	g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
+	g.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
 	g.rotateX( - Math.PI90 );
 	//g.translate( -size[0]*0.5, 0, -size[2]*0.5 );
 
@@ -2637,16 +2689,16 @@ function ellipsoid( o ) {
 	var g = new THREE.BufferGeometry();//.fromDirectGeometry( gt );
 
 	g.setIndex( new THREE.BufferAttribute( indices, 1 ) );
-	g.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-	g.addAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
-	g.addAttribute( 'order', new THREE.BufferAttribute( order, 1 ) );
+	g.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+	g.setAttribute( 'color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ) );
+	g.setAttribute( 'order', new THREE.BufferAttribute( order, 1 ) );
 
-	//g.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
+	//g.setAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
 
 	if ( gt.uvs ) {
 
 		var uvs = new Float32Array( gt.uvs.length * 2 );
-		g.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ).copyVector2sArray( gt.uvs ), 2 );
+		g.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ).copyVector2sArray( gt.uvs ), 2 );
 
 	}
 
@@ -2659,7 +2711,7 @@ function ellipsoid( o ) {
 	gt.dispose();
 
 
-	//g.addAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
+	//g.setAttribute('color', new THREE.BufferAttribute( new Float32Array( max * 3 ), 3 ));
 	var mesh = new THREE.Mesh( g, root.mat.soft );
 
 	//mesh.idx = view.setIdx( softs.length, 'softs' );
@@ -3293,10 +3345,11 @@ Object.assign( Vehicle.prototype, {
 	    mesh.userData.isWithSusp = isWithSusp;
 	    mesh.userData.isWithBrake = isWithBrake;
 
-	    if(o.noShadow === undefined ){
+	    if( o.noShadow === undefined ){
 	    	mesh.castShadow = true;
 	        mesh.receiveShadow = true;
 	    }
+	    
 	    mesh.name = name;
 
 	    if ( o.helper ) {
@@ -3336,7 +3389,6 @@ Object.assign( Vehicle.prototype, {
 } );
 
 /*global THREE*/
-
 /**   _   _____ _   _
 *    | | |_   _| |_| |
 *    | |_ _| | |  _  |
@@ -3424,8 +3476,12 @@ Object.assign( Character.prototype, {
 		// delete old if same name
 		this.remove( name );
 
-		o.size = o.size == undefined ? [ 0.25, 2, 2 ] : o.size;
-	    if ( o.size.length == 1 ) {
+		o.scale  = o.scale || 1;
+
+		o.size = o.size == undefined ? [ 0.25, 2 ] : o.size;
+
+		
+	    /*if ( o.size.length == 1 ) {
 
 			o.size[ 1 ] = o.size[ 0 ];
 
@@ -3434,7 +3490,20 @@ Object.assign( Character.prototype, {
 
 			o.size[ 2 ] = o.size[ 0 ];
 
-		}
+		}*/
+
+		if ( o.mesh ) {
+
+			var gm = o.mesh.geometry;
+
+	    	var h = (Math.abs(gm.boundingBox.max.y)+Math.abs(gm.boundingBox.min.y))*o.scale;
+	    	var py = -(Math.abs(gm.boundingBox.max.y)-Math.abs(gm.boundingBox.min.y))*o.scale*0.5; // ?
+	        o.size[ 1 ] = h;
+
+	    }
+
+	    // The total height is height+2*radius, so the height is just the height between the center of each 'sphere' of the capsule caps
+	    o.size[ 1 ] = o.size[ 1 ] - ( o.size[ 0 ]*2 );
 
 	    o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
 	    o.rot = o.rot == undefined ? [ 0, 0, 0 ] : Math.vectorad( o.rot );
@@ -3452,7 +3521,7 @@ Object.assign( Character.prototype, {
 
 		}
 
-	    var g = new THREE.CapsuleBufferGeometry( o.size[ 0 ], o.size[ 1 ] * 0.5, 6 );
+	    var g = new Capsule( o.size[ 0 ], o.size[ 1 ], 6 );
 
 	    var mesh = new THREE.Group();//o.mesh || new THREE.Mesh( g );
 
@@ -3464,18 +3533,23 @@ Object.assign( Character.prototype, {
 
 	    }
 
+
 	    if ( o.mesh ) {
 
 	        var model = o.mesh;
 	        model.material = material;
-	        model.scale.multiplyScalar( o.scale || 1 );
-	        model.position.set( 0, 0, 0 );
+	        model.scale.multiplyScalar( o.scale );
+	        model.position.set( 0, py, 0 );
 
 	        model.setTimeScale( 0.5 );
 	        model.play( 0 );
 
 	        mesh.add( model );
 	        mesh.skin = model;
+
+	        
+
+
 
 	        //this.extraGeo.push( mesh.skin.geometry );
 
@@ -3507,6 +3581,9 @@ Object.assign( Character.prototype, {
 
 	    if ( o.material ) delete ( o.material );
 	    if ( o.mesh ) delete ( o.mesh );
+	    if ( o.scale ) delete ( o.scale );
+	    
+
 
 	    root.container.add( mesh );
 		this.heroes.push( mesh );
@@ -3777,8 +3854,8 @@ function Ray( o ) {
 	this.colors = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 	this.local = [ 0, 0, 0, 0, 0, 0 ];
 
-	this.geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( this.vertices, 3 ) );
-	this.geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( this.colors, 3 ) );
+	this.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( this.vertices, 3 ) );
+	this.geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( this.colors, 3 ) );
 	this.vertices = this.geometry.attributes.position.array;
 	this.colors = this.geometry.attributes.color.array;
 
@@ -5298,6 +5375,8 @@ var engine = ( function () {
 	var tmpAdd = [];
 
 	var oldFollow = '';
+
+	//var isInternUpdate = false;
 	//var isRequestAnimationFrame = false;
 
 	var option = {
@@ -5576,20 +5655,9 @@ var engine = ( function () {
 
 			engine.tell();
 
-			if ( refView ){
+			engine.update();
 
-				{
-
-					engine.update();
-					refView.controler.follow();
-
-				}
-
-			} else {
-
-				engine.update();
-
-			}
+			if ( root.controler ) root.controler.follow();
 			
 			
 			engine.stepRemove();
@@ -5671,7 +5739,10 @@ var engine = ( function () {
 			refView = v;
 			root.mat = Object.assign( {}, root.mat, v.getMat() );
 			root.geo = Object.assign( {}, root.geo, v.getGeo() );//v.getGeo();
-			root.container = v.getScene();
+			root.container = v.getContent();
+			root.controler = v.getControler();
+
+			//if( isInternUpdate ) refView.updateIntern = engine.update;
 
 		},
 

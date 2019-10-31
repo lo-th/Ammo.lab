@@ -29,6 +29,7 @@ export var root = {
 	tmpMat: [], // tmp materials
 	mat: {}, // materials object
 	geo: {}, // geometrys object
+	controler: null,
 
 	torad: Math.PI / 180,
 

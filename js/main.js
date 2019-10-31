@@ -26,7 +26,7 @@ var demos = [
 
 demos.sort();
 
-var view, demo, physic;
+var demo, physic;
 var demoName = 'basic';
 var currentMode = '';
 
@@ -36,9 +36,10 @@ var isWithCode = false;
 
 function init(){
 
-    view = new View();
-    intro.init('Ammo: Kripken | Lab: 3th');
+    //view = new View();
     view.init( initAmmo );
+    intro.init('Ammo: Kripken | Lab: 3th');
+    
 
 }
 
@@ -66,7 +67,9 @@ function next(){
 
     editor.init( launch, isWithCode, '#308AFF', 'Ammo.lab' );
     editor.addExtraOption( physic.setMode );
-    view.setRefEditor( editor );
+    //view.setRefEditor( editor );
+    view.setEditor( editor );
+    view.unPause = unPause;
 
     //physic.start();
 

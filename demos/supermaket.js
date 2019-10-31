@@ -1,6 +1,7 @@
 function demo() {
 
     view.moveCam({ theta:0, phi:10, distance:30, target:[0,3,0] });
+    view.setSky({ url:'river.jpg' });
 
     physic.set({
 

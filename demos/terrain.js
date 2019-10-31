@@ -312,8 +312,9 @@ function update () {
 
     //view.getControls().follow();
 
-    var d = view.distanceFromCenter();
-    if( d>300 && !view.controler.cam.isDecal && !view.isTmove) decale();
+    var d = view.getDistanceToCenter();
+    
+    if( d>300 && !view.getControler().isDecal ) decale();
 
     // sound
 
@@ -342,7 +343,7 @@ function update () {
 
 function decale() {
 
-    var p = view.followGroup.position;
+    var p = view.getCenterPosition();
 
     physic.matrix( { name:option.name, pos:[0,0,0], keepY:true, keepRot:true } );
 
@@ -353,7 +354,7 @@ function decale() {
     terrain.needsUpdate = true;
 
     //view.moveTerrainTo( 'ground', p.x, p.z );
-    view.controler.cam.isDecal = true;
+    view.getControler().isDecal = true;
 
 }
 

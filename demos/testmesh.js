@@ -10,7 +10,7 @@ function afterLoad () {
 
     physic.add({
         type:'mesh',
-        shape:view.geo.bol,
+        shape:view.getGeometry('bol', 'bol'),
         friction:0.4,
         mass:0,
         pos:[0, 1, -36]

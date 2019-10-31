@@ -242,10 +242,13 @@ Object.assign( RigidBody.prototype, {
 		    		g = o.shapes[ i ];
 		    		if ( g.type === 'box' ) g.type = 'hardbox';
 		    		if ( g.type === 'cylinder' ) g.type = 'hardcylinder';
-		    		m = new THREE.Mesh( g.type === 'capsule' ? new Capsule( o.size[ 0 ], o.size[ 1 ] * 0.5 ) : root.geo[ g.type ], o.debug ? root.mat.debug : material );
+		    		m = new THREE.Mesh( g.type === 'capsule' ? new Capsule( o.size[ 0 ], o.size[ 1 ] ) : root.geo[ g.type ], o.debug ? root.mat.debug : material );
 		    		m.scale.fromArray( g.size );
 		    		m.position.fromArray( g.pos );
 	                m.quaternion.fromArray( g.quat );
+
+	                //m.receiveShadow = true;
+	        		//m.castShadow = true;
 
 		    		mesh.add( m );
 
@@ -277,7 +280,7 @@ Object.assign( RigidBody.prototype, {
 	    } else {
 
 	    	if ( o.type === 'box' && o.mass === 0 && ! o.kinematic ) o.type = 'hardbox';
-	    	if ( o.type === 'capsule' ) o.geometry = new Capsule( o.size[ 0 ], o.size[ 1 ] * 0.5 );
+	    	if ( o.type === 'capsule' ) o.geometry = new Capsule( o.size[ 0 ], o.size[ 1 ] );
 	    	if ( o.type === 'realbox' || o.type === 'realhardbox' ) o.geometry = new THREE.BoxBufferGeometry( o.size[ 0 ], o.size[ 1 ], o.size[ 2 ] );
 	    	if ( o.type === 'realsphere' ) o.geometry = new THREE.SphereBufferGeometry( o.size[ 0 ], 16, 12 );
 	    	if ( o.type === 'realcylinder' ) o.geometry = new THREE.CylinderBufferGeometry( o.size[ 0 ], o.size[ 0 ], o.size[ 1 ] * 0.5, 12, 1 );
@@ -314,7 +317,7 @@ Object.assign( RigidBody.prototype, {
 
 	    if ( mesh ) {
 
-	        if ( !customGeo ){ 
+	        if ( !customGeo && !mesh.isGroup ){ 
 	        	mesh.scale.fromArray( o.size );
 
 	        	// ! add to group to avoid matrix scale
@@ -322,10 +325,7 @@ Object.assign( RigidBody.prototype, {
 	        	mesh = new THREE.Group();
 	        	mesh.add( tmp );
 
-	        	Object.defineProperty( mesh, 'material', {
-				    get: function() { return mesh.children[0].material; },
-				    set: function( value ) { mesh.children[0].material = value; }
-				});
+	        	
 
 	        }
 
@@ -333,9 +333,6 @@ Object.assign( RigidBody.prototype, {
 	        //mesh.position.set(0,-1000000,0);
 	        mesh.position.fromArray( o.pos );
 	        mesh.quaternion.fromArray( o.quat );
-
-	        mesh.receiveShadow = true;
-	        mesh.castShadow = o.mass === 0 && ! o.kinematic ? false : true;
 
 	        mesh.updateMatrix();
 
@@ -351,6 +348,53 @@ Object.assign( RigidBody.prototype, {
 	        } else { 
 
 	        	root.container.add( mesh );
+	        	
+	        }
+
+	        // shadow
+	        if( o.noShadow === undefined ){
+
+	        	if( mesh.isGroup ){
+
+	        		/*Object.defineProperty( mesh, 'material', {
+					    get: function() { return this.children[0].material; },
+					    set: function( value ) { 
+					    	var i = this.children.length;
+					    	while(i--) this.children[i].material = value; 
+					    }
+					});*/
+
+					Object.defineProperty( mesh, 'receiveShadow', {
+					    get: function() { return this.children[0].receiveShadow; },
+					    set: function( value ) { 
+					    	var i = this.children.length;
+					    	while(i--) this.children[i].receiveShadow = value; 
+					    }
+					});
+
+					Object.defineProperty( mesh, 'castShadow', {
+					    get: function() { return this.children[0].castShadow; },
+					    set: function( value ) { 
+					    	var i = this.children.length;
+					    	while(i--) this.children[i].castShadow = value; 
+					    }
+					});
+
+	        		/*var j = mesh.children.length;
+	        		while(j--){
+	        			mesh.children[j].receiveShadow = true;
+	        			mesh.children[j].castShadow = o.mass === 0 && !o.kinematic ? false : true;
+	        		}*/
+
+	        	} 
+
+	        	
+	        	mesh.receiveShadow = true;
+	        	mesh.castShadow = o.mass === 0 && !o.kinematic ? false : true;
+	        	
+
+	        	//console.log('??')
+
 	        	
 	        }
 
