@@ -45,7 +45,8 @@ Object.assign( Vehicle.prototype, {
 
 		if ( ! map.has( name ) ) return;
 		var car = map.get( name + '_constuctor' );
-		car.drive( root.flow.key );
+
+		car.drive( root.key );
 
 	},
 
@@ -174,6 +175,7 @@ function Car( name, o, shape ) {
 
 	this.limitAngular = [1,1,1];
 
+	this.transforms = [];
 
 	this.wheelBody = [];
 	this.wheelJoint = [];
@@ -242,11 +244,14 @@ Object.assign( Car.prototype, {
 		this.body.getMotionState().getWorldTransform( trans );
 		trans.toArray( Ar, n + 1, scale );
 
+		//this.body.getWorldTransform().toArray( Ar, n + 1, scale );
+
 		var j = this.data.nWheel, w, t;
 
 		while ( j -- ) {
 
 			this.chassis.updateWheelTransform( j, true );
+
 			t = this.chassis.getWheelTransformWS( j );
 
 			// supension info
@@ -254,6 +259,8 @@ Object.assign( Car.prototype, {
 
 			w = 8 * ( j + 1 );
 			t.toArray( Ar, n + w + 1, scale );
+
+			//this.transforms[j].toArray( Ar, n + w + 1, scale );
 
 			if ( j === 0 ) Ar[ n + w ] = this.chassis.getWheelInfo( 0 ).get_m_steering();
 			if ( j === 1 ) Ar[ n + w ] = this.chassis.getWheelInfo( 1 ).get_m_steering();
@@ -531,6 +538,8 @@ Object.assign( Car.prototype, {
 			    this.chassis.setBrake( o.breaking || 100, i );
 
 			    this.wheelRadius.push(fw ? radius : radiusBack);
+
+			    this.transforms.push( this.chassis.getWheelTransformWS( i ) )
 
 			/*} else {
 

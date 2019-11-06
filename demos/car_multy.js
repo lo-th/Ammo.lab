@@ -34,9 +34,9 @@ function afterLoad () {
         name:'extra',
         roughness: 0.2,
         metalness: 0.8,
-        map: view.texture( 'cars.png' ),
+        map:{ url:'cars.png'},
         transparent:true,
-        side: THREE.DoubleSide,
+        side: 'Double',
         premultipliedAlpha: true,
 
     });
@@ -64,7 +64,7 @@ function afterLoad () {
 
     // ! \\ set the car we drive
     // use keyboard to controle car 
-    physic.drive (option.currentCar);
+    physic.drive ( option.currentCar );
 
 };
 

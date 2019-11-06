@@ -18,7 +18,7 @@ export var root = {
 		ray:[],
 		terrain:[],
 		vehicle:[],
-		key:[ 0, 0, 0, 0, 0, 0, 0, 0 ],
+		
 	},
 
 	world: null,
@@ -26,6 +26,8 @@ export var root = {
 	scale: 1,
 	invscale: 1,
 	angle: 0,
+
+	key:[ 0, 0, 0, 0, 0, 0, 0, 0 ],
 
 	post:null,
 

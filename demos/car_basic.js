@@ -123,7 +123,7 @@ function afterLoad () {
 
     });
 
-    follow ( option.follow ? option.name:'none' );
+    //follow ( option.follow ? option.name:'none' );
 
     // add option setting
     ui ({

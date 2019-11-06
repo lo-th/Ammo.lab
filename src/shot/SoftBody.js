@@ -16,6 +16,8 @@ function SoftBody() {
 	this.ID = 0;
 	this.softs = [];
 
+	this.tmpMat = null;
+
 }
 
 Object.assign( SoftBody.prototype, {
@@ -247,8 +249,10 @@ Object.assign( SoftBody.prototype, {
 			case 'softCloth': tmp = softCloth( o, material ); break;
 			case 'softRope': tmp = softRope( o, material ); break;
 
-			case 'softEllips':// tmp = ellipsoid( o );
+			case 'softEllips':// tmp = ellipsoid( o )
+			    this.tmpMat = material;
 				root.post( 'add', o );
+
 				return;
 				break;
 
@@ -273,6 +277,7 @@ Object.assign( SoftBody.prototype, {
 	createEllipsoid: function ( o ) {
 
 		var mesh = ellipsoid( o );
+		if(this.tmpMat) mesh.material = this.tmpMat;
 		//o = tmp.o;
 
 		mesh.name = o.name;

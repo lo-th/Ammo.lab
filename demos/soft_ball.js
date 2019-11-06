@@ -8,8 +8,21 @@ function demo() {
     physic.add({ type:'box', size:[40,10,1], pos:[0,4.6,15], rot:[45,0,0], mass:0 });
     physic.add({ type:'box', size:[40,2,40], pos:[0,-1,0], rot:[0,0,0], mass:0 });
 
+    var spheroid = view.material({
+        name:'spheroid',
+        roughness: 0.75,
+        metalness: 0.5,
+        sheen: new THREE.Color( 0.9, 0.8, 0.6 ),
+        color: new THREE.Color( 0.3, 0.1, 0.1 ),
+        side:'Double',
+        transparency:0.5,
+        reflectivity:0.9,
+        transparent:true,
+    });
+
     physic.add({ 
         type:'softEllips',
+        material: spheroid,
         center:[0, 20, 15],
         radius:[3, 5, 3],
         vertices:512,
@@ -30,6 +43,7 @@ function demo() {
 
     physic.add({ 
         type:'softEllips',
+        material: spheroid,
         center:[10, 20, 15],
         radius:[3, 3, 3],
         vertices:128,
@@ -49,6 +63,7 @@ function demo() {
 
     physic.add({ 
         type:'softEllips',
+        material: spheroid,
         center:[-10, 20, 15],
         radius:[2, 1, 2],
         vertices:64,

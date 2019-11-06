@@ -1261,7 +1261,7 @@
 			ray:[],
 			terrain:[],
 			vehicle:[],
-			key:[ 0, 0, 0, 0, 0, 0, 0, 0 ],
+			
 		},
 
 		world: null,
@@ -1269,6 +1269,8 @@
 		scale: 1,
 		invscale: 1,
 		angle: 0,
+
+		key:[ 0, 0, 0, 0, 0, 0, 0, 0 ],
 
 		post:null,
 
@@ -1354,12 +1356,12 @@
 
 				// the position at the end of the last physics tick
 
-				//b.getMotionState().getWorldTransform( trans );
-	            //trans.toArray( AR, n + 1, scale )
+				b.getMotionState().getWorldTransform( trans );
+	            trans.toArray( AR, n + 1, scale );
 
 
 				// non-interpolated position 
-				b.getWorldTransform().toArray( AR, n + 1, scale );
+				//b.getWorldTransform().toArray( AR, n + 1, scale );
 
 			} );
 
@@ -2210,6 +2212,7 @@
 		step: function ( AR, N ) {
 
 			var softPoints = N, n, s, j;
+			var scale = root.scale;
 
 			this.softs.forEach( function ( b ) {
 
@@ -2219,13 +2222,13 @@
 				while ( j -- ) {
 
 					n = softPoints + ( j * 3 );
-					s.at( j ).get_m_x().toArray( AR, n, root.scale );
+					s.at( j ).get_m_x().toArray( AR, n, scale );
 
 				}
 
 				softPoints += s.size() * 3;
 
-			} );
+			});
 
 		},
 
@@ -2302,7 +2305,7 @@
 			var soft = map.get( o.soft );
 			var p0 = math.vector3().fromeArray( o.wind );
 			var i = o.nodes.length;
-			while(i--) soft.addAeroForceToNode( p0, o.nodes[i] );
+			while( i-- ) soft.addAeroForceToNode( p0, o.nodes[i] );
 			p0.free();
 
 		},
@@ -2328,6 +2331,8 @@
 
 			var worldInfo = root.world.getWorldInfo();
 
+
+
 			var gendiags = o.gendiags || true;
 			//var fixed = o.fixed || 0;
 
@@ -2352,19 +2357,34 @@
 
 			var softBodyHelpers = new Ammo.btSoftBodyHelpers();
 
+			console.log( softBodyHelpers );
+
 			var body;
 
 			switch ( o.type ) {
+
+				case 'softMesh': //case 'softConvex':
+
+				    // scale geometry
+				    if ( root.scale !== 1 ){
+				    	var j = o.v.length;
+				        while ( j -- ) o.v[ j ] *= root.invScale;
+				    }
+				    
+					body = softBodyHelpers.CreateFromTriMesh( worldInfo, o.v, o.i, o.ntri, o.randomize || true );
+					body.softType = 5;
+
+				break;
 
 				case 'softCloth':
 
 					var mw = o.size[ 0 ] * 0.5;
 					var mh = o.size[ 2 ] * 0.5;
 
-					p1.fromArray( [ - mw, 0, - mh ], 0, root.invScale );
-					p2.fromArray( [ mw, 0, - mh ], 0, root.invScale );
-					p3.fromArray( [ - mw, 0, mh ], 0, root.invScale );
-					p4.fromArray( [ mw, 0, mh ], 0, root.invScale );
+					p1.fromArray( [ - mw, 0, - mh ] );
+					p2.fromArray( [ mw, 0, - mh ] );
+					p3.fromArray( [ - mw, 0, mh ] );
+					p4.fromArray( [ mw, 0, mh ] );
 
 					body = softBodyHelpers.CreatePatch( worldInfo, p1, p2, p3, p4, o.div[ 0 ], o.div[ 1 ], o.fixed || 0, gendiags );
 					body.softType = 1;
@@ -2413,9 +2433,9 @@
 
 					self.postMessage( { m: 'ellipsoid', o: o } );
 
-					break;
+				break;
 
-					/*case 'softConvex': // BUG !!
+				case 'softConvex': // BUG !!
 
 				    //var j = o.v.length;
 				    //while( j-- ) { o.v[ j ] *= root.invScale; }
@@ -2461,25 +2481,48 @@
 
 					//console.log( body.get_m_nodes().size(), lng )
 
-					break;*/
+				break;
 
-				case 'softMesh': case 'softConvex':
-
-				    var j = o.v.length;
-				    while ( j -- ) {
-
-						o.v[ j ] *= root.invScale;
-
-					}
-
-					body = softBodyHelpers.CreateFromTriMesh( worldInfo, o.v, o.i, o.ntri, o.randomize || true );
-					body.softType = 5;
-
-					break;
+				
 
 			}
 
 
+			// apply parametre
+			this.applyOption( body, o );
+			
+
+			// apply position and rotation
+			trans.identity().fromArray( o.pos.concat( o.quat ) );
+			body.transform( trans );
+
+
+			// Soft-soft and soft-rigid collisions
+			root.world.addSoftBody( body, o.group || 1, o.mask || - 1 );
+
+
+			body.setActivationState( o.state || 4 );
+			body.points = body.get_m_nodes().size();
+			body.name = name;
+
+			body.type = 'soft';
+
+			this.softs.push( body );
+
+			map.set( name, body );
+
+			// free math
+			p0.free();
+			p1.free();
+			p2.free();
+			p3.free();
+			p4.free();
+			trans.free();
+			o = null;
+
+		},
+
+		applyOption: function ( body, o ) {
 
 			var sb = body.get_m_cfg();
 
@@ -2524,7 +2567,6 @@
 	        kSS_SPLT_CL;    // Soft vs rigid impulse split [0,1] (cluster only)
 	        */
 
-
 	        var mat = body.get_m_materials().at( 0 );
 
 	        //mat.set_m_flags(0);// def 1
@@ -2536,12 +2578,9 @@
 
 			if ( o.stiffness !== undefined ) { // range (0,1)
 
-				
 				mat.set_m_kLST( o.stiffness ); // linear
 				mat.set_m_kAST( o.stiffness ); // angular
 				mat.set_m_kVST( o.stiffness ); // volume
-
-				
 
 			}
 
@@ -2568,36 +2607,7 @@
 			if ( o.margin !== undefined ) Ammo.castObject( body, Ammo.btCollisionObject ).getCollisionShape().setMargin( o.margin * root.invScale );// def 0.25
 
 
-			//body.translate( p0.fromArray( o.pos ) )
 
-			// apply position and rotation
-			trans.identity().fromArray( o.pos.concat( o.quat ) );
-			body.transform( trans );
-
-
-
-			// Soft-soft and soft-rigid collisions
-			root.world.addSoftBody( body, o.group || 1, o.mask || - 1 );
-
-
-			body.setActivationState( o.state || 4 );
-			body.points = body.get_m_nodes().size();
-			body.name = name;
-
-			body.type = 'soft';
-
-			this.softs.push( body );
-
-			map.set( name, body );
-
-			// free math
-			p0.free();
-			p1.free();
-			p2.free();
-			p3.free();
-			p4.free();
-			trans.free();
-			o = null;
 
 		}
 
@@ -2879,7 +2889,8 @@
 
 			if ( ! map.has( name ) ) return;
 			var car = map.get( name + '_constuctor' );
-			car.drive( root.flow.key );
+
+			car.drive( root.key );
 
 		},
 
@@ -3005,6 +3016,7 @@
 
 		this.limitAngular = [1,1,1];
 
+		this.transforms = [];
 
 		this.wheelBody = [];
 		this.wheelJoint = [];
@@ -3073,11 +3085,14 @@
 			this.body.getMotionState().getWorldTransform( trans );
 			trans.toArray( Ar, n + 1, scale );
 
+			//this.body.getWorldTransform().toArray( Ar, n + 1, scale );
+
 			var j = this.data.nWheel, w, t;
 
 			while ( j -- ) {
 
 				this.chassis.updateWheelTransform( j, true );
+
 				t = this.chassis.getWheelTransformWS( j );
 
 				// supension info
@@ -3085,6 +3100,8 @@
 
 				w = 8 * ( j + 1 );
 				t.toArray( Ar, n + w + 1, scale );
+
+				//this.transforms[j].toArray( Ar, n + w + 1, scale );
 
 				if ( j === 0 ) Ar[ n + w ] = this.chassis.getWheelInfo( 0 ).get_m_steering();
 				if ( j === 1 ) Ar[ n + w ] = this.chassis.getWheelInfo( 1 ).get_m_steering();
@@ -3363,6 +3380,8 @@
 
 				    this.wheelRadius.push(fw ? radius : radiusBack);
 
+				    this.transforms.push( this.chassis.getWheelTransformWS( i ) );
+
 				/*} else {
 
 					trans.identity();
@@ -3595,7 +3614,8 @@
 
 			if ( ! map.has( name ) ) return;
 			var hero = map.get( name );
-			hero.move( root.flow.key );
+
+			hero.move( root.key );
 			hero.setAngle( root.angle );
 
 		},
@@ -4271,6 +4291,10 @@
 
 	exports.engine = ( function () {
 
+		var interval = null;
+		var isInternUpdate = false;
+		var Time = typeof performance === 'undefined' ? Date : performance;
+
 		//var world = null;
 		var Ar, ArPos, ArMax;
 		var timestep = 1 / 60;
@@ -4299,6 +4323,10 @@
 		var ray = null;
 
 		var tmpT, tmpP;
+
+
+
+		var t = { now: 0, delta: 0, then: 0, deltaTime:0, inter: 0, tmp: 0, n: 0, timerate: 0, last:0 };
 
 
 
@@ -4338,13 +4366,82 @@
 
 			},
 
+			loop: function ( o ){
+
+				t.now = Time.now();
+			    t.delta = t.now - t.then;
+
+			    if ( t.delta > t.inter ) {
+			    	t.then = t.now - ( t.delta % t.inter );
+			    	exports.engine.step( { key:o.key, delta:t.delta*0.001 } );
+			    }/* else (
+			    	engine.internStep( { key:o.key } )
+			    )*/
+
+			},
+
+			internStep: function ( o ){
+
+				//var now = Time.now();
+
+
+			    //stepNext = true; 
+
+			    
+
+				//if ( interval ) clearInterval( interval );
+				//interval = setInterval( function(){ engine.loop( { key:o.key } ) }, 1000 * timestep );
+
+				//var timx = timestep;/t.inter/ - o.steptime;
+
+				//t.inter = 1000 * timestep
+
+
+				if ( interval ) clearTimeout( interval );
+				interval = setTimeout( function(){ exports.engine.loop( { key:o.key } ); },  0 );
+
+				
+
+
+				//if ( interval ) clearTimeout( interval );
+				//interval = setTimeout( engine.step( { key:o.key } ), 1000 * timestep );
+
+				/*interval = setTimeout( 
+					function(){
+						var now = Time.now();
+						engine.step({ key:o.key, delta:now - last });
+			            last = now;
+					}
+				, 1000 * timestep );*/
+
+				//console.log(timestep)
+
+			},
+
 			step: function ( o ) {
+
+				if( isInternUpdate ){
+
+					
+					//delta = ( t.now - t.last ) * 0.001;
+					if ( t.now - 1000 > t.tmp ) { t.tmp = t.now; t.fps = t.n; t.n = 0; } t.n ++;
+					
+				} /*else {
+					
+				}*/
+
+				delta = o.delta;
+
+
+
+				
+				//delta = delta || 1;
 
 
 				//if ( fixed ) root.world.stepSimulation( o.delta, substep, timestep );
 				//else root.world.stepSimulation( o.delta, substep );
 
-				//root.key = o.key;
+				root.key = o.key;
 
 
 				
@@ -4366,10 +4463,18 @@
 				// breakable object
 				if ( numBreak !== 0 ) this.stepBreak();
 
-				delta = o.delta;
 
-				if ( fixed ) root.world.stepSimulation( timestep, substep );//root.world.stepSimulation( delta, substep, timestep );
+
+				// timeStep < maxSubSteps * fixedTimeStep if you don't want to lose time.
+
+				//root.world.stepSimulation( timestep, substep );
+
+				if ( fixed ) root.world.stepSimulation( timestep, 0 );//root.world.stepSimulation( delta, substep, timestep );
+				//else root.world.stepSimulation( delta, substep, timestep );
 				else root.world.stepSimulation( delta, substep, timestep );
+
+				//if( delta > substep * timestep ) console.log('mmm')
+				//else root.world.stepSimulation( delta, substep );
 
 				rigidBody.step( Ar, ArPos[ 0 ] );
 				collision.step( Ar, ArPos[ 1 ] );
@@ -4380,8 +4485,11 @@
 
 				raycaster.step();
 
-				if ( isBuffer ) self.postMessage( { m: 'step', flow: root.flow, Ar: Ar }, [ Ar.buffer ] );
-				else self.postMessage( { m: 'step', flow: root.flow, Ar: Ar } );
+				if ( isBuffer ) self.postMessage( { m: 'step', fps:t.fps, delta:t.delta,  flow: root.flow, Ar: Ar }, [ Ar.buffer ] );
+				else self.postMessage( { m: 'step', fps:t.fps, delta:delta, flow: root.flow, Ar: Ar } );
+
+
+				if( isInternUpdate ) t.last = t.now;//Time.now();//now;
 
 			},
 
@@ -4696,6 +4804,13 @@
 				substep = o.substep !== undefined ? o.substep : 2;
 				fixed = o.fixed !== undefined ? o.fixed : false;
 
+
+				t.inter = o.fps !== undefined ? 1000 / o.fps : 1000 / 60;
+
+				isInternUpdate = o.isInternUpdate || false;
+
+				//console.log( isInternUpdate )
+
 				jointDebug = o.jointDebug !== undefined ? o.jointDebug : false;
 
 				root.constraintDebug = jointDebug;
@@ -4834,7 +4949,7 @@
 				//else  t = b.getWorldTransform();
 				//b.getWorldTransform ( t );
 
-				if( o.rot === undefined && o.quat === undefined ) o.keepRot = true;
+				if( o.rot === undefined && o.quat === undefined ) o.quat = [ 0, 0, 0, 1 ];//o.keepRot = true;
 
 				if ( o.keepX || o.keepY || o.keepZ || o.keepRot ) { // keep original position
 
@@ -4858,7 +4973,8 @@
 
 					//o.pos = math.vectomult( o.pos, root.invScale );
 					if ( o.rot !== undefined ) o.quat = math.eulerToQuadArray( o.rot, true );// is euler degree
-					if ( o.quat !== undefined ) o.pos = o.pos.concat( o.quat );
+					
+					o.pos = o.pos.concat( o.quat );
 					
 					t.fromArray( o.pos, 0, root.invScale );
 
@@ -4976,11 +5092,14 @@
 				var name = o.name;
 
 				if ( ! map.has( name ) ) return;
-				var b = map.get( name );
+				var body = map.get( name );
 
-				switch( b.type ){
+				switch( body.type ){
 					case 'solid': case 'body' :
-					    rigidBody.applyOption( b, o );
+					    rigidBody.applyOption( body, o );
+					break;
+					case 'soft':
+					    softBody.applyOption( body, o );
 					break;
 				}
 

@@ -85,7 +85,7 @@ function afterLoad () {
 
     physic.drive( option.name );
 
-    view.update = update;
+    //view.update = update;
 
 }
 
@@ -345,39 +345,39 @@ function buggyMaterials () {
         roughness: 0.2,
         metalness: 0.9,
         envMapIntensity: 1.35,
-        map: view.texture( 'buggy/body.jpg' ),
+        map: { url:'buggy/body.jpg' },
     });
 
     mat['extra'] = view.material({
         name:'extra',
         roughness: 0.4,
         metalness: 0.6,
-        map: view.texture( 'buggy/extra.jpg' ),
-        normalMap: view.texture( 'buggy/extra_n.jpg' ),
+        map: { url:'buggy/extra.jpg' },
+        normalMap: { url:'buggy/extra_n.jpg' },
     });
 
     mat['pilote'] = view.material({
         name:'pilote',
         roughness: 0.4,
         metalness: 0.6,
-        map: view.texture( 'buggy/pilote.jpg' ),
+        map: { url:'buggy/pilote.jpg' },
     });
 
     mat['wheel'] = view.material({
         name:'wheel',
         roughness: 0.4,
         metalness: 0.6,
-        map: view.texture( 'buggy/wheel_c.jpg'),
-        normalMap: view.texture( 'buggy/wheel_n.jpg'),
+        map: { url:'buggy/wheel_c.jpg' },
+        normalMap: { url:'buggy/wheel_n.jpg' },
     });
 
     mat['pneu'] = view.material({
         name:'pneu',
         roughness: 0.7,
         metalness: 0.5,
-        map: view.texture( 'buggy/wheel_c.jpg'),
-        normalMap: view.texture( 'buggy/wheel_n.jpg'),
-        normalScale:new THREE.Vector2( 2, 2 ),
+        map: { url:'buggy/wheel_c.jpg' },
+        normalMap: { url:'buggy/wheel_n.jpg' },
+        normalScale: [ 2, 2 ],
         envMapIntensity: 0.6,
     });
 
@@ -385,14 +385,14 @@ function buggyMaterials () {
         name:'susp',
         roughness: 0.6,
         metalness: 0.4,
-        map: view.texture( 'buggy/suspension.jpg'),
+        map: { url:'buggy/suspension.jpg' },
     });
 
     mat['suspM'] = view.material({
         name:'suspM',
         roughness: 0.6,
         metalness: 0.4,
-        map: view.texture( 'buggy/suspension.jpg'),
+        map: { url:'buggy/suspension.jpg' },
         morphTargets:true
     });
 

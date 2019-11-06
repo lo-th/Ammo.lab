@@ -30,12 +30,12 @@ function afterLoad () {
         name:'dragon_mat',
         roughness: 0.4,
         metalness: 0.6,
-        map: view.texture( 'dragon.jpg' ),
-        metalnessMap: view.texture( 'dragon.jpg' ),
-        alphaMap: view.texture( 'dragon_m.jpg' ),
+        map: { url:'dragon.jpg' },
+        metalnessMap: { url:'dragon.jpg' },
+        alphaMap: { url:'dragon_m.jpg' },
         transparent:true,
         //alphaTest:0.9,
-        normalMap: view.texture( 'dragon_n.jpg' ),
+        normalMap: { url:'dragon_n.jpg' },
         normalScale:  new THREE.Vector2( 1.5, 1.5 ),
         roughness:0.3,
         metalness:1.0,
@@ -148,7 +148,7 @@ function updateNode ( time ) {
 	var x = -3 + r * Math.cos( tt );
 	var y = r * Math.sin( tt );
 
-	physic.matrix( [{ name:'b_spine_0', pos:[ x, y, -1 ] }] );
+	physic.matrix( [{ name:'b_spine_0', pos:[ x, y, -1 ], keepRot:true }] );
 
 }
 

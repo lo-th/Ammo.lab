@@ -1,11 +1,13 @@
 function demo() {
 
     view.moveCam({ theta:90, phi:20, distance:40, target:[0,1,0] });
+    
     physic.set({
         fps:60,
         substep:10,
         gravity:[0,-10,0],
     })
+
     view.load ( 'pig.sea', afterLoad, true );
 
 }
@@ -14,9 +16,11 @@ function afterLoad () {
 
     var matPig = view.material({
         name:'pig',
-        roughness: 0.5,
-        metalness: 0.5,
         color: 0xF9A195,
+        roughness: 0.9,
+        metalness: 0.1,
+        sheen: new THREE.Color( 0.9, 0, 0 ),
+        //vertexColors:THREE.VertexColors,
     });
 
     physic.add({ type:'plane' }); // infinie plane

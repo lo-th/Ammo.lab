@@ -12,13 +12,23 @@ var p = new THREE.Vector3();
 var s = new THREE.Vector3();
 var q = new THREE.Quaternion();
 
+var decal = 2;
+
 function demo() {
 
     view.moveCam({ theta:20, phi:40, distance:100, target:[0,20,0] });
 
     view.setSky({ url:'photo.jpg', hdr:true });
+    view.setShadow({groundY:decal})
 
-    physic.set();
+    physic.set({
+
+        fps:60,
+        substep:2,// more substep = more accurate default set to 2
+        gravity:[0,-9.8,0],
+        worldscale:10,
+
+    })
 
     pool.load( 'assets/bvh/action.z', initAnimation );
 
@@ -141,7 +151,7 @@ function initSkeleton () {
             kinematic: true,
             //density:0.3, 
             //material:'kinematic',
-            friction:0.2, 
+            friction:0.5, 
             restitution:0.2
         }
 
@@ -178,19 +188,21 @@ function addHair () {
 
 function addExtra () {
 
-    var i = 300, d, w, h, m,  x, z, y;
+    var i = 500, d, w, h, m,  x, z, y;
 
-    w = 60;
-    h = 60;
-    m = 4;
+    w = 80;
+    h = 80;
+    m = 10;
+
+    var matSolid = 'hide';
 
     // basic box wall
-    physic.add({type:'box', size:[w, m, w], pos:[0,-m*0.5, 0], friction:0.2, restitution:0.2, material:'hide' });
-    physic.add({type:'box', size:[m,h,w-(2*m)], pos:[(w*0.5)-(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:'hide'  });
-    physic.add({type:'box', size:[m,h,w-(2*m)], pos:[(-w*0.5)+(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:'hide'  });
-    physic.add({type:'box', size:[w,h,m], pos:[0,h*0.5,(w*0.5)-(m*0.5)], friction:0.2, restitution:0.2, material:'hide' });
-    physic.add({type:'box', size:[w,h,m], pos:[0,h*0.5,(-w*0.5)+(m*0.5)], friction:0.2, restitution:0.2, material:'hide' });
-    physic.add({type:'box', size:[w-(2*m), m, w-(2*m)], pos:[0,h-(m*0.5), 0], friction:0.2, restitution:0.2, material:'hide' });
+    physic.add({type:'box', size:[w, m, w], pos:[0,(-m*0.5)+decal, 0], friction:0.2, restitution:0.2, material:matSolid });
+    physic.add({type:'box', size:[m,h,w-(2*m)], pos:[(w*0.5)-(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:matSolid  });
+    physic.add({type:'box', size:[m,h,w-(2*m)], pos:[(-w*0.5)+(m*0.5),h*0.5,0], friction:0.2, restitution:0.2, material:matSolid  });
+    physic.add({type:'box', size:[w,h,m], pos:[0,h*0.5,(w*0.5)-(m*0.5)], friction:0.2, restitution:0.2, material:matSolid });
+    physic.add({type:'box', size:[w,h,m], pos:[0,h*0.5,(-w*0.5)+(m*0.5)], friction:0.2, restitution:0.2, material:matSolid });
+    physic.add({type:'box', size:[w-(2*m), m, w-(2*m)], pos:[0,h-(m*0.5), 0], friction:0.2, restitution:0.2, material:matSolid });
 
    /* add({
         type:[ 'box', 'box', 'box', 'box', 'box' ],
@@ -203,12 +215,12 @@ function addExtra () {
         w = Math.rand(2,6);
         h = Math.rand(3,6);
         d = Math.rand(3,6);
-        x = Math.rand(-12,12);
-        z = Math.rand(-12,12);
-        y = Math.rand(4,30)//(60,100)
+        x = Math.rand(-25,25);
+        z = Math.rand(-25,25);
+        y = Math.rand(50,60)//(60,100)
 
         //add( { type:'box', size:[w,h,d], pos:[x,y,z], move:true } );
-        physic.add( { type:'sphere', size:[w*0.5], pos:[x,y,z], density:0.3, friction:0.2, restitution:0.2, linear:0, angular:1  } );
+        physic.add( { type:'sphere', size:[w*0.5], pos:[x,y,z], density:2, friction:0.5, restitution:0.2, linear:0, angular:0.5, material:'check'  } );
 
     }
 
@@ -265,9 +277,9 @@ function update () {
 
 }
 
-function update2 () {
+function update2 ( delta ) {
 
-    //if ( mixer ) mixer.update( 0.003 );
+    //if ( mixer ) mixer.update( delta*0.25 );
     if ( loaded ) updateSkeleton();
 
 }

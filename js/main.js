@@ -9,7 +9,7 @@
 'use strict';
 
 var demos = [ 
-    'basic', 'terrain', 'terrainPlus', 'supermaket', 'collision', 'ragdoll',
+    'basic', 'terrain', 'supermaket', 'collision', 'ragdoll',
     'car_advanced', 'car_basic','car_multy', 'car_Breakers', 'car_terrain',
     'moto_basic','moto_akira',
     'kinematics', 'kinem_body','kinem_test',
@@ -21,7 +21,7 @@ var demos = [
     'rayTest',
     'ghost', 
     'fps',
-    'dragon',
+    'dragon', 'chess',
 ];
 
 demos.sort();
@@ -61,9 +61,6 @@ function next(){
     physic.getKey = function () { return user.key; }
 
 
-
-    // for update envmap
-    //view.extraUpdateMat = physic.updateTmpMat;
 
     editor.init( launch, isWithCode, '#308AFF', 'Ammo.lab' );
     editor.addExtraOption( physic.setMode );

@@ -162,7 +162,6 @@ function update () {
 
     kaneda.playFrame( frame, 24 );
 
-    //console.log( frame );
 
     //var r = (data.speed*THREE.Math.DEG2RAD*0.8)
 
@@ -224,7 +223,10 @@ function initKaneda () {
     kaneda.castShadow = true;
     kaneda.receiveShadow = true;
 
-    kaneda.play( "turn", .5 );
+    kaneda.play( "turn" );
+
+    kaneda.getAnim();
+    //console.log( kaneda.anim )
 
 
     var hair = view.getMesh( 'kaneda', 'ka_hair' );
@@ -480,12 +482,13 @@ function initMaterials () {
     var ao = 1.5;
 
     mat['debugWheel'] = view.material({
+        type:'Basic',
         name:'debugWheel',
         color: 0x3c7cff,
         wireframe:true,
         transparent:true,
         opacity:0.5,
-    }, 'Basic' );
+    });
 
 	mat['glass'] = view.material({
         name:'glass',
@@ -494,7 +497,7 @@ function initMaterials () {
         color: 0xeeefff,
         transparent:true,
         opacity:0.3,
-        side:THREE.DoubleSide,
+        side:'Double',
         //depthTest:false,
         depthWrite:false,
 
@@ -504,10 +507,10 @@ function initMaterials () {
         name:'glass_colors',
         roughness: 0.1,
         metalness: 1.0,
-        map: view.texture( 'kaneda/bike_3_l.jpg'),
+        map: { url:'kaneda/bike_3_l.jpg'},
         emissive: 0xAAAAAA,
         emissiveIntensity:1,
-        emissiveMap: view.texture( 'kaneda/bike_3_l.jpg'),
+        emissiveMap: { url:'kaneda/bike_3_l.jpg'},
         transparent:true,
         opacity:0.66,
     });
@@ -517,11 +520,11 @@ function initMaterials () {
         roughness: 1.0,
         metalness: 1.0,
         //color:0xffffff,
-        map: view.texture( 'kaneda/bike_1_c.jpg'),
-        metalnessMap: view.texture( 'kaneda/bike_1_m.jpg'),
-        roughnessMap: view.texture( 'kaneda/bike_1_r.jpg'),
-        normalMap: view.texture( 'kaneda/bike_1_n.jpg'),
-        aoMap: view.texture( 'kaneda/bike_1_a.jpg'),
+        map: { url:'kaneda/bike_1_c.jpg'},
+        metalnessMap: { url:'kaneda/bike_1_m.jpg'},
+        roughnessMap: { url:'kaneda/bike_1_r.jpg'},
+        normalMap: { url:'kaneda/bike_1_n.jpg'},
+        aoMap: { url:'kaneda/bike_1_a.jpg'},
         aoMapIntensity:ao,
     });
 
@@ -529,11 +532,11 @@ function initMaterials () {
         name:'bike_1_m',
         roughness: 1.0,
         metalness: 1.0,
-        map: view.texture( 'kaneda/bike_1_c.jpg'),
-        metalnessMap: view.texture( 'kaneda/bike_1_m.jpg'),
-        roughnessMap: view.texture( 'kaneda/bike_1_r.jpg'),
-        normalMap: view.texture( 'kaneda/bike_1_n.jpg'),
-        aoMap: view.texture( 'kaneda/bike_1_a.jpg' ),
+        map: { url:'kaneda/bike_1_c.jpg'},
+        metalnessMap: { url:'kaneda/bike_1_m.jpg'},
+        roughnessMap: { url:'kaneda/bike_1_r.jpg'},
+        normalMap: { url:'kaneda/bike_1_n.jpg'},
+        aoMap: { url:'kaneda/bike_1_a.jpg' },
         aoMapIntensity:ao,
         morphTargets:true,
     });
@@ -542,23 +545,23 @@ function initMaterials () {
         name:'bike_2',
         roughness: 1.0,
         metalness: 1.0,
-        map: view.texture( 'kaneda/bike_2_c.jpg'),
-        metalnessMap: view.texture( 'kaneda/bike_2_m.jpg'),
-        roughnessMap: view.texture( 'kaneda/bike_2_r.jpg'),
-        aoMap: view.texture( 'kaneda/bike_2_a.jpg'),
+        map: { url:'kaneda/bike_2_c.jpg'},
+        metalnessMap: { url:'kaneda/bike_2_m.jpg'},
+        roughnessMap: { url:'kaneda/bike_2_r.jpg'},
+        aoMap: { url:'kaneda/bike_2_a.jpg'},
         aoMapIntensity:ao,
-        //normalMap: view.texture( 'kaneda/bike_2_n.jpg'),
+        //normalMap: { url:'kaneda/bike_2_n.jpg'),
     });
 
     mat['bike_3'] = view.material({
         name:'bike_3',
         roughness: 1.0,
         metalness: 1.0,
-        map: view.texture( 'kaneda/bike_3_c.jpg'),
-        normalMap: view.texture( 'kaneda/bike_3_n.jpg'),
-        metalnessMap: view.texture( 'kaneda/bike_3_m.jpg'),
-        roughnessMap: view.texture( 'kaneda/bike_3_r.jpg'),
-        aoMap: view.texture( 'kaneda/bike_3_a.jpg'),
+        map: { url:'kaneda/bike_3_c.jpg'},
+        normalMap: { url:'kaneda/bike_3_n.jpg'},
+        metalnessMap: { url:'kaneda/bike_3_m.jpg'},
+        roughnessMap: { url:'kaneda/bike_3_r.jpg'},
+        aoMap: { url:'kaneda/bike_3_a.jpg'},
         aoMapIntensity:ao,
     });
 
@@ -566,8 +569,8 @@ function initMaterials () {
         name:'tires',
         roughness: 0.6,
         metalness: 0.5,
-        map: view.texture( 'kaneda/tires_c.jpg'),
-        normalMap: view.texture( 'kaneda/tires_n.jpg'),
+        map: { url:'kaneda/tires_c.jpg'},
+        normalMap: { url:'kaneda/tires_n.jpg'},
         //normalScale:new THREE.Vector2( 2, 2 ),         
     });
 
@@ -576,12 +579,12 @@ function initMaterials () {
         skinning: true,
         roughness: 1.0,
         metalness: 1.0,
-        map: view.texture( 'kaneda/kaneda_c.jpg'),
-        normalMap: view.texture( 'kaneda/kaneda_n.jpg'),
+        map: { url:'kaneda/kaneda_c.jpg'},
+        normalMap: { url:'kaneda/kaneda_n.jpg'},
         //normalScale:new THREE.Vector2( 0.5, 0.5 ), 
-        metalnessMap: view.texture( 'kaneda/kaneda_m.jpg'),
-        roughnessMap: view.texture( 'kaneda/kaneda_r.jpg'),
-        aoMap: view.texture( 'kaneda/kaneda_a.jpg'), 
+        metalnessMap: { url:'kaneda/kaneda_m.jpg'},
+        roughnessMap: { url:'kaneda/kaneda_r.jpg'},
+        aoMap: { url:'kaneda/kaneda_a.jpg'}, 
         aoMapIntensity:ao,
     });
 
@@ -589,8 +592,8 @@ function initMaterials () {
         name:'eye',
         roughness: 0.0,
         metalness: 1.0,
-        map: view.texture( 'kaneda/kaneda_c.jpg'),
-        normalMap: view.texture( 'kaneda/kaneda_n.jpg'),   
+        map: { url:'kaneda/kaneda_c.jpg'},
+        normalMap: { url:'kaneda/kaneda_n.jpg'},   
     });
 
 }

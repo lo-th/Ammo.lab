@@ -202,7 +202,7 @@ function makeBall () {
             name:'lotox'+i,
             roughness: 0.4,
             metalness: 0.6,
-            map: createTexture( i+1, true )
+            map: createTexture(  i+1, true )
         });
 
         l = Math.floor(i/6);
@@ -308,6 +308,9 @@ function update () {
 
 function createTexture ( n, y ){
 
+    var old = view.getTexture('ball_' + n + (y ? 'R':'Y'));
+    if( old !== null ) return old;
+
 	ctx = tmpCanvas.getContext("2d");
 
     ctx.clearRect(0, 0, 128, 128);
@@ -342,6 +345,7 @@ function createTexture ( n, y ){
 	var t = new THREE.Texture( img );
 	t.needsUpdate = true;
 	t.flipY = false;
+    t.name = 'ball_' + n + (y ? 'R':'Y');
 
 	return t;
 

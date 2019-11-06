@@ -23,7 +23,7 @@ function afterLoadGeometry () {
         name:'drone',
         roughness: 0.4,
         metalness: 0.6,
-        map: view.texture( 'drone.jpg' ),
+        map: { url:'drone.jpg' },
     });
 
     // infinie plane

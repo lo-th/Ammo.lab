@@ -37,7 +37,8 @@ Object.assign( Character.prototype, {
 
 		if ( ! map.has( name ) ) return;
 		var hero = map.get( name );
-		hero.move( root.flow.key );
+
+		hero.move( root.key );
 		hero.setAngle( root.angle );
 
 	},

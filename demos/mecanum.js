@@ -130,29 +130,29 @@ function initMaterials () {
         name:'meca1',
         roughness: 0.4,
         metalness: 0.6,
-        map: view.texture( 'meca_chassis.jpg' ),
+        map: { url:'meca_chassis.jpg' },
     });
 
     mat['meca2'] = view.material({
         name:'meca2',
         roughness: 0.7,
         metalness: 0.3,
-        map: view.texture( 'meca_wheel.jpg' ),
-        normalMap: view.texture( 'meca_wheel_n.jpg' )
+        map: { url:'meca_wheel.jpg' },
+        normalMap: { url:'meca_wheel_n.jpg' }
     });
 
     mat['meca3'] = view.material({
         name:'meca3',
         roughness: 0.2,
         metalness: 0.8,
-        map: view.texture( 'meca_tools.jpg' ),
+        map: { url:'meca_tools.jpg' },
     });
 
     mat['meca4'] = view.material({
         name:'meca4',
         roughness: 0.2,
         metalness: 0.8,
-        map: view.texture( 'meca_tire.jpg' ),
+        map: { url:'meca_tire.jpg' },
     });
 
     mat['spring'] = view.material({

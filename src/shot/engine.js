@@ -29,7 +29,7 @@ export var engine = ( function () {
 
 	var URL = window.URL || window.webkitURL;
 	var Time = typeof performance === 'undefined' ? Date : performance;
-	var t = { now: 0, delta: 0, then: 0, deltaTime:0, inter: 0, tmp: 0, n: 0, timerate: 0 };
+	var t = { now: 0, delta: 0, then: 0, deltaTime:0, inter: 0, tmp: 0, n: 0, timerate: 0, steptime: 0 };
 
 	var timer = null;
 
@@ -57,7 +57,7 @@ export var engine = ( function () {
 
 	var oldFollow = '';
 
-	//var isInternUpdate = false;
+	var isInternUpdate = false;
 	//var isRequestAnimationFrame = false;
 
 	var option = {
@@ -70,15 +70,15 @@ export var engine = ( function () {
 		broadphase: 2,
 		soft: true,
 
-		animFrame : false,
-		fixed: false,
+		animFrame : true,
+		fixed: true,
 		jointDebug: false,
 
 	};
 
 	engine = {
 
-		link : "./build/gun.js",
+		folder: './build/',
 
 		message: function ( e ) {
 
@@ -90,7 +90,7 @@ export var engine = ( function () {
 
 				case 'initEngine': engine.initEngine(); break;
 				case 'start': engine.start(); break;
-				case 'step': engine.step(); break;
+				case 'step': engine.step(data.fps, data.delta); break;
 
 				case 'moveSolid': engine.moveSolid( data.o ); break;
 				case 'ellipsoid': engine.ellipsoidMesh( data.o ); break;
@@ -120,10 +120,12 @@ export var engine = ( function () {
 				soft: Option.soft !== undefined ? Option.soft : true,
 				//penetration: Option.penetration || 0.0399,
 
-				fixed: Option.fixed !== undefined ? Option.fixed : false,
-				animFrame: Option.animFrame !== undefined ? Option.animFrame : false,
+				fixed: Option.fixed !== undefined ? Option.fixed : true,
+				animFrame: Option.animFrame !== undefined ? Option.animFrame : true,
 
 				jointDebug : Option.jointDebug !== undefined ? Option.jointDebug : false,
+
+				isInternUpdate: isInternUpdate,
 
 			};
 
@@ -135,20 +137,20 @@ export var engine = ( function () {
 			switch( type ) {
 
 				case 'min' : 
-				    engine.load( "./build/ammo.hex", true );
+				    engine.load( engine.folder + "ammo.hex", true );
 				break;
 
 				case 'LZMA' : case 'lzma' : case 'compact' :
-				    engine.load( "./build/ammo.hex" );
+				    engine.load( engine.folder + "ammo.hex" );
 				break;
 
 				case 'WASM': case 'wasm':
-				    blob = document.location.href.replace( /\/[^/]*$/, "/" ) + "./build/ammo.wasm.js";
+				    blob = document.location.href.replace( /\/[^/]*$/, "/" ) + engine.folder + "ammo.wasm.js";
 				    engine.startWorker();
 				break;
 
 				case 'BASIC': case 'basic':
-				    blob = document.location.href.replace( /\/[^/]*$/, "/" ) + "./build/ammo.js";
+				    blob = document.location.href.replace( /\/[^/]*$/, "/" ) + engine.folder + "ammo.js";
 				    engine.startWorker();
 				break;
 
@@ -165,6 +167,8 @@ export var engine = ( function () {
 			option.fixed = o.fixed || false;
 			option.animFrame = o.animFrame || false;
 			option.jointDebug = o.jointDebug || false;
+
+			o.isInternUpdate = isInternUpdate;
 
 			root.constraintDebug = option.jointDebug;
 
@@ -207,7 +211,7 @@ export var engine = ( function () {
 
 			//blob = document.location.href.replace(/\/[^/]*$/,"/") + "./build/ammo.js" ;
 
-			worker = new Worker( isMin ? './build/gun.min.js' : engine.link );
+			worker = new Worker( engine.folder + (isMin ? 'gun.min.js' : 'gun.js') );
 			worker.postMessage = worker.webkitPostMessage || worker.postMessage;
 			worker.onmessage = engine.message;
 
@@ -288,13 +292,16 @@ export var engine = ( function () {
 			t.then = Time.now();
 
 
-			if( !noAutoUpdate ){
 
-				timer = option.animFrame ? requestAnimationFrame( engine.sendData ) : setInterval( engine.sendData, t.timerate );
+			if( !noAutoUpdate && !isInternUpdate ){
+
+				timer = option.animFrame ? requestAnimationFrame( engine.sendData ) : setInterval(  function(){ engine.sendData() }, t.timerate );
 
 				//console.log( option.animFrame )
 
 			}
+
+			if( isInternUpdate ) engine.sendStep( );
 
 			// test ray
 			engine.setMode( oldMode );
@@ -324,19 +331,30 @@ export var engine = ( function () {
 
 		},
 
-		step: function () {
+		step: function ( fps, delta ) {
 
-			//engine.stepRemove();
 
-			if ( t.now - 1000 > t.tmp ) {
+			//t.now = Time.now();
 
-				t.tmp = t.now; t.fps = t.n; t.n = 0;
+			//var start = Time.now();
 
-			} t.n ++; // FPS
+
+			if( isInternUpdate ){
+				t.fps = fps;
+				t.delta = delta 
+			} else {
+			    //t.now = Time.now();
+				if ( t.now - 1000 > t.tmp ) { t.tmp = t.now; t.fps = t.n; t.n = 0; } t.n ++; // FPS
+			}
+
+			
+
+			
 
 			engine.tell();
 
 			engine.update();
+			
 
 			if ( root.controler ) root.controler.follow();
 			
@@ -344,17 +362,30 @@ export var engine = ( function () {
 			engine.stepRemove();
         	engine.stepAdd();
 
-			stepNext = true;
+
+
+        	//t.steptime = (Time.now() - t.now) * 0.001; // millisecond
+
+        	
+            stepNext = true;
+
+
+			if( isInternUpdate ){ engine.sendStep(); }
+
+			
 
 		},
 
 		sendData: function ( stamp ) {
+
+			if( isInternUpdate ) return;
 
 			if ( refView ) if ( refView.pause ) { engine.stop(); return; }
         	
         	if( option.animFrame ){
 
         		timer = requestAnimationFrame( engine.sendData );
+        		//if ( !stepNext ) return;
         		t.now = stamp === undefined ? Time.now() : stamp;
         		t.deltaTime = t.now - t.then;
         		t.delta = t.deltaTime * 0.001;
@@ -370,9 +401,16 @@ export var engine = ( function () {
 
         	} else {
 
-        		t.now = Time.now();
+        		if ( !stepNext ){ console.log('skip'); return; }
+
+        		//t.now = Time.now();
 			    t.delta = ( t.now - t.then ) * 0.001;
+
+			    //t.delta -= t.steptime;
+
+			    //console.log(t.delta)
         	    t.then = t.now;
+        	    //
 
         	    engine.sendStep();
 
@@ -385,11 +423,27 @@ export var engine = ( function () {
 
 			if ( !stepNext ) return;
 
-			root.flow.key = engine.getKey();
+			t.now = Time.now();
+
+			var key = engine.getKey();
+
         	engine.prevUpdate( t.delta );
 
-        	if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta }, flow: root.flow, Ar: root.Ar }, [ root.Ar.buffer ] );
-			else worker.postMessage( { m: 'step', o: { delta: t.delta }, flow: root.flow, Ar: root.Ar } );
+        	// timeStep < maxSubSteps * fixedTimeStep if you don't want to lose time.
+
+        	if( isInternUpdate ) {
+
+        		if ( isBuffer ) worker.postMessage( { m: 'internStep', o: { steptime:t.steptime,  key:key }, flow: root.flow, Ar: root.Ar }, [ root.Ar.buffer ] );
+			    else worker.postMessage( { m: 'internStep', o: {  steptime:t.steptime, key:key }, flow: root.flow, Ar: root.Ar } );
+
+        	} else {
+
+        		if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta, key:key }, flow: root.flow, Ar: root.Ar }, [ root.Ar.buffer ] );
+			    else worker.postMessage( { m: 'step', o: { delta: t.delta, key:key }, flow: root.flow, Ar: root.Ar } );
+
+        	}
+
+        	
 
 			stepNext = false;
 
@@ -793,6 +847,7 @@ export var engine = ( function () {
 			// material
 
 			var wire = false;
+			
 			root.mat = {
 
 				move: new THREE.MeshLambertMaterial( { color: 0xFF8811, name: 'move', wireframe: wire } ),

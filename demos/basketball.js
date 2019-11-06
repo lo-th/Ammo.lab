@@ -7,7 +7,7 @@ function demo() {
 
     view.hideGrid();
 
-    view.addSky({ url:'photo.jpg', hdr:true });
+    view.addSky({ url:'photo.jpg' });
 
     view.moveCam({ theta:-20, phi:0, distance:150, target:[0,305,0] });
 
@@ -176,7 +176,7 @@ function afterLoadGeometry () {
     // attach to circle
     physic.anchor({ nodes:nodes, soft:'net', body:'circle' });
 
-    physic.postUpdate = update;
+    physic.prevUpdate = update;
 
 }
 
@@ -192,10 +192,11 @@ function initMaterials () {
     // note: material is not recreated on code edit
 
     mat['debugMat'] = view.material({
+        type:'Basic',
         name:'debugMat',
         color: 0x000000,
         wireframe:true
-    }, 'Basic' );
+    });
 
     mat['base'] = view.material({
         name:'base',
@@ -215,7 +216,7 @@ function initMaterials () {
         name:'panel',
         roughness: 0.5,
         metalness: 0.6,
-        map: view.texture( 'basket.png', { flip:false }),
+        map: { url:'basket.png', flip:false },
         transparent: true,
         depthWrite: false,
     });
@@ -224,20 +225,20 @@ function initMaterials () {
         name:'bball',
         roughness: 0.4,
         metalness: 0.7,
-        map: view.texture( 'bball.jpg', { repeat:[2,1], flip:false }),
-        normalMap: view.texture( 'bball_n.jpg', { repeat:[2,1], flip:false }),
+        map: { url:'bball.jpg', repeat:[2,1], flip:true },
+        normalMap: { url:'bball_n.jpg', repeat:[2,1], flip:true },
     });
 
     mat['net'] = view.material({
         name:'net',
         roughness: 0.9,
         metalness: 0.2,
-        map: view.texture( 'net256.png', { repeat:[12,1], flip:false }),
-        bumpMap: view.texture( 'net256_n.png', { repeat:[12,1], flip:false }),
+        map: { url:'net256.png', repeat:[12,1], flip:true },
+        bumpMap: { url:'net256_n.png', repeat:[12,1], flip:true },
         transparent: true,
         depthWrite: false,
         alphaTest: 0.1,
-        side: THREE.DoubleSide,
+        side:'Double',
     });
 
 }

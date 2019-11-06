@@ -19,8 +19,8 @@ function demo() {
         name:'bball',
         roughness: 0.4,
         metalness: 0.7,
-        map: view.texture( 'bball.jpg', { repeat:[2,1], flip:false }),
-        normalMap: view.texture( 'bball_n.jpg', { repeat:[2,1], flip:false }),
+        map: { url:'bball.jpg',  repeat:[2,1], flip:false },
+        normalMap: { url: 'bball_n.jpg', repeat:[2,1], flip:false },
     });
 
     ball = physic.add({ type:'highsphere', name:'ball', size:[5], pos:[0,10,-25], mass:2, friction:0.5, material:ballMat });

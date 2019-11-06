@@ -22,7 +22,7 @@ function afterLoad () {
         name:'heroes',
         roughness: 0.6,
         metalness: 0.4,
-        map: view.texture( 'heros_c.jpg', { flip:false }),
+        map: { url: 'heros_c.jpg', flip:false },
         skinning:true,
     });
 
