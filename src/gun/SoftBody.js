@@ -168,7 +168,7 @@ Object.assign( SoftBody.prototype, {
 
 		var softBodyHelpers = new Ammo.btSoftBodyHelpers();
 
-		console.log( softBodyHelpers )
+		//console.log( softBodyHelpers )
 
 		var body;
 

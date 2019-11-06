@@ -57,6 +57,8 @@ export var engine = ( function () {
 
 	var oldFollow = '';
 
+	var stats = { skip : 0, };
+
 	var isInternUpdate = false;
 	//var isRequestAnimationFrame = false;
 
@@ -268,7 +270,7 @@ export var engine = ( function () {
 
 			this.initObject();
 
-			console.log( 'AMMO.Worker ' + REVISION + ( isBuffer ? ' with ' : ' without ' ) + 'Buffer #' + type );
+			console.log( 'SHOTGUN ' + REVISION + ' | '+ ( isBuffer ? 'buffer' : 'no buffer' ) + ' | ' + type );
 
 			if ( callback ) callback();
 
@@ -401,7 +403,7 @@ export var engine = ( function () {
 
         	} else {
 
-        		if ( !stepNext ){ console.log('skip'); return; }
+        		if ( !stepNext ){ stats.skip++; return; }
 
         		//t.now = Time.now();
 			    t.delta = ( t.now - t.then ) * 0.001;
@@ -498,6 +500,8 @@ export var engine = ( function () {
 		},
 
 		reset: function ( full ) {
+
+			stats.skip = 0;
 
 			//console.log('reset', full);
 

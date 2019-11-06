@@ -153,6 +153,7 @@ function addPiece ( o, i ) {
 		friction:o.friction || 1,
 		rolling:0.9,
 		angular:0.5,
+		margin:0.03
 	}
 
 	return m;

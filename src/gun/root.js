@@ -26,6 +26,7 @@ export var root = {
 	scale: 1,
 	invscale: 1,
 	angle: 0,
+	//margin: 0.04,
 
 	key:[ 0, 0, 0, 0, 0, 0, 0, 0 ],
 

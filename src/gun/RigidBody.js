@@ -177,6 +177,12 @@ Object.assign( RigidBody.prototype, {
 		}
 
 		var shape = null;
+
+		if( o.type === 'hardbox' || o.type === 'hardbox' || o.type === 'realhardbox' || o.type === 'ChamferBox' ) o.type = 'box';
+		if( o.type === 'realcylinder' || o.type === 'ChamferCyl' ) o.type = 'cylinder';
+		if( o.type === 'realcone' ) o.type = 'cone';
+		if( o.type === 'realsphere' ) o.type = 'sphere';
+
 		switch ( o.type ) {
 
 			case 'plane':
@@ -184,21 +190,21 @@ Object.assign( RigidBody.prototype, {
 				shape = new Ammo.btStaticPlaneShape( p4, 0 );
 				break;
 
-			case 'box': case 'hardbox': case 'realbox': case 'realhardbox':
+			case 'box':
 				p4.setValue( o.size[ 0 ] * 0.5, o.size[ 1 ] * 0.5, o.size[ 2 ] * 0.5 );
 				shape = new Ammo.btBoxShape( p4 );
 				break;
 
-			case 'sphere': case 'realsphere':
+			case 'sphere': 
 				shape = new Ammo.btSphereShape( o.size[ 0 ] );
 				break;
 
-			case 'cylinder': case 'realcylinder':
+			case 'cylinder':
 				p4.setValue( o.size[ 0 ], o.size[ 1 ] * 0.5, o.size[ 2 ] * 0.5 );
 				shape = new Ammo.btCylinderShape( p4 );
 				break;
 
-			case 'cone': case 'realcone':
+			case 'cone':
 				shape = new Ammo.btConeShape( o.size[ 0 ], o.size[ 1 ] * 0.5 );
 				break;
 
@@ -227,14 +233,14 @@ Object.assign( RigidBody.prototype, {
 
 		    		switch ( g.type ) {
 
-		    			case 'box': case 'hardbox':
+		    			case 'box':
 							p4.setValue( g.size[ 0 ] * 0.5, g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
 							s = new Ammo.btBoxShape( p4 );
 							break;
 						case 'sphere':
 							s = new Ammo.btSphereShape( g.size[ 0 ] );
 							break;
-						case 'cylinder': case 'hardcylinder':
+						case 'cylinder':
 							p4.setValue( g.size[ 0 ], g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
 							s = new Ammo.btCylinderShape( p4 );
 							break;
@@ -302,9 +308,20 @@ Object.assign( RigidBody.prototype, {
 
 		}
 
-		if ( o.margin !== undefined && shape.setMargin !== undefined ) shape.setMargin( o.margin * root.invScale );
+		// margin default is 0.039
+		// for sphere or capsule margin is the radius 
+		// https://www.youtube.com/watch?v=BGAwRKPlpCw&hd=1
 
-		//console.log(shape.getMargin())
+		if( shape.setMargin !== undefined && o.type!=='sphere' && o.type!=='capsule' ) {
+
+			if( o.margin !== undefined ) shape.setMargin(  o.margin * root.invScale );
+			else if( shape.getMargin !== undefined && root.scale !== 1 ) shape.setMargin(  shape.getMargin() * root.invScale );
+
+			//if( shape.getMargin !== undefined ) console.log(o.type, shape.getMargin(), o.size );
+
+		}
+
+		
 
 		if ( extra == 'isShape' ) return shape;
 
