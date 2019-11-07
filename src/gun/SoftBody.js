@@ -255,29 +255,63 @@ Object.assign( SoftBody.prototype, {
 				var arr = [];
 				var i = 0, n;
 
+				//var ff = new Ammo.btVector3Array();
+
 				for ( i = 0; i<lng; i++ ) {
 
 					n = i * 3;
-					p1.fromArray( o.v, n, root.invScale );
-					arr.push( p1.clone() );
+					//p1.fromArray( o.v, n, root.invScale );
+					//arr.push( p1.clone() );
 					//body.get_m_nodes().at( i ).set_m_x( p1 );
 					//body.get_m_nodes().at( i ).set_m_x(new Ammo.btVector3(o.v[n], o.v[n+1], o.v[n+2]));
 
+					//arr.push( new Ammo.btVector3( o.v[n], o.v[n+1], o.v[n+2]) );
+					//arr[i] = new Ammo.btVector3( o.v[n], o.v[n+1], o.v[n+2]);
+
+					//arr.push(  [o.v[n], o.v[n+1], o.v[n+2]] );
+
 				}
 
+				//
 
 
 
 
-				body = softBodyHelpers.CreateFromConvexHull( worldInfo, arr, lng, o.randomize || false );
+
+
+
+                var hull = new Ammo.btConvexHullShape()
+
+                for ( i = 0; i<lng; i++ ) {
+
+					n = i * 3;
+					p1.fromArray( o.v, n, root.invScale );
+					hull.addPoint( p1 );
+				}
+
+				//hull.recalcLocalAabb();
+				hull.initializePolyhedralFeatures();
+
+                //console.log(hull, hull.getNumVertices() )
+
+                //console.log(hull.getConvexPolyhedron().m_vertices.size() )
+
+				body = softBodyHelpers.CreateFromConvexHull( worldInfo, hull.getConvexPolyhedron(), hull.getConvexPolyhedron().m_vertices.size(), o.randomize || false );
+
+
+				//body = softBodyHelpers.CreateFromConvexHull( worldInfo, hull.getConvexPolyhedron(), hull.getConvexPolyhedron().get_m_vertices().size(), o.randomize || true );
+
+				//body.setCollisionShape( fff )
 				//body = softBodyHelpers.CreateFromConvexHull( worldInfo, arr, lng, o.randomize || true );
-				//body.generateBendingConstraints( 2 );
+				//body.generateBendingConstraints( hull.getNumVertices() );
 				body.softType = 4;
+
+				//console.log(body)
 
 
 
 				// free node
-				i = lng;
+				/*i = lng;
 				//while ( i -- ) arr[i].free();
 				// force nodes
 				//var i = lng, n;
@@ -289,8 +323,8 @@ Object.assign( SoftBody.prototype, {
 					//body.get_m_nodes().at( i ).set_m_x(new Ammo.btVector3(o.v[n], o.v[n+1], o.v[n+2]));
 
 				}
-
-				//console.log( body.get_m_nodes().size(), lng )
+*/
+				console.log( body, body.get_m_nodes().size() )
 
 			break;
 

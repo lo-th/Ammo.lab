@@ -119,7 +119,7 @@ function onPhysics(){
             case 1 : physic.add({ type:'sphere',   size:[d,d,d], pos:pos, mass:2, friction:1, restitution:1, angular:0.1 }); break;
             case 2 : physic.add({ type:'cylinder', size:[d,h,d], rot:rot, pos:pos, mass:2, friction:1, rolling:0.3, angular:0.1 }); break;
             case 3 : physic.add({ type:'cone',     size:[d,h,d], pos:pos, mass:2, friction:1, rolling:0.3, angular:0.1 }); break;
-            case 4 : physic.add({ type:'capsule',  size:[d,h,d], rot:rot, pos:pos, mass:2, friction:1, rolling:0.3, angular:0.1 }); break;
+            case 4 : physic.add({ type:'capsule',  size:[d,h*0.5,d], rot:rot, pos:pos, mass:2, friction:1, rolling:0.3, angular:0.1 }); break;
             
         }
     }

@@ -16,7 +16,9 @@ function afterLoad () {
     physic.add({ type:'box', size:[40,10,1], pos:[0,4.6,0], rot:[45,0,0], mass:0 });
     physic.add({ type:'box', size:[40,2,40], pos:[0,1,-10], rot:[0,0,0], mass:0 });
 
-    var geo = view.getGeometry( 'test2', 'ball2' )//view.getGeo();
+    //var geo = view.getGeometry( 'test2', 'ball2' )//view.getGeo();
+
+    var geo = new THREE.BoxBufferGeometry( 3,3,3 );
 
     physic.add({ 
 
@@ -39,7 +41,7 @@ function afterLoad () {
         pressure: 0,// Pressure coefficient [-inf,+inf]
 */
 
-        margin:0.05,
+        //margin:0.05,
     });
 
 

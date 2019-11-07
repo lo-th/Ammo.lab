@@ -1587,6 +1587,12 @@
 						shape.addPoint( p4 );
 
 					}
+
+					if(o.optimized){
+						shape.recalcLocalAabb();
+						shape.initializePolyhedralFeatures(); //computation happens here
+					}
+					//
 					break;
 
 			}
@@ -1788,7 +1794,7 @@
 			//if ( o.linearFactor !== undefined ) b.setLinearFactor( o.linearFactor );
 			//if ( o.angularFactor !== undefined ) b.setAngularFactor( o.angularFactor );
 
-			if ( o.threshold !== undefined ) b.setCcdMotionThreshold( o.threshold );
+
 
 			if ( o.anisotropic !== undefined ) b.setAnisotropicFriction( o.anisotropic[ 0 ], o.anisotropic[ 1 ] );
 			if ( o.massProps !== undefined ) b.setMassProps( o.massProps[ 0 ], o.massProps[ 1 ] );
@@ -1798,6 +1804,14 @@
 				if ( o.gravity ) b.setGravity( root.gravity ); else b.setGravity( this.zero );
 
 			}
+
+
+			// for high speed object like bullet
+			// http://www.panda3d.org/manual/?title=Bullet_Continuous_Collision_Detection
+			// Don't do continuous collision detection if the motion (in one step) is less then m_ccdMotionThreshold
+			if ( o.ccdThreshold !== undefined ) b.setCcdMotionThreshold( o.ccdThreshold );// 1e-7
+			if ( o.ccdRadius !== undefined ) b.setCcdSweptSphereRadius( o.ccdRadius ); // 0.2 // 0.0 by default
+
 
 			p1.free();
 
@@ -2461,32 +2475,65 @@
 				    //while( j-- ) { o.v[ j ] *= root.invScale; }
 
 					var lng = o.v.length / 3;
-					var arr = [];
 					var i = 0, n;
+
+					//var ff = new Ammo.btVector3Array();
 
 					for ( i = 0; i<lng; i++ ) {
 
 						n = i * 3;
-						p1.fromArray( o.v, n, root.invScale );
-						arr.push( p1.clone() );
+						//p1.fromArray( o.v, n, root.invScale );
+						//arr.push( p1.clone() );
 						//body.get_m_nodes().at( i ).set_m_x( p1 );
 						//body.get_m_nodes().at( i ).set_m_x(new Ammo.btVector3(o.v[n], o.v[n+1], o.v[n+2]));
 
+						//arr.push( new Ammo.btVector3( o.v[n], o.v[n+1], o.v[n+2]) );
+						//arr[i] = new Ammo.btVector3( o.v[n], o.v[n+1], o.v[n+2]);
+
+						//arr.push(  [o.v[n], o.v[n+1], o.v[n+2]] );
+
 					}
 
+					//
 
 
 
 
-					body = softBodyHelpers.CreateFromConvexHull( worldInfo, arr, lng, o.randomize || false );
+
+
+
+	                var hull = new Ammo.btConvexHullShape();
+
+	                for ( i = 0; i<lng; i++ ) {
+
+						n = i * 3;
+						p1.fromArray( o.v, n, root.invScale );
+						hull.addPoint( p1 );
+					}
+
+					//hull.recalcLocalAabb();
+					hull.initializePolyhedralFeatures();
+
+	                //console.log(hull, hull.getNumVertices() )
+
+	                //console.log(hull.getConvexPolyhedron().m_vertices.size() )
+
+					body = softBodyHelpers.CreateFromConvexHull( worldInfo, hull.getConvexPolyhedron(), hull.getConvexPolyhedron().m_vertices.size(), o.randomize || false );
+
+
+					//body = softBodyHelpers.CreateFromConvexHull( worldInfo, hull.getConvexPolyhedron(), hull.getConvexPolyhedron().get_m_vertices().size(), o.randomize || true );
+
+					//body.setCollisionShape( fff )
 					//body = softBodyHelpers.CreateFromConvexHull( worldInfo, arr, lng, o.randomize || true );
-					//body.generateBendingConstraints( 2 );
+					//body.generateBendingConstraints( hull.getNumVertices() );
 					body.softType = 4;
+
+					//console.log(body)
 
 
 
 					// free node
-					i = lng;
+					/*i = lng;
 					//while ( i -- ) arr[i].free();
 					// force nodes
 					//var i = lng, n;
@@ -2498,8 +2545,8 @@
 						//body.get_m_nodes().at( i ).set_m_x(new Ammo.btVector3(o.v[n], o.v[n+1], o.v[n+2]));
 
 					}
-
-					//console.log( body.get_m_nodes().size(), lng )
+	*/
+					console.log( body, body.get_m_nodes().size() );
 
 				break;
 

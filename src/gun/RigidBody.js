@@ -306,6 +306,12 @@ Object.assign( RigidBody.prototype, {
 					shape.addPoint( p4 );
 
 				}
+
+				if(o.optimized){
+					shape.recalcLocalAabb();
+					shape.initializePolyhedralFeatures(); //computation happens here
+				}
+				//
 				break;
 
 		}
@@ -507,7 +513,7 @@ Object.assign( RigidBody.prototype, {
 		//if ( o.linearFactor !== undefined ) b.setLinearFactor( o.linearFactor );
 		//if ( o.angularFactor !== undefined ) b.setAngularFactor( o.angularFactor );
 
-		if ( o.threshold !== undefined ) b.setCcdMotionThreshold( o.threshold );
+
 
 		if ( o.anisotropic !== undefined ) b.setAnisotropicFriction( o.anisotropic[ 0 ], o.anisotropic[ 1 ] );
 		if ( o.massProps !== undefined ) b.setMassProps( o.massProps[ 0 ], o.massProps[ 1 ] );
@@ -517,6 +523,14 @@ Object.assign( RigidBody.prototype, {
 			if ( o.gravity ) b.setGravity( root.gravity ); else b.setGravity( this.zero );
 
 		}
+
+
+		// for high speed object like bullet
+		// http://www.panda3d.org/manual/?title=Bullet_Continuous_Collision_Detection
+		// Don't do continuous collision detection if the motion (in one step) is less then m_ccdMotionThreshold
+		if ( o.ccdThreshold !== undefined ) b.setCcdMotionThreshold( o.ccdThreshold );// 1e-7
+		if ( o.ccdRadius !== undefined ) b.setCcdSweptSphereRadius( o.ccdRadius ); // 0.2 // 0.0 by default
+
 
 		p1.free();
 

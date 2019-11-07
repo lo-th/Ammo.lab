@@ -2472,8 +2472,6 @@
 		o.i = g.realIndices;
 		o.ntri = g.numFaces;
 
-
-
 		//var material = o.material === undefined ? root.mat.soft : root.mat[o.material];
 		var mesh = new THREE.Mesh( g, material );
 

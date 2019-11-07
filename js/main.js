@@ -21,7 +21,7 @@ var demos = [
     'rayTest',
     'ghost', 
     'fps',
-    'dragon', 'chess',
+    'dragon', 'chess', 'bullet',
 ];
 
 demos.sort();
