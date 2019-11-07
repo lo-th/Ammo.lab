@@ -17,7 +17,12 @@ function demo() {
     // box filter
     physic.add({ type:'box', size:[10,6,2], pos:[0,4.5,-7], rot:[0,0,0], mass:0 });
 
-    // dynamique sphere
+    setTimeout( function (){ launchBullet(); }, 2000)
+
+}
+
+function launchBullet () {
+
     var i = 50, r = 0.2, d = 0.4, x;
     while(i--){
         x = Math.rand(-4,4);
@@ -27,7 +32,6 @@ function demo() {
             ccdRadius:0.1,
             rollingFriction:0.9,
         });
-       // physic.add({ type:'box', size:[d,d,d], pos:[x,12+(i*3), 10], mass:0.2, group:4, mask:1|4 });
     }
 
 }
