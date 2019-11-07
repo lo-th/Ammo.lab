@@ -1,4 +1,4 @@
-var mat = view.getMat();
+var mat = {};
 
 function demo() {
 
@@ -10,7 +10,11 @@ function demo() {
         substep:2,// more substep = more accurate simulation default set to 2
         gravity:[0,-10,0],
 
-    })
+    });
+
+
+    mat['contactOn'] = view.material({name:'contactOn', color:0x33FF33 });
+    mat['contactOff'] = view.material({name:'contactOff', color:0xFF3333 });
 
     // basic geometry body
 
@@ -23,8 +27,8 @@ function demo() {
 
 function afterLoad () {
 
-    var m1 = physic.add({ type:'box', name:'boxy', size:[2,2,2], pos:[-5,30,0], mass:2, restitution:0.8, material:'contactOff' });
-    var m2 = physic.add({ type:'sphere', name:'sphy', size:[1], pos:[5,30,0], mass:2, restitution:0.8, material:'contactOff' });
+    var m1 = physic.add({ type:'box', name:'boxy', size:[2,2,2], pos:[-5,30,0], mass:2, restitution:0.8, material:mat.contactOff });
+    var m2 = physic.add({ type:'sphere', name:'sphy', size:[1], pos:[5,30,0], mass:2, restitution:0.8, material:mat.contactOff });
 
     var s1 = view.addSound('ping_pong');
     var s2 = view.addSound('ping_pong');

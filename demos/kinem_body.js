@@ -13,6 +13,7 @@ var s = new THREE.Vector3();
 var q = new THREE.Quaternion();
 
 var decal = 2;
+var ballMat;
 
 function demo() {
 
@@ -28,7 +29,9 @@ function demo() {
         gravity:[0,-9.8,0],
         worldscale:10,
 
-    })
+    });
+
+    ballMat = view.material({ name:'ballMat', color:0xCCCCCF, metalness:0.6, roughness:0.5, premultipliedAlpha:true })
 
     pool.load( 'assets/bvh/action.z', initAnimation );
 
@@ -220,7 +223,7 @@ function addExtra () {
         y = Math.rand(50,60)//(60,100)
 
         //add( { type:'box', size:[w,h,d], pos:[x,y,z], move:true } );
-        physic.add( { type:'sphere', size:[w*0.5], pos:[x,y,z], density:2, friction:0.5, restitution:0.2, linear:0, angular:0.5, material:'check'  } );
+        physic.add( { type:'sphere', size:[w*0.5], pos:[x,y,z], density:2, friction:0.5, restitution:0.2, linear:0, angular:0.5, material:ballMat  } );
 
     }
 

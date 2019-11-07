@@ -41,9 +41,13 @@ var mat = {};
 function demo() {
 
     //view.moveCam({ theta:-90, phi:0, distance:5, target:[0,1,0] });
-    view.moveCam({ theta:90, phi:0, distance:5, target:[0,1,0] });
+    view.moveCam({ theta:135, phi:20, distance:5, target:[0,1,0] });
 
-    view.addSky({  hour:hour });
+   // view.addSky({  hour:hour });
+
+    //view.addSky({  url:'parking.hdr', visible:true });
+    view.addSky({  url:'parking.jpg', visible:true });
+
     view.setShadow( { size:30, near:150, far:250 } );
 
     view.addJoystick({ sameAxis:true });
@@ -343,9 +347,13 @@ function buggyMaterials () {
     mat['body'] = view.material({
         name:'body',
         roughness: 0.2,
-        metalness: 0.9,
-        envMapIntensity: 1.35,
-        map: { url:'buggy/body.jpg' },
+        metalness: 0.8,
+        envMapIntensity: 1.25,
+        map: { url:'buggy/body.jpg'},
+        premultipliedAlpha: true,
+        /*clearCoat: 0.0,
+        clearCoatRoughness: 0.2,
+        reflectivity: 1.0*/
     });
 
     mat['extra'] = view.material({

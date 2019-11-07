@@ -11,9 +11,10 @@ var ball = [];
 var tmpCanvas = document.createElement('canvas');
 tmpCanvas.width = tmpCanvas.height = 128;
 var yellow = false;
-
 var open1 = false;
 var open2 = false;
+
+var glassMat;
 
 var timer;
 
@@ -38,6 +39,8 @@ function demo() {
     physic.pause();
 
     view.resetCallBack = extraReset;
+
+    glassMat = view.material({ name:'glassMat', color:0xCCCCCF, transparent:true, opacity:0.3, depthTest:true, depthWrite:false, metalness:0.8, roughness:0.2, premultipliedAlpha:true })
 
     view.load ( ['million.sea'], afterLoadGeometry, true, true );
 
@@ -69,24 +72,28 @@ function makeBigMAchine () {
     physic.add({ 
         name:'roll', type:'mesh', mass:0,
         shape:view.getGeometry( 'million', 'L_roll' ),
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
         name:'back', type:'mesh', mass:0,
         shape:view.getGeometry( 'million', 'L_back' ),
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
         name:'front', type:'mesh', mass:0,
         shape:view.getGeometry( 'million', 'L_front' ),
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
         name:'rampe', type:'mesh', mass:0,
         shape:view.getGeometry( 'million', 'L_rampe' ),
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
@@ -94,19 +101,19 @@ function makeBigMAchine () {
         name:'pale1', type:'mesh', mass:0, kinematic: true,
         shape:view.getGeometry( 'million', 'L_pale1' ),
         rot:[0,0,45],
-        material:'static',
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
         name:'pale2', type:'mesh', mass:0, kinematic: true,
         shape:view.getGeometry( 'million', 'L_pale2' ),
-        material:'static',
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
-        name:'block', type:'box', mass:0, material:'static',
+        name:'block', type:'box', mass:0, material:glassMat,
         size:[10,2,10], pos:[0,-48.7,0],
         friction: 0, restitution: 0,
     });
@@ -121,43 +128,47 @@ function makeLittleMAchine () {
     physic.add({ 
         name:'roll2', type:'mesh', mass:0, pos:[85,-18,0],
         shape:view.getGeometry( 'million', 'M_roll' ),
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
         name:'back2', type:'mesh', mass:0, pos:[85,-18,0],
         shape:view.getGeometry( 'million', 'M_back' ),
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
         name:'front2', type:'mesh', mass:0, pos:[85,-18,0],
         shape:view.getGeometry( 'million', 'M_front' ),
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
         name:'rampe2', type:'mesh', mass:0, pos:[85,0,0],
         shape:view.getGeometry( 'million', 'M_rampe' ),
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
         name:'pale3', type:'mesh', mass:0, kinematic: true, rot:[0,0,45], pos:[85,-18,0],
         shape:view.getGeometry( 'million', 'M_pale1' ),
-        material:'static',
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
         name:'pale4', type:'mesh', mass:0, kinematic: true, pos:[85,-18,0],
         shape:view.getGeometry( 'million', 'M_pale2' ),
-        material:'static',
+        material:glassMat,
         friction: friction, restitution: bounce
     });
 
     physic.add({ 
-        name:'block2', type:'box', mass:0, material:'static',
+        name:'block2', type:'box', mass:0, material:glassMat,
         size:[10,2,10], pos:[85,-48.7,0],
         friction: 0, restitution: 0,
     });
@@ -231,7 +242,7 @@ function startSimulation () {
     timer = setTimeout( function(){ 
 
         physic.add({ 
-            name:'close', type:'mesh', mass:0, material:'static',//, material:'hide',
+            name:'close', type:'mesh', mass:0, material:glassMat,//, material:'hide',
             shape:view.getGeometry( 'million', 'L_close' ),
             friction: 0.5, restitution: 0.0
         });

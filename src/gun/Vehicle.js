@@ -160,7 +160,10 @@ export { Vehicle };
 function Car( name, o, shape ) {
 
 	// http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+	
 	// https://github.com/yanzuzu/BulletPhysic_Vehicle
+
+	//https://docs.google.com/document/d/18edpOwtGgCwNyvakS78jxMajCuezotCU_0iezcwiFQc/edit
 
 	this.name = name;
 

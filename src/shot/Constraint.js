@@ -139,8 +139,8 @@ Object.assign( Joint.prototype, {
 		var colors = new Float32Array([ 0, 1, 0, 1, 1, 0 ]);
 
 		var geometry = new THREE.BufferGeometry();
-		geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-		geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
+		geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+		geometry.setAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
 
 		this.mesh = new THREE.Line( geometry, root.mat.jointLine );
 		this.mesh.name = o.name;

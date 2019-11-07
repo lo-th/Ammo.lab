@@ -240,8 +240,6 @@ Object.assign( RigidBody.prototype, {
 		    	for ( var i = 0; i < o.shapes.length; i ++ ) {
 
 		    		g = o.shapes[ i ];
-		    		if ( g.type === 'box' ) g.type = 'hardbox';
-		    		if ( g.type === 'cylinder' ) g.type = 'hardcylinder';
 		    		m = new THREE.Mesh( g.type === 'capsule' ? new Capsule( o.size[ 0 ], o.size[ 1 ] ) : root.geo[ g.type ], o.debug ? root.mat.debug : material );
 		    		m.scale.fromArray( g.size );
 		    		m.position.fromArray( g.pos );

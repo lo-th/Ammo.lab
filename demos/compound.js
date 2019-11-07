@@ -2,8 +2,6 @@ function demo() {
 
     //view.hideGrid();
 
-    view.setSky({ url:'photo.jpg' });
-
     view.moveCam({ theta:40, phi:40, distance:60, target:[0,1,0] });
 
     physic.set({

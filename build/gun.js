@@ -1502,6 +1502,8 @@
 
 			    		g = o.shapes[ i ];
 
+			    		g.quat = g.quat === undefined ? [ 0, 0, 0, 1 ] : g.quat;
+
 			    		if ( root.scale !== 1 ) {
 
 							g.pos = math.vectomult( g.pos, root.invScale );
@@ -1593,7 +1595,7 @@
 			// for sphere or capsule margin is the radius 
 			// https://www.youtube.com/watch?v=BGAwRKPlpCw&hd=1
 
-			if( shape.setMargin !== undefined && o.type!=='sphere' && o.type!=='capsule' ) {
+			if( shape.setMargin !== undefined && o.type!=='sphere' && o.type!=='capsule' && o.type!=='compound' ) {
 
 				if( o.margin !== undefined ) shape.setMargin(  o.margin * root.invScale );
 				else if( shape.getMargin !== undefined && root.scale !== 1 ) shape.setMargin(  shape.getMargin() * root.invScale );
@@ -3019,7 +3021,10 @@
 	function Car( name, o, shape ) {
 
 		// http://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
+		
 		// https://github.com/yanzuzu/BulletPhysic_Vehicle
+
+		//https://docs.google.com/document/d/18edpOwtGgCwNyvakS78jxMajCuezotCU_0iezcwiFQc/edit
 
 		this.name = name;
 
