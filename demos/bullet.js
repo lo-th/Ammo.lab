@@ -17,7 +17,7 @@ function demo() {
     // box filter
     physic.add({ type:'box', size:[10,6,2], pos:[0,4.5,-7], rot:[0,0,0], mass:0 });
 
-    setTimeout( function (){ launchBullet(); }, 2000)
+    setTimeout( function (){ launchBullet(); }, 4000);
 
 }
 
