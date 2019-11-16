@@ -371,7 +371,14 @@ Object.assign( Constraint.prototype, {
 
 		//console.log( math.getLength() );
 
-	}
+	},
+
+	// TODO
+	applyOption: function ( joint, o ) {
+
+
+
+	},
 
 
 } );

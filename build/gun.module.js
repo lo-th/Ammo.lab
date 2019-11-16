@@ -1513,20 +1513,34 @@ Object.assign( RigidBody.prototype, {
 		    			case 'box':
 							p4.setValue( g.size[ 0 ] * 0.5, g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
 							s = new Ammo.btBoxShape( p4 );
-							break;
+						break;
 						case 'sphere':
 							s = new Ammo.btSphereShape( g.size[ 0 ] );
-							break;
+						break;
 						case 'cylinder':
 							p4.setValue( g.size[ 0 ], g.size[ 1 ] * 0.5, g.size[ 2 ] * 0.5 );
 							s = new Ammo.btCylinderShape( p4 );
-							break;
+						break;
 						case 'cone':
 							s = new Ammo.btConeShape( g.size[ 0 ], g.size[ 1 ] * 0.5 );
 							break;
 						case 'capsule':
 							s = new Ammo.btCapsuleShape( g.size[ 0 ], g.size[ 1 ] );
-							break;
+						break;
+						case 'convex':
+							s = new Ammo.btConvexHullShape();
+							var vx = g.v;
+							for ( var i = 0, fMax = vx.length; i < fMax; i += 3 ) {
+
+								vx[ i ] *= g.size[ 0 ];
+								vx[ i + 1 ] *= g.size[ 1 ];
+								vx[ i + 2 ] *= g.size[ 2 ];
+
+								p4.fromArray( vx, i );
+								s.addPoint( p4 );
+
+							}
+						break;
 
 					}
 
@@ -1798,6 +1812,15 @@ Object.assign( RigidBody.prototype, {
 			if ( o.gravity ) b.setGravity( root.gravity ); else b.setGravity( this.zero );
 
 		}
+
+		/*
+
+		const btScalar DAMPED_TIMESCALE = 3.0 * timeInSecondPerTimeStep; // adjust this multiple as necessary, but for stability don't go below 3.0
+		btScalar clampedTimeRatio = (dt > DAMPED_TIMESCALE) ? 1.0 : dt / DAMPED_TIMESCALE; // clamp to 1.0 to enforce stability
+		btVector3 newLinearVelocity = (targetPosition - rigidBody->getPosition()) * clampedTimeRatio;
+		rigidBody->setLinearVelocity(newLinearVelocity);
+
+		*/
 
 
 		// for high speed object like bullet
@@ -2184,7 +2207,14 @@ Object.assign( Constraint.prototype, {
 
 		//console.log( math.getLength() );
 
-	}
+	},
+
+	// TODO
+	applyOption: function ( joint, o ) {
+
+
+
+	},
 
 
 } );
@@ -3054,7 +3084,14 @@ Object.assign( Vehicle.prototype, {
 		map.set( name , car.body );
 		map.set( name + '_chassis', car.chassis );
 
-	}
+	},
+
+	// TODO
+	applyOption: function ( car, o ) {
+
+
+
+	},
 
 } );
 

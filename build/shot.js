@@ -1569,6 +1569,10 @@
 				if( b.enabled ){
 					b.position.fromArray( AR, n + 1 );
 		            b.quaternion.fromArray( AR, n + 4 );
+
+		            if( !b.matrixAutoUpdate ) b.updateMatrix();
+		            //b.updateMatrixWorld( true );
+		            //b.updateWorldMatrix( true,true)
 				}
 
 				
@@ -1758,13 +1762,23 @@
 			    	for ( var i = 0; i < o.shapes.length; i ++ ) {
 
 			    		g = o.shapes[ i ];
-			    		m = new THREE.Mesh( g.type === 'capsule' ? new Capsule( o.size[ 0 ], o.size[ 1 ] ) : root.geo[ g.type ], o.debug ? root.mat.debug : material );
+
+			    		var geom = null;
+
+			    		if( g.type === 'capsule' ) geom = new Capsule( o.size[ 0 ], o.size[ 1 ] );
+			    		else if( g.type === 'convex' ){ 
+			    			geom = g.shape; 
+			    			g.v = geometryInfo( g.shape, g.type );
+			    			delete ( g.shape );
+			    		}
+			    		else geom = root.geo[ g.type ];
+
+			    		if( g.type === 'capsule' || g.type === 'convex' ) root.extraGeo.push( geom );
+
+			    		m = new THREE.Mesh( geom, o.debug ? root.mat.debug : material );
 			    		m.scale.fromArray( g.size );
 			    		m.position.fromArray( g.pos );
 		                m.quaternion.fromArray( g.quat );
-
-		                //m.receiveShadow = true;
-		        		//m.castShadow = true;
 
 			    		mesh.add( m );
 
@@ -1829,21 +1843,29 @@
 		    if ( o.type === 'highsphere' ) o.type = 'sphere';
 
 
+		    
+
+
 
 
 		    if ( mesh ) {
 
 		        if ( !customGeo && !mesh.isGroup ){ 
-		        	mesh.scale.fromArray( o.size );
 
+		        	mesh.scale.fromArray( o.size );
 		        	// ! add to group to avoid matrix scale
 		        	var tmp = mesh;
 		        	mesh = new THREE.Group();
 		        	mesh.add( tmp );
-
 		        	
-
 		        }
+
+		        if( o.mesh ){
+
+			    	mesh = new THREE.Group();
+			        mesh.add( o.mesh );
+
+			    }
 
 		        // out of view on start
 		        //mesh.position.set(0,-1000000,0);
@@ -1919,6 +1941,7 @@
 		    if ( o.shape ) delete ( o.shape );
 		    if ( o.geometry ) delete ( o.geometry );
 		    if ( o.material ) delete ( o.material );
+		    if ( o.mesh ) { delete ( o.mesh ); }
 
 		    if ( o.noPhy === undefined ) {
 
@@ -1946,6 +1969,11 @@
 		    	//mesh.userData.mass = o.mass;
 		    	mesh.userData.mass = o.mass;
 		        map.set( o.name, mesh );
+
+		        if( o.autoMatrix !== undefined ) mesh.matrixAutoUpdate = o.autoMatrix; 
+
+
+
 		        return mesh;
 
 			}

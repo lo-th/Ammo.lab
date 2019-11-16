@@ -149,7 +149,14 @@ Object.assign( Vehicle.prototype, {
 		map.set( name , car.body );
 		map.set( name + '_chassis', car.chassis );
 
-	}
+	},
+
+	// TODO
+	applyOption: function ( car, o ) {
+
+
+
+	},
 
 } );
 
