@@ -1496,6 +1496,8 @@ var root = {
 
 	torad: Math.PI / 180,
 
+	isRefView: false,
+
 
 };
 
@@ -1803,12 +1805,24 @@ Object.assign( RigidBody.prototype, {
 
 	    } else {
 
-	    	if ( o.type === 'box' && o.mass === 0 && ! o.kinematic ) o.type = 'hardbox';
+	    	//if ( o.type === 'box' && o.mass === 0 && ! o.kinematic ) o.type = 'hardbox';
 	    	if ( o.type === 'capsule' ) o.geometry = new Capsule( o.size[ 0 ], o.size[ 1 ] );
+	    	
+	    	// breakable
 	    	if ( o.type === 'realbox' || o.type === 'realhardbox' ) o.geometry = new THREE.BoxBufferGeometry( o.size[ 0 ], o.size[ 1 ], o.size[ 2 ] );
 	    	if ( o.type === 'realsphere' ) o.geometry = new THREE.SphereBufferGeometry( o.size[ 0 ], 16, 12 );
 	    	if ( o.type === 'realcylinder' ) o.geometry = new THREE.CylinderBufferGeometry( o.size[ 0 ], o.size[ 0 ], o.size[ 1 ] * 0.5, 12, 1 );
 	    	if ( o.type === 'realcone' ) o.geometry = new THREE.CylinderBufferGeometry( 0, o.size[ 0 ] * 0.5, o.size[ 1 ] * 0.55, 12, 1 );
+	    	
+
+	    	// new Geometry
+	    	if( o.radius !== undefined && root.isRefView ){
+
+	    		if ( o.type === 'box' ) o.geometry = new THREE.ChamferBox( o.size[ 0 ], o.size[ 1 ], o.size[ 2 ], o.radius );
+	    		if ( o.type === 'cylinder' ) o.geometry = new THREE.ChamferCyl( o.size[ 0 ], o.size[ 0 ], o.size[ 1 ] * 0.5, o.radius );
+	    		if ( o.type === 'cone' ) o.geometry = new THREE.ChamferCyl( o.radius, o.size[ 0 ], o.size[ 1 ] * 0.5, o.radius );
+
+	    	}
 
 
 	        if ( o.geometry ) {
@@ -5816,6 +5830,8 @@ var engine = ( function () {
 			root.geo = Object.assign( {}, root.geo, v.getGeo() );//v.getGeo();
 			root.container = v.getContent();
 			root.controler = v.getControler();
+
+			root.isRefView = true;
 
 			//if( isInternUpdate ) refView.updateIntern = engine.update;
 

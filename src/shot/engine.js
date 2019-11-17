@@ -479,6 +479,8 @@ export var engine = ( function () {
 			root.container = v.getContent();
 			root.controler = v.getControler();
 
+			root.isRefView = true;
+
 			//if( isInternUpdate ) refView.updateIntern = engine.update;
 
 		},

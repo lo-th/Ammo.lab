@@ -31,7 +31,7 @@ function demo() {
         r0 = Math.randInt(0,4)*90;
         r1 = Math.randInt(0,4)*90;
         pos = [ i*d + decaleX, (k*d + d)-0.5, j*d + decaleZ ];
-        physic.add ({ type:'box', geometry:geo.dice, size:[d,d,d], pos:pos, rot:[r1,r0,0], mass:1, friction:0.4, restitution:0.6, state:2 });
+        physic.add ({ type:'box', radius:0.1, size:[d,d,d], pos:pos, rot:[r1,r0,0], mass:1, friction:0.4, restitution:0.6, state:2 });
     }}}
 
     physic.add({ type:'highsphere', size:[s,s,s], pos:[0,100,0], state:4, mass:10, friction:0.3, restitution:0.6 });

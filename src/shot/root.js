@@ -33,6 +33,8 @@ export var root = {
 
 	torad: Math.PI / 180,
 
+	isRefView: false,
+
 
 };
 
