@@ -7,11 +7,11 @@ var chess_black, chess_white;
 
 function demo() {
 
-    view.moveCam({ theta:0, phi:20, distance:80, target:[0,1,0] });
+    view.moveCam({ theta:25, phi:20, distance:80, target:[0,1,0] });
 
-    view.addSky({ url:'photo.jpg' });
+    view.addSky({ url:'photo.jpg', visible:true });
 
-    view.initGrid({s1:64,s2:8, c1:0xFF00FF, c2:0xFFFFFF})
+    view.initGrid({s1:64,s2:8, c1:0x000000, c2:0x000000})
     
     physic.set({
 
