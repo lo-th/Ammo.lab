@@ -263,11 +263,13 @@ function buildMecanum () {
         type:'convex',
         shape:view.getGeometry( 'mecanum', 'meca_chassis_shape' ),
 
+
         mass:settings.massChassis,
         size:[size],
         pos:[0, posY+decalY, 0],
 
         geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_chassis' ),
+        geoScale:[size],
         material:debug ? undefined : mat.meca1,
         
         state:4,
@@ -348,6 +350,7 @@ function wheelAxis ( n ) {
         //size:[28*size, 7*size, 80*size],
 
         geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_paddel' ),
+
         material:debug ? mat.green : mat.meca3,
         geoRot:gr,
         geoSize:[size],
@@ -670,6 +673,7 @@ function wheel ( n ) {
         type:'convex',
         shape:shape,
         geometry:debug ? undefined : geometry,
+        geoScale:[size],
         material:debug ? undefined : material,
         size:[size],
 
@@ -833,6 +837,7 @@ function wheel ( n ) {
             name:n+'_rr_'+i,
             type:'convex',
             shape:view.getGeometry( 'mecanum', 'meca_roller_shape' ),
+
             mass:settings.massRoller,
             friction:settings.frictionRoller,
             size:[size],
@@ -840,6 +845,7 @@ function wheel ( n ) {
             pos:[x+ position[0], y+ position[1], z],
 
             geometry:debug ? undefined : view.getGeometry( 'mecanum', 'meca_roller' ),
+            geoScale:[size],
             material:debug ? undefined : mat.meca2,
             
             state:4,

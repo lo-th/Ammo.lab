@@ -97,9 +97,7 @@ Object.assign( Vehicle.prototype, {
 
 	},
 
-	addExtra: function () {
-
-	},
+	//addExtra: function () { },
 
 	setData: function ( o ){
 
@@ -124,13 +122,13 @@ Object.assign( Vehicle.prototype, {
 
 		// car shape
 		var shapeType = o.shapeType || 'box';
-		var sho = {};
+		var shapeInfo = {};
 
-		if ( shapeType == 'mesh' ) sho = { type: 'mesh', v: o.v, mass: 1 };
-		else if ( shapeType == 'convex' ) sho = { type: 'convex', v: o.v };
-		else sho = { type: 'box', size: o.size };
+		if ( shapeType == 'mesh' ) shapeInfo = { type: 'mesh', v: o.v, mass: 1 };
+		else if ( shapeType == 'convex' ) shapeInfo = { type: 'convex', v: o.v };
+		else shapeInfo = { type: 'box', size: o.size };
 
-		var shape = this.addExtra( sho, 'isShape' );
+		var shape = root.makeShape( shapeInfo );
 
 		if ( o.v !== undefined ) delete ( o.v );
 

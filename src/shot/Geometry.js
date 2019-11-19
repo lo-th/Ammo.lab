@@ -1,5 +1,5 @@
 /*global THREE*/
-import { QuickHull } from './QuickHull.js';
+import { ConvexHull } from './ConvexHull.js';
 
 
 export function geometryInfo( g, type ) {
@@ -223,7 +223,8 @@ function ConvexBufferGeometry( points ) {
 
 	// execute QuickHull
 
-	var quickHull = new QuickHull().setFromPoints( points );
+	var quickHull = new ConvexHull().setFromPoints( points );
+
 
 	// generate vertices and normals
 

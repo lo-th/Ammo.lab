@@ -32,6 +32,8 @@ export var root = {
 
 	post:null,
 
+	makeShape: null,
+
 };
 
 // ROW map

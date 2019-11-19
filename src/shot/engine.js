@@ -406,12 +406,12 @@ export var engine = ( function () {
         		if ( !stepNext ){ stats.skip++; return; }
 
         		//t.now = Time.now();
-			    t.delta = ( t.now - t.then ) * 0.001;
+			    //t.delta = ( t.now - t.then ) * 0.001;
 
 			    //t.delta -= t.steptime;
 
 			    //console.log(t.delta)
-        	    t.then = t.now;
+        	    //t.then = t.now;
         	    //
 
         	    engine.sendStep();
@@ -426,10 +426,12 @@ export var engine = ( function () {
 			if ( !stepNext ) return;
 
 			t.now = Time.now();
+			t.delta = ( t.now - t.then ) * 0.001;
+			t.then = t.now;
+
+			engine.prevUpdate( t.delta );
 
 			var key = engine.getKey();
-
-        	engine.prevUpdate( t.delta );
 
         	// timeStep < maxSubSteps * fixedTimeStep if you don't want to lose time.
 
@@ -487,6 +489,7 @@ export var engine = ( function () {
 
 		getFps: function () { return t.fps; },
 		getDelta: function () { return t.delta; },
+		getIsFixed: function () { return option.fixed; },
 		getKey: function () { return [ 0, 0, 0, 0, 0, 0, 0, 0 ]; },
 
 		tell: function () {},
@@ -815,7 +818,7 @@ export var engine = ( function () {
 			if ( prev === 'join' ) return constraint.add( o );
 			else if ( prev === 'soft' ) softBody.add( o );
 			else if ( type === 'terrain' ) terrains.add( o );
-			else if ( type === 'character' ) character.add( o );
+			else if ( type === 'character' ) return character.add( o );
 			else if ( type === 'collision' ) return collision.add( o );
 			else if ( type === 'car' ) vehicles.add( o );
 			else if ( type === 'ray' ) return rayCaster.add( o );
@@ -912,6 +915,8 @@ export var engine = ( function () {
 			if ( convexBreaker === null ) convexBreaker = new ConvexObjectBreaker();
 
 			var mesh = map.get( name );
+
+			
 			// breakOption: [ maxImpulse, maxRadial, maxRandom, levelOfSubdivision ]
 			var breakOption = o.breakOption;
 
@@ -925,6 +930,8 @@ export var engine = ( function () {
 
 			var i = debris.length;
 			while ( i -- ) tmpAdd.push( this.addDebris( name, i, debris[ i ], breakOption ) );
+
+			//while ( i -- ) this.addDebris( name, i, debris[ i ], breakOption );
 
 		},
 

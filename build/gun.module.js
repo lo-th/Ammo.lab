@@ -1269,6 +1269,8 @@ var root = {
 
 	post:null,
 
+	makeShape: null,
+
 };
 
 // ROW map
@@ -1768,6 +1770,8 @@ Object.assign( RigidBody.prototype, {
 
 	applyOption: function ( b, o ) {
 
+		
+
 		var p1 = math.vector3();
 
 		if ( o.flag !== undefined ){ 
@@ -1796,7 +1800,7 @@ Object.assign( RigidBody.prototype, {
 
 		// TODO try this setting
 		if ( o.linearVelocity !== undefined ) b.setLinearVelocity( p1.fromArray( o.linearVelocity, 0, root.invScale ) );
-		if ( o.angularVelocity !== undefined ) b.setAngularVelocity( p1.fromArray( o.angularVelocity ) );
+		if ( o.angularVelocity !== undefined ) b.setAngularVelocity( p1.fromArray( o.angularVelocity ) );// radian
 		if ( o.linearFactor !== undefined ) b.setLinearFactor( p1.fromArray( o.linearFactor ) );
 		if ( o.angularFactor !== undefined ) b.setAngularFactor( p1.fromArray( o.angularFactor ) );
 		//if ( o.linearFactor !== undefined ) b.setLinearFactor( o.linearFactor );
@@ -3032,9 +3036,7 @@ Object.assign( Vehicle.prototype, {
 
 	},
 
-	addExtra: function () {
-
-	},
+	//addExtra: function () { },
 
 	setData: function ( o ){
 
@@ -3059,13 +3061,13 @@ Object.assign( Vehicle.prototype, {
 
 		// car shape
 		var shapeType = o.shapeType || 'box';
-		var sho = {};
+		var shapeInfo = {};
 
-		if ( shapeType == 'mesh' ) sho = { type: 'mesh', v: o.v, mass: 1 };
-		else if ( shapeType == 'convex' ) sho = { type: 'convex', v: o.v };
-		else sho = { type: 'box', size: o.size };
+		if ( shapeType == 'mesh' ) shapeInfo = { type: 'mesh', v: o.v, mass: 1 };
+		else if ( shapeType == 'convex' ) shapeInfo = { type: 'convex', v: o.v };
+		else shapeInfo = { type: 'box', size: o.size };
 
-		var shape = this.addExtra( sho, 'isShape' );
+		var shape = root.makeShape( shapeInfo );
 
 		if ( o.v !== undefined ) delete ( o.v );
 
@@ -3779,6 +3781,8 @@ Object.assign( Character.prototype, {
 
 function Hero( name, o ) {
 
+	this.type = 'character';
+
 	this.name = name;
 
 	this.body = null;
@@ -3798,6 +3802,8 @@ function Hero( name, o ) {
 }
 
 Object.assign( Hero.prototype, {
+
+	isCharacter: true,
 
 	step: function ( Ar, n ) {
 
@@ -3933,20 +3939,24 @@ Object.assign( Hero.prototype, {
 		if ( root.scale !== 1 ) {
 
 			o.pos = math.vectomult( o.pos, root.invScale );
-			o.size = math.vectomult( o.size, root.invScale );
+			//o.size = math.vectomult( o.size, root.invScale );
 			if( o.masscenter !== undefined ) o.masscenter = math.vectomult( o.masscenter, root.invScale );
 
 		}
 
 
 
-		var capsule = new Ammo.btCapsuleShape( o.size[ 0 ], o.size[ 1 ] );
+		//var capsule = new Ammo.btCapsuleShape( o.size[ 0 ], o.size[ 1 ] );
+
+		var shapeInfo = o.shapeInfo || { type: 'capsule', size: o.size };
+
+		var shape = root.makeShape( shapeInfo );
 
 		var body = new Ammo.btPairCachingGhostObject();
 		trans.identity().fromArray( o.pos.concat( o.quat ) );
 		body.setWorldTransform( trans );
 
-		body.setCollisionShape( capsule );
+		body.setCollisionShape( shape );
 		body.setCollisionFlags( 16 );//CHARACTER_OBJECT
 
 		
@@ -3956,44 +3966,77 @@ Object.assign( Hero.prototype, {
 
 		body.setActivationState( 4 );
 		body.activate();
+		this.body = body;
 
-		var controller = new Ammo.btKinematicCharacterController( body, capsule, o.stepH || 0.35, o.upAxis || 1 );
+		var controller = new Ammo.btKinematicCharacterController( body, shape, o.stepH || 0.35, o.upAxis || 1 );
 		//var hero = new Ammo.btKinematicCharacterController( body, shape, o.stepH || 0.3 )
-		controller.setUseGhostSweepTest( capsule );
+		controller.setUseGhostSweepTest( shape );
+
+		p0.setValue( 0, 0, 0 );
+		controller.setVelocityForTimeInterval( p0, 1 );
 
 		// hero.getGhostObject().getWorldTransform().setRotation(q4( o.quat ));
+		this.controller = controller;
+		this.applyOption( o );
 
-		controller.setGravity( 9.8*3 );//9.8 *3
-		controller.setFallSpeed( 55 );//55
-		//hero.setUpAxis(1);
-		controller.setMaxJumpHeight( 0.01 );
-		controller.setJumpSpeed( 0.1 );//10
-		/*
+		this.setAngle( 0 );
 
 
-        hero.jump();
-        */
-		//hero.canJump( true );
-
-	    console.log( controller );
+	    console.log( controller, body );
 
 		// The max slope determines the maximum angle that the controller can walk
-		if ( o.slopeRadians ) controller.setMaxSlope( o.slopeRadians );//45
+		
 
 
 
 
 		// controller.warp(v3(o.pos));
 
-		p0.setValue( 0, 0, 0 );
-		controller.setVelocityForTimeInterval( p0, 1 );
+		
 
 
 
-		this.body = body;
-		this.controller = controller;
+		
+		
 
 		// world.getPairCache().setInternalGhostPairCallback( new Ammo.btGhostPairCallback() );
+
+	},
+
+	applyOption: function ( o ) {
+
+		//console.log('set')
+
+		var controller = this.controller;
+
+		if ( o.gravity !== undefined ) controller.setGravity( o.gravity );//9.8 *3
+		if ( o.upAxis !== undefined ) controller.setUpAxis( o.upAxis );
+		if ( o.canJump !== undefined ) controller.canJump( o.canJump );
+		if ( o.maxJumpHeight !== undefined ) controller.setMaxJumpHeight( o.maxJumpHeight   );//0.01
+		if ( o.jumpSpeed !== undefined) controller.setJumpSpeed( o.jumpSpeed );//0.1
+		if ( o.fallSpeed !== undefined ) controller.setFallSpeed( o.fallSpeed );//55
+		if ( o.slopeRadians !== undefined ) controller.setMaxSlope( o.slopeRadians );//45
+
+		if( o.angle !== undefined ) this.setAngle( o.angle );//45
+		if( o.position !== undefined ){
+
+			this.position.fromArray( o.position, 0, root.invScale );
+			this.position.direction( this.q );
+			controller.setWalkDirection( this.position );
+
+		}
+
+	},
+
+	setMatrix: function ( o ){
+
+		var p0 = math.vector3();
+		o.pos = math.vectomult( o.pos, root.invScale );
+		p0.fromArray( o.pos );
+
+		this.controller.warp( p0 );
+
+		p0.free();
 
 	},
 
@@ -4570,7 +4613,7 @@ var engine = ( function () {
 
 			//root.world.stepSimulation( timestep, substep );
 
-			if ( fixed ) root.world.stepSimulation( timestep, 0 );//root.world.stepSimulation( delta, substep, timestep );
+			if ( fixed ) root.world.stepSimulation( timestep, substep );//root.world.stepSimulation( delta, substep, timestep );
 			//else root.world.stepSimulation( delta, substep, timestep );
 			else root.world.stepSimulation( delta, substep, timestep );
 
@@ -4702,7 +4745,10 @@ var engine = ( function () {
 				tmpT = math.transform();
 				tmpP = math.vector3();
 
-				vehicles.addExtra = rigidBody.add;
+				root.makeShape = function ( o ) { return rigidBody.add( o, 'isShape' ); };
+
+				//vehicles.addExtra = rigidBody.add;
+				//character.addExtra = rigidBody.add;
 
 				self.postMessage( { m: 'initEngine' } );
 
@@ -5043,6 +5089,11 @@ var engine = ( function () {
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
 
+			if( b.isCharacter ){
+				b.setMatrix( o );
+				return;
+			}
+
 			var t = tmpT.identity(); //math.transform();
 			var p1 = tmpP; //math.vector3();
 
@@ -5201,6 +5252,9 @@ var engine = ( function () {
 				break;
 				case 'soft':
 				    softBody.applyOption( body, o );
+				break;
+				case 'character':
+				    body.applyOption( o );
 				break;
 			}
 

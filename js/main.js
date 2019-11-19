@@ -17,7 +17,7 @@ var demos = [
     'character', 'joints', 'empty',  'asteroid', 'point2point', 'contact', 'testmesh', 'water',
     'mecanum', 'drone', 'millions', 'basketball',
     'compound', 'tower', 
-    'break_glass', 'break_round',
+    'break_glass', 'break_diamond',
     'rayTest',
     'ghost', 
     'fps',

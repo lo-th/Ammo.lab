@@ -182,6 +182,7 @@ ConvexObjectBreaker.prototype = {
 		// Returned value is number of pieces, 0 for error.
 
 		var geometry = object.geometry;
+		if( !geometry ) { console.log(object, 'no geometry ?'); return 0;}
 		var coords = geometry.attributes.position.array;
 		var normals = geometry.attributes.normal.array;
 

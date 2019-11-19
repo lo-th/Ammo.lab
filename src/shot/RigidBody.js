@@ -108,7 +108,7 @@ Object.assign( RigidBody.prototype, {
 
 	},
 
-	add: function ( o ) {
+	add: function ( o, extra ) {
 
 		if ( o.density !== undefined ) o.mass = o.density;
 		if ( o.bounce !== undefined ) o.restitution = o.bounce;
@@ -179,6 +179,8 @@ Object.assign( RigidBody.prototype, {
 
 	    var mesh = null;
 	    var noMesh = o.noMesh !== undefined ? o.noMesh : false; 
+
+	    var isDirectGeometry = false;
 
 	    if ( o.type === 'plane' ) {
 
@@ -270,6 +272,9 @@ Object.assign( RigidBody.prototype, {
 
 	    } else if ( o.type === 'mesh' || o.type === 'convex' ) {
 
+	    	isDirectGeometry = true;
+	    	customGeo = true;
+
 	        if ( o.shape ) {
 
 	            o.v = geometryInfo( o.shape, o.type );
@@ -278,6 +283,13 @@ Object.assign( RigidBody.prototype, {
 			}
 
 	        if ( o.geometry ) {
+
+	        	
+	        	if ( o.geoScale ){ 
+	        		o.geometry = o.geometry.clone();
+	        		o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[ 0 ], o.geoScale[ 0 ], o.geoScale[ 0 ] ) );
+	        	}
+
 
 	            mesh = new THREE.Mesh( o.geometry, material );
 	            root.extraGeo.push( o.geometry );
@@ -337,7 +349,8 @@ Object.assign( RigidBody.prototype, {
 	    if ( o.type === 'highsphere' ) o.type = 'sphere';
 
 
-	    
+	    if ( extra == 'isGeometry' ) return g;
+
 
 
 
@@ -354,6 +367,7 @@ Object.assign( RigidBody.prototype, {
 	        	
 	        }
 
+	        // mesh remplacement 
 	        if( o.mesh ){
 
 		    	mesh = new THREE.Group();

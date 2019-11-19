@@ -90,7 +90,7 @@ Object.assign( Character.prototype, {
 
 		o.scale  = o.scale || 1;
 
-		o.size = o.size == undefined ? [ 0.25, 2 ] : o.size;
+		o.size = o.size !== undefined ? o.size : [ 0.25, 2 ];
 
 		
 	    /*if ( o.size.length == 1 ) {
@@ -107,7 +107,6 @@ Object.assign( Character.prototype, {
 		if ( o.mesh ) {
 
 			var gm = o.mesh.geometry;
-
 	    	var h = (Math.abs(gm.boundingBox.max.y)+Math.abs(gm.boundingBox.min.y))*o.scale;
 	    	var py = -(Math.abs(gm.boundingBox.max.y)-Math.abs(gm.boundingBox.min.y))*o.scale*0.5; // ?
 	        o.size[ 1 ] = h;
@@ -203,6 +202,8 @@ Object.assign( Character.prototype, {
 		map.set( name, mesh );
 
 		root.post( 'add', o );
+
+		return mesh;
 
 	},
 

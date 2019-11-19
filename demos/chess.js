@@ -147,6 +147,7 @@ function addPiece ( o, i ) {
 	    material: o.black ? chess_black : chess_white,
 		type: 'convex', 
 		size: [ chessSize ], 
+		geoScale: [ chessSize ], 
 		pos: [ o.pos[0] || 0,( o.pos[1] || 0) + h[n]*chessSize, o.pos[2] || 0 ], 
 		rot: o.rot || [0,0,0],
 		mass: o.mass || 10, 

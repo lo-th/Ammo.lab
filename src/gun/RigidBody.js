@@ -493,6 +493,8 @@ Object.assign( RigidBody.prototype, {
 
 	applyOption: function ( b, o ) {
 
+		
+
 		var p1 = math.vector3();
 
 		if ( o.flag !== undefined ){ 
@@ -521,7 +523,7 @@ Object.assign( RigidBody.prototype, {
 
 		// TODO try this setting
 		if ( o.linearVelocity !== undefined ) b.setLinearVelocity( p1.fromArray( o.linearVelocity, 0, root.invScale ) );
-		if ( o.angularVelocity !== undefined ) b.setAngularVelocity( p1.fromArray( o.angularVelocity ) );
+		if ( o.angularVelocity !== undefined ) b.setAngularVelocity( p1.fromArray( o.angularVelocity ) );// radian
 		if ( o.linearFactor !== undefined ) b.setLinearFactor( p1.fromArray( o.linearFactor ) );
 		if ( o.angularFactor !== undefined ) b.setAngularFactor( p1.fromArray( o.angularFactor ) );
 		//if ( o.linearFactor !== undefined ) b.setLinearFactor( o.linearFactor );

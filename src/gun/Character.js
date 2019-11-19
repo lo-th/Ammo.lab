@@ -104,6 +104,8 @@ export { Character };
 
 function Hero( name, o ) {
 
+	this.type = 'character';
+
 	this.name = name;
 
 	this.body = null;
@@ -123,6 +125,8 @@ function Hero( name, o ) {
 }
 
 Object.assign( Hero.prototype, {
+
+	isCharacter: true,
 
 	step: function ( Ar, n ) {
 
@@ -258,20 +262,24 @@ Object.assign( Hero.prototype, {
 		if ( root.scale !== 1 ) {
 
 			o.pos = math.vectomult( o.pos, root.invScale );
-			o.size = math.vectomult( o.size, root.invScale );
+			//o.size = math.vectomult( o.size, root.invScale );
 			if( o.masscenter !== undefined ) o.masscenter = math.vectomult( o.masscenter, root.invScale );
 
 		}
 
 
 
-		var capsule = new Ammo.btCapsuleShape( o.size[ 0 ], o.size[ 1 ] );
+		//var capsule = new Ammo.btCapsuleShape( o.size[ 0 ], o.size[ 1 ] );
+
+		var shapeInfo = o.shapeInfo || { type: 'capsule', size: o.size };
+
+		var shape = root.makeShape( shapeInfo );
 
 		var body = new Ammo.btPairCachingGhostObject();
 		trans.identity().fromArray( o.pos.concat( o.quat ) );
 		body.setWorldTransform( trans );
 
-		body.setCollisionShape( capsule );
+		body.setCollisionShape( shape );
 		body.setCollisionFlags( 16 );//CHARACTER_OBJECT
 
 		
@@ -281,44 +289,77 @@ Object.assign( Hero.prototype, {
 
 		body.setActivationState( 4 );
 		body.activate();
+		this.body = body;
 
-		var controller = new Ammo.btKinematicCharacterController( body, capsule, o.stepH || 0.35, o.upAxis || 1 );
+		var controller = new Ammo.btKinematicCharacterController( body, shape, o.stepH || 0.35, o.upAxis || 1 );
 		//var hero = new Ammo.btKinematicCharacterController( body, shape, o.stepH || 0.3 )
-		controller.setUseGhostSweepTest( capsule );
+		controller.setUseGhostSweepTest( shape );
+
+		p0.setValue( 0, 0, 0 );
+		controller.setVelocityForTimeInterval( p0, 1 );
 
 		// hero.getGhostObject().getWorldTransform().setRotation(q4( o.quat ));
+		this.controller = controller;
+		this.applyOption( o );
 
-		controller.setGravity( 9.8*3 );//9.8 *3
-		controller.setFallSpeed( 55 );//55
-		//hero.setUpAxis(1);
-		controller.setMaxJumpHeight( 0.01 );
-		controller.setJumpSpeed( 0.1 );//10
-		/*
+		this.setAngle( 0 );
 
 
-        hero.jump();
-        */
-		//hero.canJump( true );
-
-	    console.log( controller )
+	    console.log( controller, body )
 
 		// The max slope determines the maximum angle that the controller can walk
-		if ( o.slopeRadians ) controller.setMaxSlope( o.slopeRadians );//45
+		
 
 
 
 
 		// controller.warp(v3(o.pos));
 
-		p0.setValue( 0, 0, 0 );
-		controller.setVelocityForTimeInterval( p0, 1 );
+		
 
 
 
-		this.body = body;
-		this.controller = controller;
+		
+		
 
 		// world.getPairCache().setInternalGhostPairCallback( new Ammo.btGhostPairCallback() );
+
+	},
+
+	applyOption: function ( o ) {
+
+		//console.log('set')
+
+		var controller = this.controller;
+
+		if ( o.gravity !== undefined ) controller.setGravity( o.gravity );//9.8 *3
+		if ( o.upAxis !== undefined ) controller.setUpAxis( o.upAxis );
+		if ( o.canJump !== undefined ) controller.canJump( o.canJump );
+		if ( o.maxJumpHeight !== undefined ) controller.setMaxJumpHeight( o.maxJumpHeight   );//0.01
+		if ( o.jumpSpeed !== undefined) controller.setJumpSpeed( o.jumpSpeed );//0.1
+		if ( o.fallSpeed !== undefined ) controller.setFallSpeed( o.fallSpeed );//55
+		if ( o.slopeRadians !== undefined ) controller.setMaxSlope( o.slopeRadians );//45
+
+		if( o.angle !== undefined ) this.setAngle( o.angle );//45
+		if( o.position !== undefined ){
+
+			this.position.fromArray( o.position, 0, root.invScale );
+			this.position.direction( this.q );
+			controller.setWalkDirection( this.position );
+
+		}
+
+	},
+
+	setMatrix: function ( o ){
+
+		var p0 = math.vector3();
+		o.pos = math.vectomult( o.pos, root.invScale );
+		p0.fromArray( o.pos )
+
+		this.controller.warp( p0 );
+
+		p0.free();
 
 	},
 

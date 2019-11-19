@@ -79,7 +79,13 @@ function demo() {
     var i = 10;
     while(i--){
         physic.add ({ type:'sphere', size:[1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
-        physic.add ({ type:'box',  size:[1,1,1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
+       // physic.add ({ type:'box',  size:[1,1,1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
+    }
+
+    i = 10;
+    while(i--){
+       // physic.add ({ type:'sphere', size:[1], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
+        physic.add ({ type:'box', size:[2,2,2], pos:[Math.rand(-100,100),20,Math.rand(-100,100)], mass:10 });
     }
 
     // load buggy 3d model

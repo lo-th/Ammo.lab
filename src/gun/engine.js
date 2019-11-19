@@ -225,7 +225,7 @@ export var engine = ( function () {
 
 			//root.world.stepSimulation( timestep, substep );
 
-			if ( fixed ) root.world.stepSimulation( timestep, 0 );//root.world.stepSimulation( delta, substep, timestep );
+			if ( fixed ) root.world.stepSimulation( timestep, substep );//root.world.stepSimulation( delta, substep, timestep );
 			//else root.world.stepSimulation( delta, substep, timestep );
 			else root.world.stepSimulation( delta, substep, timestep );
 
@@ -358,7 +358,10 @@ export var engine = ( function () {
 				tmpT = math.transform();
 				tmpP = math.vector3();
 
-				vehicles.addExtra = rigidBody.add;
+				root.makeShape = function ( o ) { return rigidBody.add( o, 'isShape' ); }
+
+				//vehicles.addExtra = rigidBody.add;
+				//character.addExtra = rigidBody.add;
 
 				self.postMessage( { m: 'initEngine' } );
 
@@ -699,6 +702,11 @@ export var engine = ( function () {
 			if ( ! map.has( name ) ) return;
 			var b = map.get( name );
 
+			if( b.isCharacter ){
+				b.setMatrix( o );
+				return;
+			}
+
 			var t = tmpT.identity(); //math.transform();
 			var p1 = tmpP; //math.vector3();
 
@@ -857,6 +865,9 @@ export var engine = ( function () {
 				break;
 				case 'soft':
 				    softBody.applyOption( body, o );
+				break;
+				case 'character':
+				    body.applyOption( o );
 				break;
 			}
 
