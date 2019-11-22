@@ -4510,26 +4510,39 @@ var engine = ( function () {
 
 		},
 
-		loop: function ( o ){
+		/*loop: function ( o ){
 
 			t.now = Time.now();
 		    t.delta = t.now - t.then;
 
-		    if ( t.delta > t.inter ) {
-		    	t.then = t.now - ( t.delta % t.inter );
-		    	engine.step( { key:o.key, delta:t.delta*0.001 } );
-		    }/* else (
+		    //if ( t.delta > t.inter ) {
+		    	//t.then = t.now - ( t.delta % t.inter );
+		    	engine.step( { key:o.key, delta:t.delta*0.001 } )
+		    //}/* else (
 		    	engine.internStep( { key:o.key } )
-		    )*/
+		    //)*/
 
-		},
+		//},
 
 		internStep: function ( o ){
 
 			//var now = Time.now();
 
+			//isInternUpdate = true;
+
+			root.key = o.key;
+
 
 		    //stepNext = true; 
+		    t.last = Time.now();
+
+		    function mainLoop() {
+
+		        t.now = Time.now();
+		        engine.step( { delta: (t.now - t.last)*0.001 } );
+		        t.last = t.now;
+
+		    }
 
 		    
 
@@ -4541,8 +4554,8 @@ var engine = ( function () {
 			//t.inter = 1000 * timestep
 
 
-			if ( interval ) clearTimeout( interval );
-			interval = setTimeout( function(){ engine.loop( { key:o.key } ); },  0 );
+			if ( interval ) clearInterval( interval );
+			interval = setInterval( mainLoop, 1000 * timestep );
 
 			
 
@@ -4558,7 +4571,7 @@ var engine = ( function () {
 				}
 			, 1000 * timestep );*/
 
-			//console.log(timestep)
+			console.log('is interne update');
 
 		},
 
@@ -4566,13 +4579,15 @@ var engine = ( function () {
 
 			if( isInternUpdate ){
 
-				
-				//delta = ( t.now - t.last ) * 0.001;
 				if ( t.now - 1000 > t.tmp ) { t.tmp = t.now; t.fps = t.n; t.n = 0; } t.n ++;
 				
-			} /*else {
+			} else {
+
+				root.key = o.key;
 				
-			}*/
+			}
+
+
 
 			delta = o.delta;
 
@@ -4585,7 +4600,7 @@ var engine = ( function () {
 			//if ( fixed ) root.world.stepSimulation( o.delta, substep, timestep );
 			//else root.world.stepSimulation( o.delta, substep );
 
-			root.key = o.key;
+			
 
 
 			
@@ -4610,10 +4625,10 @@ var engine = ( function () {
 
 
 			// timeStep < maxSubSteps * fixedTimeStep if you don't want to lose time.
-
+			//'timeStep', units in preferably in seconds
 			//root.world.stepSimulation( timestep, substep );
 
-			if ( fixed ) root.world.stepSimulation( timestep, substep );//root.world.stepSimulation( delta, substep, timestep );
+			if ( fixed ) root.world.stepSimulation( timestep, 0 );//root.world.stepSimulation( delta, substep, timestep );
 			//else root.world.stepSimulation( delta, substep, timestep );
 			else root.world.stepSimulation( delta, substep, timestep );
 
@@ -4629,11 +4644,11 @@ var engine = ( function () {
 
 			raycaster.step();
 
-			if ( isBuffer ) self.postMessage( { m: 'step', fps:t.fps, delta:t.delta,  flow: root.flow, Ar: Ar }, [ Ar.buffer ] );
+			if ( isBuffer ) self.postMessage( { m: 'step', fps:t.fps, delta:t.delta, flow: root.flow, Ar: Ar }, [ Ar.buffer ] );
 			else self.postMessage( { m: 'step', fps:t.fps, delta:delta, flow: root.flow, Ar: Ar } );
 
 
-			if( isInternUpdate ) t.last = t.now;//Time.now();//now;
+			//if( isInternUpdate ) t.last = t.now;//Time.now();//now;
 
 		},
 

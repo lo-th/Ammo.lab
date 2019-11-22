@@ -112,6 +112,8 @@ export var engine = ( function () {
 
 			callback = Callback;
 
+			isInternUpdate = Option.use_intern_update || false;
+
 			option = {
 
 				fps: Option.fps || 60,
@@ -222,6 +224,8 @@ export var engine = ( function () {
 			worker.postMessage( { m: 'test', ab: ab }, [ ab ] );
 			isBuffer = ab.byteLength ? false : true;
 
+			if( isInternUpdate ) isBuffer = false;
+
 			// start engine worker
 			engine.post( 'init', { blob: blob, ArPos: root.ArPos, ArMax: root.ArMax, isBuffer: isBuffer, option: option } );
 			root.post = engine.post;
@@ -303,7 +307,10 @@ export var engine = ( function () {
 
 			}
 
-			if( isInternUpdate ) engine.sendStep( );
+			if( !noAutoUpdate && isInternUpdate ){ //engine.sendStep();
+				var key = engine.getKey();
+				worker.postMessage( { m: 'internStep', o: {  steptime:t.steptime, key:key }, flow: root.flow, Ar: root.Ar } );
+			}
 
 			// test ray
 			engine.setMode( oldMode );
@@ -405,6 +412,11 @@ export var engine = ( function () {
 
         		if ( !stepNext ){ stats.skip++; return; }
 
+        		//t.delta = ( t.now - Time.now() ) * 0.001;
+
+        		t.delta = ( t.now - t.then ) * 0.001;
+        		t.then = t.now;
+
         		//t.now = Time.now();
 			    //t.delta = ( t.now - t.then ) * 0.001;
 
@@ -426,8 +438,8 @@ export var engine = ( function () {
 			if ( !stepNext ) return;
 
 			t.now = Time.now();
-			t.delta = ( t.now - t.then ) * 0.001;
-			t.then = t.now;
+			//t.delta = ( t.now - t.then ) * 0.001;
+			//t.then = t.now;
 
 			engine.prevUpdate( t.delta );
 
@@ -438,7 +450,7 @@ export var engine = ( function () {
         	if( isInternUpdate ) {
 
         		if ( isBuffer ) worker.postMessage( { m: 'internStep', o: { steptime:t.steptime,  key:key }, flow: root.flow, Ar: root.Ar }, [ root.Ar.buffer ] );
-			    else worker.postMessage( { m: 'internStep', o: {  steptime:t.steptime, key:key }, flow: root.flow, Ar: root.Ar } );
+			    //else worker.postMessage( { m: 'internStep', o: {  steptime:t.steptime, key:key }, flow: root.flow, Ar: root.Ar } );
 
         	} else {
 
@@ -450,6 +462,13 @@ export var engine = ( function () {
         	
 
 			stepNext = false;
+
+		},
+
+		simpleStep: function (delta) {
+
+			var key = engine.getKey();
+			worker.postMessage( { m: 'step', o: { delta: delta, key:key } } );
 
 		},
 

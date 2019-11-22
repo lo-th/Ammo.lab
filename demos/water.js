@@ -18,10 +18,13 @@ function demo() {
 
     physic.add ({ 
         type:'terrain',
-        name:'water', 
+        name:'water',
+
+        uv:2,
+
         water:true,
         pos : [0,0,0], // terrain position
-        size : [120,15,120], // terrain size in meter
+        size : [120,20,120], // terrain size in meter
         sample : [128,128], // number of subdivision
 
         frequency : [0.016,0.08], // frequency of noise
@@ -38,16 +41,18 @@ function demo() {
         //bounce: 0.0,
         //soft_cfm:0.000001
         //toTri: true,
+        group:2, 
+        mask:1,
     });
 
-    /*
+    /**/
     // content box
-    var l = 200, h = 40;
-    physic.add({type:'box', pos:[l*0.5,h*0.5,0], size:[1,h, l+1], material:'hide'});
-    physic.add({type:'box', pos:[-l*0.5,h*0.5,0], size:[1,h, l+1], material:'hide'});
-    physic.add({type:'box', pos:[0,h*0.5,l*0.5], size:[l-1,h, 1], material:'hide'});
-    physic.add({type:'box', pos:[0,h*0.5,-l*0.5], size:[l-1,h, 1], material:'hide'})
-    */
+    var l = 130, h = 40, d=10;
+    physic.add({type:'box', pos:[l*0.5,h*0.5,0], size:[d, h, l+d], group:2, mask:1, material:'hide' });
+    physic.add({type:'box', pos:[-l*0.5,h*0.5,0], size:[d,h, l+d], group:2, mask:1, material:'hide'  });
+    physic.add({type:'box', pos:[0,h*0.5,l*0.5], size:[l-d,h, d], group:2, mask:1, material:'hide'  });
+    physic.add({type:'box', pos:[0,h*0.5,-l*0.5], size:[l-d,h, d], group:2, mask:1, material:'hide' });
+    
 
     water = physic.byName('water');
 
@@ -55,7 +60,7 @@ function demo() {
 
     while(i--){
         physic.add ({ type:'sphere', size:[2], pos:[Math.rand(-40,40),40+(i*40),Math.rand(-40,40)], mass:1, friction: 0.5, state:4 });
-        physic.add ({ type:'box', size:[4], pos:[Math.rand(-40,40),40+(i*40),Math.rand(-40,40)], mass:1, friction: 0.5, state:4 });
+        physic.add ({ type:'box', radius:0.2, size:[4], pos:[Math.rand(-40,40),40+(i*40),Math.rand(-40,40)], mass:1, friction: 0.5, state:4 });
     }
 
     physic.postUpdate = update;

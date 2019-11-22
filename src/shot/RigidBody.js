@@ -52,7 +52,7 @@ Object.assign( RigidBody.prototype, {
 				b.position.fromArray( AR, n + 1 );
 	            b.quaternion.fromArray( AR, n + 4 );
 
-	            if( !b.matrixAutoUpdate ) b.updateMatrix();
+	            //if( !b.matrixAutoUpdate ) b.updateMatrix();
 	            //b.updateMatrixWorld( true );
 	            //b.updateWorldMatrix( true,true)
 			}

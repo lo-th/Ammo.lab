@@ -82,6 +82,7 @@ function afterLoad () {
             type:'convex',
             shape:shape,
             geometry:geometry,
+            geoScale:[0.5],
             friction:0.4,
             mass:1,
             size:[0.5],

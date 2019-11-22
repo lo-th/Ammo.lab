@@ -1669,7 +1669,7 @@
 					b.position.fromArray( AR, n + 1 );
 		            b.quaternion.fromArray( AR, n + 4 );
 
-		            if( !b.matrixAutoUpdate ) b.updateMatrix();
+		            //if( !b.matrixAutoUpdate ) b.updateMatrix();
 		            //b.updateMatrixWorld( true );
 		            //b.updateWorldMatrix( true,true)
 				}
@@ -5594,6 +5594,8 @@
 
 				callback = Callback;
 
+				isInternUpdate = Option.use_intern_update || false;
+
 				option = {
 
 					fps: Option.fps || 60,
@@ -5704,6 +5706,8 @@
 				worker.postMessage( { m: 'test', ab: ab }, [ ab ] );
 				isBuffer = ab.byteLength ? false : true;
 
+				if( isInternUpdate ) isBuffer = false;
+
 				// start engine worker
 				exports.engine.post( 'init', { blob: blob, ArPos: root.ArPos, ArMax: root.ArMax, isBuffer: isBuffer, option: option } );
 				root.post = exports.engine.post;
@@ -5785,6 +5789,11 @@
 
 				}
 
+				if( !noAutoUpdate && isInternUpdate ){ //engine.sendStep();
+					var key = exports.engine.getKey();
+					worker.postMessage( { m: 'internStep', o: {  steptime:t.steptime, key:key }, flow: root.flow, Ar: root.Ar } );
+				}
+
 				// test ray
 				exports.engine.setMode( oldMode );
 
@@ -5821,7 +5830,10 @@
 				//var start = Time.now();
 
 
-				{
+				if( isInternUpdate ){
+					t.fps = fps;
+					t.delta = delta; 
+				} else {
 				    //t.now = Time.now();
 					if ( t.now - 1000 > t.tmp ) { t.tmp = t.now; t.fps = t.n; t.n = 0; } t.n ++; // FPS
 				}
@@ -5848,11 +5860,16 @@
 	        	
 	            stepNext = true;
 
+
+				if( isInternUpdate ){ exports.engine.sendStep(); }
+
 				
 
 			},
 
 			sendData: function ( stamp ) {
+
+				if( isInternUpdate ) return;
 
 				if ( refView ) if ( refView.pause ) { exports.engine.stop(); return; }
 	        	
@@ -5877,6 +5894,11 @@
 
 	        		if ( !stepNext ){ return; }
 
+	        		//t.delta = ( t.now - Time.now() ) * 0.001;
+
+	        		t.delta = ( t.now - t.then ) * 0.001;
+	        		t.then = t.now;
+
 	        		//t.now = Time.now();
 				    //t.delta = ( t.now - t.then ) * 0.001;
 
@@ -5898,8 +5920,8 @@
 				if ( !stepNext ) return;
 
 				t.now = Time.now();
-				t.delta = ( t.now - t.then ) * 0.001;
-				t.then = t.now;
+				//t.delta = ( t.now - t.then ) * 0.001;
+				//t.then = t.now;
 
 				exports.engine.prevUpdate( t.delta );
 
@@ -5907,7 +5929,12 @@
 
 	        	// timeStep < maxSubSteps * fixedTimeStep if you don't want to lose time.
 
-	        	{
+	        	if( isInternUpdate ) {
+
+	        		if ( isBuffer ) worker.postMessage( { m: 'internStep', o: { steptime:t.steptime,  key:key }, flow: root.flow, Ar: root.Ar }, [ root.Ar.buffer ] );
+				    //else worker.postMessage( { m: 'internStep', o: {  steptime:t.steptime, key:key }, flow: root.flow, Ar: root.Ar } );
+
+	        	} else {
 
 	        		if ( isBuffer ) worker.postMessage( { m: 'step', o: { delta: t.delta, key:key }, flow: root.flow, Ar: root.Ar }, [ root.Ar.buffer ] );
 				    else worker.postMessage( { m: 'step', o: { delta: t.delta, key:key }, flow: root.flow, Ar: root.Ar } );
@@ -5917,6 +5944,13 @@
 	        	
 
 				stepNext = false;
+
+			},
+
+			simpleStep: function (delta) {
+
+				var key = exports.engine.getKey();
+				worker.postMessage( { m: 'step', o: { delta: delta, key:key } } );
 
 			},
 

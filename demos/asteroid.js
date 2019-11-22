@@ -2,7 +2,7 @@
 function demo () {
 
     view.moveCam({ theta:0, phi:60, distance:40, target:[0,0,0] });
-    view.addSky({ url:'milkyway.jpg', visible:true });
+    view.addSky({ url:'stars.jpg', visible:true });
     view.hideGrid();
 
     
