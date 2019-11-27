@@ -1,6 +1,6 @@
 // ROOT reference of engine
 
-export var REVISION = '004';
+export var REVISION = '005';
 
 export var root = {
 
@@ -35,18 +35,37 @@ export var root = {
 
 	isRefView: false,
 
+	correctSize: function ( s ) {
+
+		if ( s.length === 1 ) s[ 1 ] = s[ 0 ];
+	    if ( s.length === 2 ) s[ 2 ] = s[ 0 ];
+	    return s;
+
+	},
+
+	// rotation
+
+	tmpQ: new THREE.Quaternion(),
+	tmpE: new THREE.Euler(),
+	tmpM: new THREE.Matrix4(),
+
+	toQuatArray: function ( rotation ) { // rotation array in degree
+
+		return root.tmpQ.setFromEuler( root.tmpE.fromArray( root.vectorad( rotation ) ) ).toArray();
+
+	},
+
+	vectorad: function ( r ) {
+
+		var i = r.length;
+	    while ( i -- ) r[ i ] *= root.torad;
+	    return r;
+
+	},
+
 
 };
 
 // ROW map
 
 export var map = new Map();
-
-
-export function vectorad( r ) {
-
-	var i = r.length;
-	while ( i -- ) r[ i ] *= root.torad;
-	return r;
-
-}

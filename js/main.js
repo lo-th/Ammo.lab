@@ -8,7 +8,18 @@
 
 'use strict';
 
-var demos = [ 
+
+var demos = {
+    'BASIC': ['empty', 'basic', 'moto_basic', 'car_basic', 'collision', 'ragdoll', 'terrain', 'supermaket', 'kinematics', 'kinem_test','character', 'joints', 'point2point', 'contact', 'testmesh','compound', 'tower','rayTest','ghost', 'fps', 'bullet',],
+    'SOFT': ['soft_cloth', 'soft_rope', 'soft_rope2', 'soft_box', 'soft_pig', 'soft_ball', 'soft_convex'],
+    'ADVANCED':[ 'asteroid', 'basketball', 'car_advanced', 'car_multy', 'car_Breakers', 'car_terrain', 'moto_akira', 'kinem_body','mecanum', 'drone', 'millions', 'water', 'break_glass', 'break_diamond', 'dragon', 'chess',],
+};
+
+
+/*
+
+
+var demos = [
     'basic', 'terrain', 'supermaket', 'collision', 'ragdoll',
     'car_advanced', 'car_basic','car_multy', 'car_Breakers', 'car_terrain',
     'moto_basic','moto_akira',
@@ -22,9 +33,9 @@ var demos = [
     'ghost', 
     'fps',
     'dragon', 'chess', 'bullet',
-];
+];*/
 
-demos.sort();
+//demos.sort();
 
 var demo, physic;
 var demoName = 'basic';

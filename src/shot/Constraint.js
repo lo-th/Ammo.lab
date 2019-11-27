@@ -1,5 +1,5 @@
 /*global THREE*/
-import { root, map, vectorad } from './root.js';
+import { root, map } from './root.js';
 
 /**   _   _____ _   _
 *    | | |_   _| |_| |
@@ -74,6 +74,14 @@ Object.assign( Constraint.prototype, {
 
 		// delete old if same name
 		this.remove( o.name );
+
+		/*
+	    if ( o.rotA ){ o.quatA = root.toQuatArray( o.rotA ); delete ( o.rotA ); }
+	    if ( o.rotB ){ o.quatB = root.toQuatArray( o.rotB ); delete ( o.rotB ); }
+
+	    if ( o.angUpper ) o.angUpper = root.vectorad( o.angUpper );
+	    if ( o.angLower ) o.angLower = root.vectorad( o.angLower );
+	    */
 
 		var joint = new Joint( o );
 		this.joints.push( joint );

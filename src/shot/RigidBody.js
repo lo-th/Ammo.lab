@@ -1,6 +1,6 @@
 /*global THREE*/
 import { Capsule, geometryInfo } from './Geometry.js';
-import { root, map, vectorad } from './root.js';
+import { root, map } from './root.js';
 
 /**   _   _____ _   _
 *    | | |_   _| |_| |
@@ -130,52 +130,22 @@ Object.assign( RigidBody.prototype, {
 
 		}
 
+		var customGeo = false;
+
 		o.type = o.type === undefined ? 'box' : o.type;
-		//o.size = o.size === undefined ? [ 1, 1, 1 ] : o.size;
+
+		// position
 		o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
-		//o.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
-
-	    var customGeo = false;
-
 	    // size
 	    o.size = o.size == undefined ? [ 1, 1, 1 ] : o.size;
-	    if ( o.size.length === 1 ) {
-
-			o.size[ 1 ] = o.size[ 0 ];
-
-		}
-	    if ( o.size.length === 2 ) {
-
-			o.size[ 2 ] = o.size[ 0 ];
-
-		}
-
-	    if ( o.geoSize ) {
-
-	        if ( o.geoSize.length === 1 ) {
-
-				o.geoSize[ 1 ] = o.geoSize[ 0 ];
-
-			}
-	        if ( o.geoSize.length === 2 ) {
-
-				o.geoSize[ 2 ] = o.geoSize[ 0 ];
-
-			}
-
-		}
-
-	    // rotation is in degree
-	    o.rot = o.rot === undefined ? [ 0, 0, 0 ] : vectorad( o.rot );
-	    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
+	    o.size = root.correctSize( o.size );
+	    if ( o.geoSize ) o.geoSize = root.correctSize( o.geoSize );
+	    // rotation is in degree or Quaternion
+	    o.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
+	    if( o.rot !== undefined ){ o.quat = root.toQuatArray( o.rot ); delete ( o.rot ); }
 
 	    
-
-	    if ( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotA ) ) ).toArray();
-	    if ( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotB ) ) ).toArray();
-
-	    if ( o.angUpper ) o.angUpper = vectorad( o.angUpper );
-	    if ( o.angLower ) o.angLower = vectorad( o.angLower );
+	    
 
 	    var mesh = null;
 	    var noMesh = o.noMesh !== undefined ? o.noMesh : false; 
@@ -229,7 +199,7 @@ Object.assign( RigidBody.prototype, {
 
 				}
 	            g.pos = g.pos === undefined ? [ 0, 0, 0 ] : g.pos;
-	    		g.rot = g.rot === undefined ? [ 0, 0, 0 ] : vectorad( g.rot );
+	    		g.rot = g.rot === undefined ? [ 0, 0, 0 ] : root.vectorad( g.rot );
 				g.quat = g.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( g.rot ) ).toArray() : g.quat;
 
 	    	}
@@ -327,7 +297,7 @@ Object.assign( RigidBody.prototype, {
 
 	            if ( o.geoRot || o.geoScale ) o.geometry = o.geometry.clone();
 	            // rotation only geometry
-	            if ( o.geoRot ) o.geometry.applyMatrix( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( vectorad( o.geoRot ) ) ) );
+	            if ( o.geoRot ) o.geometry.applyMatrix( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( root.vectorad( o.geoRot ) ) ) );
 	            // scale only geometry
 	            if ( o.geoScale ) o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[ 0 ], o.geoScale[ 1 ], o.geoScale[ 2 ] ) );
 

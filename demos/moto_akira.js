@@ -58,8 +58,9 @@ function demo() {
 
     view.addJoystick({ sameAxis:true });
 
-    view.addSky({ hour:option.hour, hdr:true, cloud_covr:0.6, cloud_dens:60, groundColor:0x373737 });
-    //view.addSky({  url:'photo.jpg', hdr:true, visible:false });
+    //view.addSky({ hour:option.hour, hdr:true, cloud_covr:0.6, cloud_dens:60, groundColor:0x373737 });
+    view.addSky({  url:'photo.jpg', hdr:true, visible:false });
+
     view.setShadow( { size:10, near:195, far:205, groundSize:1000, debug:debug } );
 
     physic.set({
@@ -220,6 +221,8 @@ function initKaneda () {
     kaneda = view.getMesh( 'kaneda', 'ka_body' );
     kaneda.material = mat.kaneda;
 
+    view.addUV2( kaneda );
+
     kaneda.castShadow = true;
     kaneda.receiveShadow = true;
 
@@ -246,6 +249,9 @@ function initKaneda () {
     glass.material = mat.glass;
     eye_l.material = mat.eye;
     eye_r.material = mat.eye;
+
+    view.addUV2( hair );
+    view.addUV2( lunette );
 
     hair.skeleton = kaneda.skeleton;
     lunette.skeleton = kaneda.skeleton;
@@ -274,6 +280,7 @@ function initBike () {
 
         m = mesh.children[k];
         name = mesh.children[k].name;
+        view.addUV2( m );
         m.material = mat.bike_1;
 
         if( name === 'ak_axis_back' || name === 'ak_axis_front' ){

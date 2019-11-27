@@ -1566,7 +1566,7 @@
 
 	// ROOT reference of engine
 
-	var REVISION = '004';
+	var REVISION = '005';
 
 	var root = {
 
@@ -1601,21 +1601,40 @@
 
 		isRefView: false,
 
+		correctSize: function ( s ) {
+
+			if ( s.length === 1 ) s[ 1 ] = s[ 0 ];
+		    if ( s.length === 2 ) s[ 2 ] = s[ 0 ];
+		    return s;
+
+		},
+
+		// rotation
+
+		tmpQ: new THREE.Quaternion(),
+		tmpE: new THREE.Euler(),
+		tmpM: new THREE.Matrix4(),
+
+		toQuatArray: function ( rotation ) { // rotation array in degree
+
+			return root.tmpQ.setFromEuler( root.tmpE.fromArray( root.vectorad( rotation ) ) ).toArray();
+
+		},
+
+		vectorad: function ( r ) {
+
+			var i = r.length;
+		    while ( i -- ) r[ i ] *= root.torad;
+		    return r;
+
+		},
+
 
 	};
 
 	// ROW map
 
 	var map = new Map();
-
-
-	function vectorad( r ) {
-
-		var i = r.length;
-		while ( i -- ) r[ i ] *= root.torad;
-		return r;
-
-	}
 
 	/*global THREE*/
 
@@ -1747,52 +1766,22 @@
 
 			}
 
+			var customGeo = false;
+
 			o.type = o.type === undefined ? 'box' : o.type;
-			//o.size = o.size === undefined ? [ 1, 1, 1 ] : o.size;
+
+			// position
 			o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
-			//o.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
-
-		    var customGeo = false;
-
 		    // size
 		    o.size = o.size == undefined ? [ 1, 1, 1 ] : o.size;
-		    if ( o.size.length === 1 ) {
-
-				o.size[ 1 ] = o.size[ 0 ];
-
-			}
-		    if ( o.size.length === 2 ) {
-
-				o.size[ 2 ] = o.size[ 0 ];
-
-			}
-
-		    if ( o.geoSize ) {
-
-		        if ( o.geoSize.length === 1 ) {
-
-					o.geoSize[ 1 ] = o.geoSize[ 0 ];
-
-				}
-		        if ( o.geoSize.length === 2 ) {
-
-					o.geoSize[ 2 ] = o.geoSize[ 0 ];
-
-				}
-
-			}
-
-		    // rotation is in degree
-		    o.rot = o.rot === undefined ? [ 0, 0, 0 ] : vectorad( o.rot );
-		    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
+		    o.size = root.correctSize( o.size );
+		    if ( o.geoSize ) o.geoSize = root.correctSize( o.geoSize );
+		    // rotation is in degree or Quaternion
+		    o.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
+		    if( o.rot !== undefined ){ o.quat = root.toQuatArray( o.rot ); delete ( o.rot ); }
 
 		    
-
-		    if ( o.rotA ) o.quatA = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotA ) ) ).toArray();
-		    if ( o.rotB ) o.quatB = new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( vectorad( o.rotB ) ) ).toArray();
-
-		    if ( o.angUpper ) o.angUpper = vectorad( o.angUpper );
-		    if ( o.angLower ) o.angLower = vectorad( o.angLower );
+		    
 
 		    var mesh = null;
 		    var noMesh = o.noMesh !== undefined ? o.noMesh : false; 
@@ -1844,7 +1833,7 @@
 
 					}
 		            g.pos = g.pos === undefined ? [ 0, 0, 0 ] : g.pos;
-		    		g.rot = g.rot === undefined ? [ 0, 0, 0 ] : vectorad( g.rot );
+		    		g.rot = g.rot === undefined ? [ 0, 0, 0 ] : root.vectorad( g.rot );
 					g.quat = g.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( g.rot ) ).toArray() : g.quat;
 
 		    	}
@@ -1940,7 +1929,7 @@
 
 		            if ( o.geoRot || o.geoScale ) o.geometry = o.geometry.clone();
 		            // rotation only geometry
-		            if ( o.geoRot ) o.geometry.applyMatrix( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( vectorad( o.geoRot ) ) ) );
+		            if ( o.geoRot ) o.geometry.applyMatrix( new THREE.Matrix4().makeRotationFromEuler( new THREE.Euler().fromArray( root.vectorad( o.geoRot ) ) ) );
 		            // scale only geometry
 		            if ( o.geoScale ) o.geometry.applyMatrix( new THREE.Matrix4().makeScale( o.geoScale[ 0 ], o.geoScale[ 1 ], o.geoScale[ 2 ] ) );
 
@@ -2179,6 +2168,14 @@
 
 			// delete old if same name
 			this.remove( o.name );
+
+			/*
+		    if ( o.rotA ){ o.quatA = root.toQuatArray( o.rotA ); delete ( o.rotA ); }
+		    if ( o.rotB ){ o.quatB = root.toQuatArray( o.rotB ); delete ( o.rotB ); }
+
+		    if ( o.angUpper ) o.angUpper = root.vectorad( o.angUpper );
+		    if ( o.angLower ) o.angLower = root.vectorad( o.angLower );
+		    */
 
 			var joint = new Joint( o );
 			this.joints.push( joint );
@@ -2504,24 +2501,14 @@
 			// delete old if same name
 			this.remove( name );
 
+			// position
 			o.pos = o.pos === undefined ? [ 0, 0, 0 ] : o.pos;
-
 			// size
 		    o.size = o.size == undefined ? [ 1, 1, 1 ] : o.size;
-		    if ( o.size.length === 1 ) {
-
-				o.size[ 1 ] = o.size[ 0 ];
-
-			}
-		    if ( o.size.length === 2 ) {
-
-				o.size[ 2 ] = o.size[ 0 ];
-
-			}
-
-			// rotation is in degree
-		    o.rot = o.rot === undefined ? [ 0, 0, 0 ] : vectorad( o.rot );
-		    o.quat = o.quat === undefined ? new THREE.Quaternion().setFromEuler( new THREE.Euler().fromArray( o.rot ) ).toArray() : o.quat;
+		    o.size = root.correctSize( o.size );
+			// rotation is in degree or Quaternion
+		    o.quat = o.quat === undefined ? [ 0, 0, 0, 1 ] : o.quat;
+		    if( o.rot !== undefined ){ o.quat = root.toQuatArray( o.rot ); delete ( o.rot ); }
 
 			// material
 
@@ -2562,9 +2549,13 @@
 			//mesh.isSoft = true;
 			mesh.type = 'soft';
 
+			//mesh.position.fromArray( o.pos );
+		    //mesh.quaternion.fromArray( o.quat );
+
 
 		    root.container.add( mesh );
 			this.softs.push( mesh );
+
 			map.set( name, mesh );
 
 			root.post( 'add', o );
@@ -2599,19 +2590,9 @@
 	function softMesh( o, material ) {
 
 		var g = o.shape.clone();
-		var pos = o.pos || [ 0, 0, 0 ];
-		var size = o.size || [ 1, 1, 1 ];
-		//var rot = o.rot || [ 0, 0, 0 ];
-
 		
-		g.scale( size[ 0 ], size[ 1 ], size[ 2 ] );
-		//g.applyMatrix( new THREE.Matrix4().makeRotationFromQuaternion( new THREE.Quaternion().fromArray( o.quat ) ) );
-		//g.translate( pos[ 0 ], pos[ 1 ], pos[ 2 ] );
-		
-		//g.rotateX( rot[0] *= Math.degtorad );
-		//g.rotateY( rot[1] *= Math.degtorad );
-		//g.rotateZ( rot[2] *= Math.degtorad );
-		//g.applyMatrix( new THREE.Matrix4().makeRotationY( rot[ 1 ] *= Math.torad ) );
+		// apply scale before get geometry info
+		g.scale( o.size[ 0 ], o.size[ 1 ], o.size[ 2 ] );
 
 		geometryInfo( g );
 
@@ -2621,7 +2602,11 @@
 		o.i = g.realIndices;
 		o.ntri = g.numFaces;
 
-		//var material = o.material === undefined ? root.mat.soft : root.mat[o.material];
+		// position and rotation after get geometry info
+		g.translate( o.pos[ 0 ], o.pos[ 1 ], o.pos[ 2 ] );
+		g.applyMatrix( root.tmpM.makeRotationFromQuaternion( root.tmpQ.fromArray( o.quat ) ) );
+
+
 		var mesh = new THREE.Mesh( g, material );
 
 		mesh.castShadow = true;

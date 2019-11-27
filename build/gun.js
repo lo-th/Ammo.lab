@@ -2416,6 +2416,8 @@
 
 			}
 
+			//console.log(o.pos)
+
 			var p0 = math.vector3();
 			var p1 = math.vector3();
 			var p2 = math.vector3();
