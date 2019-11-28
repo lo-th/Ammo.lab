@@ -127,6 +127,10 @@ function makeBuggy () {
     susp.children[0].receiveShadow = false;
     susp.children[0].castShadow = false;
 
+    mesh.material = mat.body;
+    //mesh.receiveShadow = false;
+    //mesh.castShadow = false;
+
     var k = mesh.children.length, m;
 
     while(k--){
@@ -146,9 +150,18 @@ function makeBuggy () {
 
     }
 
+    
+
+
+    //wheel.material = mat.wheel;
+    //wheel.receiveShadow = false;
+    //wheel.castShadow = false;
+
+
     k = wheel.children.length;
 
     while(k--){
+
         m = wheel.children[k];
         if( m.name === 'h_pneu' ) m.material = mat.pneu;
         else m.material = mat.wheel;
@@ -158,13 +171,9 @@ function makeBuggy () {
 
     }
 
-    mesh.material = mat.body;
-    //mesh.receiveShadow = false;
-    //mesh.castShadow = false;
+    
 
-    wheel.material = mat.wheel;
-    //wheel.receiveShadow = false;
-    //wheel.castShadow = false;
+    
 
     // car physics
 
@@ -187,6 +196,8 @@ function makeBuggy () {
         meshBrake: brake,
         meshSteeringWheel: steeringWheel,
         extraWeels:true,
+
+        wheelMaterial:  mat.wheel,
         
         helper: true,
         pos:[0,1,0], // start position of car 

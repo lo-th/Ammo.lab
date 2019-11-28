@@ -201,6 +201,8 @@ function makeBuggy () {
         meshSteeringWheel: steeringWheel,
         extraWeels:true,
 
+        wheelMaterial:  mat.wheel,
+
 
         
         
