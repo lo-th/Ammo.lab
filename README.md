@@ -8,5 +8,5 @@ Demo on worker with code editor<br>
 
 ### UPDATE ###
 
-Is time to switch ES6 worker version with the last OimoPhysics 1.2.2 :)<br>
+Is time to switch ES6 worker version with the last Ammo 3.0 :)<br>
 go to new [PHY repro](https://github.com/lo-th/phy)
